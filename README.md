@@ -1,79 +1,66 @@
 # CivicData
 
-A civic-data production system for collecting, normalizing, validating, and publishing reliable information about elected officials, candidates, districts, and geographic relationships.
+A versioned civic-data production system for collecting, normalizing, validating, publishing, and maintaining reliable information about governments, offices, officeholders, elections, identifiers, and geographic relationships.
 
-## Core objective
+## Current proof
 
-Build a nationwide dataset that can support questions such as:
+Two municipal jurisdictions now pass the same release and consumer system:
 
-- Who represents a given address?
-- Which municipality, county, state-legislative districts, and congressional district contain a location?
-- Who currently holds each federal, state, county, and municipal office?
-- What source supports each published record?
+| Jurisdiction | Modeled offices | Public-elected offices | Current RoleTerms | Consumer test |
+|---|---:|---:|---:|---|
+| Seattle, Washington | 18 | 18 | 18 | PASS |
+| Tacoma, Washington | 16 | 15 | 16 | PASS |
 
-## Definition of done
+Tacoma adds a Council–Manager government, an appointed City Manager, voter-elected Civil Service Board seats, and a judicial retirement → vacancy → appointment → successor-election transition without changing the package schema or release logic.
 
-A record is complete only when:
-
-1. Source data exists in `data/raw/`.
-2. A normalized record exists in `data/normalized/`.
-3. Required QA checks pass.
-4. `Parity_OK` is `TRUE`.
-5. Source, confidence, and review metadata are populated.
-6. The project tracker reflects completion.
-
-## Initial pipeline
+## Repository contract
 
 ```text
-Source research
+source assertions
     ↓
-Raw capture
+canonical entities and temporal relationships
     ↓
-Normalization
+jurisdiction-neutral validation
     ↓
-Validation and QA
+canonical JSON + CSV mirrors + manifest + QA
     ↓
-Parity checks
-    ↓
-Publishable output
+independent consumer acceptance
 ```
 
-## Planned repository structure
+A jurisdiction is not complete because rows were collected. It is complete when:
+
+1. durable entities have stable canonical IDs;
+2. every factual record has registered evidence;
+3. unknowns, conflicts, and deferrals remain explicit;
+4. relationship and temporal checks pass;
+5. JSON and CSV outputs agree;
+6. checksums match;
+7. a consumer can use the release without opening the working spreadsheet.
+
+## Repository layout
 
 ```text
-CivicData/
-├── data/
-│   ├── raw/
-│   ├── normalized/
-│   └── reference/
-├── docs/
-│   ├── schemas/
-│   └── workflows/
-├── scripts/
-│   ├── ingest/
-│   ├── normalize/
-│   └── qa/
-├── tests/
-└── README.md
+.github/workflows/         Continuous validation
+docs/contracts/            Field and publication contracts
+docs/workflows/            Production and maintenance procedures
+partner-acceptance/        Bounded external acceptance protocol
+registry/                  Jurisdiction and release registry
+releases/<place>/<version> Canonical JSON, manifest, QA, checksum
+schema/                    Versioned package schema
+scripts/                   Generic release and consumer validators
+tests/                     Cross-jurisdiction regression tests
 ```
 
-## Initial development priorities
+## Run validation
 
-1. Define the canonical jurisdiction and office schemas.
-2. Establish raw-to-normalized field mappings.
-3. Create repeatable QA and parity checks.
-4. Build one end-to-end pilot jurisdiction.
-5. Convert the pilot into a reusable state-production workflow.
+```bash
+python scripts/validate_release.py releases/seattle/0.1/canonical.json
+python scripts/validate_release.py releases/tacoma/0.1/canonical.json
+python scripts/run_consumer_test.py releases/seattle/0.1/canonical.json
+python scripts/run_consumer_test.py releases/tacoma/0.1/canonical.json
+python -m unittest discover -s tests -v
+```
 
-## Working principles
+## Rights and licensing
 
-- Preserve raw source data.
-- Separate facts from interpretations.
-- Store provenance at the record level.
-- Prefer repeatable batch workflows over manual edits.
-- Never mark work complete before QA and parity validation.
-- Improve the existing system before redesigning it.
-
-## Status
-
-Repository initialized. Schemas and the first pilot pipeline are the next build targets.
+Record-level source attribution is part of every release. A package-level open license has **not yet been adopted**. See `docs/RIGHTS_AND_LICENSING.md`.
