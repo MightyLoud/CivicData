@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civicdata.tech/schema/civic-reality-package-v0.1.json",
+  "title": "Civic Reality Package v0.1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "interface_version",
+    "package_id",
+    "generated_at",
+    "snapshot_as_of",
+    "coverage_scope",
+    "completeness_state",
+    "record_counts",
+    "known_gap_ids",
+    "attribution_statement",
+    "rights_statement",
+    "jurisdictions",
+    "divisions",
+    "bodies",
+    "offices",
+    "people",
+    "role_terms",
+    "leadership_roles",
+    "elections",
+    "contests",
+    "candidacies",
+    "source_evidence",
+    "source_assertions",
+    "identifier_crosswalks",
+    "known_gaps"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "interface_version": {"type": "string"},
+    "package_id": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "snapshot_as_of": {"type": "string", "format": "date"},
+    "coverage_scope": {"type": "string", "minLength": 1},
+    "completeness_state": {"enum": ["complete", "complete_with_known_gaps", "incomplete"]},
+    "record_counts": {"type": "object"},
+    "known_gap_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "attribution_statement": {"type": "string"},
+    "rights_statement": {"type": "string"},
+    "package_license": {"type": ["string", "null"]},
+    "source_workbook": {"type": ["string", "null"]}
+  },
+  "patternProperties": {
+    "^(jurisdictions|divisions|bodies|offices|people|role_terms|leadership_roles|elections|contests|candidacies|source_evidence|source_assertions|identifier_crosswalks|known_gaps)$": {
+      "type": "array",
+      "items": {"type": "object"}
+    }
+  },
+  "additionalProperties": true
+}
