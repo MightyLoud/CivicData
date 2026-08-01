@@ -1,0 +1,32 @@
+{
+  "registry_version": "0.1",
+  "updated_at": "2026-08-01",
+  "jurisdictions": [
+    {
+      "slug": "seattle-wa",
+      "canonical_jurisdiction_id": "jur-us-wa-seattle",
+      "version": "0.1",
+      "snapshot_as_of": "2026-08-01",
+      "modeled_office_count": 18,
+      "public_elected_office_count": 18,
+      "current_role_term_count": 18,
+      "parity_ok": true,
+      "consumer_test": "PASS",
+      "known_gap_count": 6,
+      "release_zip_sha256": "8ea9d4ccdf92a3c4b3c48c6cb8c8efdede527356863b94a83ca2018266d694be"
+    },
+    {
+      "slug": "tacoma-wa",
+      "canonical_jurisdiction_id": "jur-us-wa-tacoma",
+      "version": "0.1",
+      "snapshot_as_of": "2026-08-01",
+      "modeled_office_count": 16,
+      "public_elected_office_count": 15,
+      "current_role_term_count": 16,
+      "parity_ok": true,
+      "consumer_test": "PASS",
+      "known_gap_count": 2,
+      "release_zip_sha256": "7a46eb2eee35b6e1d460048d7ad899c32f93c3101445cdb2bfd6f09afd76f43d"
+    }
+  ]
+}
