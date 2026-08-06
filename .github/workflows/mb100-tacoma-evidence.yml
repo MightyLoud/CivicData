@@ -1,0 +1,55 @@
+name: MB100 Tacoma Evidence
+
+on:
+  push:
+    branches:
+      - automation/mb100-tacoma-20260806
+    paths:
+      - scripts/run_mb100_tacoma.py
+      - .github/workflows/mb100-tacoma-evidence.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out evidence harness
+        uses: actions/checkout@v4
+        with:
+          path: harness
+
+      - name: Check out frozen generator
+        uses: actions/checkout@v4
+        with:
+          repository: openstates/jurisdictions
+          ref: 6fbe7d6aed32c3b781490c8e4c5a737bdd6e4705
+          path: generator
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        working-directory: generator
+        run: uv python install 3.12
+
+      - name: Install frozen generator environment
+        working-directory: generator
+        run: uv sync --frozen --dev
+
+      - name: Execute Tacoma twice and verify parity
+        working-directory: generator
+        run: uv run python ../harness/scripts/run_mb100_tacoma.py
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mb100-002-tacoma-evidence
+          path: generator/mb100_evidence
+          if-no-files-found: error
