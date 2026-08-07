@@ -7,7 +7,7 @@ on:
       - main
       - 'agent/civic-gps-live-smoke'
     paths:
-      - 'civic_gps_runtime.zip'
+      - 'civic_gps_runtime_parts/**'
       - 'tests/civic_gps_live_smoke.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
@@ -39,8 +39,12 @@ jobs:
       - name: Install Civic GPS runtime dependency
         run: python -m pip install -r requirements-civic-gps.txt
 
-      - name: Expand exact Civic GPS runtime package
-        run: unzip -q civic_gps_runtime.zip
+      - name: Reconstruct exact Civic GPS runtime package
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo 'fef242729e6e2efeb0a92c9f81bd19c31a3533ac2b3d44d4e5024ba392ee487b  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
 
       - name: Compile engine and smoke test
         run: python -m py_compile civic_gps/engine.py tests/civic_gps_live_smoke.py
