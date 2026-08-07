@@ -2,6 +2,15 @@ name: Civic GPS live smoke
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'civic_gps_runtime_parts/**'
+      - 'tests/civic_gps_live_smoke.py'
+      - 'requirements-civic-gps.txt'
+      - '.github/workflows/civic-gps-live-smoke.yml'
+      - 'docs/workflows/civic-gps-live-smoke.md'
   push:
     branches:
       - main
@@ -11,6 +20,7 @@ on:
       - 'tests/civic_gps_live_smoke.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
+      - 'docs/workflows/civic-gps-live-smoke.md'
   schedule:
     - cron: '23 15 * * 3'
 
@@ -18,11 +28,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: civic-gps-live-smoke-${{ github.ref }}
+  group: civic-gps-live-smoke-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   live-smoke:
+    name: Civic GPS release gate
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
