@@ -1,0 +1,126 @@
+{
+  "schema_version": "civic-gps-county-onboarding/0.1.0",
+  "archetype": "TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1",
+  "county": {
+    "name": "Bastrop County",
+    "state": "TX",
+    "geoid": "48021",
+    "jurisdiction_id": "jur-us-tx-bastrop-county",
+    "division_id": "div-us-tx-bastrop-county",
+    "adapter_id": "ADAPTER-TX-BASTROP",
+    "response_id_prefix": "civic-gps-bastrop",
+    "release_filename": "civic_gps_bastrop_county_v0.1.json",
+    "observed_on": "2026-08-08"
+  },
+  "scope": {
+    "bounded": true,
+    "countywide_complete": false,
+    "unmodeled_status": "BOUNDED_V0_1_SCOPE",
+    "expected_total_offices": 18,
+    "countywide_offices": [
+      {"office_id": "office-us-tx-bastrop-county-judge", "title": "County Judge", "holder": "Gregory Klaus", "official_url": "https://www.co.bastrop.tx.us/page/co.county_judge"},
+      {"office_id": "office-us-tx-bastrop-county-sheriff", "title": "Sheriff", "holder": "Maurice Cook", "official_url": "https://www.co.bastrop.tx.us/page/lec.sheriff"},
+      {"office_id": "office-us-tx-bastrop-county-clerk", "title": "County Clerk", "holder": "Krista Bartsch", "official_url": "https://www.co.bastrop.tx.us/page/co.county_clerk"},
+      {"office_id": "office-us-tx-bastrop-county-district-clerk", "title": "District Clerk", "holder": "Sarah Loucks", "official_url": "https://www.co.bastrop.tx.us/page/dc.clerk"},
+      {"office_id": "office-us-tx-bastrop-county-tax-assessor-collector", "title": "Tax Assessor-Collector", "holder": "Ellen Owens", "official_url": "https://www.co.bastrop.tx.us/page/co.tax_assessor"},
+      {"office_id": "office-us-tx-bastrop-county-treasurer", "title": "County Treasurer", "holder": "Brittney Ross", "official_url": "https://www.co.bastrop.tx.us/page/tr.treasurer"}
+    ]
+  },
+  "sources": {
+    "snapshot_ref": "https://www.co.bastrop.tx.us/",
+    "source_repository": "https://www.co.bastrop.tx.us/",
+    "manifest": {
+      "county_judge": "https://www.co.bastrop.tx.us/page/co.county_judge",
+      "county_clerk": "https://www.co.bastrop.tx.us/page/co.county_clerk",
+      "district_clerk": "https://www.co.bastrop.tx.us/page/dc.clerk",
+      "sheriff": "https://www.co.bastrop.tx.us/page/lec.sheriff",
+      "tax_assessor_collector": "https://www.co.bastrop.tx.us/page/co.tax_assessor",
+      "treasurer": "https://www.co.bastrop.tx.us/page/tr.treasurer",
+      "commissioners": "https://www.co.bastrop.tx.us/page/com.main",
+      "justice_courts": "https://www.co.bastrop.tx.us/page/co.justice_peace",
+      "constables": "https://www.co.bastrop.tx.us/page/co.constables",
+      "shared_precinct_geometry": "https://maps.co.bastrop.tx.us/server/rest/services/Viewers/PublicGISViewerService/MapServer/8",
+      "geometry_provenance": "https://maps.co.bastrop.tx.us/upload/GIS_Data/Precinct.htm",
+      "controls": "official Bastrop County courthouse and precinct office addresses spanning precincts 1-4"
+    },
+    "identity_conflicts": [],
+    "source_health": [
+      {"source_id": "bastrop-shared-precinct-gis", "status": "OK"},
+      {"source_id": "bastrop-current-countywide-roster", "status": "OK"},
+      {"source_id": "bastrop-current-district-rosters", "status": "OK"}
+    ]
+  },
+  "architecture": {"requires_custom_resolver_logic": false, "requires_consumer_schema_change": false},
+  "district_families": [
+    {
+      "family": "commissioner",
+      "adapter_id": "DIST-TX-BASTROP-COMMISSIONER",
+      "layer": "bastrop_county_commissioner_precinct",
+      "district_keys": ["1", "2", "3", "4"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1},
+      "holders": {"1": "Butch Carmack", "2": "Clara Beckett", "3": "Mark Meuth", "4": "David Glass"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {"official": true, "service_url": "https://maps.co.bastrop.tx.us/server/rest/services/Viewers/PublicGISViewerService/MapServer/8", "district_field": "precinct", "district_field_type": "esriFieldTypeInteger", "numeric": true, "endpoint_authority_class": "OFFICIAL_COUNTY_GIS", "endpoint_provenance_url": "https://maps.co.bastrop.tx.us/upload/GIS_Data/Precinct.htm", "endpoint_publisher": "Bastrop County Information Technology / GIS"},
+      "district_name_template": "Bastrop County Commissioner Precinct {district}",
+      "division_id_template": "div-us-tx-bastrop-county-commissioner-{district}",
+      "division_type": "county_commissioner_precinct",
+      "office_id_template": "office-us-tx-bastrop-county-commissioner-{district}",
+      "office_title_template": "Commissioner Precinct {district}",
+      "official_url": "https://www.co.bastrop.tx.us/page/com.main",
+      "coverage_reason": "Address-specific Commissioner precinct resolved from official Bastrop County shared precinct geometry."
+    },
+    {
+      "family": "justice_of_the_peace",
+      "adapter_id": "DIST-TX-BASTROP-JP",
+      "layer": "bastrop_county_jp_precinct",
+      "district_keys": ["1", "2", "3", "4"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1},
+      "holders": {"1": "Cindy Allen", "2": "Zachary Carter", "3": "Krystal Stabeno", "4": "Larry Dunne"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {"official": true, "service_url": "https://maps.co.bastrop.tx.us/server/rest/services/Viewers/PublicGISViewerService/MapServer/8", "district_field": "precinct", "district_field_type": "esriFieldTypeInteger", "numeric": true, "endpoint_authority_class": "OFFICIAL_COUNTY_GIS", "endpoint_provenance_url": "https://maps.co.bastrop.tx.us/upload/GIS_Data/Precinct.htm", "endpoint_publisher": "Bastrop County Information Technology / GIS"},
+      "district_name_template": "Bastrop County Justice Precinct {district}",
+      "division_id_template": "div-us-tx-bastrop-county-jp-{district}",
+      "division_type": "justice_precinct",
+      "office_id_template": "office-us-tx-bastrop-county-jp-{district}",
+      "office_title_template": "Justice of the Peace Precinct {district}",
+      "official_url": "https://www.co.bastrop.tx.us/page/co.justice_peace",
+      "coverage_reason": "Address-specific Justice precinct resolved from official Bastrop County shared precinct geometry."
+    },
+    {
+      "family": "constable",
+      "adapter_id": "DIST-TX-BASTROP-CONSTABLE",
+      "layer": "bastrop_county_constable_precinct",
+      "district_keys": ["1", "2", "3", "4"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1},
+      "holders": {"1": "Wayne Wood", "2": "James Scoggins", "3": "Tim Sparkman", "4": "Joey Dzienowski"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {"official": true, "service_url": "https://maps.co.bastrop.tx.us/server/rest/services/Viewers/PublicGISViewerService/MapServer/8", "district_field": "precinct", "district_field_type": "esriFieldTypeInteger", "numeric": true, "endpoint_authority_class": "OFFICIAL_COUNTY_GIS", "endpoint_provenance_url": "https://maps.co.bastrop.tx.us/upload/GIS_Data/Precinct.htm", "endpoint_publisher": "Bastrop County Information Technology / GIS"},
+      "district_name_template": "Bastrop County Constable Precinct {district}",
+      "division_id_template": "div-us-tx-bastrop-county-constable-{district}",
+      "division_type": "constable_precinct",
+      "office_id_template": "office-us-tx-bastrop-county-constable-{district}",
+      "office_title_template": "Constable Precinct {district}",
+      "official_url": "https://www.co.bastrop.tx.us/page/co.constables",
+      "coverage_reason": "Address-specific Constable precinct resolved from official Bastrop County shared precinct geometry."
+    }
+  ],
+  "controls": {
+    "interiors": [
+      {"id": "bastrop-precinct1-candidate", "address": "803 Pine Street, Bastrop, TX 78602"},
+      {"id": "bastrop-precinct2-candidate", "address": "1624 NE Loop 230, Smithville, TX 78957"},
+      {"id": "bastrop-precinct3-candidate", "address": "5785 FM 535, Cedar Creek, TX 78612"},
+      {"id": "bastrop-precinct4-candidate", "address": "1125 Dildy Drive, Elgin, TX 78621"}
+    ],
+    "outside_negative": {"address": "700 Lavaca Street, Austin, TX 78701", "expected": {"bastrop_jurisdiction_present": false}},
+    "boundary": {"required": true, "policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK", "shared_geometry_families": ["commissioner", "justice_of_the_peace", "constable"]}
+  },
+  "actions": {"status": "NOT_YET_RELEASED", "layer": "bastrop_action_endpoints", "reason": "Bastrop County civic-action routing is intentionally outside the County #6 CG-01→CG-03 fit-screen scope."},
+  "release_status": "PROBE_CURRENT",
+  "source_status": "FROZEN_FIT_SCREEN_PENDING_LIVE_CONTROLS",
+  "release_note": "Bastrop County is County #6 and the second production candidate generated through County Onboarding Pipeline v0.1. The frozen fit-screen scope models six deliberately bounded countywide offices plus Commissioner, Justice of the Peace, and Constable precincts 1-4. Current officeholder identity comes from official Bastrop County office pages; all three district families use the official shared county precinct layer with integer keys 1-4. Live GIS, interior, negative, boundary, package, and promotion gates remain pending after CG-03.",
+  "known_gaps": [
+    {"gap_id": "GAP-BASTROP-GPS-001", "status": "NOT_YET_RELEASED", "summary": "Bastrop County civic-action routing is not included in the County #6 fit-screen batch."},
+    {"gap_id": "GAP-BASTROP-GPS-002", "status": "BOUNDED_V0_1_SCOPE", "summary": "The v0.1 countywide set is deliberately bounded to six countywide offices; additional countywide and judicial offices are not yet modeled."},
+    {"gap_id": "GAP-BASTROP-GPS-003", "status": "LIVE_PROOF_PENDING", "summary": "CG-04 through CG-10 remain pending after the automated CG-01 through CG-03 fit decision."}
+  ]
+}
