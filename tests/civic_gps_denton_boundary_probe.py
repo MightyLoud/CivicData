@@ -1,14 +1,7 @@
 #!/usr/bin/env python3
-"""Live Denton County boundary-edge proof for Civic GPS v0.6.0.
-
-Derives real shared boundary segments from Denton County's official ArcGIS layers,
-proves exact-boundary ambiguity is emitted as ADAPTER-scoped CONFLICT (never a
-silent precinct tie-break), and proves small points on both sides resolve to the
-expected distinct precincts while the Denton BASE remains active.
-"""
+"""Packaged Denton County exact-boundary fail-closed proof for Civic GPS v0.6.0."""
 from __future__ import annotations
 
-import copy
 import importlib.util
 import json
 import math
@@ -23,7 +16,7 @@ GPS = ROOT / "civic_gps"
 OUTPUT = ROOT / "artifacts" / "civic-gps-live-smoke"
 OUTPUT.mkdir(parents=True, exist_ok=True)
 ENGINE_PATH = GPS / "engine.py"
-PROBE_REGISTRY_PATH = GPS / "registry-denton-probe.json"
+REGISTRY_PATH = GPS / "registry.json"
 
 J_DENTON = "jur-us-tx-denton-county"
 A_COMM = "DIST-TX-DENTON-COMMISSIONER"
@@ -31,6 +24,7 @@ A_JP = "DIST-TX-DENTON-JP"
 A_CONST = "DIST-TX-DENTON-CONSTABLE"
 COMM_SERVICE = "https://gis.dentoncounty.gov/arcgis/rest/services/PoliticalBoundaries_GC/MapServer/4"
 JPC_SERVICE = "https://gis.dentoncounty.gov/arcgis/rest/services/PoliticalBoundaries_GC/MapServer/5"
+POLICY = "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK"
 
 spec = importlib.util.spec_from_file_location("civic_gps_engine_denton_boundary", ENGINE_PATH)
 engine_mod = importlib.util.module_from_spec(spec)
@@ -87,16 +81,15 @@ def point_keys(service: str, field: str, lon: float, lat: float) -> list[str]:
     return sorted(set(values))
 
 
-def rounded_point(point: list[float] | tuple[float, float]) -> tuple[float, float]:
+def rounded_point(point) -> tuple[float, float]:
     return (round(float(point[0]), 8), round(float(point[1]), 8))
 
 
-def segment_index(features: list[dict], field: str) -> dict[tuple, list[tuple[str, tuple[float, float], tuple[float, float]]]]:
-    index: dict[tuple, list[tuple[str, tuple[float, float], tuple[float, float]]]] = {}
+def segment_index(features: list[dict], field: str) -> dict:
+    index = {}
     for feature in features:
         district = str((feature.get("attributes") or {}).get(field)).strip()
-        geometry = feature.get("geometry") or {}
-        for ring in geometry.get("rings") or []:
+        for ring in (feature.get("geometry") or {}).get("rings") or []:
             for a_raw, b_raw in zip(ring, ring[1:]):
                 a = (float(a_raw[0]), float(a_raw[1]))
                 b = (float(b_raw[0]), float(b_raw[1]))
@@ -116,13 +109,11 @@ def find_isolated_boundary(primary_service: str, primary_field: str, other_servi
         if len(districts) < 2:
             continue
         a, b = rows[0][1], rows[0][2]
-        length = math.hypot(b[0] - a[0], b[1] - a[1])
-        candidates.append((length, districts, a, b))
+        candidates.append((math.hypot(b[0] - a[0], b[1] - a[1]), districts, a, b))
     candidates.sort(reverse=True, key=lambda row: row[0])
     if not candidates:
         raise AssertionError(f"No shared polygon segment found in {primary_service}")
 
-    epsilons = (2e-7, 5e-7, 1e-6, 2e-6, 5e-6, 1e-5, 2e-5, 5e-5)
     for _, shared_districts, a, b in candidates:
         mid = ((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0)
         primary_mid = point_keys(primary_service, primary_field, *mid)
@@ -134,7 +125,7 @@ def find_isolated_boundary(primary_service: str, primary_field: str, other_servi
         if norm == 0:
             continue
         nx, ny = -dy / norm, dx / norm
-        for eps in epsilons:
+        for eps in (2e-7, 5e-7, 1e-6, 2e-6, 5e-6, 1e-5, 2e-5, 5e-5):
             side_a = (mid[0] + nx * eps, mid[1] + ny * eps)
             side_b = (mid[0] - nx * eps, mid[1] - ny * eps)
             pa = point_keys(primary_service, primary_field, *side_a)
@@ -143,39 +134,34 @@ def find_isolated_boundary(primary_service: str, primary_field: str, other_servi
             ob = point_keys(other_service, other_field, *side_b)
             if len(pa) == len(pb) == len(oa) == len(ob) == 1 and pa[0] != pb[0] and oa[0] == ob[0] == other_mid[0]:
                 return {
-                    "segment_endpoints": [a, b],
                     "midpoint": mid,
                     "primary_mid_keys": primary_mid,
                     "other_mid_key": other_mid[0],
                     "side_a": side_a,
                     "side_a_primary_key": pa[0],
-                    "side_a_other_key": oa[0],
                     "side_b": side_b,
                     "side_b_primary_key": pb[0],
-                    "side_b_other_key": ob[0],
                     "epsilon_degrees": eps,
                     "shared_segment_districts": shared_districts,
                 }
     raise AssertionError(f"Could not derive isolated two-sided boundary control from {primary_service}")
 
 
-if not PROBE_REGISTRY_PATH.is_file():
-    raise AssertionError("Denton probe registry missing; run civic_gps_denton_live_probe.py first")
+registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-DENTON"), None)
+if not bundle:
+    raise AssertionError("Packaged Denton bundle missing")
+adapters = {a["adapter_id"]: a for a in bundle.get("district_adapters", [])}
+for adapter_id in (A_COMM, A_JP, A_CONST):
+    adapter = adapters.get(adapter_id)
+    if not adapter:
+        raise AssertionError(f"Packaged adapter missing: {adapter_id}")
+    if adapter.get("failure_scope") != "ADAPTER":
+        raise AssertionError(f"{adapter_id} must fail at ADAPTER scope on ambiguous boundaries")
+    if adapter.get("boundary_policy") != POLICY:
+        raise AssertionError(f"{adapter_id} boundary policy mismatch: {adapter.get('boundary_policy')}")
 
-registry = copy.deepcopy(json.loads(PROBE_REGISTRY_PATH.read_text(encoding="utf-8")))
-for bundle in registry.get("bundles", []):
-    if bundle.get("adapter_id") == "ADAPTER-TX-DENTON":
-        for adapter in bundle.get("district_adapters", []):
-            adapter["failure_scope"] = "ADAPTER"
-            adapter["boundary_policy"] = "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK"
-        break
-else:
-    raise AssertionError("Denton bundle missing from probe registry")
-
-boundary_registry_path = GPS / "registry-denton-boundary-probe.json"
-boundary_registry_path.write_text(json.dumps(registry, sort_keys=True, indent=2) + "\n", encoding="utf-8")
-resolver = engine_mod.CivicGPSOverlayEngine.from_file(boundary_registry_path, timeout_seconds=30.0)
-bundle = next(b for b in registry["bundles"] if b.get("adapter_id") == "ADAPTER-TX-DENTON")
+resolver = engine_mod.CivicGPSOverlayEngine.from_file(REGISTRY_PATH, timeout_seconds=30.0)
 observed = datetime.now(timezone.utc).date().isoformat()
 geo = {
     "state": {"GEOID": "48", "STATE": "48", "NAME": "Texas"},
@@ -199,7 +185,11 @@ def resolve_xy(label: str, point: tuple[float, float]) -> dict:
 
 
 def assignments(payload: dict) -> dict[str, str]:
-    return {row["adapter_id"]: str(row["district_key"]) for row in payload["district_assignments"] if row.get("jurisdiction_id") == J_DENTON}
+    return {
+        row["adapter_id"]: str(row["district_key"])
+        for row in payload["district_assignments"]
+        if row.get("jurisdiction_id") == J_DENTON
+    }
 
 
 def applicable_count(payload: dict) -> int:
@@ -207,7 +197,11 @@ def applicable_count(payload: dict) -> int:
 
 
 def conflict_layers(payload: dict) -> set[str]:
-    return {row.get("layer") for row in payload.get("coverage", []) if row.get("status") == "CONFLICT"}
+    return {
+        row.get("layer")
+        for row in payload.get("coverage", [])
+        if row.get("status") == "CONFLICT"
+    }
 
 
 commissioner_boundary = find_isolated_boundary(COMM_SERVICE, "COMMISH", JPC_SERVICE, "JP_C")
@@ -228,13 +222,13 @@ if "county_commissioner_precinct" not in conflict_layers(commissioner_exact):
     raise AssertionError("Commissioner exact boundary did not emit CONFLICT coverage")
 
 comm_a_assign, comm_b_assign = assignments(commissioner_a), assignments(commissioner_b)
-for side_name, got, expected_comm in (
-    ("side_a", comm_a_assign, commissioner_boundary["side_a_primary_key"]),
-    ("side_b", comm_b_assign, commissioner_boundary["side_b_primary_key"]),
+for side_name, payload, got, expected_comm in (
+    ("side_a", commissioner_a, comm_a_assign, commissioner_boundary["side_a_primary_key"]),
+    ("side_b", commissioner_b, comm_b_assign, commissioner_boundary["side_b_primary_key"]),
 ):
     if got.get(A_COMM) != expected_comm or got.get(A_JP) != commissioner_boundary["other_mid_key"] or got.get(A_CONST) != commissioner_boundary["other_mid_key"]:
         raise AssertionError(f"Commissioner {side_name} assignments incorrect: {got}")
-    if applicable_count(commissioner_a if side_name == "side_a" else commissioner_b) != 9:
+    if applicable_count(payload) != 9:
         raise AssertionError(f"Commissioner {side_name} should resolve 9 Denton offices")
 if comm_a_assign[A_COMM] == comm_b_assign[A_COMM]:
     raise AssertionError("Commissioner boundary side controls did not resolve distinct precincts")
@@ -257,13 +251,13 @@ if not {"justice_of_the_peace_precinct", "constable_precinct"}.issubset(conflict
     raise AssertionError(f"JP/Constable exact boundary did not emit both CONFLICT coverage rows: {conflict_layers(jpc_exact)}")
 
 jpc_a_assign, jpc_b_assign = assignments(jpc_a), assignments(jpc_b)
-for side_name, got, expected_jpc in (
-    ("side_a", jpc_a_assign, jpc_boundary["side_a_primary_key"]),
-    ("side_b", jpc_b_assign, jpc_boundary["side_b_primary_key"]),
+for side_name, payload, got, expected_jpc in (
+    ("side_a", jpc_a, jpc_a_assign, jpc_boundary["side_a_primary_key"]),
+    ("side_b", jpc_b, jpc_b_assign, jpc_boundary["side_b_primary_key"]),
 ):
     if got.get(A_COMM) != jpc_boundary["other_mid_key"] or got.get(A_JP) != expected_jpc or got.get(A_CONST) != expected_jpc:
         raise AssertionError(f"JP/Constable {side_name} assignments incorrect: {got}")
-    if applicable_count(jpc_a if side_name == "side_a" else jpc_b) != 9:
+    if applicable_count(payload) != 9:
         raise AssertionError(f"JP/Constable {side_name} should resolve 9 Denton offices")
 if jpc_a_assign[A_JP] == jpc_b_assign[A_JP]:
     raise AssertionError("JP/Constable boundary side controls did not resolve distinct precincts")
@@ -276,13 +270,16 @@ for name, payload in (
     ("denton-jpc-boundary-side-a", jpc_a),
     ("denton-jpc-boundary-side-b", jpc_b),
 ):
-    (OUTPUT / f"{name}.json").write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    (OUTPUT / f"{name}.json").write_text(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 summary = {
     "status": "PASS",
     "engine_version": registry.get("engine_version"),
     "registry_artifact_version": registry.get("registry_artifact_version"),
-    "policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK",
+    "policy": POLICY,
     "commissioner_boundary": {
         "midpoint": commissioner_boundary["midpoint"],
         "exact_intersections": commissioner_boundary["primary_mid_keys"],
@@ -304,6 +301,9 @@ summary = {
         "epsilon_degrees": jpc_boundary["epsilon_degrees"],
     },
 }
-(OUTPUT / "denton-boundary-summary.json").write_text(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+(OUTPUT / "denton-boundary-summary.json").write_text(
+    json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+    encoding="utf-8",
+)
 print(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2))
-print("PASS: Denton Commissioner + JP/Constable boundary fail-closed controls")
+print("PASS: packaged Denton Commissioner + JP/Constable boundary fail-closed controls")

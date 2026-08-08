@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Denton County outside-scope negative control.
-
-Requires civic_gps_denton_live_probe.py to have created the temporary Denton probe
-registry earlier in the same workflow job.
-"""
+"""Packaged Denton County outside-scope negative control."""
 from __future__ import annotations
 
 import importlib.util
@@ -14,13 +10,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GPS = ROOT / "civic_gps"
 OUTPUT = ROOT / "artifacts" / "civic-gps-live-smoke"
+OUTPUT.mkdir(parents=True, exist_ok=True)
 ENGINE_PATH = GPS / "engine.py"
-REGISTRY_PATH = GPS / "registry-denton-probe.json"
+REGISTRY_PATH = GPS / "registry.json"
 J_DENTON = "jur-us-tx-denton-county"
 ADDRESS = "1500 Marilla Street, Dallas, TX 75201"
-
-if not REGISTRY_PATH.exists():
-    raise SystemExit("Denton probe registry missing; run civic_gps_denton_live_probe.py first")
 
 spec = importlib.util.spec_from_file_location("civic_gps_engine_denton_negative", ENGINE_PATH)
 engine_mod = importlib.util.module_from_spec(spec)
@@ -45,7 +39,8 @@ if J_DENTON in jurisdictions:
     raise AssertionError(f"Denton incorrectly activated for Dallas address; jurisdictions={sorted(jurisdictions)}")
 if denton_assignments or denton_offices or denton_actions:
     raise AssertionError(
-        f"Denton leaked outside county: assignments={len(denton_assignments)}, offices={len(denton_offices)}, actions={len(denton_actions)}"
+        f"Denton leaked outside county: assignments={len(denton_assignments)}, "
+        f"offices={len(denton_offices)}, actions={len(denton_actions)}"
     )
 
 summary = {
@@ -61,4 +56,4 @@ summary = {
     json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8"
 )
 print(json.dumps(summary, sort_keys=True))
-print("PASS: Denton outside-county negative control")
+print("PASS: packaged Denton outside-county negative control")
