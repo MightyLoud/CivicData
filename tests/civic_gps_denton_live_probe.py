@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Packaged Denton County live controls for Civic GPS v0.6.1 / registry v0.5.2."""
+"""Packaged Denton County live controls for Civic GPS v0.6.1 / registry v0.5.3."""
 from __future__ import annotations
 
 import importlib.util
@@ -28,8 +28,8 @@ A_CONST = "DIST-TX-DENTON-CONSTABLE"
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
 if registry.get("engine_version") != "0.6.1":
     raise AssertionError(f"Expected engine 0.6.1 registry contract, got {registry.get('engine_version')}")
-if registry.get("registry_artifact_version") != "0.5.2":
-    raise AssertionError(f"Expected packaged registry 0.5.2, got {registry.get('registry_artifact_version')}")
+if registry.get("registry_artifact_version") != "0.5.3":
+    raise AssertionError(f"Expected packaged registry 0.5.3, got {registry.get('registry_artifact_version')}")
 denton_bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-DENTON"), None)
 if not denton_bundle:
     raise AssertionError("Packaged Denton bundle is missing")

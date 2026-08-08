@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic Denton action-selection contract for Civic GPS v0.6.1 / registry v0.5.2."""
+"""Deterministic Denton action-selection contract for Civic GPS v0.6.1 / registry v0.5.3."""
 from __future__ import annotations
 
 import importlib.util
@@ -23,8 +23,8 @@ assert spec.loader is not None
 spec.loader.exec_module(engine_mod)
 
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("registry_artifact_version") != "0.5.2":
-    raise AssertionError(f"Expected registry 0.5.2, got {registry.get('registry_artifact_version')}")
+if registry.get("registry_artifact_version") != "0.5.3":
+    raise AssertionError(f"Expected registry 0.5.3, got {registry.get('registry_artifact_version')}")
 resolver = engine_mod.CivicGPSOverlayEngine.from_file(REGISTRY_PATH, timeout_seconds=30.0)
 action_registry = json.loads((GPS / ACTION_FILE).read_text(encoding="utf-8"))
 if action_registry.get("meta", {}).get("route_count") != 27:
