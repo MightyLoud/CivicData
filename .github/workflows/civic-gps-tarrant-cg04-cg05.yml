@@ -33,9 +33,7 @@ jobs:
           mkdir -p artifacts/civic-gps-tarrant-cg04-cg05
           python - <<'PY'
           from __future__ import annotations
-          import html
           import json
-          import re
           import time
           import urllib.parse
           import urllib.request
@@ -161,9 +159,16 @@ jobs:
                   raise AssertionError(data['error'])
               return data.get('features', [])
 
+          # 645 Grapevine Highway is an official JP3 office address but Census does not geocode it.
+          # Use Tarrant County's second official JP3 location for this live point-intersection sample only.
+          sample_address_overrides = {
+              'tarrant-jp3-candidate': '1400 Main Street, Southlake, TX 76092'
+          }
+
           samples = []
           for control in spec['controls']['interiors']:
-              lon, lat, matched = geocode(control['address'])
+              sample_address = sample_address_overrides.get(control['id'], control['address'])
+              lon, lat, matched = geocode(sample_address)
               comm = point_query(commissioner_url, lon, lat, 'District_N')
               jp = point_query(jp_url, lon, lat, 'JP,Constable')
               assert len(comm) == 1, (control['id'], 'commissioner', len(comm))
@@ -175,12 +180,11 @@ jobs:
               assert jp_key in {str(i) for i in range(1,9)}
               assert jp_key == constable_key
               samples.append({
-                  'id': control['id'], 'input_address': control['address'], 'matched_address': matched,
-                  'lon': lon, 'lat': lat, 'commissioner': commissioner,
+                  'id': control['id'], 'frozen_candidate_address': control['address'], 'sample_address': sample_address,
+                  'matched_address': matched, 'lon': lon, 'lat': lat, 'commissioner': commissioner,
                   'jp': jp_key, 'constable': constable_key
               })
 
-          # All eight official JP/subcourthouse addresses should exercise all eight shared JP/Constable keys.
           observed_jp = sorted({s['jp'] for s in samples}, key=int)
           assert observed_jp == [str(i) for i in range(1, 9)], observed_jp
           assert len(samples) == 8
@@ -198,6 +202,7 @@ jobs:
                   'boundary_policy': 'MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK',
                   'samples': samples
               },
+              'control_note': 'Frozen JP3 candidate 645 Grapevine Highway is official but non-geocodable by Census; CG-05 sample uses official alternate JP3 location 1400 Main Street, Southlake.',
               'runtime_changed': False,
               'packaged': False,
               'next_gate': 'CG-06'
