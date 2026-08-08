@@ -10,6 +10,7 @@ on:
       - 'tests/civic_gps_live_smoke.py'
       - 'tests/civic_gps_denton_live_probe.py'
       - 'tests/civic_gps_denton_negative_probe.py'
+      - 'tests/civic_gps_denton_boundary_probe.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
       - 'docs/workflows/civic-gps-live-smoke.md'
@@ -22,6 +23,7 @@ on:
       - 'tests/civic_gps_live_smoke.py'
       - 'tests/civic_gps_denton_live_probe.py'
       - 'tests/civic_gps_denton_negative_probe.py'
+      - 'tests/civic_gps_denton_boundary_probe.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
       - 'docs/workflows/civic-gps-live-smoke.md'
@@ -62,7 +64,7 @@ jobs:
           unzip -q civic_gps_runtime.zip
 
       - name: Compile engine and smoke tests
-        run: python -m py_compile civic_gps/engine.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py
+        run: python -m py_compile civic_gps/engine.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py
 
       - name: Run real-network Civic GPS controls
         run: python tests/civic_gps_live_smoke.py
@@ -72,6 +74,9 @@ jobs:
 
       - name: Run Denton outside-county negative control
         run: python tests/civic_gps_denton_negative_probe.py
+
+      - name: Run Denton boundary fail-closed controls
+        run: python tests/civic_gps_denton_boundary_probe.py
 
       - name: Upload live responses
         if: always()
