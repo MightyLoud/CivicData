@@ -178,8 +178,16 @@ probe_registry.write_text(json.dumps(registry, ensure_ascii=False, sort_keys=Tru
 resolver = engine_mod.CivicGPSOverlayEngine.from_file(probe_registry, timeout_seconds=30.0)
 
 CASES = [
-    {"id": "denton-courthouse", "address": "1 Courthouse Drive, Denton, TX 76208"},
-    {"id": "denton-frisco", "address": "5533 FM 423, Frisco, TX 75036"},
+    {
+        "id": "denton-frisco-p2",
+        "address": "5533 FM 423, Frisco, TX 75036",
+        "expected": {"DIST-TX-DENTON-COMMISSIONER": "2", "DIST-TX-DENTON-JP": "2", "DIST-TX-DENTON-CONSTABLE": "2"},
+    },
+    {
+        "id": "denton-lewisville-p3",
+        "address": "400 N Valley Parkway, Lewisville, TX 75067",
+        "expected": {"DIST-TX-DENTON-COMMISSIONER": "3", "DIST-TX-DENTON-JP": "3", "DIST-TX-DENTON-CONSTABLE": "3"},
+    },
 ]
 
 summaries = []
@@ -193,11 +201,8 @@ for case in CASES:
     if J_DENTON not in jurisdictions:
         raise AssertionError(f"[{case['id']}] Denton jurisdiction missing: {sorted(jurisdictions)}")
     assignments = {x["adapter_id"]: str(x["district_key"]) for x in payload["district_assignments"] if x.get("jurisdiction_id") == J_DENTON}
-    required = {"DIST-TX-DENTON-COMMISSIONER", "DIST-TX-DENTON-JP", "DIST-TX-DENTON-CONSTABLE"}
-    if set(assignments) != required:
-        raise AssertionError(f"[{case['id']}] expected exactly 3 Denton assignments, got {assignments}")
-    if assignments["DIST-TX-DENTON-JP"] != assignments["DIST-TX-DENTON-CONSTABLE"]:
-        raise AssertionError(f"[{case['id']}] JP/Constable precinct mismatch: {assignments}")
+    if assignments != case["expected"]:
+        raise AssertionError(f"[{case['id']}] expected {case['expected']}, got {assignments}")
     denton_applicable = [x for x in payload["applicable_offices"] if x.get("jurisdiction_id") == J_DENTON]
     if len(denton_applicable) != 9:
         raise AssertionError(f"[{case['id']}] expected 9 Denton applicable offices, got {len(denton_applicable)}")
@@ -214,6 +219,9 @@ for case in CASES:
         "district_representatives": {x["adapter_id"]: x.get("representative") for x in payload["district_assignments"] if x.get("jurisdiction_id") == J_DENTON},
         "status": "PASS",
     })
+
+if len({tuple(sorted(x["assignments"].items())) for x in summaries}) != 2:
+    raise AssertionError("Denton controls did not prove two materially different district combinations.")
 
 summary = {"status": "PASS", "engine_version": registry.get("engine_version"), "registry_artifact_version": registry.get("registry_artifact_version"), "cases": summaries}
 (OUTPUT / "denton-summary.json").write_text(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
