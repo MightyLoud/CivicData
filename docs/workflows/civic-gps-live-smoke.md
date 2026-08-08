@@ -12,12 +12,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de`
+`567c809839a2bcbafff7da432e28bf7e6fa23e5c2dff9639cf11ad4f87759d60`
 
 Current contract set:
 
 - Overlay Engine: `v0.6.1`
-- Adapter registry artifact: `v0.5.4`
+- Adapter registry artifact: `v0.5.5`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 - County onboarding frozen-spec schema: `civic-gps-county-onboarding/0.1.0`
@@ -70,6 +70,19 @@ Required packaged controls:
 
 Williamson release scope is 18 offices = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Williamson action routing remains `NOT_YET_RELEASED`; additional countywide elected offices remain `BOUNDED_V0_1_SCOPE`.
 
+### Tarrant County
+
+Tarrant is the fourth production output of the county archetype and the second county completed through County Onboarding Pipeline v0.1.
+
+Required packaged controls:
+
+- Eight permanent interiors cover JP/Constable keys 1–8 and all Commissioner keys 1–4; each returns 9 offices = 6 countywide + Commissioner + JP + Constable.
+- Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Tarrant jurisdiction, assignments, offices, actions, or coverage.
+- Commissioner exact boundary — live official geometry must suppress only Commissioner while preserving the independently resolved JP and Constable assignments; both sides restore 9 offices.
+- Shared JP/Constable exact boundary — live official geometry must suppress JP and Constable together while preserving the independently resolved Commissioner assignment; both sides restore 9 offices.
+
+Tarrant release scope is 26 offices / 26 holders = 6 deliberately bounded countywide + 4 Commissioner + 8 JP + 8 Constable. Tarrant action routing remains `NOT_YET_RELEASED`; additional countywide elected offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
+
 ## Triggers
 
 The gate runs:
@@ -108,3 +121,4 @@ For an onboarding-fixture failure, fix the frozen-spec/tool contract. Do not loo
 - Collin reusable-archetype release: PR #7.
 - Travis reusable-archetype release: PR #8; post-merge run `31243494442`.
 - Williamson release: PR #10; protected PR run `31246989220`; post-merge run `31247035390`; runtime SHA `52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de`.
+- Tarrant pre-promotion package: run `31274189655`; full packaged regression: run `31274416507`; candidate runtime SHA `567c809839a2bcbafff7da432e28bf7e6fa23e5c2dff9639cf11ad4f87759d60`.
