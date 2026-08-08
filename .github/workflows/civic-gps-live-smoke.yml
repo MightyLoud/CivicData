@@ -59,6 +59,19 @@ jobs:
           echo 'fef242729e6e2efeb0a92c9f81bd19c31a3533ac2b3d44d4e5024ba392ee487b  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
+      - name: Prepare temporary Denton probe config
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('tests/civic_gps_denton_live_probe.py')
+          s = p.read_text()
+          needle = '            "required": True,\n        },'
+          replacement = '            "required": True,\n            "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",\n        },'
+          if s.count(needle) != 3:
+              raise SystemExit(f'expected 3 Denton adapter patch sites, found {s.count(needle)}')
+          p.write_text(s.replace(needle, replacement))
+          PY
+
       - name: Compile engine and smoke tests
         run: python -m py_compile civic_gps/engine.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py
 
