@@ -1,0 +1,188 @@
+name: Civic GPS Tarrant CG-07
+
+on:
+  push:
+    branches:
+      - agent/civic-gps-tarrant-onboarding
+    paths:
+      - .github/workflows/civic-gps-tarrant-cg07.yml
+      - tests/fixtures/civic_gps_county_onboarding/tarrant_county5_candidate_v0.1.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tarrant-cg07:
+    name: Tarrant outside-negative leakage proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out County
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Reconstruct exact released runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+
+      - name: Run unchanged released Civic GPS matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tests/civic_gps_live_smoke.py
+          python tests/civic_gps_denton_live_probe.py
+          python tests/civic_gps_denton_negative_probe.py
+          python tests/civic_gps_denton_boundary_probe.py
+          python tests/civic_gps_denton_action_probe.py
+          python tests/civic_gps_collin_live_probe.py
+          python tests/civic_gps_travis_live_probe.py
+          python tests/civic_gps_williamson_live_probe.py
+
+      - name: Generate Tarrant candidate from frozen onboarding spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf artifacts/civic-gps-tarrant-cg07 artifacts/civic-gps-tarrant-cg07-onboarding
+          mkdir -p artifacts/civic-gps-tarrant-cg07
+          python tools/civic_gps_county_onboarding.py \
+            tests/fixtures/civic_gps_county_onboarding/tarrant_county5_candidate_v0.1.json \
+            --output-dir artifacts/civic-gps-tarrant-cg07-onboarding \
+            --expect SUPPORTED_V0_1
+
+      - name: Run Tarrant CG-07 outside-negative control
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import importlib.util
+          import json
+          import sys
+          from pathlib import Path
+
+          ROOT = Path('.')
+          GPS = ROOT / 'civic_gps'
+          OUT = ROOT / 'artifacts' / 'civic-gps-tarrant-cg07'
+          GENERATED = ROOT / 'artifacts' / 'civic-gps-tarrant-cg07-onboarding'
+          REGISTRY_PATH = GPS / 'registry.json'
+          ENGINE_PATH = GPS / 'engine.py'
+          RELEASE_NAME = 'civic_gps_tarrant_county_v0.1.json'
+          RELEASE_PATH = GPS / RELEASE_NAME
+          J = 'jur-us-tx-tarrant-county'
+          TRAVIS = 'jur-us-tx-travis-county'
+          ADDRESS = '700 Lavaca Street, Austin, TX 78701'
+
+          original_registry_bytes = REGISTRY_PATH.read_bytes()
+          original_registry_sha = hashlib.sha256(original_registry_bytes).hexdigest()
+          registry = json.loads(original_registry_bytes)
+          if registry.get('engine_version') != '0.6.1' or registry.get('registry_artifact_version') != '0.5.4':
+              raise AssertionError(f"CG-07 requires released 0.6.1/0.5.4, got {registry.get('engine_version')}/{registry.get('registry_artifact_version')}")
+          if any(b.get('adapter_id') == 'ADAPTER-TX-TARRANT' for b in registry.get('bundles', [])):
+              raise AssertionError('Tarrant must not already be packaged before CG-07')
+
+          release = json.loads((GENERATED / 'canonical-release-preview.json').read_text(encoding='utf-8'))
+          bundle = json.loads((GENERATED / 'base-bundle-plan.json').read_text(encoding='utf-8'))
+          if len(release.get('payload', {}).get('offices', [])) != 26:
+              raise AssertionError('Tarrant candidate must still contain 26 offices')
+          if len(release.get('payload', {}).get('officeholders', [])) != 26:
+              raise AssertionError('Tarrant candidate must still contain 26 officeholders')
+          if any(row.get('failure_scope') != 'ADAPTER' for row in bundle.get('district_adapters', [])):
+              raise AssertionError('Tarrant district adapters must remain ADAPTER-scoped')
+          if bundle.get('action_registry_files'):
+              raise AssertionError('Tarrant action routing must remain unreleased')
+
+          RELEASE_PATH.write_text(json.dumps(release, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+          registry.setdefault('bundles', []).append(bundle)
+          REGISTRY_PATH.write_text(json.dumps(registry, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+
+          def load_module(name: str, path: Path):
+              module_spec = importlib.util.spec_from_file_location(name, path)
+              mod = importlib.util.module_from_spec(module_spec)
+              sys.modules[name] = mod
+              assert module_spec.loader is not None
+              module_spec.loader.exec_module(mod)
+              return mod
+
+          engine_mod = load_module('civic_gps_engine_tarrant_cg07', ENGINE_PATH)
+          resolver = engine_mod.CivicGPSOverlayEngine.from_file(REGISTRY_PATH, timeout_seconds=30.0)
+          result = resolver.resolve(ADDRESS, observed_on=None)
+          (OUT / 'tarrant-outside-austin.json').write_text(json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+          if 'error' in result:
+              raise AssertionError(f'Outside-Austin control engine error: {result["error"]}')
+
+          payload = result['payload']
+          jurisdictions = payload.get('jurisdictions') or []
+          assignments = payload.get('district_assignments') or []
+          offices = payload.get('applicable_offices') or []
+          actions = payload.get('action_links') or []
+          coverage = payload.get('coverage') or []
+
+          jurisdiction_ids = {row.get('jurisdiction_id') for row in jurisdictions}
+          if TRAVIS not in jurisdiction_ids:
+              raise AssertionError(f'Outside control must remain a valid Travis resolution; got jurisdictions {sorted(j for j in jurisdiction_ids if j)}')
+          if J in jurisdiction_ids:
+              raise AssertionError('Outside-Austin control unexpectedly activated Tarrant')
+
+          tarrant_assignments = [row for row in assignments if row.get('jurisdiction_id') == J]
+          tarrant_offices = [row for row in offices if row.get('jurisdiction_id') == J]
+          tarrant_actions = [row for row in actions if row.get('jurisdiction_id') == J]
+          tarrant_coverage = [row for row in coverage if 'tarrant' in json.dumps(row, ensure_ascii=False, sort_keys=True).lower()]
+
+          if tarrant_assignments:
+              raise AssertionError(f'Outside-Austin control leaked Tarrant assignments: {tarrant_assignments}')
+          if tarrant_offices:
+              raise AssertionError(f'Outside-Austin control leaked Tarrant applicable offices: {tarrant_offices}')
+          if tarrant_actions:
+              raise AssertionError(f'Outside-Austin control leaked Tarrant actions: {tarrant_actions}')
+          if tarrant_coverage:
+              raise AssertionError(f'Outside-Austin control leaked Tarrant coverage: {tarrant_coverage}')
+
+          summary = {
+              'status': 'PASS',
+              'gate': 'CG-07',
+              'county': 'Tarrant County, TX',
+              'geoid': '48439',
+              'address': ADDRESS,
+              'released_runtime_sha256': '52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de',
+              'released_registry_version': '0.5.4',
+              'original_registry_sha256': original_registry_sha,
+              'candidate_overlay_only': True,
+              'candidate_packaged': False,
+              'valid_non_tarrant_resolution': {'travis_jurisdiction_present': True},
+              'tarrant_jurisdiction_present': False,
+              'tarrant_assignments': 0,
+              'tarrant_applicable_offices': 0,
+              'tarrant_actions': 0,
+              'tarrant_coverage_rows': 0,
+              'next_gate': 'CG-08',
+          }
+          (OUT / 'tarrant-cg07-summary.json').write_text(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+          print('TARRANT CG-07 PASS')
+          PY
+
+      - name: Upload CG-07 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-tarrant-cg07-${{ github.run_id }}
+          path: |
+            artifacts/civic-gps-tarrant-cg07/
+            artifacts/civic-gps-tarrant-cg07-onboarding/
+          if-no-files-found: warn
+          retention-days: 30
