@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Packaged Denton County live controls for Civic GPS v0.6.0 / registry v0.5.0."""
+"""Packaged Denton County live controls for Civic GPS v0.6.0 / registry v0.5.1."""
 from __future__ import annotations
 
 import importlib.util
@@ -28,13 +28,15 @@ A_CONST = "DIST-TX-DENTON-CONSTABLE"
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
 if registry.get("engine_version") != "0.6.0":
     raise AssertionError(f"Expected engine 0.6.0 registry contract, got {registry.get('engine_version')}")
-if registry.get("registry_artifact_version") != "0.5.0":
-    raise AssertionError(f"Expected packaged registry 0.5.0, got {registry.get('registry_artifact_version')}")
+if registry.get("registry_artifact_version") != "0.5.1":
+    raise AssertionError(f"Expected packaged registry 0.5.1, got {registry.get('registry_artifact_version')}")
 denton_bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-DENTON"), None)
 if not denton_bundle:
     raise AssertionError("Packaged Denton bundle is missing")
 if denton_bundle.get("release_files") != ["civic_gps_denton_county_v0.1.json"]:
     raise AssertionError(f"Unexpected Denton release files: {denton_bundle.get('release_files')}")
+if denton_bundle.get("action_registry_files") != ["civic_gps_action_registry_denton_v0.1.json"]:
+    raise AssertionError(f"Unexpected Denton action registry files: {denton_bundle.get('action_registry_files')}")
 
 release = json.loads((GPS / "civic_gps_denton_county_v0.1.json").read_text(encoding="utf-8"))
 if len(release.get("payload", {}).get("offices", [])) != 22:
@@ -106,15 +108,24 @@ for case in CASES:
         )
 
     denton_actions = [x for x in payload["action_links"] if x.get("jurisdiction_id") == J_DENTON]
-    if denton_actions:
-        raise AssertionError(f"[{case['id']}] Denton actions are not released yet, got {len(denton_actions)}")
+    action_ids = {x["action_id"] for x in denton_actions}
+    expected_district_actions = {
+        f"ACT-DENTON-CONTACT-COMMISSIONER-P{case['expected'][A_COMM]}",
+        f"ACT-DENTON-CONTACT-JP-P{case['expected'][A_JP]}",
+        f"ACT-DENTON-CONTACT-CONSTABLE-P{case['expected'][A_CONST]}",
+    }
+    if len(denton_actions) != 14 or not expected_district_actions.issubset(action_ids):
+        raise AssertionError(f"[{case['id']}] expected 14 Denton actions with {sorted(expected_district_actions)}, got {len(denton_actions)} / {sorted(action_ids)}")
+    wrong_precinct_actions = {aid for aid in action_ids if aid.startswith("ACT-DENTON-CONTACT-COMMISSIONER-P") or aid.startswith("ACT-DENTON-CONTACT-JP-P") or aid.startswith("ACT-DENTON-CONTACT-CONSTABLE-P")} - expected_district_actions
+    if wrong_precinct_actions:
+        raise AssertionError(f"[{case['id']}] leaked non-applicable precinct actions: {sorted(wrong_precinct_actions)}")
 
-    action_gap = [
+    action_coverage = [
         row for row in payload["coverage"]
-        if row.get("layer") == "denton_action_endpoints" and row.get("status") == "NOT_YET_RELEASED"
+        if row.get("layer") == "denton_action_endpoints" and row.get("status") == "RELEASE_BACKED"
     ]
-    if not action_gap:
-        raise AssertionError(f"[{case['id']}] missing explicit Denton action-routing coverage gap")
+    if not action_coverage:
+        raise AssertionError(f"[{case['id']}] missing RELEASE_BACKED Denton action coverage")
 
     summaries.append({
         "case": case["id"],
@@ -122,7 +133,7 @@ for case in CASES:
         "status": "PASS",
         "assignments": assignments,
         "applicable_offices": len(applicable),
-        "denton_actions": 0,
+        "denton_actions": len(denton_actions),
         "district_representatives": representatives,
     })
 

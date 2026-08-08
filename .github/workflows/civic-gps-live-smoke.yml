@@ -11,6 +11,7 @@ on:
       - 'tests/civic_gps_denton_live_probe.py'
       - 'tests/civic_gps_denton_negative_probe.py'
       - 'tests/civic_gps_denton_boundary_probe.py'
+      - 'tests/civic_gps_denton_action_probe.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
       - 'docs/workflows/civic-gps-live-smoke.md'
@@ -24,6 +25,7 @@ on:
       - 'tests/civic_gps_denton_live_probe.py'
       - 'tests/civic_gps_denton_negative_probe.py'
       - 'tests/civic_gps_denton_boundary_probe.py'
+      - 'tests/civic_gps_denton_action_probe.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
       - 'docs/workflows/civic-gps-live-smoke.md'
@@ -60,11 +62,11 @@ jobs:
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
-          echo '66f876c59809849b36ab837e942ac2465e2c32936cf44f1cbe8aa65795ee04c7  civic_gps_runtime.zip' | sha256sum --check --strict
+          echo 'ea4e10ac250582f01e0a5eabb74837cd987325dfafb30c4111121c4e7c950c9b  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
       - name: Compile engine and smoke tests
-        run: python -m py_compile civic_gps/engine.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py
+        run: python -m py_compile civic_gps/engine.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py
 
       - name: Run baseline real-network Civic GPS controls
         run: python tests/civic_gps_live_smoke.py
@@ -77,6 +79,9 @@ jobs:
 
       - name: Run packaged Denton boundary fail-closed controls
         run: python tests/civic_gps_denton_boundary_probe.py
+
+      - name: Run Denton action selection contract
+        run: python tests/civic_gps_denton_action_probe.py
 
       - name: Upload live responses
         if: always()
