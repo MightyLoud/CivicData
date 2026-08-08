@@ -116,7 +116,7 @@ resolver = engine_mod.CivicGPSOverlayEngine.from_file(probe_registry, timeout_se
 
 CASES = [
     {"id": "denton-frisco-p2", "address": "5533 FM 423, Frisco, TX 75036", "expected": {"DIST-TX-DENTON-COMMISSIONER": "2", "DIST-TX-DENTON-JP": "2", "DIST-TX-DENTON-CONSTABLE": "2"}},
-    {"id": "denton-lewisville-p3", "address": "400 N Valley Parkway, Lewisville, TX 75067", "expected": {"DIST-TX-DENTON-COMMISSIONER": "3", "DIST-TX-DENTON-JP": "3", "DIST-TX-DENTON-CONSTABLE": "3"}},
+    {"id": "denton-flower-mound-p4", "address": "6200 Canyon Falls Drive, Flower Mound, TX 76226", "expected": {"DIST-TX-DENTON-COMMISSIONER": "4", "DIST-TX-DENTON-JP": "4", "DIST-TX-DENTON-CONSTABLE": "4"}},
 ]
 
 summaries = []
