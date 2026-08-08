@@ -14,6 +14,7 @@ on:
       - 'tests/civic_gps_denton_action_probe.py'
       - 'tests/civic_gps_collin_live_probe.py'
       - 'tests/civic_gps_travis_live_probe.py'
+      - 'tests/civic_gps_williamson_cg05_probe.py'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
@@ -23,6 +24,7 @@ on:
     branches:
       - main
       - 'agent/civic-gps-live-smoke'
+      - 'agent/civic-gps-williamson-onboarding'
     paths:
       - 'civic_gps_runtime_parts/**'
       - 'tests/civic_gps_live_smoke.py'
@@ -32,6 +34,7 @@ on:
       - 'tests/civic_gps_denton_action_probe.py'
       - 'tests/civic_gps_collin_live_probe.py'
       - 'tests/civic_gps_travis_live_probe.py'
+      - 'tests/civic_gps_williamson_cg05_probe.py'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
@@ -74,7 +77,7 @@ jobs:
           unzip -q civic_gps_runtime.zip
 
       - name: Compile engine and smoke tests
-        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py
+        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_cg05_probe.py
 
       - name: Run baseline real-network Civic GPS controls
         run: python tests/civic_gps_live_smoke.py
@@ -96,6 +99,9 @@ jobs:
 
       - name: Run packaged Travis County archetype controls
         run: python tests/civic_gps_travis_live_probe.py
+
+      - name: Run Williamson County CG-05 onboarding proof
+        run: python tests/civic_gps_williamson_cg05_probe.py
 
       - name: Upload live responses
         if: always()
