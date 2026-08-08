@@ -14,12 +14,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`ea4e10ac250582f01e0a5eabb74837cd987325dfafb30c4111121c4e7c950c9b`
+`c8b16090b044463379a9ca179ca1196af20c82d47f7d25c84056e4b2bcb9ab39`
 
 Current engine/contract set:
 
-- Overlay Engine: `v0.6.0`
-- Adapter registry artifact: `v0.5.1`
+- Overlay Engine: `v0.6.1`
+- Adapter registry artifact: `v0.5.2`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 
@@ -83,6 +83,44 @@ Current engine/contract set:
 
 Denton action routing v0.1 is release-backed with 27 verified routes: five Commissioners Court participation/records routes, six countywide elected-office contacts, four Commissioner contacts, six Justice of the Peace court contacts, and six Constable contacts. A normal resolved Denton address returns 14 Denton action links: 11 countywide/body routes plus exactly three precinct-specific routes. Exact boundary conflicts suppress only the ambiguous precinct-specific route or routes while preserving all unambiguous Denton actions.
 
+## Collin County reusable-archetype controls
+
+11. **Collin / Frisco** — `6101 Frisco Square Boulevard, Frisco, TX 75034`
+    - Commissioner Precinct 1
+    - Justice of the Peace Precinct 4
+    - Constable Precinct 4
+    - 9 applicable Collin offices
+
+12. **Collin / Plano** — `1520 K Avenue, Plano, TX 75074`
+    - Commissioner Precinct 2
+    - Justice of the Peace Precinct 3
+    - Constable Precinct 3
+    - 9 applicable Collin offices
+
+13. **Collin / McKinney** — `2300 Bloomdale Road, McKinney, TX 75071`
+    - Commissioner Precinct 3
+    - Justice of the Peace Precinct 1
+    - Constable Precinct 1
+    - 9 applicable Collin offices
+
+14. **Dallas outside-Collin negative** — `1500 Marilla Street, Dallas, TX 75201`
+    - Collin must not activate
+    - 0 Collin assignments, applicable offices, or actions
+
+15. **Collin Commissioner boundary**
+    - Exact current official shared boundary must return Commissioner `CONFLICT` and no Commissioner assignment.
+    - Collin BASE plus the unambiguous JP/Constable assignments must survive.
+    - Points on opposite sides must resolve to distinct Commissioner precincts.
+
+16. **Collin JP / Constable shared boundary**
+    - Exact current official shared boundary must return both JP and Constable `CONFLICT` with neither assignment guessed.
+    - Collin BASE plus the unambiguous Commissioner assignment must survive.
+    - Points on opposite sides must resolve to distinct JP/Constable precincts.
+
+Collin is the first production county generated with `TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1`: a parameterized build helper that emits the existing Civic GPS BASE registry/release contract rather than a parallel resolver. The release contains 18 offices: six countywide plus four each for Commissioner, Justice of the Peace, and Constable. Collin civic-action routing is explicitly `NOT_YET_RELEASED` in this batch.
+
+Overlay Engine v0.6.1 keeps the resolver logic unchanged and adds an explicit default `CivicGPS` HTTP User-Agent. This is a generic interoperability hardening discovered during Collin proof: Collin's public ArcGIS service rejected the anonymous/default `python-requests` identity but passed the unchanged control matrix when the client identified itself.
+
 ## Triggers
 
 The gate runs:
@@ -113,4 +151,4 @@ For upstream drift, capture the live artifact, verify the authoritative source, 
 
 The first successful five-control networked baseline was GitHub Actions run `31224765817` on August 7, 2026.
 
-Denton geography/office applicability was promoted through PR #5 and post-merge main run `31240231410`. Denton action routing v0.1 advances the packaged registry to v0.5.1; promotion requires the full baseline + Denton interior/negative/boundary matrix to pass against the new packaged runtime, including action-count and boundary-action filtering assertions.
+Denton geography/office applicability was promoted through PR #5 and post-merge main run `31240231410`. Denton action routing v0.1 was promoted through PR #6 and post-merge main run `31241061355`. Collin County then proved the reusable Texas county precinct archetype on isolated run `31241712240` before packaging. Registry v0.5.2 / engine v0.6.1 promotion requires the full baseline + Denton + Collin interior/negative/boundary matrix to pass against the exact packaged runtime.
