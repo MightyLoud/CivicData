@@ -1,0 +1,57 @@
+name: Civic GPS Tarrant CG-09 runtime packager
+
+on:
+  push:
+    branches:
+      - agent/civic-gps-tarrant-cg09
+    paths:
+      - tools/package_tarrant_runtime.py
+      - .github/workflows/civic-gps-tarrant-cg09-packager.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package Tarrant County runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out CG-09 branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/civic-gps-tarrant-cg09
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build deterministic Tarrant runtime
+        run: python tools/package_tarrant_runtime.py
+
+      - name: Verify package summary
+        run: cat artifacts/civic-gps-tarrant-package/package-summary.json
+
+      - name: Commit runtime chunks only
+        shell: bash
+        run: |
+          git config user.name 'Creyton Loud'
+          git config user.email 'creytonloud2@gmail.com'
+          git add civic_gps_runtime_parts/part.*
+          if git diff --cached --quiet; then
+            echo 'No runtime chunk changes to commit.'
+          else
+            git commit -m 'Package Tarrant County runtime [skip ci]'
+            git push origin HEAD:agent/civic-gps-tarrant-cg09
+          fi
+
+      - name: Upload package evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-tarrant-package-${{ github.run_id }}
+          path: artifacts/civic-gps-tarrant-package/
+          if-no-files-found: error
+          retention-days: 30
