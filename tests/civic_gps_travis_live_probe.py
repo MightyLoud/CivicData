@@ -34,9 +34,9 @@ GIS_COMM = f"{GIS_BASE}/0"
 GIS_JPC = f"{GIS_BASE}/2"
 
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.1" or registry.get("registry_artifact_version") != "0.5.3":
+if registry.get("engine_version") != "0.6.1" or registry.get("registry_artifact_version") != "0.5.4":
     raise AssertionError(
-        f"Travis release proof requires engine 0.6.1 / registry 0.5.3, got "
+        f"Travis release proof requires engine 0.6.1 / registry 0.5.4, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-TRAVIS"), None)
@@ -196,7 +196,7 @@ for side in (jp_a,jp_b):
     assigns={x["adapter_id"]:str(x["district_key"]) for x in side["payload"]["district_assignments"] if x.get("jurisdiction_id")==J}
     if set(assigns)!={A_COMM,A_JP,A_CONST}: raise AssertionError(f"JP/Constable boundary side did not fully resolve: {assigns}")
 
-summary={"status":"PASS","archetype":"TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1","engine_version":"0.6.1","base_registry_version":"0.5.3","engine_change_required":False,"consumer_schema_change_required":False,"release_offices":20,"countywide_offices":6,"district_families":3,"interior_controls":summaries,"outside_negative":"PASS","boundaries":{"commissioner":{"status":"PASS","exact_keys":comm_boundary["mid_keys"],"side_a_key":comm_boundary["side_a_key"],"side_b_key":comm_boundary["side_b_key"],"applicable_offices_exact":8},"jp_constable":{"status":"PASS","exact_keys":jp_boundary["mid_keys"],"side_a_key":jp_boundary["side_a_key"],"side_b_key":jp_boundary["side_b_key"],"applicable_offices_exact":7}},"known_gaps":{"countywide_scope":"BOUNDED_V0_1_SCOPE","actions":"NOT_YET_RELEASED"}}
+summary={"status":"PASS","archetype":"TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1","engine_version":"0.6.1","base_registry_version":"0.5.4","engine_change_required":False,"consumer_schema_change_required":False,"release_offices":20,"countywide_offices":6,"district_families":3,"interior_controls":summaries,"outside_negative":"PASS","boundaries":{"commissioner":{"status":"PASS","exact_keys":comm_boundary["mid_keys"],"side_a_key":comm_boundary["side_a_key"],"side_b_key":comm_boundary["side_b_key"],"applicable_offices_exact":8},"jp_constable":{"status":"PASS","exact_keys":jp_boundary["mid_keys"],"side_a_key":jp_boundary["side_a_key"],"side_b_key":jp_boundary["side_b_key"],"applicable_offices_exact":7}},"known_gaps":{"countywide_scope":"BOUNDED_V0_1_SCOPE","actions":"NOT_YET_RELEASED"}}
 (OUTPUT/"summary.json").write_text(json.dumps(summary,sort_keys=True,indent=2)+"\n",encoding="utf-8")
 print(json.dumps(summary,sort_keys=True,indent=2))
 print("PASS: Packaged Travis County reusable archetype proof")

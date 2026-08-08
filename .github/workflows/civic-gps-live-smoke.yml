@@ -14,6 +14,7 @@ on:
       - 'tests/civic_gps_denton_action_probe.py'
       - 'tests/civic_gps_collin_live_probe.py'
       - 'tests/civic_gps_travis_live_probe.py'
+      - 'tests/civic_gps_williamson_live_probe.py'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
@@ -32,6 +33,7 @@ on:
       - 'tests/civic_gps_denton_action_probe.py'
       - 'tests/civic_gps_collin_live_probe.py'
       - 'tests/civic_gps_travis_live_probe.py'
+      - 'tests/civic_gps_williamson_live_probe.py'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
@@ -70,11 +72,11 @@ jobs:
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
-          echo 'a47205629202d0ee09304b07155262018963f9b815433e1ba9cf7e0e4abe8a4a  civic_gps_runtime.zip' | sha256sum --check --strict
+          echo '52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
       - name: Compile engine and smoke tests
-        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py
+        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py
 
       - name: Run baseline real-network Civic GPS controls
         run: python tests/civic_gps_live_smoke.py
@@ -97,11 +99,17 @@ jobs:
       - name: Run packaged Travis County archetype controls
         run: python tests/civic_gps_travis_live_probe.py
 
+      - name: Run packaged Williamson County archetype controls
+        run: python tests/civic_gps_williamson_live_probe.py
+
       - name: Upload live responses
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: civic-gps-live-smoke-${{ github.run_id }}
-          path: artifacts/civic-gps-live-smoke/
+          path: |
+            artifacts/civic-gps-live-smoke/
+            artifacts/civic-gps-travis-archetype/
+            artifacts/civic-gps-williamson-cg09/
           if-no-files-found: warn
           retention-days: 30
