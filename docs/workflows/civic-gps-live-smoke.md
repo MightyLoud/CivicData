@@ -4,7 +4,7 @@
 
 The Civic GPS live-smoke workflow is the formal networked release and source-drift gate for the packaged Civic GPS resolver.
 
-A Civic GPS runtime/configuration change is not release-ready until the workflow passes against the maintained real-address controls. The same workflow runs on a weekly schedule so upstream geography/API drift is detected after release as well as before it.
+A Civic GPS runtime/configuration change is not release-ready until the workflow passes against the maintained real-address and boundary controls. The same workflow runs on a weekly schedule so upstream geography/API drift is detected after release as well as before it.
 
 ## Gate contract
 
@@ -14,16 +14,16 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`fef242729e6e2efeb0a92c9f81bd19c31a3533ac2b3d44d4e5024ba392ee487b`
+`66f876c59809849b36ab837e942ac2465e2c32936cf44f1cbe8aa65795ee04c7`
 
 Current engine/contract set:
 
 - Overlay Engine: `v0.6.0`
-- Adapter registry artifact: `v0.4.1`
+- Adapter registry artifact: `v0.5.0`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 
-## Live controls
+## Baseline live controls
 
 1. **Tacoma/Pierce** — `747 Market Street, Tacoma, WA 98402`
    - Tacoma Council District 2
@@ -51,6 +51,36 @@ Current engine/contract set:
    - 0 D11 applicable offices
    - 0 D11 actions
 
+## Denton County packaged controls
+
+6. **Denton / Frisco** — `5533 FM 423, Frisco, TX 75036`
+   - Commissioner Precinct 2
+   - Justice of the Peace Precinct 2
+   - Constable Precinct 2
+   - 9 applicable Denton offices
+
+7. **Denton / Flower Mound** — `6200 Canyon Falls Drive, Flower Mound, TX 76226`
+   - Commissioner Precinct 4
+   - Justice of the Peace Precinct 4
+   - Constable Precinct 4
+   - 9 applicable Denton offices
+
+8. **Dallas outside-Denton negative** — `1500 Marilla Street, Dallas, TX 75201`
+   - Denton must not activate
+   - 0 Denton assignments, applicable offices, or actions
+
+9. **Denton Commissioner boundary**
+   - Exact current official shared boundary must return Commissioner `CONFLICT` and no Commissioner assignment.
+   - Denton BASE plus the unambiguous JP/Constable assignments must survive.
+   - Points on opposite sides must resolve to distinct Commissioner precincts.
+
+10. **Denton JP / Constable shared boundary**
+    - Exact current official shared boundary must return both JP and Constable `CONFLICT` with neither assignment guessed.
+    - Denton BASE plus the unambiguous Commissioner assignment must survive.
+    - Points on opposite sides must resolve to distinct JP/Constable precincts.
+
+Denton action routing is not yet released. The runtime must expose that as `NOT_YET_RELEASED`; zero Denton action links are not interpreted as action-routing completeness.
+
 ## Triggers
 
 The gate runs:
@@ -62,7 +92,7 @@ The gate runs:
 
 ## Evidence
 
-Every run uploads the live Civic GPS responses and summary as a GitHub Actions artifact retained for 30 days. Failed runs still upload whatever evidence was produced before failure.
+Every run uploads the live Civic GPS responses and summaries as a GitHub Actions artifact retained for 30 days. Failed runs still upload whatever evidence was produced before failure.
 
 ## Failure handling
 
@@ -75,8 +105,10 @@ Classify failures as one of:
 - **RUNTIME_INTEGRITY** — packaged runtime SHA or reconstruction failed;
 - **TRANSIENT_UPSTREAM_FAILURE** — temporary network/provider failure, confirmed by a clean rerun without changing assertions.
 
-For upstream drift, capture the live artifact, verify the authoritative source, update canonical release/configuration data deliberately, rerun offline regressions, then require this gate to pass again.
+For upstream drift, capture the live artifact, verify the authoritative source, update canonical release/configuration data deliberately, rerun regressions, then require this gate to pass again.
 
-## Baseline promotion
+## Baselines
 
-The first successful networked baseline was GitHub Actions run `31224765817` on August 7, 2026: all five controls passed using the exact verified runtime bundle.
+The first successful five-control networked baseline was GitHub Actions run `31224765817` on August 7, 2026.
+
+Denton's pre-package promotion proof passed on run `31237951659`: two distinct interior controls, the Dallas outside-county negative, and both exact-boundary fail-closed controls passed while the original five controls remained green. The next required proof is the same Denton matrix executed against the packaged registry v0.5.0 runtime.
