@@ -1,0 +1,159 @@
+{
+  "schema_version": "civic-gps-bastrop-cg04-cg05-proof/0.1.0",
+  "county": "Bastrop County",
+  "county_geoid": "48021",
+  "observed_on": "2026-08-08",
+  "canonical_roster": {
+    "expected_total_offices": 18,
+    "identity_source_rule": "CANONICAL_RELEASE_ONLY",
+    "records": [
+      {
+        "office_id": "office-us-tx-bastrop-county-judge",
+        "title": "County Judge",
+        "holder": "Gregory Klaus",
+        "source_url": "https://www.bastropcounty.gov/page/co.county_judge",
+        "required_fragments": ["County Judge Gregory Klaus"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-sheriff",
+        "title": "Sheriff",
+        "holder": "Maurice Cook",
+        "source_url": "https://www.bastropcounty.gov/page/lec.sheriff",
+        "required_fragments": ["Maurice Cook", "Bastrop County Sheriff"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-clerk",
+        "title": "County Clerk",
+        "holder": "Krista Bartsch",
+        "source_url": "https://www.bastropcounty.gov/page/co.county_clerk",
+        "required_fragments": ["Krista Bartsch County Clerk"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-district-clerk",
+        "title": "District Clerk",
+        "holder": "Sarah Loucks",
+        "source_url": "https://www.bastropcounty.gov/page/dc.clerk",
+        "required_fragments": ["District Clerk Sarah Loucks"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-tax-assessor-collector",
+        "title": "Tax Assessor-Collector",
+        "holder": "Ellen Owens",
+        "source_url": "https://www.bastropcounty.gov/page/co.tax_assessor",
+        "required_fragments": ["Tax Assessor/Collector Ellen Owens"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-treasurer",
+        "title": "County Treasurer",
+        "holder": "Brittney Ross",
+        "source_url": "https://www.bastropcounty.gov/page/tr.treasurer",
+        "required_fragments": ["County Treasurer Brittney Ross"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-commissioner-1",
+        "title": "Commissioner Precinct 1",
+        "holder": "Butch Carmack",
+        "source_url": "https://www.bastropcounty.gov/page/com.pct_1",
+        "required_fragments": ["Commissioner Precinct 1 Butch Carmack"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-commissioner-2",
+        "title": "Commissioner Precinct 2",
+        "holder": "Clara Beckett",
+        "source_url": "https://www.bastropcounty.gov/page/com.pct_2",
+        "required_fragments": ["Commissioner Precinct 2 Clara Beckett"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-commissioner-3",
+        "title": "Commissioner Precinct 3",
+        "holder": "Mark Meuth",
+        "source_url": "https://www.bastropcounty.gov/page/com.pct_3",
+        "required_fragments": ["Commissioner Precinct 3 Mark Meuth"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-commissioner-4",
+        "title": "Commissioner Precinct 4",
+        "holder": "David Glass",
+        "source_url": "https://www.bastropcounty.gov/page/com.pct_4",
+        "required_fragments": ["Commissioner Precinct 4 David Glass"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-jp-1",
+        "title": "Justice of the Peace Precinct 1",
+        "holder": "Cindy Allen",
+        "source_url": "https://www.bastropcounty.gov/page/co.justice_peace",
+        "required_fragments": ["Judge Cindy Allen", "Justice of the Peace, Precinct 1"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-jp-2",
+        "title": "Justice of the Peace Precinct 2",
+        "holder": "Zachary Carter",
+        "source_url": "https://www.bastropcounty.gov/page/co.justice_peace",
+        "required_fragments": ["Judge Zachary Carter", "Justice of the Peace, Precinct 2"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-jp-3",
+        "title": "Justice of the Peace Precinct 3",
+        "holder": "Krystal Stabeno",
+        "source_url": "https://www.bastropcounty.gov/page/co.justice_peace",
+        "required_fragments": ["Judge Krystal Stabeno", "Justice of the Peace, Precinct 3"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-jp-4",
+        "title": "Justice of the Peace Precinct 4",
+        "holder": "Larry Dunne",
+        "source_url": "https://www.bastropcounty.gov/page/co.justice_peace",
+        "required_fragments": ["Judge Larry Dunne", "Justice of the Peace, Precinct 4"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-constable-1",
+        "title": "Constable Precinct 1",
+        "holder": "Wayne Wood",
+        "source_url": "https://www.bastropcounty.gov/page/co.constables",
+        "required_fragments": ["Wayne Wood", "Precinct 1 Constable"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-constable-2",
+        "title": "Constable Precinct 2",
+        "holder": "James Scoggins",
+        "source_url": "https://www.bastropcounty.gov/page/co.constables",
+        "required_fragments": ["James Scoggins", "Precinct 2 Constable"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-constable-3",
+        "title": "Constable Precinct 3",
+        "holder": "Tim Sparkman",
+        "source_url": "https://www.bastropcounty.gov/page/co.constables",
+        "required_fragments": ["Tim Sparkman", "Precinct 3 Constable"]
+      },
+      {
+        "office_id": "office-us-tx-bastrop-county-constable-4",
+        "title": "Constable Precinct 4",
+        "holder": "Joey Dzienowski",
+        "source_url": "https://www.bastropcounty.gov/page/co.constables",
+        "required_fragments": ["Joey Dzienowski", "Precinct 4 Constable"]
+      }
+    ]
+  },
+  "gis": {
+    "service_url": "https://maps.co.bastrop.tx.us/server/rest/services/Viewers/PublicGISViewerService/MapServer/8",
+    "provenance_url": "https://maps.co.bastrop.tx.us/upload/GIS_Data/Precinct.htm",
+    "official_hosts": ["maps.co.bastrop.tx.us", "www.bastropcounty.gov"],
+    "layer_name": "Precinct",
+    "geometry_type": "esriGeometryPolygon",
+    "district_field": "precinct",
+    "district_field_type": "esriFieldTypeInteger",
+    "district_keys": ["1", "2", "3", "4"],
+    "families": ["commissioner", "justice_of_the_peace", "constable"],
+    "resolver_kind": "ARCGIS_POINT_INTERSECT",
+    "failure_scope": "ADAPTER",
+    "boundary_policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK",
+    "provenance_fragments": [
+      "Bastrop County Commissioner, Constable and Justice of the Peace precinct boundaries",
+      "Feature count 4",
+      "Field precinct",
+      "Data type Integer"
+    ]
+  },
+  "stop_before": "CG-06"
+}
