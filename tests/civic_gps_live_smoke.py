@@ -158,11 +158,10 @@ def main() -> int:
     output_dir = ROOT / args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Temporary non-main probe support: export the exact reconstructed runtime source
-    # into the normal smoke artifact so Denton can be built against the real v0.6.0
-    # engine/registry rather than an inferred copy.
-    shutil.copy2(ENGINE_PATH, output_dir / "engine.py")
-    shutil.copy2(REGISTRY_PATH, output_dir / "registry.json")
+    # Non-main packaging probe: export the entire exact reconstructed runtime tree.
+    # This lets Denton packaging preserve every shipped file byte-for-byte at the
+    # uncompressed-content level instead of rebuilding existing jurisdictions from inference.
+    shutil.copytree(GPS, output_dir / "runtime_source", dirs_exist_ok=True)
 
     resolver = engine_mod.CivicGPSOverlayEngine.from_file(REGISTRY_PATH, timeout_seconds=30.0)
     summaries = []
@@ -171,7 +170,7 @@ def main() -> int:
             print(f"RUN {case['id']}: {case['address']}", flush=True)
             summary = run_case(resolver, case, output_dir)
             summaries.append(summary)
-            print(f"PASS {case['id']}: {json.dumps(summary, sort_keys=True)}", flush=True)
+            print(f"PASS {case_id if False else case['id']}: {json.dumps(summary, sort_keys=True)}", flush=True)
     except Exception as exc:
         summary_path = output_dir / "summary.json"
         summary_path.write_text(
