@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -156,6 +157,12 @@ def main() -> int:
     args = parser.parse_args()
     output_dir = ROOT / args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Temporary non-main probe support: export the exact reconstructed runtime source
+    # into the normal smoke artifact so Denton can be built against the real v0.6.0
+    # engine/registry rather than an inferred copy.
+    shutil.copy2(ENGINE_PATH, output_dir / "engine.py")
+    shutil.copy2(REGISTRY_PATH, output_dir / "registry.json")
 
     resolver = engine_mod.CivicGPSOverlayEngine.from_file(REGISTRY_PATH, timeout_seconds=30.0)
     summaries = []
