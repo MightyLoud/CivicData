@@ -1,0 +1,258 @@
+name: Civic GPS Tarrant CG-06
+
+on:
+  push:
+    branches:
+      - agent/civic-gps-tarrant-onboarding
+    paths:
+      - .github/workflows/civic-gps-tarrant-cg06.yml
+      - tests/fixtures/civic_gps_county_onboarding/tarrant_county5_candidate_v0.1.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tarrant-cg06:
+    name: Tarrant interior canonical-join proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out County
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Reconstruct exact released runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+
+      - name: Run unchanged released Civic GPS matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tests/civic_gps_live_smoke.py
+          python tests/civic_gps_denton_live_probe.py
+          python tests/civic_gps_denton_negative_probe.py
+          python tests/civic_gps_denton_boundary_probe.py
+          python tests/civic_gps_denton_action_probe.py
+          python tests/civic_gps_collin_live_probe.py
+          python tests/civic_gps_travis_live_probe.py
+          python tests/civic_gps_williamson_live_probe.py
+
+      - name: Generate Tarrant candidate from frozen onboarding spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf artifacts/civic-gps-tarrant-cg06 artifacts/civic-gps-tarrant-cg06-onboarding
+          mkdir -p artifacts/civic-gps-tarrant-cg06
+          python tools/civic_gps_county_onboarding.py \
+            tests/fixtures/civic_gps_county_onboarding/tarrant_county5_candidate_v0.1.json \
+            --output-dir artifacts/civic-gps-tarrant-cg06-onboarding \
+            --expect SUPPORTED_V0_1
+
+      - name: Run Tarrant CG-06 through unchanged engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import importlib.util
+          import json
+          import shutil
+          import sys
+          from pathlib import Path
+
+          ROOT = Path('.')
+          GPS = ROOT / 'civic_gps'
+          OUT = ROOT / 'artifacts' / 'civic-gps-tarrant-cg06'
+          GENERATED = ROOT / 'artifacts' / 'civic-gps-tarrant-cg06-onboarding'
+          SPEC_PATH = ROOT / 'tests' / 'fixtures' / 'civic_gps_county_onboarding' / 'tarrant_county5_candidate_v0.1.json'
+          REGISTRY_PATH = GPS / 'registry.json'
+          ENGINE_PATH = GPS / 'engine.py'
+          RELEASE_NAME = 'civic_gps_tarrant_county_v0.1.json'
+          RELEASE_PATH = GPS / RELEASE_NAME
+          J = 'jur-us-tx-tarrant-county'
+          A_COMM = 'DIST-TX-TARRANT-COMMISSIONER'
+          A_JP = 'DIST-TX-TARRANT-JP'
+          A_CONST = 'DIST-TX-TARRANT-CONSTABLE'
+          EXPECTED_ADAPTERS = {A_COMM, A_JP, A_CONST}
+
+          spec = json.loads(SPEC_PATH.read_text(encoding='utf-8'))
+          original_registry_bytes = REGISTRY_PATH.read_bytes()
+          original_registry_sha = hashlib.sha256(original_registry_bytes).hexdigest()
+          registry = json.loads(original_registry_bytes)
+          if registry.get('engine_version') != '0.6.1' or registry.get('registry_artifact_version') != '0.5.4':
+              raise AssertionError(f"CG-06 requires released 0.6.1/0.5.4, got {registry.get('engine_version')}/{registry.get('registry_artifact_version')}")
+          if any(b.get('adapter_id') == 'ADAPTER-TX-TARRANT' for b in registry.get('bundles', [])):
+              raise AssertionError('Tarrant must not already be packaged before CG-06')
+
+          release = json.loads((GENERATED / 'canonical-release-preview.json').read_text(encoding='utf-8'))
+          bundle = json.loads((GENERATED / 'base-bundle-plan.json').read_text(encoding='utf-8'))
+          offices = release.get('payload', {}).get('offices', [])
+          holders = release.get('payload', {}).get('officeholders', [])
+          if len(offices) != 26 or len(holders) != 26:
+              raise AssertionError(f'Expected 26 offices/holders, got {len(offices)}/{len(holders)}')
+          if len({row.get('office_id') for row in offices}) != 26:
+              raise AssertionError('Tarrant candidate office IDs are not unique')
+          if {row.get('office_id') for row in offices} != {row.get('office_id') for row in holders}:
+              raise AssertionError('Tarrant officeholder joins do not match office IDs')
+          if any(row.get('failure_scope') != 'ADAPTER' for row in bundle.get('district_adapters', [])):
+              raise AssertionError('Tarrant district adapters must remain ADAPTER-scoped')
+          if any(row.get('officeholder_identity_source') != 'CANONICAL_RELEASE_ONLY' for row in bundle.get('district_adapters', [])):
+              raise AssertionError('Tarrant identity must remain CANONICAL_RELEASE_ONLY')
+          if bundle.get('action_registry_files'):
+              raise AssertionError('Tarrant action routing must remain unreleased')
+
+          RELEASE_PATH.write_text(json.dumps(release, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+          registry.setdefault('bundles', []).append(bundle)
+          REGISTRY_PATH.write_text(json.dumps(registry, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+
+          def load_module(name: str, path: Path):
+              module_spec = importlib.util.spec_from_file_location(name, path)
+              mod = importlib.util.module_from_spec(module_spec)
+              sys.modules[name] = mod
+              assert module_spec.loader is not None
+              module_spec.loader.exec_module(mod)
+              return mod
+
+          engine_mod = load_module('civic_gps_engine_tarrant_cg06', ENGINE_PATH)
+          resolver = engine_mod.CivicGPSOverlayEngine.from_file(REGISTRY_PATH, timeout_seconds=30.0)
+
+          countywide_ids = {row['office_id'] for row in spec['scope']['countywide_offices']}
+          if len(countywide_ids) != 6:
+              raise AssertionError(f'Expected six bounded countywide IDs, got {countywide_ids}')
+
+          CASES = [
+              ('tarrant-jp1', '100 W Weatherford Street, Fort Worth, TX 76196', '4', '1', {
+                  A_COMM: 'Manny Ramirez', A_JP: 'Ralph Swearingin Jr.', A_CONST: 'Dale Clark'}),
+              ('tarrant-jp2', '700 E Abram Street, Arlington, TX 76010', '2', '2', {
+                  A_COMM: 'Alisa Simmons', A_JP: 'Mary Tom Curnutt', A_CONST: 'David Woodruff'}),
+              ('tarrant-jp3', '1400 Main Street, Southlake, TX 76092', '3', '3', {
+                  A_COMM: 'Matt Krause', A_JP: 'William P. Brandt', A_CONST: 'Darrell Huffman'}),
+              ('tarrant-jp4', '6713 Telephone Road, Lake Worth, TX 76135', '4', '4', {
+                  A_COMM: 'Manny Ramirez', A_JP: 'Christopher Gregory', A_CONST: 'Jody Johnson'}),
+              ('tarrant-jp5', '350 W Belknap Street, Fort Worth, TX 76102', '4', '5', {
+                  A_COMM: 'Manny Ramirez', A_JP: 'Sergio L. De Leon', A_CONST: 'Pedro "Pete" Munoz'}),
+              ('tarrant-jp6', '6551 Granbury Road, Fort Worth, TX 76133', '1', '6', {
+                  A_COMM: 'Roderick Miles Jr', A_JP: 'Jason Charbonnet', A_CONST: 'Jon H. Siegel'}),
+              ('tarrant-jp7', '1100 E Broad Street, Mansfield, TX 76063', '2', '7', {
+                  A_COMM: 'Alisa Simmons', A_JP: 'Kenneth Sanders', A_CONST: 'Sandra Lee'}),
+              ('tarrant-jp8', '3500 Miller Avenue, Fort Worth, TX 76119', '1', '8', {
+                  A_COMM: 'Roderick Miles Jr', A_JP: 'Lisa R. Woodard', A_CONST: 'Michael R. Campbell'}),
+          ]
+
+          summaries = []
+          all_comm = set()
+          all_jp = set()
+          for case_id, address, commissioner_key, jp_key, expected_reps in CASES:
+              result = resolver.resolve(address, observed_on=None)
+              (OUT / f'{case_id}.json').write_text(json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+              if 'error' in result:
+                  raise AssertionError(f'[{case_id}] engine error: {result["error"]}')
+              payload = result['payload']
+              if J not in {row.get('jurisdiction_id') for row in payload.get('jurisdictions') or []}:
+                  raise AssertionError(f'[{case_id}] Tarrant jurisdiction did not activate')
+              assignments = {
+                  row['adapter_id']: str(row['district_key'])
+                  for row in payload.get('district_assignments') or []
+                  if row.get('jurisdiction_id') == J
+              }
+              expected_assignments = {A_COMM: commissioner_key, A_JP: jp_key, A_CONST: jp_key}
+              if assignments != expected_assignments:
+                  raise AssertionError(f'[{case_id}] expected assignments {expected_assignments}, got {assignments}')
+              reps = {
+                  row['adapter_id']: row.get('representative')
+                  for row in payload.get('district_assignments') or []
+                  if row.get('jurisdiction_id') == J
+              }
+              if reps != expected_reps:
+                  raise AssertionError(f'[{case_id}] canonical representative mismatch: expected {expected_reps}, got {reps}')
+
+              applicable = [row for row in payload.get('applicable_offices') or [] if row.get('jurisdiction_id') == J]
+              wide = [row for row in applicable if row.get('applicability_scope') == 'JURISDICTION_WIDE']
+              district = [row for row in applicable if row.get('applicability_scope') == 'DISTRICT_MATCH']
+              if (len(applicable), len(wide), len(district)) != (9, 6, 3):
+                  raise AssertionError(f'[{case_id}] expected 9 = 6 wide + 3 district, got {len(applicable)} = {len(wide)} + {len(district)}')
+              wide_ids = {row.get('office_id') for row in wide}
+              if wide_ids != countywide_ids:
+                  raise AssertionError(f'[{case_id}] countywide office set mismatch: {wide_ids}')
+              expected_district_ids = {
+                  f'office-us-tx-tarrant-county-commissioner-{commissioner_key}',
+                  f'office-us-tx-tarrant-county-jp-{jp_key}',
+                  f'office-us-tx-tarrant-county-constable-{jp_key}',
+              }
+              district_ids = {row.get('office_id') for row in district}
+              if district_ids != expected_district_ids:
+                  raise AssertionError(f'[{case_id}] district office set mismatch: expected {expected_district_ids}, got {district_ids}')
+              if any(row.get('jurisdiction_id') == J for row in payload.get('action_links') or []):
+                  raise AssertionError(f'[{case_id}] Tarrant actions must remain unreleased')
+
+              all_comm.add(commissioner_key)
+              all_jp.add(jp_key)
+              summaries.append({
+                  'case': case_id,
+                  'address': address,
+                  'assignments': assignments,
+                  'representatives': reps,
+                  'wide_office_ids': sorted(wide_ids),
+                  'district_office_ids': sorted(district_ids),
+                  'applicable_offices': 9,
+                  'status': 'PASS',
+              })
+
+          if all_comm != {'1', '2', '3', '4'}:
+              raise AssertionError(f'CG-06 controls must cover all Commissioner keys 1-4, got {sorted(all_comm)}')
+          if all_jp != {str(i) for i in range(1, 9)}:
+              raise AssertionError(f'CG-06 controls must cover all JP/Constable keys 1-8, got {sorted(all_jp)}')
+
+          summary = {
+              'status': 'PASS',
+              'gate': 'CG-06',
+              'county': 'Tarrant County, TX',
+              'geoid': '48439',
+              'engine_version': '0.6.1',
+              'released_registry_version': '0.5.4',
+              'released_runtime_sha256': '52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de',
+              'original_registry_sha256': original_registry_sha,
+              'candidate_overlay_only': True,
+              'candidate_packaged': False,
+              'release_offices': 26,
+              'release_holders': 26,
+              'controls': summaries,
+              'commissioner_keys_covered': sorted(all_comm, key=int),
+              'jp_constable_keys_covered': sorted(all_jp, key=int),
+              'normal_applicable_offices': 9,
+              'normal_composition': {'countywide': 6, 'district': 3},
+              'actions': 'NOT_YET_RELEASED',
+              'jp3_control_note': 'Uses official alternate JP3 location 1400 Main Street, Southlake because Census does not geocode 645 Grapevine Highway.',
+              'next_gate': 'CG-07',
+          }
+          (OUT / 'tarrant-cg06-summary.json').write_text(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+          print('TARRANT CG-06 PASS')
+          PY
+
+      - name: Upload CG-06 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-tarrant-cg06-${{ github.run_id }}
+          path: |
+            artifacts/civic-gps-tarrant-cg06/
+            artifacts/civic-gps-tarrant-cg06-onboarding/
+          if-no-files-found: warn
+          retention-days: 30
