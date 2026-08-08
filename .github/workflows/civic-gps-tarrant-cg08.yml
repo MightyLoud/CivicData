@@ -1,0 +1,401 @@
+name: Civic GPS Tarrant CG-08
+
+on:
+  push:
+    branches:
+      - agent/civic-gps-tarrant-onboarding
+    paths:
+      - .github/workflows/civic-gps-tarrant-cg08.yml
+      - tests/fixtures/civic_gps_county_onboarding/tarrant_county5_candidate_v0.1.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tarrant-cg08:
+    name: Tarrant exact-boundary fail-closed proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out County
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Reconstruct exact released runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+
+      - name: Run unchanged released Civic GPS matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tests/civic_gps_live_smoke.py
+          python tests/civic_gps_denton_live_probe.py
+          python tests/civic_gps_denton_negative_probe.py
+          python tests/civic_gps_denton_boundary_probe.py
+          python tests/civic_gps_denton_action_probe.py
+          python tests/civic_gps_collin_live_probe.py
+          python tests/civic_gps_travis_live_probe.py
+          python tests/civic_gps_williamson_live_probe.py
+
+      - name: Generate Tarrant candidate from frozen onboarding spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf artifacts/civic-gps-tarrant-cg08 artifacts/civic-gps-tarrant-cg08-onboarding
+          mkdir -p artifacts/civic-gps-tarrant-cg08
+          python tools/civic_gps_county_onboarding.py \
+            tests/fixtures/civic_gps_county_onboarding/tarrant_county5_candidate_v0.1.json \
+            --output-dir artifacts/civic-gps-tarrant-cg08-onboarding \
+            --expect SUPPORTED_V0_1
+
+      - name: Run Tarrant CG-08 exact-boundary controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import importlib.util
+          import json
+          import math
+          import sys
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          import requests
+
+          ROOT = Path('.')
+          GPS = ROOT / 'civic_gps'
+          OUT = ROOT / 'artifacts' / 'civic-gps-tarrant-cg08'
+          GENERATED = ROOT / 'artifacts' / 'civic-gps-tarrant-cg08-onboarding'
+          REGISTRY_PATH = GPS / 'registry.json'
+          ENGINE_PATH = GPS / 'engine.py'
+          RELEASE_NAME = 'civic_gps_tarrant_county_v0.1.json'
+          RELEASE_PATH = GPS / RELEASE_NAME
+
+          J = 'jur-us-tx-tarrant-county'
+          A_COMM = 'DIST-TX-TARRANT-COMMISSIONER'
+          A_JP = 'DIST-TX-TARRANT-JP'
+          A_CONST = 'DIST-TX-TARRANT-CONSTABLE'
+          COMM_SERVICE = 'https://mapit.tarrantcounty.com/arcgis/rest/services/BondProject/BondProjects/MapServer/3'
+          JPC_SERVICE = 'https://mapit.tarrantcounty.com/arcgis/rest/services/Dynamic/JusticeOfThePeace/MapServer/0'
+          POLICY = 'MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK'
+
+          release = json.loads((GENERATED / 'canonical-release-preview.json').read_text(encoding='utf-8'))
+          bundle = json.loads((GENERATED / 'base-bundle-plan.json').read_text(encoding='utf-8'))
+          if len(release.get('payload', {}).get('offices', [])) != 26 or len(release.get('payload', {}).get('officeholders', [])) != 26:
+              raise AssertionError('Tarrant CG-08 requires 26 offices / 26 holders')
+          adapters = {row['adapter_id']: row for row in bundle.get('district_adapters', [])}
+          for adapter_id in (A_COMM, A_JP, A_CONST):
+              adapter = adapters.get(adapter_id)
+              if not adapter:
+                  raise AssertionError(f'Missing Tarrant adapter {adapter_id}')
+              if adapter.get('failure_scope') != 'ADAPTER':
+                  raise AssertionError(f'{adapter_id} must remain ADAPTER-scoped')
+              if adapter.get('boundary_policy') != POLICY:
+                  raise AssertionError(f'{adapter_id} boundary policy mismatch: {adapter.get("boundary_policy")}')
+              if adapter.get('officeholder_identity_source') != 'CANONICAL_RELEASE_ONLY':
+                  raise AssertionError(f'{adapter_id} identity source changed')
+          if bundle.get('action_registry_files'):
+              raise AssertionError('Tarrant actions must remain unreleased')
+
+          registry = json.loads(REGISTRY_PATH.read_text(encoding='utf-8'))
+          if registry.get('engine_version') != '0.6.1' or registry.get('registry_artifact_version') != '0.5.4':
+              raise AssertionError('CG-08 requires released engine 0.6.1 / registry 0.5.4')
+          if any(row.get('adapter_id') == 'ADAPTER-TX-TARRANT' for row in registry.get('bundles', [])):
+              raise AssertionError('Tarrant must remain unpackaged before CG-08')
+
+          RELEASE_PATH.write_text(json.dumps(release, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+          registry.setdefault('bundles', []).append(bundle)
+          REGISTRY_PATH.write_text(json.dumps(registry, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+
+          module_spec = importlib.util.spec_from_file_location('civic_gps_engine_tarrant_cg08', ENGINE_PATH)
+          engine_mod = importlib.util.module_from_spec(module_spec)
+          sys.modules[module_spec.name] = engine_mod
+          assert module_spec.loader is not None
+          module_spec.loader.exec_module(engine_mod)
+          resolver = engine_mod.CivicGPSOverlayEngine.from_file(REGISTRY_PATH, timeout_seconds=30.0)
+
+          SESSION = requests.Session()
+          SESSION.headers.update({'User-Agent': 'CivicData-CivicGPS/0.1 (+https://github.com/MightyLoud/CivicData)'})
+
+          def get_json(url: str, params: dict) -> dict:
+              response = SESSION.get(url, params=params, timeout=30)
+              response.raise_for_status()
+              body = response.json()
+              if body.get('error'):
+                  raise AssertionError(f'ArcGIS error from {url}: {body["error"]}')
+              return body
+
+          def norm_key(raw) -> str:
+              if isinstance(raw, float) and raw.is_integer():
+                  return str(int(raw))
+              return str(raw).strip()
+
+          def all_features(service: str, field: str) -> list[dict]:
+              body = get_json(service.rstrip('/') + '/query', {
+                  'where': '1=1', 'outFields': field, 'returnGeometry': 'true', 'outSR': '4326', 'f': 'json'
+              })
+              features = body.get('features') or []
+              if len(features) < 2:
+                  raise AssertionError(f'Expected multiple polygons from {service}; got {len(features)}')
+              return features
+
+          def point_keys(service: str, field: str, lon: float, lat: float) -> list[str]:
+              body = get_json(service.rstrip('/') + '/query', {
+                  'where': '1=1',
+                  'geometry': f'{lon:.12f},{lat:.12f}',
+                  'geometryType': 'esriGeometryPoint',
+                  'inSR': '4326',
+                  'spatialRel': 'esriSpatialRelIntersects',
+                  'outFields': field,
+                  'returnGeometry': 'false',
+                  'f': 'json',
+              })
+              values = []
+              for feature in body.get('features') or []:
+                  raw = (feature.get('attributes') or {}).get(field)
+                  if raw not in (None, ''):
+                      values.append(norm_key(raw))
+              return sorted(set(values), key=int)
+
+          def rounded_point(point) -> tuple[float, float]:
+              return (round(float(point[0]), 8), round(float(point[1]), 8))
+
+          def segment_index(features: list[dict], field: str) -> dict:
+              index = {}
+              for feature in features:
+                  district = norm_key((feature.get('attributes') or {}).get(field))
+                  for ring in (feature.get('geometry') or {}).get('rings') or []:
+                      for a_raw, b_raw in zip(ring, ring[1:]):
+                          a = (float(a_raw[0]), float(a_raw[1]))
+                          b = (float(b_raw[0]), float(b_raw[1]))
+                          ka, kb = rounded_point(a), rounded_point(b)
+                          if ka == kb:
+                              continue
+                          key = tuple(sorted((ka, kb)))
+                          index.setdefault(key, []).append((district, a, b))
+              return index
+
+          def find_isolated_boundary(primary_service: str, primary_field: str, other_service: str, other_field: str) -> dict:
+              candidates = []
+              for rows in segment_index(all_features(primary_service, primary_field), primary_field).values():
+                  districts = sorted({row[0] for row in rows}, key=int)
+                  if len(districts) < 2:
+                      continue
+                  a, b = rows[0][1], rows[0][2]
+                  candidates.append((math.hypot(b[0] - a[0], b[1] - a[1]), districts, a, b))
+              candidates.sort(reverse=True, key=lambda row: row[0])
+              if not candidates:
+                  raise AssertionError(f'No shared polygon segment found in {primary_service}')
+
+              for _, shared_districts, a, b in candidates:
+                  mid = ((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0)
+                  primary_mid = point_keys(primary_service, primary_field, *mid)
+                  other_mid = point_keys(other_service, other_field, *mid)
+                  if len(primary_mid) < 2 or len(other_mid) != 1:
+                      continue
+                  dx, dy = b[0] - a[0], b[1] - a[1]
+                  norm = math.hypot(dx, dy)
+                  if norm == 0:
+                      continue
+                  nx, ny = -dy / norm, dx / norm
+                  for eps in (2e-7, 5e-7, 1e-6, 2e-6, 5e-6, 1e-5, 2e-5, 5e-5):
+                      side_a = (mid[0] + nx * eps, mid[1] + ny * eps)
+                      side_b = (mid[0] - nx * eps, mid[1] - ny * eps)
+                      pa = point_keys(primary_service, primary_field, *side_a)
+                      pb = point_keys(primary_service, primary_field, *side_b)
+                      oa = point_keys(other_service, other_field, *side_a)
+                      ob = point_keys(other_service, other_field, *side_b)
+                      if len(pa) == len(pb) == len(oa) == len(ob) == 1 and pa[0] != pb[0] and oa[0] == ob[0] == other_mid[0]:
+                          return {
+                              'midpoint': mid,
+                              'primary_mid_keys': primary_mid,
+                              'other_mid_key': other_mid[0],
+                              'side_a': side_a,
+                              'side_a_primary_key': pa[0],
+                              'side_b': side_b,
+                              'side_b_primary_key': pb[0],
+                              'epsilon_degrees': eps,
+                              'shared_segment_districts': shared_districts,
+                          }
+              raise AssertionError(f'Could not derive isolated two-sided boundary control from {primary_service}')
+
+          observed = datetime.now(timezone.utc).date().isoformat()
+          geo = {
+              'state': {'GEOID': '48', 'STATE': '48', 'NAME': 'Texas'},
+              'county': {'GEOID': '48439', 'NAME': 'Tarrant County'},
+          }
+
+          def resolve_xy(label: str, point: tuple[float, float]) -> dict:
+              lon, lat = point
+              gc = {
+                  'longitude': lon,
+                  'latitude': lat,
+                  'matched_address': None,
+                  'geographies': {},
+                  'request_url': f'derived-from-official-tarrant-arcgis:{label}:{lon:.12f},{lat:.12f}',
+              }
+              part = resolver._resolve_part(bundle, label, gc, geo, observed)
+              if not part.get('active'):
+                  raise AssertionError(f'[{label}] Tarrant BASE did not remain active')
+              return part['payload']
+
+          def assignments(payload: dict) -> dict[str, str]:
+              return {
+                  row['adapter_id']: str(row['district_key'])
+                  for row in payload.get('district_assignments') or []
+                  if row.get('jurisdiction_id') == J
+              }
+
+          def reps(payload: dict) -> dict[str, str | None]:
+              return {
+                  row['adapter_id']: row.get('representative')
+                  for row in payload.get('district_assignments') or []
+                  if row.get('jurisdiction_id') == J
+              }
+
+          def applicable_count(payload: dict) -> int:
+              return len([row for row in payload.get('applicable_offices') or [] if row.get('jurisdiction_id') == J])
+
+          def conflict_layers(payload: dict) -> set[str]:
+              return {
+                  row.get('layer')
+                  for row in payload.get('coverage') or []
+                  if row.get('status') == 'CONFLICT'
+              }
+
+          comm_boundary = find_isolated_boundary(COMM_SERVICE, 'District_N', JPC_SERVICE, 'JP')
+          comm_exact = resolve_xy('tarrant-commissioner-boundary-exact', tuple(comm_boundary['midpoint']))
+          comm_a = resolve_xy('tarrant-commissioner-boundary-side-a', tuple(comm_boundary['side_a']))
+          comm_b = resolve_xy('tarrant-commissioner-boundary-side-b', tuple(comm_boundary['side_b']))
+
+          comm_exact_assign = assignments(comm_exact)
+          if A_COMM in comm_exact_assign:
+              raise AssertionError(f'Commissioner exact boundary silently assigned precinct: {comm_exact_assign}')
+          if set(comm_exact_assign) != {A_JP, A_CONST}:
+              raise AssertionError(f'Commissioner exact boundary should preserve only JP+Constable; got {comm_exact_assign}')
+          if comm_exact_assign[A_JP] != comm_boundary['other_mid_key'] or comm_exact_assign[A_CONST] != comm_boundary['other_mid_key']:
+              raise AssertionError(f'Commissioner boundary changed isolated JP/Constable key: {comm_exact_assign}')
+          if applicable_count(comm_exact) != 8:
+              raise AssertionError(f'Commissioner exact boundary must preserve 8 offices, got {applicable_count(comm_exact)}')
+          if 'tarrant_county_commissioner_precinct' not in conflict_layers(comm_exact):
+              raise AssertionError(f'Commissioner exact boundary did not emit CONFLICT coverage: {conflict_layers(comm_exact)}')
+
+          comm_a_assign, comm_b_assign = assignments(comm_a), assignments(comm_b)
+          for label, payload, got, expected_comm in (
+              ('side_a', comm_a, comm_a_assign, comm_boundary['side_a_primary_key']),
+              ('side_b', comm_b, comm_b_assign, comm_boundary['side_b_primary_key']),
+          ):
+              if got.get(A_COMM) != expected_comm or got.get(A_JP) != comm_boundary['other_mid_key'] or got.get(A_CONST) != comm_boundary['other_mid_key']:
+                  raise AssertionError(f'Commissioner {label} assignments incorrect: {got}')
+              if applicable_count(payload) != 9:
+                  raise AssertionError(f'Commissioner {label} must restore 9 offices')
+          if comm_a_assign[A_COMM] == comm_b_assign[A_COMM]:
+              raise AssertionError('Commissioner side controls did not resolve distinct precincts')
+
+          jpc_boundary = find_isolated_boundary(JPC_SERVICE, 'JP', COMM_SERVICE, 'District_N')
+          jpc_exact = resolve_xy('tarrant-jpc-boundary-exact', tuple(jpc_boundary['midpoint']))
+          jpc_a = resolve_xy('tarrant-jpc-boundary-side-a', tuple(jpc_boundary['side_a']))
+          jpc_b = resolve_xy('tarrant-jpc-boundary-side-b', tuple(jpc_boundary['side_b']))
+
+          jpc_exact_assign = assignments(jpc_exact)
+          if A_JP in jpc_exact_assign or A_CONST in jpc_exact_assign:
+              raise AssertionError(f'JP/Constable exact boundary silently assigned shared precinct: {jpc_exact_assign}')
+          if set(jpc_exact_assign) != {A_COMM}:
+              raise AssertionError(f'JP/Constable exact boundary should preserve only Commissioner; got {jpc_exact_assign}')
+          if jpc_exact_assign[A_COMM] != jpc_boundary['other_mid_key']:
+              raise AssertionError(f'JP/Constable boundary changed isolated Commissioner key: {jpc_exact_assign}')
+          if applicable_count(jpc_exact) != 7:
+              raise AssertionError(f'JP/Constable exact boundary must preserve 7 offices, got {applicable_count(jpc_exact)}')
+          required_conflicts = {'tarrant_county_jp_precinct', 'tarrant_county_constable_precinct'}
+          if not required_conflicts.issubset(conflict_layers(jpc_exact)):
+              raise AssertionError(f'JP/Constable exact boundary did not emit both CONFLICT rows: {conflict_layers(jpc_exact)}')
+
+          jpc_a_assign, jpc_b_assign = assignments(jpc_a), assignments(jpc_b)
+          for label, payload, got, expected_jpc in (
+              ('side_a', jpc_a, jpc_a_assign, jpc_boundary['side_a_primary_key']),
+              ('side_b', jpc_b, jpc_b_assign, jpc_boundary['side_b_primary_key']),
+          ):
+              if got.get(A_COMM) != jpc_boundary['other_mid_key'] or got.get(A_JP) != expected_jpc or got.get(A_CONST) != expected_jpc:
+                  raise AssertionError(f'JP/Constable {label} assignments incorrect: {got}')
+              if applicable_count(payload) != 9:
+                  raise AssertionError(f'JP/Constable {label} must restore 9 offices')
+          if jpc_a_assign[A_JP] == jpc_b_assign[A_JP]:
+              raise AssertionError('JP/Constable side controls did not resolve distinct precincts')
+
+          for name, payload in (
+              ('tarrant-commissioner-boundary-exact', comm_exact),
+              ('tarrant-commissioner-boundary-side-a', comm_a),
+              ('tarrant-commissioner-boundary-side-b', comm_b),
+              ('tarrant-jpc-boundary-exact', jpc_exact),
+              ('tarrant-jpc-boundary-side-a', jpc_a),
+              ('tarrant-jpc-boundary-side-b', jpc_b),
+          ):
+              (OUT / f'{name}.json').write_text(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+
+          summary = {
+              'status': 'PASS',
+              'gate': 'CG-08',
+              'county': 'Tarrant County, TX',
+              'geoid': '48439',
+              'engine_version': '0.6.1',
+              'released_registry_version': '0.5.4',
+              'released_runtime_sha256': '52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de',
+              'candidate_overlay_only': True,
+              'candidate_packaged': False,
+              'policy': POLICY,
+              'commissioner_boundary': {
+                  'midpoint': comm_boundary['midpoint'],
+                  'exact_intersections': comm_boundary['primary_mid_keys'],
+                  'preserved_jp_constable_key': comm_boundary['other_mid_key'],
+                  'exact_assignments': comm_exact_assign,
+                  'exact_representatives': reps(comm_exact),
+                  'exact_applicable_offices': applicable_count(comm_exact),
+                  'side_a_assignments': comm_a_assign,
+                  'side_b_assignments': comm_b_assign,
+                  'epsilon_degrees': comm_boundary['epsilon_degrees'],
+              },
+              'jp_constable_boundary': {
+                  'midpoint': jpc_boundary['midpoint'],
+                  'exact_intersections': jpc_boundary['primary_mid_keys'],
+                  'preserved_commissioner_key': jpc_boundary['other_mid_key'],
+                  'exact_assignments': jpc_exact_assign,
+                  'exact_representatives': reps(jpc_exact),
+                  'exact_applicable_offices': applicable_count(jpc_exact),
+                  'side_a_assignments': jpc_a_assign,
+                  'side_b_assignments': jpc_b_assign,
+                  'epsilon_degrees': jpc_boundary['epsilon_degrees'],
+              },
+              'actions': 'NOT_YET_RELEASED',
+              'next_gate': 'CG-09',
+          }
+          (OUT / 'tarrant-cg08-summary.json').write_text(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+          print('TARRANT CG-08 PASS')
+          PY
+
+      - name: Upload CG-08 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-tarrant-cg08-${{ github.run_id }}
+          path: |
+            artifacts/civic-gps-tarrant-cg08/
+            artifacts/civic-gps-tarrant-cg08-onboarding/
+          if-no-files-found: warn
+          retention-days: 30
