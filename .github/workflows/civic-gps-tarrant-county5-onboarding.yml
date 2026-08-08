@@ -1,0 +1,66 @@
+name: Civic GPS Tarrant County #5 onboarding
+
+on:
+  push:
+    branches:
+      - 'agent/civic-gps-tarrant-onboarding'
+    paths:
+      - '.github/workflows/civic-gps-tarrant-county5-onboarding.yml'
+      - 'tests/fixtures/civic_gps_county_onboarding/tarrant_county5_candidate_v0.1.json'
+      - 'tools/civic_gps_county_onboarding.py'
+      - 'tools/civic_gps_tx_county_archetype.py'
+
+permissions:
+  contents: read
+
+jobs:
+  fit-screen:
+    name: Tarrant County automated CG-01 to CG-03
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out County #5 branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile onboarding tooling
+        run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py
+
+      - name: Run frozen Tarrant spec twice
+        shell: bash
+        run: |
+          rm -rf artifacts/civic-gps-tarrant-county5-a artifacts/civic-gps-tarrant-county5-b
+          python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/tarrant_county5_candidate_v0.1.json --output-dir artifacts/civic-gps-tarrant-county5-a --expect SUPPORTED_V0_1
+          python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/tarrant_county5_candidate_v0.1.json --output-dir artifacts/civic-gps-tarrant-county5-b --expect SUPPORTED_V0_1
+
+      - name: Prove deterministic outputs
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          a=Path('artifacts/civic-gps-tarrant-county5-a')
+          b=Path('artifacts/civic-gps-tarrant-county5-b')
+          def snapshot(root):
+              out={}
+              for p in sorted(root.rglob('*')):
+                  if p.is_file():
+                      out[str(p.relative_to(root))]=hashlib.sha256(p.read_bytes()).hexdigest()
+              return out
+          sa,sb=snapshot(a),snapshot(b)
+          if sa != sb:
+              raise SystemExit(f'non-deterministic outputs: {sa} != {sb}')
+          print(json.dumps({'status':'PASS','files':sa}, sort_keys=True))
+          PY
+
+      - name: Upload County #5 fit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-tarrant-county5-${{ github.run_id }}
+          path: artifacts/civic-gps-tarrant-county5-a/
+          if-no-files-found: error
+          retention-days: 30
