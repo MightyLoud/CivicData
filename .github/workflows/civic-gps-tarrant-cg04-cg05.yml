@@ -1,0 +1,219 @@
+name: Civic GPS Tarrant CG-04 CG-05
+
+on:
+  push:
+    branches:
+      - agent/civic-gps-tarrant-onboarding
+    paths:
+      - tests/fixtures/civic_gps_county_onboarding/tarrant_county5_candidate_v0.1.json
+      - .github/workflows/civic-gps-tarrant-cg04-cg05.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tarrant-cg04-cg05:
+    name: Tarrant canonical roster and live adapter proof
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out County
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run CG-04 roster QA and CG-05 live GIS proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf artifacts/civic-gps-tarrant-cg04-cg05
+          mkdir -p artifacts/civic-gps-tarrant-cg04-cg05
+          python - <<'PY'
+          from __future__ import annotations
+          import html
+          import json
+          import re
+          import time
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          SPEC = Path('tests/fixtures/civic_gps_county_onboarding/tarrant_county5_candidate_v0.1.json')
+          OUT = Path('artifacts/civic-gps-tarrant-cg04-cg05')
+          spec = json.loads(SPEC.read_text(encoding='utf-8'))
+
+          def http_json(url: str, params: dict[str, object], attempts: int = 3) -> dict:
+              qs = urllib.parse.urlencode(params)
+              req = urllib.request.Request(
+                  url + '?' + qs,
+                  headers={'User-Agent': 'CivicData-CivicGPS/0.1 (+https://github.com/MightyLoud/CivicData)'}
+              )
+              last = None
+              for attempt in range(1, attempts + 1):
+                  try:
+                      with urllib.request.urlopen(req, timeout=45) as r:
+                          return json.load(r)
+                  except Exception as exc:
+                      last = exc
+                      if attempt == attempts:
+                          break
+                      time.sleep(attempt * 2)
+              raise RuntimeError(f'TRANSIENT_UPSTREAM_FAILURE url={url} error={last}')
+
+          # CG-04 — deterministic canonical roster structure.
+          roster = []
+          for row in spec['scope']['countywide_offices']:
+              roster.append({'office_id': row['office_id'], 'holder': row['holder'], 'family': 'countywide'})
+          for fam in spec['district_families']:
+              for key in fam['district_keys']:
+                  office_id = fam['office_id_template'].format(district=key)
+                  roster.append({'office_id': office_id, 'holder': fam['holders'][str(key)], 'family': fam['family'], 'district': str(key)})
+
+          office_ids = [r['office_id'] for r in roster]
+          assert len(roster) == spec['scope']['expected_total_offices'] == 26, (len(roster), spec['scope']['expected_total_offices'])
+          assert len(office_ids) == len(set(office_ids)) == 26
+          assert all(r['holder'].strip() for r in roster)
+          assert len([r for r in roster if r['family'] == 'countywide']) == 6
+          assert len([r for r in roster if r['family'] == 'commissioner']) == 4
+          assert len([r for r in roster if r['family'] == 'justice_of_the_peace']) == 8
+          assert len([r for r in roster if r['family'] == 'constable']) == 8
+
+          source_precedence = {
+              'status': 'RESOLVED',
+              'rules': [
+                  {
+                      'subject': 'Constable Precinct 1',
+                      'canonical_holder': 'Dale Clark',
+                      'office_specific_identity': 'H.D. "Dale" Clark III',
+                      'canonical_source': 'https://www.tarrantcountytx.gov/en/constables/constable-1.html',
+                      'superseded_navigation_form': 'Harry D. Clark III',
+                      'rule': 'CURRENT_OFFICE_SPECIFIC_AND_CURRENT_ELECTED_DIRECTORY_OVERRIDE_OLDER_NAVIGATION_LABEL'
+                  },
+                  {
+                      'subject': 'Constable Precinct 6',
+                      'canonical_holder': 'Jon H. Siegel',
+                      'canonical_source': 'https://www.tarrantcountytx.gov/en/constables/constable-6.html',
+                      'superseded_navigation_form': 'Jon H. Segel',
+                      'rule': 'CURRENT_OFFICE_SPECIFIC_AND_CURRENT_ELECTED_DIRECTORY_OVERRIDE_OLDER_NAVIGATION_LABEL'
+                  }
+              ],
+              'unresolved_identity_conflicts': 0
+          }
+
+          # CG-05 — official metadata and exact key-set checks.
+          commissioner_url = 'https://mapit.tarrantcounty.com/arcgis/rest/services/BondProject/BondProjects/MapServer/3'
+          jp_url = 'https://mapit.tarrantcounty.com/arcgis/rest/services/Dynamic/JusticeOfThePeace/MapServer/0'
+
+          comm_meta = http_json(commissioner_url, {'f': 'json'})
+          jp_meta = http_json(jp_url, {'f': 'json'})
+          assert comm_meta['geometryType'] == 'esriGeometryPolygon'
+          assert jp_meta['geometryType'] == 'esriGeometryPolygon'
+          assert 'effective beginning June 3rd 2025' in comm_meta.get('description', '')
+          comm_fields = {f['name']: f['type'] for f in comm_meta['fields']}
+          jp_fields = {f['name']: f['type'] for f in jp_meta['fields']}
+          assert comm_fields['District_N'] == 'esriFieldTypeString'
+          assert jp_fields['JP'] == 'esriFieldTypeString'
+          assert jp_fields['Constable'] == 'esriFieldTypeSmallInteger'
+
+          comm_distinct = http_json(commissioner_url + '/query', {
+              'where': '1=1', 'outFields': 'District_N', 'returnGeometry': 'false',
+              'returnDistinctValues': 'true', 'orderByFields': 'District_N', 'f': 'json'
+          })
+          comm_keys = sorted({str(f['attributes']['District_N']).strip() for f in comm_distinct['features']}, key=int)
+          assert comm_keys == ['1', '2', '3', '4'], comm_keys
+
+          jp_distinct = http_json(jp_url + '/query', {
+              'where': '1=1', 'outFields': 'JP,Constable', 'returnGeometry': 'false',
+              'returnDistinctValues': 'true', 'orderByFields': 'JP', 'f': 'json'
+          })
+          jp_pairs = sorted({(str(f['attributes']['JP']).strip(), str(f['attributes']['Constable']).strip()) for f in jp_distinct['features']}, key=lambda x: int(x[0]))
+          expected_pairs = [(str(i), str(i)) for i in range(1, 9)]
+          assert jp_pairs == expected_pairs, jp_pairs
+
+          def geocode(address: str) -> tuple[float, float, str]:
+              data = http_json('https://geocoding.geo.census.gov/geocoder/locations/onelineaddress', {
+                  'address': address,
+                  'benchmark': 'Public_AR_Current',
+                  'format': 'json'
+              })
+              matches = data.get('result', {}).get('addressMatches', [])
+              if len(matches) != 1:
+                  raise AssertionError(f'expected one Census match for {address!r}; got {len(matches)}')
+              m = matches[0]
+              return float(m['coordinates']['x']), float(m['coordinates']['y']), m['matchedAddress']
+
+          def point_query(url: str, lon: float, lat: float, out_fields: str) -> list[dict]:
+              geom = json.dumps({'x': lon, 'y': lat, 'spatialReference': {'wkid': 4326}}, separators=(',', ':'))
+              data = http_json(url + '/query', {
+                  'where': '1=1',
+                  'geometry': geom,
+                  'geometryType': 'esriGeometryPoint',
+                  'inSR': '4326',
+                  'spatialRel': 'esriSpatialRelIntersects',
+                  'outFields': out_fields,
+                  'returnGeometry': 'false',
+                  'f': 'json'
+              })
+              if 'error' in data:
+                  raise AssertionError(data['error'])
+              return data.get('features', [])
+
+          samples = []
+          for control in spec['controls']['interiors']:
+              lon, lat, matched = geocode(control['address'])
+              comm = point_query(commissioner_url, lon, lat, 'District_N')
+              jp = point_query(jp_url, lon, lat, 'JP,Constable')
+              assert len(comm) == 1, (control['id'], 'commissioner', len(comm))
+              assert len(jp) == 1, (control['id'], 'jp_constable', len(jp))
+              commissioner = str(comm[0]['attributes']['District_N']).strip()
+              jp_key = str(jp[0]['attributes']['JP']).strip()
+              constable_key = str(jp[0]['attributes']['Constable']).strip()
+              assert commissioner in {'1','2','3','4'}
+              assert jp_key in {str(i) for i in range(1,9)}
+              assert jp_key == constable_key
+              samples.append({
+                  'id': control['id'], 'input_address': control['address'], 'matched_address': matched,
+                  'lon': lon, 'lat': lat, 'commissioner': commissioner,
+                  'jp': jp_key, 'constable': constable_key
+              })
+
+          # All eight official JP/subcourthouse addresses should exercise all eight shared JP/Constable keys.
+          observed_jp = sorted({s['jp'] for s in samples}, key=int)
+          assert observed_jp == [str(i) for i in range(1, 9)], observed_jp
+          assert len(samples) == 8
+
+          evidence = {
+              'county': 'Tarrant County',
+              'gates': {'CG-04': 'PASS', 'CG-05': 'PASS'},
+              'canonical_roster': {'count': 26, 'unique_office_ids': 26, 'duplicate_joins': 0, 'rows': roster},
+              'source_precedence': source_precedence,
+              'gis': {
+                  'commissioner': {'service_url': commissioner_url, 'district_field': 'District_N', 'keys': comm_keys, 'failure_scope': 'ADAPTER'},
+                  'justice_of_the_peace': {'service_url': jp_url, 'district_field': 'JP', 'keys': [str(i) for i in range(1,9)], 'failure_scope': 'ADAPTER'},
+                  'constable': {'service_url': jp_url, 'district_field': 'Constable', 'keys': [str(i) for i in range(1,9)], 'failure_scope': 'ADAPTER'},
+                  'identity_policy': 'CANONICAL_RELEASE_ONLY',
+                  'boundary_policy': 'MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK',
+                  'samples': samples
+              },
+              'runtime_changed': False,
+              'packaged': False,
+              'next_gate': 'CG-06'
+          }
+          (OUT / 'tarrant-cg04-cg05-evidence.json').write_text(json.dumps(evidence, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          print(json.dumps({
+              'status': 'PASS', 'CG-04': 'PASS', 'CG-05': 'PASS', 'roster': 26,
+              'commissioner_keys': comm_keys, 'jp_constable_keys': observed_jp,
+              'samples': samples, 'next_gate': 'CG-06'
+          }, sort_keys=True))
+          PY
+
+      - name: Upload CG-04 CG-05 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-tarrant-cg04-cg05-${{ github.run_id }}
+          path: artifacts/civic-gps-tarrant-cg04-cg05/
+          if-no-files-found: error
+          retention-days: 30
