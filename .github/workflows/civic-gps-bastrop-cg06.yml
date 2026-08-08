@@ -1,0 +1,305 @@
+name: Civic GPS Bastrop CG-06
+
+on:
+  push:
+    branches:
+      - agent/civic-gps-bastrop-onboarding
+    paths:
+      - .github/workflows/civic-gps-bastrop-cg06.yml
+      - tests/fixtures/civic_gps_county_onboarding/bastrop_county6_candidate_v0.1.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bastrop-cg06:
+    name: Bastrop interior canonical-join proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: 'Check out County #6 branch'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Reconstruct exact released runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '567c809839a2bcbafff7da432e28bf7e6fa23e5c2dff9639cf11ad4f87759d60  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+
+      - name: Run unchanged released Civic GPS matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tests/civic_gps_live_smoke.py
+          python tests/civic_gps_denton_live_probe.py
+          python tests/civic_gps_denton_negative_probe.py
+          python tests/civic_gps_denton_boundary_probe.py
+          python tests/civic_gps_denton_action_probe.py
+          python tests/civic_gps_collin_live_probe.py
+          python tests/civic_gps_travis_live_probe.py
+          python tests/civic_gps_williamson_live_probe.py
+          python tests/civic_gps_tarrant_live_probe.py
+
+      - name: Generate Bastrop candidate from frozen onboarding spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf artifacts/civic-gps-bastrop-cg06 artifacts/civic-gps-bastrop-cg06-onboarding
+          mkdir -p artifacts/civic-gps-bastrop-cg06
+          python tools/civic_gps_county_onboarding.py \
+            tests/fixtures/civic_gps_county_onboarding/bastrop_county6_candidate_v0.1.json \
+            --output-dir artifacts/civic-gps-bastrop-cg06-onboarding \
+            --expect SUPPORTED_V0_1
+
+      - name: Run Bastrop CG-06 through unchanged engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import importlib.util
+          import json
+          import sys
+          from pathlib import Path
+
+          ROOT = Path('.')
+          GPS = ROOT / 'civic_gps'
+          OUT = ROOT / 'artifacts' / 'civic-gps-bastrop-cg06'
+          GENERATED = ROOT / 'artifacts' / 'civic-gps-bastrop-cg06-onboarding'
+          SPEC_PATH = ROOT / 'tests' / 'fixtures' / 'civic_gps_county_onboarding' / 'bastrop_county6_candidate_v0.1.json'
+          REGISTRY_PATH = GPS / 'registry.json'
+          ENGINE_PATH = GPS / 'engine.py'
+          RELEASE_NAME = 'civic_gps_bastrop_county_v0.1.json'
+          RELEASE_PATH = GPS / RELEASE_NAME
+          J = 'jur-us-tx-bastrop-county'
+          A_COMM = 'DIST-TX-BASTROP-COMMISSIONER'
+          A_JP = 'DIST-TX-BASTROP-JP'
+          A_CONST = 'DIST-TX-BASTROP-CONSTABLE'
+          EXPECTED_ADAPTERS = {A_COMM, A_JP, A_CONST}
+          POLICY = 'MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK'
+
+          spec = json.loads(SPEC_PATH.read_text(encoding='utf-8'))
+          original_registry_bytes = REGISTRY_PATH.read_bytes()
+          original_registry_sha = hashlib.sha256(original_registry_bytes).hexdigest()
+          registry = json.loads(original_registry_bytes)
+          if registry.get('engine_version') != '0.6.1' or registry.get('registry_artifact_version') != '0.5.5':
+              raise AssertionError(
+                  f"CG-06 requires released 0.6.1/0.5.5, got "
+                  f"{registry.get('engine_version')}/{registry.get('registry_artifact_version')}"
+              )
+          if any(bundle.get('adapter_id') == 'ADAPTER-TX-BASTROP' for bundle in registry.get('bundles', [])):
+              raise AssertionError('Bastrop must not already be packaged before CG-06')
+
+          release = json.loads((GENERATED / 'canonical-release-preview.json').read_text(encoding='utf-8'))
+          bundle = json.loads((GENERATED / 'base-bundle-plan.json').read_text(encoding='utf-8'))
+          offices = release.get('payload', {}).get('offices', [])
+          holders = release.get('payload', {}).get('officeholders', [])
+          office_ids = {row.get('office_id') for row in offices}
+          holder_ids = {row.get('office_id') for row in holders}
+          if len(offices) != 18 or len(holders) != 18:
+              raise AssertionError(f'Expected 18 offices/holders, got {len(offices)}/{len(holders)}')
+          if len(office_ids) != 18 or office_ids != holder_ids:
+              raise AssertionError('Bastrop office/officeholder identity join failed')
+          adapters = {row.get('adapter_id'): row for row in bundle.get('district_adapters', [])}
+          if set(adapters) != EXPECTED_ADAPTERS:
+              raise AssertionError(f'Unexpected Bastrop adapters: {sorted(adapters)}')
+          for adapter_id, adapter in adapters.items():
+              if adapter.get('failure_scope') != 'ADAPTER':
+                  raise AssertionError(f'{adapter_id} must remain ADAPTER-scoped')
+              if adapter.get('officeholder_identity_source') != 'CANONICAL_RELEASE_ONLY':
+                  raise AssertionError(f'{adapter_id} identity source changed')
+              if adapter.get('boundary_policy') != POLICY:
+                  raise AssertionError(f'{adapter_id} boundary policy changed')
+          if bundle.get('action_registry_files'):
+              raise AssertionError('Bastrop action routing must remain unreleased')
+
+          RELEASE_PATH.write_text(
+              json.dumps(release, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          registry.setdefault('bundles', []).append(bundle)
+          REGISTRY_PATH.write_text(
+              json.dumps(registry, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+              encoding='utf-8',
+          )
+
+          def load_module(name: str, path: Path):
+              module_spec = importlib.util.spec_from_file_location(name, path)
+              mod = importlib.util.module_from_spec(module_spec)
+              sys.modules[name] = mod
+              assert module_spec.loader is not None
+              module_spec.loader.exec_module(mod)
+              return mod
+
+          engine_mod = load_module('civic_gps_engine_bastrop_cg06', ENGINE_PATH)
+          resolver = engine_mod.CivicGPSOverlayEngine.from_file(REGISTRY_PATH, timeout_seconds=30.0)
+
+          countywide_ids = {row['office_id'] for row in spec['scope']['countywide_offices']}
+          if len(countywide_ids) != 6:
+              raise AssertionError(f'Expected six bounded countywide IDs, got {countywide_ids}')
+          expected_layers = {str(row['layer']) for row in spec['district_families']}
+
+          CASES = [
+              ('bastrop-p1', '803 Pine Street, Bastrop, TX 78602', '1', {
+                  A_COMM: 'Butch Carmack', A_JP: 'Cindy Allen', A_CONST: 'Wayne Wood'}),
+              ('bastrop-p2', '1624 NE Loop 230, Smithville, TX 78957', '2', {
+                  A_COMM: 'Clara Beckett', A_JP: 'Zachary Carter', A_CONST: 'James Scoggins'}),
+              ('bastrop-p3', '5540 FM 535, Cedar Creek, TX 78612', '3', {
+                  A_COMM: 'Mark Meuth', A_JP: 'Krystal Stabeno', A_CONST: 'Tim Sparkman'}),
+              ('bastrop-p4', '1125 Dildy Drive, Elgin, TX 78621', '4', {
+                  A_COMM: 'David Glass', A_JP: 'Larry Dunne', A_CONST: 'Joey Dzienowski'}),
+          ]
+
+          summaries = []
+          keys_covered = set()
+          for case_id, address, key, expected_reps in CASES:
+              result = resolver.resolve(address, observed_on=None)
+              (OUT / f'{case_id}.json').write_text(
+                  json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+                  encoding='utf-8',
+              )
+              if 'error' in result:
+                  raise AssertionError(f'[{case_id}] engine error: {result["error"]}')
+              payload = result['payload']
+              if J not in {row.get('jurisdiction_id') for row in payload.get('jurisdictions') or []}:
+                  raise AssertionError(f'[{case_id}] Bastrop jurisdiction did not activate')
+              assignments = {
+                  row['adapter_id']: str(row['district_key'])
+                  for row in payload.get('district_assignments') or []
+                  if row.get('jurisdiction_id') == J
+              }
+              expected_assignments = {adapter_id: key for adapter_id in EXPECTED_ADAPTERS}
+              if assignments != expected_assignments:
+                  raise AssertionError(
+                      f'[{case_id}] expected assignments {expected_assignments}, got {assignments}'
+                  )
+              representatives = {
+                  row['adapter_id']: row.get('representative')
+                  for row in payload.get('district_assignments') or []
+                  if row.get('jurisdiction_id') == J
+              }
+              if representatives != expected_reps:
+                  raise AssertionError(
+                      f'[{case_id}] canonical representative mismatch: '
+                      f'expected {expected_reps}, got {representatives}'
+                  )
+
+              applicable = [
+                  row for row in payload.get('applicable_offices') or []
+                  if row.get('jurisdiction_id') == J
+              ]
+              wide = [row for row in applicable if row.get('applicability_scope') == 'JURISDICTION_WIDE']
+              district = [row for row in applicable if row.get('applicability_scope') == 'DISTRICT_MATCH']
+              if (len(applicable), len(wide), len(district)) != (9, 6, 3):
+                  raise AssertionError(
+                      f'[{case_id}] expected 9 = 6 wide + 3 district, got '
+                      f'{len(applicable)} = {len(wide)} + {len(district)}'
+                  )
+              wide_ids = {row.get('office_id') for row in wide}
+              if wide_ids != countywide_ids:
+                  raise AssertionError(f'[{case_id}] countywide office set mismatch: {wide_ids}')
+              expected_district_ids = {
+                  f'office-us-tx-bastrop-county-commissioner-{key}',
+                  f'office-us-tx-bastrop-county-jp-{key}',
+                  f'office-us-tx-bastrop-county-constable-{key}',
+              }
+              district_ids = {row.get('office_id') for row in district}
+              if district_ids != expected_district_ids:
+                  raise AssertionError(
+                      f'[{case_id}] district office set mismatch: '
+                      f'expected {expected_district_ids}, got {district_ids}'
+                  )
+              if any(row.get('jurisdiction_id') == J for row in payload.get('action_links') or []):
+                  raise AssertionError(f'[{case_id}] Bastrop actions must remain unreleased')
+              release_backed_layers = {
+                  str(row.get('layer'))
+                  for row in payload.get('coverage') or []
+                  if row.get('status') == 'RELEASE_BACKED'
+                  and str(row.get('layer') or '').startswith('bastrop_county_')
+              }
+              if release_backed_layers != expected_layers:
+                  raise AssertionError(
+                      f'[{case_id}] expected coverage layers {expected_layers}, '
+                      f'got {release_backed_layers}'
+                  )
+
+              keys_covered.add(key)
+              summaries.append({
+                  'case': case_id,
+                  'address': address,
+                  'key': key,
+                  'assignments': assignments,
+                  'representatives': representatives,
+                  'wide_office_ids': sorted(wide_ids),
+                  'district_office_ids': sorted(district_ids),
+                  'coverage_layers': sorted(release_backed_layers),
+                  'applicable_offices': 9,
+                  'status': 'PASS',
+              })
+
+          if keys_covered != {'1', '2', '3', '4'}:
+              raise AssertionError(
+                  f'CG-06 controls must cover shared keys 1-4, got {sorted(keys_covered)}'
+              )
+
+          summary = {
+              'status': 'PASS',
+              'gate': 'CG-06',
+              'county': 'Bastrop County, TX',
+              'geoid': '48021',
+              'engine_version': '0.6.1',
+              'released_registry_version': '0.5.5',
+              'released_runtime_sha256': '567c809839a2bcbafff7da432e28bf7e6fa23e5c2dff9639cf11ad4f87759d60',
+              'original_registry_sha256': original_registry_sha,
+              'candidate_spec_sha256': 'f91f98ec040c153f12cff82bf5be91ac32dbee3e9616048120a95d6f0c8f0077',
+              'candidate_overlay_only': True,
+              'candidate_packaged': False,
+              'release_offices': 18,
+              'release_holders': 18,
+              'controls': summaries,
+              'shared_keys_covered': sorted(keys_covered, key=int),
+              'normal_applicable_offices': 9,
+              'normal_composition': {'countywide': 6, 'district': 3},
+              'actions': 'NOT_YET_RELEASED',
+              'p3_control_note': (
+                  'Uses official Bastrop County Cedar Creek Park at 5540 FM 535 because '
+                  'the unchanged Census geocoder does not match the nearby frozen '
+                  'Cedar Creek Annex address at 5785 FM 535.'
+              ),
+              'p3_control_source': 'https://www.bastropcounty.gov/page/par.ourparks',
+              'next_gate': 'CG-07',
+              'stopped_before': 'CG-07',
+          }
+          summary_path = OUT / 'bastrop-cg06-summary.json'
+          summary_path.write_text(
+              json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+          print('BASTROP CG-06 PASS')
+          PY
+
+      - name: Upload CG-06 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-bastrop-cg06-${{ github.run_id }}
+          path: |
+            artifacts/civic-gps-bastrop-cg06/
+            artifacts/civic-gps-bastrop-cg06-onboarding/
+          if-no-files-found: warn
+          retention-days: 30
