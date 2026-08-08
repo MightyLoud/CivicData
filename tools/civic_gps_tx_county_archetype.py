@@ -2,7 +2,7 @@
 """Build existing Civic GPS artifacts for Texas county precinct archetypes.
 
 This is a build helper, not a new resolver. It emits the same release payload and
-BASE bundle consumed by CivicGPSOverlayEngine v0.6.0.
+BASE bundle consumed by CivicGPSOverlayEngine v0.6.1.
 """
 from __future__ import annotations
 
@@ -26,6 +26,8 @@ def _district_office_id(template: str, key: str) -> str:
 
 def build_texas_county_precinct_artifacts(spec: dict) -> tuple[dict, dict]:
     """Return (release, registry_bundle) from one bounded county spec."""
+    # v0.1 contract: one district-specific office per district key per family.
+    # Multi-seat/place offices sharing one geographic key require a future generalized contract.
     required = [
         "county_name", "county_geoid", "jurisdiction_id", "division_id",
         "adapter_id", "response_id_prefix", "release_filename",

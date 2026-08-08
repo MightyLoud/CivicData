@@ -14,12 +14,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`c8b16090b044463379a9ca179ca1196af20c82d47f7d25c84056e4b2bcb9ab39`
+`a47205629202d0ee09304b07155262018963f9b815433e1ba9cf7e0e4abe8a4a`
 
 Current engine/contract set:
 
 - Overlay Engine: `v0.6.1`
-- Adapter registry artifact: `v0.5.2`
+- Adapter registry artifact: `v0.5.3`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 
@@ -121,6 +121,56 @@ Collin is the first production county generated with `TX_COUNTY_COMMISSIONER_JP_
 
 Overlay Engine v0.6.1 keeps the resolver logic unchanged and adds an explicit default `CivicGPS` HTTP User-Agent. This is a generic interoperability hardening discovered during Collin proof: Collin's public ArcGIS service rejected the anonymous/default `python-requests` identity but passed the unchanged control matrix when the client identified itself.
 
+## Travis County reusable-archetype controls
+
+17. **Travis / Precinct 1** — `4717 Heflin Lane, Austin, TX 78721`
+    - Commissioner Precinct 1
+    - Justice of the Peace Precinct 1
+    - Constable Precinct 1
+    - 9 applicable Travis offices
+
+18. **Travis / Precinct 2** — `10409 Burnet Road, Austin, TX 78758`
+    - Commissioner Precinct 2
+    - Justice of the Peace Precinct 2
+    - Constable Precinct 2
+    - 9 applicable Travis offices
+
+19. **Travis / Commissioner 3 + JP/Constable 3** — `8656 B Highway 71 West, Austin, TX 78735`
+    - Commissioner Precinct 3
+    - Justice of the Peace Precinct 3
+    - Constable Precinct 3
+    - 9 applicable Travis offices
+
+20. **Travis / Precinct 4** — `4011 McKinney Falls Parkway, Austin, TX 78744`
+    - Commissioner Precinct 4
+    - Justice of the Peace Precinct 4
+    - Constable Precinct 4
+    - 9 applicable Travis offices
+
+21. **Travis / Commissioner 3 + JP/Constable 5** — `700 Lavaca Street, Austin, TX 78701`
+    - Commissioner Precinct 3
+    - Justice of the Peace Precinct 5
+    - Constable Precinct 5
+    - 9 applicable Travis offices
+
+22. **Dallas outside-Travis negative** — `1500 Marilla Street, Dallas, TX 75201`
+    - Travis must not activate
+    - 0 Travis assignments, applicable offices, or actions
+
+23. **Travis Commissioner boundary**
+    - Exact current official shared boundary must return Commissioner `CONFLICT` and no Commissioner assignment.
+    - Travis BASE plus the unambiguous JP/Constable assignments must survive.
+    - Points on opposite sides must resolve to distinct Commissioner precincts.
+
+24. **Travis JP / Constable shared boundary**
+    - Exact current official shared boundary must return both JP and Constable `CONFLICT` with neither assignment guessed.
+    - Travis BASE plus the unambiguous Commissioner assignment must survive.
+    - Points on opposite sides must resolve to distinct JP/Constable precincts.
+
+Travis is the second production county generated with `TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1` and the clean county-onboarding speed benchmark. Five interior controls cover all four Commissioner precincts and all five shared JP/Constable precincts without any engine or consumer-schema change. The release contains 20 modeled offices: a deliberately bounded six-office countywide set, four Commissioner offices, five Justice of the Peace offices, and five Constable offices. Additional countywide elected offices are explicitly `BOUNDED_V0_1_SCOPE`; Travis civic-action routing is explicitly `NOT_YET_RELEASED`.
+
+Travis also proves source precedence: official GIS is authoritative for geometry, not current officeholder identity. Where GIS or directory display labels lag current official office pages, the canonical release uses current official-page identity and records the conflict rather than silently accepting the GIS label.
+
 ## Triggers
 
 The gate runs:
@@ -151,4 +201,4 @@ For upstream drift, capture the live artifact, verify the authoritative source, 
 
 The first successful five-control networked baseline was GitHub Actions run `31224765817` on August 7, 2026.
 
-Denton geography/office applicability was promoted through PR #5 and post-merge main run `31240231410`. Denton action routing v0.1 was promoted through PR #6 and post-merge main run `31241061355`. Collin County then proved the reusable Texas county precinct archetype on isolated run `31241712240` before packaging. Registry v0.5.2 / engine v0.6.1 promotion requires the full baseline + Denton + Collin interior/negative/boundary matrix to pass against the exact packaged runtime.
+Denton geography/office applicability was promoted through PR #5 and post-merge main run `31240231410`. Denton action routing v0.1 was promoted through PR #6 and post-merge main run `31241061355`. Collin County then proved the reusable Texas county precinct archetype on isolated run `31241712240` before packaging. Registry v0.5.3 / engine v0.6.1 promotion requires the full baseline + Denton + Collin + Travis interior/negative/boundary matrix to pass against the exact packaged runtime. Travis first passed the reusable-archetype proof on isolated run `31243037463` before packaging.
