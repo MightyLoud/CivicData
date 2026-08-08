@@ -34,11 +34,22 @@ A supported county moves through the same gates:
 
 A county is considered a successful pipeline outcome either when it reaches release without new architecture, or when it stops early with a named unsupported pattern before custom engineering begins.
 
+## Automated frozen-spec intake
+
+New counties should begin with `tools/civic_gps_county_onboarding.py` and a frozen `civic-gps-county-onboarding/0.1.0` JSON spec. The tool runs CG-01→CG-03 deterministically before custom engineering, records source-precedence decisions, and emits the existing archetype builder input plus release/bundle previews only for supported counties.
+
+The tool does **not** scrape sources, infer officeholder identity from GIS, or mutate production. Live source discovery and reconciliation must be frozen into the input spec first. See `docs/workflows/civic-gps-county-onboarding.md`.
+
+Acceptance fixtures are permanent:
+
+- Williamson County → `SUPPORTED_V0_1 / NONE` and deterministic release/bundle previews.
+- Hays County → `MULTI_OFFICE_PER_DISTRICT` and no build previews.
+
 ## Proven counties
 
 - **Collin County** — 4 Commissioner + 4 JP + 4 Constable precincts; first production archetype release.
 - **Travis County** — 4 Commissioner + 5 JP + 5 Constable precincts; second production archetype release and first clean speed benchmark.
-- **Williamson County** — 4 Commissioner + 4 JP + 4 Constable precincts; third production archetype output and first county completed through the explicit County Onboarding Pipeline. Williamson uses one official shared precinct layer (`PCT_NUMBER` 1–4) for all three district families. Its pre-promotion package completed CG-01 through CG-09 with no engine or consumer-schema change.
+- **Williamson County** — 4 Commissioner + 4 JP + 4 Constable precincts; third production archetype output and first county completed through CG-01→CG-10. Williamson uses one official shared precinct layer (`PCT_NUMBER` 1–4) for all three district families and was released with no engine or consumer-schema change.
 
 Normal interiors in these archetype counties return the explicitly bounded jurisdiction-wide office set plus exactly one office from each resolved district family. Boundary conflicts never tie-break.
 
