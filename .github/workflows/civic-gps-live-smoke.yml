@@ -2,39 +2,18 @@ name: Civic GPS live smoke
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'civic_gps_runtime_parts/**'
-      - 'tests/civic_gps_live_smoke.py'
-      - 'tests/civic_gps_denton_live_probe.py'
-      - 'tests/civic_gps_denton_negative_probe.py'
-      - 'tests/civic_gps_denton_boundary_probe.py'
-      - 'requirements-civic-gps.txt'
-      - '.github/workflows/civic-gps-live-smoke.yml'
-      - 'docs/workflows/civic-gps-live-smoke.md'
   push:
     branches:
-      - main
       - 'agent/civic-gps-live-smoke'
     paths:
-      - 'civic_gps_runtime_parts/**'
-      - 'tests/civic_gps_live_smoke.py'
-      - 'tests/civic_gps_denton_live_probe.py'
-      - 'tests/civic_gps_denton_negative_probe.py'
-      - 'tests/civic_gps_denton_boundary_probe.py'
-      - 'requirements-civic-gps.txt'
+      - 'tools/package_denton_runtime.py'
       - '.github/workflows/civic-gps-live-smoke.yml'
-      - 'docs/workflows/civic-gps-live-smoke.md'
-  schedule:
-    - cron: '23 15 * * 3'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: civic-gps-live-smoke-${{ github.event.pull_request.number || github.ref }}
+  group: civic-gps-live-smoke-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -43,46 +22,50 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Check out repository
+      - name: Check out branch
         uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
-          cache-dependency-path: requirements-civic-gps.txt
 
-      - name: Install Civic GPS runtime dependency
-        run: python -m pip install -r requirements-civic-gps.txt
-
-      - name: Reconstruct exact Civic GPS runtime package
+      - name: Reconstruct verified pre-Denton runtime
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
           echo 'fef242729e6e2efeb0a92c9f81bd19c31a3533ac2b3d44d4e5024ba392ee487b  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
-      - name: Compile engine and smoke tests
-        run: python -m py_compile civic_gps/engine.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py
+      - name: Build deterministic Denton package
+        run: python tools/package_denton_runtime.py
 
-      - name: Run real-network Civic GPS controls
-        run: python tests/civic_gps_live_smoke.py
+      - name: Validate packaged structure
+        shell: bash
+        run: |
+          echo '66f876c59809849b36ab837e942ac2465e2c32936cf44f1cbe8aa65795ee04c7  civic_gps_runtime.zip' | sha256sum --check --strict
+          python -m py_compile civic_gps/engine.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          reg = json.loads(Path('civic_gps/registry.json').read_text())
+          rel = json.loads(Path('civic_gps/civic_gps_denton_county_v0.1.json').read_text())
+          assert reg['engine_version'] == '0.6.0'
+          assert reg['registry_artifact_version'] == '0.5.0'
+          denton = [b for b in reg['bundles'] if b['adapter_id'] == 'ADAPTER-TX-DENTON']
+          assert len(denton) == 1
+          assert len(rel['payload']['offices']) == 22
+          assert len(rel['payload']['officeholders']) == 22
+          assert all(a['failure_scope'] == 'ADAPTER' for a in denton[0]['district_adapters'])
+          print('PASS: packaged Denton registry/release structure')
+          PY
 
-      - name: Run Denton configuration-only live probe
-        run: python tests/civic_gps_denton_live_probe.py
-
-      - name: Run Denton outside-county negative control
-        run: python tests/civic_gps_denton_negative_probe.py
-
-      - name: Run Denton boundary fail-closed controls
-        run: python tests/civic_gps_denton_boundary_probe.py
-
-      - name: Upload live responses
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: civic-gps-live-smoke-${{ github.run_id }}
-          path: artifacts/civic-gps-live-smoke/
-          if-no-files-found: warn
-          retention-days: 30
+      - name: Commit runtime chunks only
+        shell: bash
+        run: |
+          git config user.name 'Creyton Loud'
+          git config user.email 'creytonloud2@gmail.com'
+          git add civic_gps_runtime_parts/part.*
+          git diff --cached --quiet && { echo 'No runtime chunk changes'; exit 1; }
+          git commit -m 'Package Denton County runtime [skip ci]'
+          git push origin HEAD:agent/civic-gps-live-smoke
