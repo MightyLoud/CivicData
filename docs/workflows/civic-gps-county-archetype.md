@@ -50,6 +50,7 @@ Acceptance fixtures are permanent:
 - **Collin County** — 4 Commissioner + 4 JP + 4 Constable precincts; first production archetype release.
 - **Travis County** — 4 Commissioner + 5 JP + 5 Constable precincts; second production archetype release and first clean speed benchmark.
 - **Williamson County** — 4 Commissioner + 4 JP + 4 Constable precincts; third production archetype output and first county completed through CG-01→CG-10. Williamson uses one official shared precinct layer (`PCT_NUMBER` 1–4) for all three district families and was released with no engine or consumer-schema change.
+- **Tarrant County** — 4 Commissioner + 8 JP + 8 Constable precincts; fourth production archetype output and second county completed through the automated County Onboarding Pipeline. Tarrant uses separate official Commissioner geometry and shared JP/Constable geometry, preserving independent fail-closed behavior without an engine or consumer-schema change.
 
 Normal interiors in these archetype counties return the explicitly bounded jurisdiction-wide office set plus exactly one office from each resolved district family. Boundary conflicts never tie-break.
 
@@ -80,3 +81,5 @@ Before promotion:
 - require a post-merge `main` pass before calling the county released.
 
 Williamson's v0.1 geography/office package keeps action routing `NOT_YET_RELEASED` and additional countywide offices `BOUNDED_V0_1_SCOPE`.
+
+Tarrant's v0.1 geography/office package contains 26 canonical offices / 26 holders = 6 deliberately bounded countywide + 4 Commissioner + 8 JP + 8 Constable. Action routing remains `NOT_YET_RELEASED`; additional countywide offices remain `BOUNDED_V0_1_SCOPE`.

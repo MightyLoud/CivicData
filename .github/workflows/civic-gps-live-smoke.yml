@@ -15,6 +15,7 @@ on:
       - 'tests/civic_gps_collin_live_probe.py'
       - 'tests/civic_gps_travis_live_probe.py'
       - 'tests/civic_gps_williamson_live_probe.py'
+      - 'tests/civic_gps_tarrant_live_probe.py'
       - 'tests/civic_gps_county_onboarding_test.py'
       - 'tests/fixtures/civic_gps_county_onboarding/**'
       - 'tools/civic_gps_tx_county_archetype.py'
@@ -39,6 +40,7 @@ on:
       - 'tests/civic_gps_collin_live_probe.py'
       - 'tests/civic_gps_travis_live_probe.py'
       - 'tests/civic_gps_williamson_live_probe.py'
+      - 'tests/civic_gps_tarrant_live_probe.py'
       - 'tests/civic_gps_county_onboarding_test.py'
       - 'tests/fixtures/civic_gps_county_onboarding/**'
       - 'tools/civic_gps_tx_county_archetype.py'
@@ -82,11 +84,11 @@ jobs:
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
-          echo '52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de  civic_gps_runtime.zip' | sha256sum --check --strict
+          echo '567c809839a2bcbafff7da432e28bf7e6fa23e5c2dff9639cf11ad4f87759d60  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
       - name: Compile engine, onboarding tool, and smoke tests
-        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py
+        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py
 
       - name: Run deterministic County Onboarding Pipeline fixtures
         shell: bash
@@ -120,6 +122,9 @@ jobs:
       - name: Run packaged Williamson County archetype controls
         run: python tests/civic_gps_williamson_live_probe.py
 
+      - name: Run packaged Tarrant County archetype controls
+        run: python tests/civic_gps_tarrant_live_probe.py
+
       - name: Upload live responses
         if: always()
         uses: actions/upload-artifact@v4
@@ -130,5 +135,6 @@ jobs:
             artifacts/civic-gps-live-smoke/
             artifacts/civic-gps-travis-archetype/
             artifacts/civic-gps-williamson-cg09/
+            artifacts/civic-gps-tarrant-cg09/
           if-no-files-found: warn
           retention-days: 30
