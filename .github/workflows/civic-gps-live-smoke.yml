@@ -8,6 +8,7 @@ on:
     paths:
       - 'civic_gps_runtime_parts/**'
       - 'tests/civic_gps_live_smoke.py'
+      - 'tests/civic_gps_denton_live_probe.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
       - 'docs/workflows/civic-gps-live-smoke.md'
@@ -18,6 +19,7 @@ on:
     paths:
       - 'civic_gps_runtime_parts/**'
       - 'tests/civic_gps_live_smoke.py'
+      - 'tests/civic_gps_denton_live_probe.py'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
       - 'docs/workflows/civic-gps-live-smoke.md'
@@ -57,11 +59,14 @@ jobs:
           echo 'fef242729e6e2efeb0a92c9f81bd19c31a3533ac2b3d44d4e5024ba392ee487b  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
-      - name: Compile engine and smoke test
-        run: python -m py_compile civic_gps/engine.py tests/civic_gps_live_smoke.py
+      - name: Compile engine and smoke tests
+        run: python -m py_compile civic_gps/engine.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py
 
       - name: Run real-network Civic GPS controls
         run: python tests/civic_gps_live_smoke.py
+
+      - name: Run Denton configuration-only live probe
+        run: python tests/civic_gps_denton_live_probe.py
 
       - name: Upload live responses
         if: always()
