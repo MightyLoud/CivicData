@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-"""Focused Denton County Civic GPS configuration-only live probe.
-
-This does not modify the packaged runtime. It loads the exact reconstructed v0.6.0
-engine + v0.4.1 registry, writes a temporary Denton release/registry beside them,
-and proves that one county BASE can resolve Commissioner + JP + Constable district
-assignments concurrently.
-"""
+"""Denton County configuration-only live probe for Civic GPS v0.6.0."""
 from __future__ import annotations
 
 import copy
@@ -16,10 +10,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GPS = ROOT / "civic_gps"
-ENGINE_PATH = GPS / "engine.py"
-REGISTRY_PATH = GPS / "registry.json"
 OUTPUT = ROOT / "artifacts" / "civic-gps-live-smoke"
 OUTPUT.mkdir(parents=True, exist_ok=True)
+ENGINE_PATH = GPS / "engine.py"
+REGISTRY_PATH = GPS / "registry.json"
 
 spec = importlib.util.spec_from_file_location("civic_gps_engine_denton", ENGINE_PATH)
 engine_mod = importlib.util.module_from_spec(spec)
@@ -28,73 +22,70 @@ assert spec.loader is not None
 spec.loader.exec_module(engine_mod)
 
 J_DENTON = "jur-us-tx-denton-county"
-SNAPSHOT = "https://www.dentoncounty.gov/1144/Elected-Officials"
+RESOLUTION = "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT"
 
-countywide = [
-    ("office-denton-county-judge", "County Judge", "Andy Eads"),
-    ("office-denton-county-sheriff", "Sheriff", "Tracy Murphree"),
-    ("office-denton-county-clerk", "County Clerk", "Juli Luke"),
-    ("office-denton-county-district-clerk", "District Clerk", "David Trantham"),
-    ("office-denton-county-tax-assessor-collector", "Tax Assessor-Collector", "Dawn Waye"),
-    ("office-denton-county-treasurer", "County Treasurer", "Cindy Yeatts Brown"),
-]
-commissioners = {
-    "1": "Ryan Williams",
-    "2": "Kevin Falconer",
-    "3": "Bobbie J. Mitchell",
-    "4": "Dianne Edmondson",
+COUNTYWIDE = {
+    "office-denton-county-judge": ("County Judge", "Andy Eads"),
+    "office-denton-county-sheriff": ("Sheriff", "Tracy Murphree"),
+    "office-denton-county-clerk": ("County Clerk", "Juli Luke"),
+    "office-denton-county-district-clerk": ("District Clerk", "David Trantham"),
+    "office-denton-county-tax-assessor-collector": ("Tax Assessor-Collector", "Dawn Waye"),
+    "office-denton-county-treasurer": ("County Treasurer", "Cindy Yeatts Brown"),
 }
-jps = {
-    "1": "Alan Wheeler",
-    "2": "James R. DePiazza",
-    "3": "James Kerbow",
-    "4": "Harris Hughey",
-    "5": "Mike Oglesby",
-    "6": "Blanca Oliver",
-}
-constables = {
-    "1": "Trevor Krueger",
-    "2": "Michael A. Truitt",
-    "3": "Dan Rochelle",
-    "4": "Danny Fletcher",
-    "5": "Doug Boydston",
-    "6": "Richard Bachus",
-}
+COMMISSIONERS = {"1": "Ryan Williams", "2": "Kevin Falconer", "3": "Bobbie J. Mitchell", "4": "Dianne Edmondson"}
+JPS = {"1": "Alan Wheeler", "2": "James R. DePiazza", "3": "James Kerbow", "4": "Harris Hughey", "5": "Mike Oglesby", "6": "Blanca Oliver"}
+CONSTABLES = {"1": "Trevor Krueger", "2": "Michael A. Truitt", "3": "Dan Rochelle", "4": "Danny Fletcher", "5": "Doug Boydston", "6": "Richard Bachus"}
 
-offices = []
-holders = []
-for oid, name, person in countywide:
-    offices.append({"office_id": oid, "jurisdiction_id": J_DENTON, "name": name, "coverage_class": "RELEASED_CURRENT"})
-    holders.append({"office_id": oid, "canonical_name": person})
-for key, person in commissioners.items():
-    oid = f"office-denton-county-commissioner-precinct-{key}"
-    offices.append({"office_id": oid, "jurisdiction_id": J_DENTON, "name": f"County Commissioner Precinct {key}", "coverage_class": "RELEASED_CURRENT"})
-    holders.append({"office_id": oid, "canonical_name": person})
-for key, person in jps.items():
-    oid = f"office-denton-county-justice-of-the-peace-precinct-{key}"
-    offices.append({"office_id": oid, "jurisdiction_id": J_DENTON, "name": f"Justice of the Peace Precinct {key}", "coverage_class": "RELEASED_CURRENT"})
-    holders.append({"office_id": oid, "canonical_name": person})
-for key, person in constables.items():
-    oid = f"office-denton-county-constable-precinct-{key}"
-    offices.append({"office_id": oid, "jurisdiction_id": J_DENTON, "name": f"Constable Precinct {key}", "coverage_class": "RELEASED_CURRENT"})
-    holders.append({"office_id": oid, "canonical_name": person})
 
-assert len(offices) == 22
-assert len(holders) == 22
+def office(office_id: str, name: str, holder: str):
+    return (
+        {"office_id": office_id, "jurisdiction_id": J_DENTON, "name": name, "coverage_class": "RELEASED_CURRENT"},
+        {"office_id": office_id, "canonical_name": holder},
+    )
 
+
+offices, holders = [], []
+for oid, (name, holder) in COUNTYWIDE.items():
+    o, h = office(oid, name, holder); offices.append(o); holders.append(h)
+for key, holder in COMMISSIONERS.items():
+    o, h = office(f"office-denton-county-commissioner-precinct-{key}", f"County Commissioner Precinct {key}", holder); offices.append(o); holders.append(h)
+for key, holder in JPS.items():
+    o, h = office(f"office-denton-county-justice-of-the-peace-precinct-{key}", f"Justice of the Peace Precinct {key}", holder); offices.append(o); holders.append(h)
+for key, holder in CONSTABLES.items():
+    o, h = office(f"office-denton-county-constable-precinct-{key}", f"Constable Precinct {key}", holder); offices.append(o); holders.append(h)
+assert len(offices) == len(holders) == 22
+
+release_name = "civic_gps_denton_probe_release_v0.1.json"
 release = {
     "meta": {"release_id": "civic-gps-denton-probe-v0.1", "status": "PROBE_ONLY"},
     "payload": {
-        "jurisdictions": [{"jurisdiction_id": J_DENTON, "name": "Denton County", "snapshot_ref": SNAPSHOT}],
+        "jurisdictions": [{"jurisdiction_id": J_DENTON, "name": "Denton County", "snapshot_ref": "https://www.dentoncounty.gov/1144/Elected-Officials"}],
         "offices": offices,
         "officeholders": holders,
     },
 }
-release_name = "civic_gps_denton_probe_release_v0.1.json"
 (GPS / release_name).write_text(json.dumps(release, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
 
-registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-registry = copy.deepcopy(registry)
+
+def district_adapter(adapter_id: str, layer: str, service: str, field: str, name_template: str, div_template: str, office_template: str):
+    return {
+        "adapter_id": adapter_id,
+        "activation": {"jurisdiction_active": J_DENTON},
+        "jurisdiction_id": J_DENTON,
+        "layer": layer,
+        "service_url": service,
+        "district_field": field,
+        "district_key_normalization": "NUMERIC",
+        "district_name_template": name_template,
+        "division_id_template": div_template,
+        "parent_division_id": "div-us-tx-denton-county",
+        "office_id_template": office_template,
+        "required": True,
+        "resolution_method": RESOLUTION,
+    }
+
+
+registry = copy.deepcopy(json.loads(REGISTRY_PATH.read_text(encoding="utf-8")))
 registry["bundles"].append({
     "adapter_id": "ADAPTER-TX-DENTON",
     "mode": "BASE",
@@ -109,85 +100,23 @@ registry["bundles"].append({
         {"division_id": "div-us-tx", "name": "Texas", "parent_id": None, "type": "state", "when": {"geography": "state", "fields": ["GEOID", "STATE"], "equals": "48"}},
         {"division_id": "div-us-tx-denton-county", "name": "Denton County", "parent_id": "div-us-tx", "type": "county", "when": {"geography": "county", "fields": ["GEOID"], "equals": "48121"}},
     ],
-    "jurisdictions": [
-        {"jurisdiction_id": J_DENTON, "activation": {"geography": "county", "fields": ["GEOID"], "equals": "48121"}},
-    ],
+    "jurisdictions": [{"jurisdiction_id": J_DENTON, "activation": {"geography": "county", "fields": ["GEOID"], "equals": "48121"}}],
     "district_adapters": [
-        {
-            "adapter_id": "DIST-TX-DENTON-COMMISSIONER",
-            "activation": {"jurisdiction_active": J_DENTON},
-            "jurisdiction_id": J_DENTON,
-            "layer": "county_commissioner_precinct",
-            "service_url": "https://gis.dentoncounty.gov/arcgis/rest/services/PoliticalBoundaries_GC/MapServer/4",
-            "district_field": "COMMISH",
-            "district_key_normalization": "NUMERIC",
-            "district_name_template": "Denton County Commissioner Precinct {district}",
-            "division_id_template": "div-us-tx-denton-county-commissioner-precinct-{district}",
-            "division_type": "commissioner_precinct",
-            "parent_division_id": "div-us-tx-denton-county",
-            "office_id_template": "office-denton-county-commissioner-precinct-{district}",
-            "required": True,
-        },
-        {
-            "adapter_id": "DIST-TX-DENTON-JP",
-            "activation": {"jurisdiction_active": J_DENTON},
-            "jurisdiction_id": J_DENTON,
-            "layer": "justice_of_the_peace_precinct",
-            "service_url": "https://gis.dentoncounty.gov/arcgis/rest/services/PoliticalBoundaries_GC/MapServer/5",
-            "district_field": "JP_C",
-            "district_key_normalization": "NUMERIC",
-            "district_name_template": "Denton County Justice of the Peace Precinct {district}",
-            "division_id_template": "div-us-tx-denton-county-jp-precinct-{district}",
-            "division_type": "justice_of_the_peace_precinct",
-            "parent_division_id": "div-us-tx-denton-county",
-            "office_id_template": "office-denton-county-justice-of-the-peace-precinct-{district}",
-            "required": True,
-        },
-        {
-            "adapter_id": "DIST-TX-DENTON-CONSTABLE",
-            "activation": {"jurisdiction_active": J_DENTON},
-            "jurisdiction_id": J_DENTON,
-            "layer": "constable_precinct",
-            "service_url": "https://gis.dentoncounty.gov/arcgis/rest/services/PoliticalBoundaries_GC/MapServer/5",
-            "district_field": "JP_C",
-            "district_key_normalization": "NUMERIC",
-            "district_name_template": "Denton County Constable Precinct {district}",
-            "division_id_template": "div-us-tx-denton-county-constable-precinct-{district}",
-            "division_type": "constable_precinct",
-            "parent_division_id": "div-us-tx-denton-county",
-            "office_id_template": "office-denton-county-constable-precinct-{district}",
-            "required": True,
-        },
+        district_adapter("DIST-TX-DENTON-COMMISSIONER", "county_commissioner_precinct", "https://gis.dentoncounty.gov/arcgis/rest/services/PoliticalBoundaries_GC/MapServer/4", "COMMISH", "Denton County Commissioner Precinct {district}", "div-us-tx-denton-county-commissioner-precinct-{district}", "office-denton-county-commissioner-precinct-{district}"),
+        district_adapter("DIST-TX-DENTON-JP", "justice_of_the_peace_precinct", "https://gis.dentoncounty.gov/arcgis/rest/services/PoliticalBoundaries_GC/MapServer/5", "JP_C", "Denton County Justice of the Peace Precinct {district}", "div-us-tx-denton-county-jp-precinct-{district}", "office-denton-county-justice-of-the-peace-precinct-{district}"),
+        district_adapter("DIST-TX-DENTON-CONSTABLE", "constable_precinct", "https://gis.dentoncounty.gov/arcgis/rest/services/PoliticalBoundaries_GC/MapServer/5", "JP_C", "Denton County Constable Precinct {district}", "div-us-tx-denton-county-constable-precinct-{district}", "office-denton-county-constable-precinct-{district}"),
     ],
-    "applicable_office_rules": [{
-        "jurisdiction_id": J_DENTON,
-        "jurisdiction_wide_office_ids": [x[0] for x in countywide],
-        "include_resolved_district_offices": True,
-    }],
-    "coverage_rules": [
-        {"layer": "county_government", "status": "RELEASE_BACKED", "reason": "Denton County probe release is joined.", "when": {"jurisdiction_active": J_DENTON}},
-        {"layer": "county_commissioner_precinct", "status": "RELEASE_BACKED", "reason": "Official Denton County Commissioner precinct resolved.", "when": {"district_resolved": "DIST-TX-DENTON-COMMISSIONER"}},
-        {"layer": "justice_of_the_peace_precinct", "status": "RELEASE_BACKED", "reason": "Official Denton County JP precinct resolved.", "when": {"district_resolved": "DIST-TX-DENTON-JP"}},
-        {"layer": "constable_precinct", "status": "RELEASE_BACKED", "reason": "Official Denton County Constable precinct resolved.", "when": {"district_resolved": "DIST-TX-DENTON-CONSTABLE"}},
-    ],
+    "applicable_office_rules": [{"jurisdiction_id": J_DENTON, "jurisdiction_wide_office_ids": list(COUNTYWIDE), "include_resolved_district_offices": True}],
+    "coverage_rules": [],
     "known_gaps": [],
 })
-
 probe_registry = GPS / "registry-denton-probe.json"
 probe_registry.write_text(json.dumps(registry, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
 resolver = engine_mod.CivicGPSOverlayEngine.from_file(probe_registry, timeout_seconds=30.0)
 
 CASES = [
-    {
-        "id": "denton-frisco-p2",
-        "address": "5533 FM 423, Frisco, TX 75036",
-        "expected": {"DIST-TX-DENTON-COMMISSIONER": "2", "DIST-TX-DENTON-JP": "2", "DIST-TX-DENTON-CONSTABLE": "2"},
-    },
-    {
-        "id": "denton-lewisville-p3",
-        "address": "400 N Valley Parkway, Lewisville, TX 75067",
-        "expected": {"DIST-TX-DENTON-COMMISSIONER": "3", "DIST-TX-DENTON-JP": "3", "DIST-TX-DENTON-CONSTABLE": "3"},
-    },
+    {"id": "denton-frisco-p2", "address": "5533 FM 423, Frisco, TX 75036", "expected": {"DIST-TX-DENTON-COMMISSIONER": "2", "DIST-TX-DENTON-JP": "2", "DIST-TX-DENTON-CONSTABLE": "2"}},
+    {"id": "denton-lewisville-p3", "address": "400 N Valley Parkway, Lewisville, TX 75067", "expected": {"DIST-TX-DENTON-COMMISSIONER": "3", "DIST-TX-DENTON-JP": "3", "DIST-TX-DENTON-CONSTABLE": "3"}},
 ]
 
 summaries = []
@@ -197,33 +126,25 @@ for case in CASES:
     if "error" in result:
         raise AssertionError(f"[{case['id']}] engine error: {result['error']}")
     payload = result["payload"]
-    jurisdictions = {x["jurisdiction_id"] for x in payload["jurisdictions"]}
-    if J_DENTON not in jurisdictions:
-        raise AssertionError(f"[{case['id']}] Denton jurisdiction missing: {sorted(jurisdictions)}")
+    if J_DENTON not in {x["jurisdiction_id"] for x in payload["jurisdictions"]}:
+        raise AssertionError(f"[{case['id']}] Denton jurisdiction missing")
     assignments = {x["adapter_id"]: str(x["district_key"]) for x in payload["district_assignments"] if x.get("jurisdiction_id") == J_DENTON}
     if assignments != case["expected"]:
-        raise AssertionError(f"[{case['id']}] expected {case['expected']}, got {assignments}")
-    denton_applicable = [x for x in payload["applicable_offices"] if x.get("jurisdiction_id") == J_DENTON]
-    if len(denton_applicable) != 9:
-        raise AssertionError(f"[{case['id']}] expected 9 Denton applicable offices, got {len(denton_applicable)}")
-    district_scopes = [x for x in denton_applicable if x.get("applicability_scope") == "DISTRICT_MATCH"]
-    wide_scopes = [x for x in denton_applicable if x.get("applicability_scope") == "JURISDICTION_WIDE"]
-    if len(district_scopes) != 3 or len(wide_scopes) != 6:
-        raise AssertionError(f"[{case['id']}] expected 6 wide + 3 district offices; got wide={len(wide_scopes)}, district={len(district_scopes)}")
+        raise AssertionError(f"[{case['id']}] expected assignments {case['expected']}, got {assignments}")
+    applicable = [x for x in payload["applicable_offices"] if x.get("jurisdiction_id") == J_DENTON]
+    wide = [x for x in applicable if x.get("applicability_scope") == "JURISDICTION_WIDE"]
+    district = [x for x in applicable if x.get("applicability_scope") == "DISTRICT_MATCH"]
+    if len(applicable) != 9 or len(wide) != 6 or len(district) != 3:
+        raise AssertionError(f"[{case['id']}] expected 9 offices = 6 wide + 3 district; got total={len(applicable)}, wide={len(wide)}, district={len(district)}")
     summaries.append({
-        "case": case["id"],
-        "address": case["address"],
-        "matched_address": payload["input"].get("matched_address"),
-        "assignments": assignments,
-        "applicable_offices": len(denton_applicable),
+        "case": case["id"], "address": case["address"], "status": "PASS",
+        "assignments": assignments, "applicable_offices": len(applicable),
         "district_representatives": {x["adapter_id"]: x.get("representative") for x in payload["district_assignments"] if x.get("jurisdiction_id") == J_DENTON},
-        "status": "PASS",
     })
 
-if len({tuple(sorted(x["assignments"].items())) for x in summaries}) != 2:
-    raise AssertionError("Denton controls did not prove two materially different district combinations.")
-
+if summaries[0]["assignments"] == summaries[1]["assignments"]:
+    raise AssertionError("Denton controls did not prove distinct district combinations")
 summary = {"status": "PASS", "engine_version": registry.get("engine_version"), "registry_artifact_version": registry.get("registry_artifact_version"), "cases": summaries}
 (OUTPUT / "denton-summary.json").write_text(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
 print(json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2))
-print(f"PASS: {len(summaries)}/{len(CASES)} Denton configuration-only live controls")
+print("PASS: 2/2 Denton configuration-only live controls")
