@@ -1,0 +1,173 @@
+{
+  "schema_version": "civic-gps-county-onboarding/0.1.0",
+  "archetype": "TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1",
+  "county": {
+    "name": "Hays County",
+    "state": "TX",
+    "geoid": "48209",
+    "jurisdiction_id": "jur-us-tx-hays-county",
+    "division_id": "div-us-tx-hays-county",
+    "adapter_id": "ADAPTER-TX-HAYS",
+    "response_id_prefix": "civic-gps-hays",
+    "release_filename": "civic_gps_hays_county_v0.1.json",
+    "observed_on": "2026-08-08"
+  },
+  "scope": {
+    "bounded": true,
+    "countywide_complete": false,
+    "unmodeled_status": "BOUNDED_V0_1_SCOPE",
+    "expected_total_offices": 16,
+    "countywide_offices": []
+  },
+  "sources": {
+    "snapshot_ref": "https://www.hayscountytx.gov/260/Local-Officeholders",
+    "source_repository": "https://www.hayscountytx.gov/",
+    "manifest": {
+      "local_officeholders": "https://www.hayscountytx.gov/260/Local-Officeholders",
+      "commissioner_geometry": "https://services5.arcgis.com/bVphnK8rPe5MHUSr/ArcGIS/rest/services/HaysCountyCommissionerPrecincts/FeatureServer/0",
+      "jp_constable_geometry": "https://services5.arcgis.com/bVphnK8rPe5MHUSr/ArcGIS/rest/services/HaysCoJusticeOfPeace/FeatureServer/0",
+      "fit_fixture": "Hays JP precincts 1 and 2 each have multiple JP places sharing one geographic precinct key"
+    },
+    "identity_conflicts": [],
+    "source_health": [
+      {"source_id": "hays-roster", "status": "OK"},
+      {"source_id": "hays-gis", "status": "OK"}
+    ]
+  },
+  "architecture": {
+    "requires_custom_resolver_logic": false,
+    "requires_consumer_schema_change": false
+  },
+  "district_families": [
+    {
+      "family": "commissioner",
+      "adapter_id": "DIST-TX-HAYS-COMMISSIONER",
+      "layer": "hays_county_commissioner_precinct",
+      "district_keys": ["1", "2", "3", "4"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1},
+      "holders": {
+        "1": "Debbie Ingalsbe",
+        "2": "Michelle Cohen",
+        "3": "Morgan Hammer",
+        "4": "Walt Smith"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://services5.arcgis.com/bVphnK8rPe5MHUSr/ArcGIS/rest/services/HaysCountyCommissionerPrecincts/FeatureServer/0",
+        "district_field": "CommPrcnt",
+        "district_field_type": "esriFieldTypeString",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.hayscountytx.gov/355/GIS",
+        "endpoint_publisher": "Hays County GIS"
+      },
+      "district_name_template": "Hays County Commissioner Precinct {district}",
+      "division_id_template": "div-us-tx-hays-county-commissioner-{district}",
+      "division_type": "county_commissioner_precinct",
+      "office_id_template": "office-us-tx-hays-county-commissioner-{district}",
+      "office_title_template": "Commissioner Precinct {district}",
+      "official_url": "https://www.hayscountytx.gov/260/Local-Officeholders",
+      "coverage_reason": "Fit-screen fixture only; official Commissioner geometry is available."
+    },
+    {
+      "family": "justice_of_the_peace",
+      "adapter_id": "DIST-TX-HAYS-JP",
+      "layer": "hays_county_jp_precinct",
+      "district_keys": ["1", "2", "3", "4", "5"],
+      "offices_per_key": {"1": 2, "2": 2, "3": 1, "4": 1, "5": 1},
+      "holders": {
+        "1": ["Jo Prado", "Maggie Moreno"],
+        "2": ["Beth Smith", "J.R. Mendoza, Jr."],
+        "3": "Andrew Cable",
+        "4": "John Burns",
+        "5": "Sandra Bryant"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://services5.arcgis.com/bVphnK8rPe5MHUSr/ArcGIS/rest/services/HaysCoJusticeOfPeace/FeatureServer/0",
+        "district_field": "PRECINCT",
+        "district_field_type": "esriFieldTypeInteger",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.hayscountytx.gov/355/GIS",
+        "endpoint_publisher": "Hays County GIS"
+      },
+      "district_name_template": "Hays County Justice Precinct {district}",
+      "division_id_template": "div-us-tx-hays-county-jp-{district}",
+      "division_type": "justice_precinct",
+      "office_id_template": "office-us-tx-hays-county-jp-{district}",
+      "office_title_template": "Justice of the Peace Precinct {district}",
+      "official_url": "https://www.hayscountytx.gov/260/Local-Officeholders",
+      "coverage_reason": "Fit-screen fixture: JP precincts 1 and 2 each contain two distinct JP offices."
+    },
+    {
+      "family": "constable",
+      "adapter_id": "DIST-TX-HAYS-CONSTABLE",
+      "layer": "hays_county_constable_precinct",
+      "district_keys": ["1", "2", "3", "4", "5"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1, "5": 1},
+      "holders": {
+        "1": "David Peterson",
+        "2": "Michael Torres",
+        "3": "Don Montague",
+        "4": "Dave Graham",
+        "5": "John Ellen"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://services5.arcgis.com/bVphnK8rPe5MHUSr/ArcGIS/rest/services/HaysCoJusticeOfPeace/FeatureServer/0",
+        "district_field": "PRECINCT",
+        "district_field_type": "esriFieldTypeInteger",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.hayscountytx.gov/355/GIS",
+        "endpoint_publisher": "Hays County GIS"
+      },
+      "district_name_template": "Hays County Constable Precinct {district}",
+      "division_id_template": "div-us-tx-hays-county-constable-{district}",
+      "division_type": "constable_precinct",
+      "office_id_template": "office-us-tx-hays-county-constable-{district}",
+      "office_title_template": "Constable Precinct {district}",
+      "official_url": "https://www.hayscountytx.gov/260/Local-Officeholders",
+      "coverage_reason": "Fit-screen fixture only; Constable precinct keys share the JP precinct numbering."
+    }
+  ],
+  "controls": {
+    "interiors": [
+      {
+        "id": "hays-fit-p2",
+        "address": "5458 FM 2770, Kyle, TX 78640",
+        "expected_assignments": {"DIST-TX-HAYS-JP": "2"},
+        "note": "Candidate only; CG-06 is blocked because CG-03 must stop first."
+      }
+    ],
+    "outside_negative": {
+      "address": "700 Lavaca Street, Austin, TX 78701",
+      "expected": {"hays_jurisdiction_present": false}
+    },
+    "boundary": {
+      "required": true,
+      "policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK",
+      "shared_geometry_families": ["justice_of_the_peace", "constable"]
+    }
+  },
+  "actions": {
+    "status": "NOT_YET_RELEASED",
+    "layer": "hays_action_endpoints"
+  },
+  "known_gaps": [
+    {
+      "gap_id": "GAP-HAYS-GPS-ARCHETYPE-001",
+      "status": "MULTI_OFFICE_PER_DISTRICT",
+      "summary": "Justice of the Peace precincts 1 and 2 each contain two offices; v0.1 cannot map one resolved geographic key to multiple applicable offices without a contract generalization."
+    },
+    {
+      "gap_id": "GAP-HAYS-GPS-SCOPE-001",
+      "status": "BOUNDED_V0_1_SCOPE",
+      "summary": "Countywide offices are intentionally omitted from this negative fit fixture because onboarding must stop at CG-03 before release construction."
+    }
+  ]
+}

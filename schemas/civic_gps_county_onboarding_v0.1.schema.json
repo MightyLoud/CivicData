@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "civic-gps-county-onboarding/0.1.0",
+  "title": "Civic GPS County Onboarding Frozen Spec v0.1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "archetype",
+    "county",
+    "scope",
+    "sources",
+    "architecture",
+    "district_families",
+    "controls"
+  ],
+  "properties": {
+    "schema_version": {"const": "civic-gps-county-onboarding/0.1.0"},
+    "archetype": {"const": "TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1"},
+    "county": {
+      "type": "object",
+      "required": [
+        "name",
+        "state",
+        "geoid",
+        "jurisdiction_id",
+        "division_id",
+        "adapter_id",
+        "response_id_prefix",
+        "release_filename",
+        "observed_on"
+      ],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "state": {"const": "TX"},
+        "geoid": {"type": "string", "pattern": "^48[0-9]{3}$"},
+        "jurisdiction_id": {"type": "string", "minLength": 1},
+        "division_id": {"type": "string", "minLength": 1},
+        "adapter_id": {"type": "string", "minLength": 1},
+        "response_id_prefix": {"type": "string", "minLength": 1},
+        "release_filename": {"type": "string", "minLength": 1},
+        "observed_on": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": ["bounded", "countywide_complete", "expected_total_offices", "countywide_offices"],
+      "properties": {
+        "bounded": {"type": "boolean"},
+        "countywide_complete": {"type": "boolean"},
+        "unmodeled_status": {"type": "string"},
+        "expected_total_offices": {"type": "integer", "minimum": 0},
+        "countywide_offices": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "sources": {
+      "type": "object",
+      "required": ["snapshot_ref", "source_repository", "manifest"],
+      "properties": {
+        "snapshot_ref": {"type": "string", "minLength": 1},
+        "source_repository": {"type": "string", "minLength": 1},
+        "manifest": {"type": "object"},
+        "identity_conflicts": {"type": "array", "items": {"type": "object"}},
+        "source_health": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "architecture": {
+      "type": "object",
+      "required": ["requires_custom_resolver_logic", "requires_consumer_schema_change"],
+      "properties": {
+        "requires_custom_resolver_logic": {"type": "boolean"},
+        "requires_consumer_schema_change": {"type": "boolean"}
+      }
+    },
+    "district_families": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "family",
+          "adapter_id",
+          "layer",
+          "district_keys",
+          "offices_per_key",
+          "holders",
+          "geometry",
+          "district_name_template",
+          "division_id_template",
+          "division_type",
+          "office_id_template",
+          "office_title_template",
+          "official_url",
+          "coverage_reason"
+        ],
+        "properties": {
+          "family": {"type": "string", "minLength": 1},
+          "adapter_id": {"type": "string", "minLength": 1},
+          "layer": {"type": "string", "minLength": 1},
+          "district_keys": {"type": "array", "minItems": 1},
+          "offices_per_key": {"type": "object", "minProperties": 1},
+          "holders": {"type": "object", "minProperties": 1},
+          "geometry": {
+            "type": "object",
+            "required": [
+              "official",
+              "service_url",
+              "district_field",
+              "district_field_type",
+              "numeric",
+              "endpoint_authority_class",
+              "endpoint_provenance_url",
+              "endpoint_publisher"
+            ]
+          }
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "required": ["interiors", "outside_negative", "boundary"],
+      "properties": {
+        "interiors": {"type": "array", "minItems": 1},
+        "outside_negative": {"type": "object", "required": ["address"]},
+        "boundary": {
+          "type": "object",
+          "required": ["required", "policy"],
+          "properties": {
+            "required": {"const": true},
+            "policy": {"const": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK"}
+          }
+        }
+      }
+    }
+  }
+}

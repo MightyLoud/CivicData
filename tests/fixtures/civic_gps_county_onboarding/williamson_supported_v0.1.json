@@ -1,0 +1,266 @@
+{
+  "schema_version": "civic-gps-county-onboarding/0.1.0",
+  "archetype": "TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1",
+  "county": {
+    "name": "Williamson County",
+    "state": "TX",
+    "geoid": "48491",
+    "jurisdiction_id": "jur-us-tx-williamson-county",
+    "division_id": "div-us-tx-williamson-county",
+    "adapter_id": "ADAPTER-TX-WILLIAMSON",
+    "response_id_prefix": "civic-gps-williamson",
+    "release_filename": "civic_gps_williamson_county_v0.1.json",
+    "observed_on": "2026-08-08"
+  },
+  "scope": {
+    "bounded": true,
+    "countywide_complete": false,
+    "unmodeled_status": "BOUNDED_V0_1_SCOPE",
+    "expected_total_offices": 18,
+    "countywide_offices": [
+      {
+        "office_id": "office-us-tx-williamson-county-judge",
+        "title": "County Judge",
+        "holder": "Steven Snell",
+        "selection_type": "appointment",
+        "official_url": "https://www.wilcotx.gov/334/County-Judge"
+      },
+      {
+        "office_id": "office-us-tx-williamson-county-sheriff",
+        "title": "Sheriff",
+        "holder": "Matthew Lindemann",
+        "official_url": "https://www.wilcotx.gov/188/Elected-Officials"
+      },
+      {
+        "office_id": "office-us-tx-williamson-county-clerk",
+        "title": "County Clerk",
+        "holder": "Nancy E. Rister",
+        "official_url": "https://www.wilcotx.gov/188/Elected-Officials"
+      },
+      {
+        "office_id": "office-us-tx-williamson-county-district-clerk",
+        "title": "District Clerk",
+        "holder": "Lisa David",
+        "official_url": "https://www.wilcotx.gov/188/Elected-Officials"
+      },
+      {
+        "office_id": "office-us-tx-williamson-county-tax-assessor-collector",
+        "title": "Tax Assessor-Collector",
+        "holder": "Catherine Totty",
+        "selection_type": "appointment",
+        "official_url": "https://www.wilcotx.gov/tax"
+      },
+      {
+        "office_id": "office-us-tx-williamson-county-treasurer",
+        "title": "County Treasurer",
+        "holder": "D. Scott Heselmeyer",
+        "official_url": "https://www.wilcotx.gov/188/Elected-Officials"
+      }
+    ]
+  },
+  "sources": {
+    "snapshot_ref": "https://www.wilcotx.gov/188/Elected-Officials",
+    "source_repository": "https://www.wilcotx.gov/",
+    "manifest": {
+      "elected_officials": "https://www.wilcotx.gov/188/Elected-Officials",
+      "county_judge": "https://www.wilcotx.gov/334/County-Judge",
+      "tax_assessor_collector": "https://www.wilcotx.gov/tax",
+      "geometry": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0",
+      "controls": "official Williamson County facility and precinct-office addresses"
+    },
+    "identity_conflicts": [
+      {
+        "subject": "Tax Assessor-Collector",
+        "resolution_status": "RESOLVED",
+        "canonical_value": "Catherine Totty",
+        "superseded_value": "Larry Gaddes",
+        "winning_source": "https://www.wilcotx.gov/tax",
+        "superseded_source": "https://www.wilcotx.gov/188/Elected-Officials",
+        "effective_on": "2026-07-21",
+        "rule": "NEWER_OFFICE_SPECIFIC_OR_APPOINTMENT_OVERRIDES_STALE_GENERAL_DIRECTORY"
+      }
+    ],
+    "source_health": [
+      {
+        "source_id": "williamson-gis",
+        "status": "OK"
+      }
+    ]
+  },
+  "architecture": {
+    "requires_custom_resolver_logic": false,
+    "requires_consumer_schema_change": false
+  },
+  "district_families": [
+    {
+      "family": "commissioner",
+      "adapter_id": "DIST-TX-WILLIAMSON-COMMISSIONER",
+      "layer": "williamson_county_commissioner_precinct",
+      "district_keys": ["1", "2", "3", "4"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1},
+      "holders": {"1": "Terry Cook", "2": "Cynthia Long", "3": "Valerie Covey", "4": "Russ Boles"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0",
+        "district_field": "PCT_NUMBER",
+        "district_field_type": "esriFieldTypeSmallInteger",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0",
+        "endpoint_publisher": "Williamson County GIS"
+      },
+      "district_name_template": "Williamson County Commissioner Precinct {district}",
+      "division_id_template": "div-us-tx-williamson-county-commissioner-{district}",
+      "division_type": "county_commissioner_precinct",
+      "office_id_template": "office-us-tx-williamson-county-commissioner-{district}",
+      "office_title_template": "Commissioner Precinct {district}",
+      "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+      "coverage_reason": "Address-specific Commissioner precinct resolved from official Williamson County precinct geometry."
+    },
+    {
+      "family": "justice_of_the_peace",
+      "adapter_id": "DIST-TX-WILLIAMSON-JP",
+      "layer": "williamson_county_jp_precinct",
+      "district_keys": ["1", "2", "3", "4"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1},
+      "holders": {"1": "KT Musselman", "2": "Angela Williams", "3": "Evelyn McLean", "4": "Rhonda Redden"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0",
+        "district_field": "PCT_NUMBER",
+        "district_field_type": "esriFieldTypeSmallInteger",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0",
+        "endpoint_publisher": "Williamson County GIS"
+      },
+      "district_name_template": "Williamson County Justice Precinct {district}",
+      "division_id_template": "div-us-tx-williamson-county-jp-{district}",
+      "division_type": "justice_precinct",
+      "office_id_template": "office-us-tx-williamson-county-jp-{district}",
+      "office_title_template": "Justice of the Peace Precinct {district}",
+      "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+      "coverage_reason": "Address-specific Justice precinct resolved from official Williamson County precinct geometry."
+    },
+    {
+      "family": "constable",
+      "adapter_id": "DIST-TX-WILLIAMSON-CONSTABLE",
+      "layer": "williamson_county_constable_precinct",
+      "district_keys": ["1", "2", "3", "4"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1},
+      "holders": {"1": "Mickey Chance", "2": "Jeff Anderson", "3": "Kevin Wilkie", "4": "Paul Leal"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0",
+        "district_field": "PCT_NUMBER",
+        "district_field_type": "esriFieldTypeSmallInteger",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0",
+        "endpoint_publisher": "Williamson County GIS"
+      },
+      "district_name_template": "Williamson County Constable Precinct {district}",
+      "division_id_template": "div-us-tx-williamson-county-constable-{district}",
+      "division_type": "constable_precinct",
+      "office_id_template": "office-us-tx-williamson-county-constable-{district}",
+      "office_title_template": "Constable Precinct {district}",
+      "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+      "coverage_reason": "Address-specific Constable precinct resolved from the shared official Williamson County precinct geography; identity is canonical-release-only."
+    }
+  ],
+  "controls": {
+    "interiors": [
+      {
+        "id": "williamson-p1",
+        "address": "1801 E Old Settlers Boulevard, Round Rock, TX 78664",
+        "expected_assignments": {
+          "DIST-TX-WILLIAMSON-COMMISSIONER": "1",
+          "DIST-TX-WILLIAMSON-JP": "1",
+          "DIST-TX-WILLIAMSON-CONSTABLE": "1"
+        },
+        "expected_applicable_offices": 9
+      },
+      {
+        "id": "williamson-p2",
+        "address": "350 Discovery Boulevard, Cedar Park, TX 78613",
+        "expected_assignments": {
+          "DIST-TX-WILLIAMSON-COMMISSIONER": "2",
+          "DIST-TX-WILLIAMSON-JP": "2",
+          "DIST-TX-WILLIAMSON-CONSTABLE": "2"
+        },
+        "expected_applicable_offices": 9
+      },
+      {
+        "id": "williamson-p3",
+        "address": "405 Martin Luther King Street, Georgetown, TX 78626",
+        "expected_assignments": {
+          "DIST-TX-WILLIAMSON-COMMISSIONER": "3",
+          "DIST-TX-WILLIAMSON-JP": "3",
+          "DIST-TX-WILLIAMSON-CONSTABLE": "3"
+        },
+        "expected_applicable_offices": 9
+      },
+      {
+        "id": "williamson-p4",
+        "address": "3001 Joe DiMaggio Boulevard, Round Rock, TX 78665",
+        "expected_assignments": {
+          "DIST-TX-WILLIAMSON-COMMISSIONER": "4",
+          "DIST-TX-WILLIAMSON-JP": "4",
+          "DIST-TX-WILLIAMSON-CONSTABLE": "4"
+        },
+        "expected_applicable_offices": 9
+      }
+    ],
+    "outside_negative": {
+      "address": "700 Lavaca Street, Austin, TX 78701",
+      "expected": {
+        "williamson_jurisdiction_present": false,
+        "assignments": 0,
+        "applicable_offices": 0,
+        "actions": 0
+      }
+    },
+    "boundary": {
+      "required": true,
+      "policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK",
+      "shared_geometry_families": ["commissioner", "justice_of_the_peace", "constable"],
+      "expected_exact": {
+        "district_assignments": 0,
+        "applicable_offices": 6,
+        "district_offices": 0
+      },
+      "expected_sides": {
+        "each_restores_single_precinct": true,
+        "applicable_offices": 9
+      }
+    }
+  },
+  "actions": {
+    "status": "NOT_YET_RELEASED",
+    "layer": "williamson_action_endpoints",
+    "reason": "Williamson County civic-action routing is intentionally not yet released in the county-archetype geography/office batch."
+  },
+  "release_status": "RELEASE_BACKED_CURRENT",
+  "source_status": "LIVE_INTERIOR_NEGATIVE_BOUNDARY_PASS",
+  "release_note": "Williamson County is the third production county generated through the reusable Texas county precinct archetype. It models a deliberately bounded six-office countywide set plus Commissioner, Justice of the Peace, and Constable precinct offices 1-4. Geography comes only from official Williamson County administrative-boundary GIS. Current officeholder identity comes only from canonical official-page evidence; the Tax Assessor-Collector uses newer office-specific appointment evidence over a stale general directory entry. Civic-action routing and additional countywide offices remain explicitly outside this v0.1 release scope.",
+  "known_gaps": [
+    {
+      "gap_id": "GAP-WILLIAMSON-GPS-001",
+      "status": "NOT_YET_RELEASED",
+      "summary": "Williamson County civic-action routing is intentionally not included in this geography/office release."
+    },
+    {
+      "gap_id": "GAP-WILLIAMSON-GPS-002",
+      "status": "BOUNDED_V0_1_SCOPE",
+      "summary": "The v0.1 countywide set is intentionally bounded to six core countywide offices; additional countywide offices are not yet modeled."
+    },
+    {
+      "gap_id": "GAP-WILLIAMSON-GPS-003",
+      "status": "SOURCE_PRECEDENCE_RESOLVED",
+      "summary": "Newer office-specific evidence establishes Catherine Totty as current Tax Assessor-Collector; a stale general directory entry for Larry Gaddes is not canonical."
+    }
+  ]
+}

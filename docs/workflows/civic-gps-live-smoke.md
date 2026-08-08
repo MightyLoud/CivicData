@@ -2,11 +2,11 @@
 
 ## Purpose
 
-The Civic GPS live-smoke workflow is the formal networked release and source-drift gate for the packaged Civic GPS resolver. A runtime/configuration change is not release-ready until this workflow passes against the maintained real-address, negative, action-selection, and exact-boundary controls. The same workflow runs weekly so upstream drift is detected after release as well as before it.
+The Civic GPS live-smoke workflow is the formal release and source-drift gate for Civic GPS. It now protects both the packaged resolver and the deterministic County Onboarding Pipeline. A relevant change is not release-ready until the offline onboarding fixtures pass **and** the maintained real-address, negative, action-selection, and exact-boundary controls pass. The same workflow runs weekly so upstream drift is detected after release as well as before it.
 
 ## Gate contract
 
-The workflow must pass before a Civic GPS runtime/configuration change is promoted to `main`.
+The workflow must pass before a Civic GPS runtime/configuration or county-onboarding automation change is promoted to `main`.
 
 The runner reconstructs the exact packaged runtime from repository chunks and verifies its SHA-256 before execution.
 
@@ -20,8 +20,20 @@ Current contract set:
 - Adapter registry artifact: `v0.5.4`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
+- County onboarding frozen-spec schema: `civic-gps-county-onboarding/0.1.0`
 
-## Maintained controls
+## Deterministic county-onboarding controls
+
+Before any networked smoke tests, the gate runs the offline County Onboarding Pipeline fixtures:
+
+- Williamson County must classify `SUPPORTED_V0_1 / NONE`, produce deterministic builder/release/bundle previews, and preserve `ADAPTER` failure scope, `CANONICAL_RELEASE_ONLY` identity, and the fail-closed boundary policy.
+- Hays County must classify `MULTI_OFFICE_PER_DISTRICT` and must not emit a builder spec, release preview, or bundle preview.
+- All seven named STOP classes must have executable deterministic detectors.
+- Running the same frozen Williamson spec twice must produce byte-identical JSON outputs.
+
+These tests are intentionally offline. They validate the frozen-spec contract; later CG gates validate live sources.
+
+## Maintained network controls
 
 ### Baseline
 
@@ -62,7 +74,7 @@ Williamson release scope is 18 offices = 6 deliberately bounded countywide + 4 C
 
 The gate runs:
 
-- on pull requests to `main` that change Civic GPS runtime, maintained tests, dependencies, workflow, or gate documentation;
+- on pull requests to `main` that change Civic GPS runtime, maintained tests, onboarding tool/schema/fixtures, dependencies, workflow, or gate documentation;
 - on relevant pushes to `main`;
 - manually through `workflow_dispatch`;
 - weekly on Wednesday at 15:23 UTC.
@@ -71,7 +83,7 @@ The required status context is exactly `Civic GPS release gate`.
 
 ## Evidence
 
-Every run uploads generated live-response evidence for the baseline plus county-specific proof directories. Failed runs still upload whatever evidence was produced before failure.
+Every run uploads deterministic county-onboarding outputs plus generated live-response evidence for the baseline and county-specific proof directories. Failed runs still upload whatever evidence was produced before failure.
 
 ## Failure handling
 
@@ -86,6 +98,8 @@ Classify failures as one of:
 
 For upstream drift, capture the artifact, verify the authoritative source, update canonical release/config deliberately, rerun regressions, and require this gate to pass again.
 
+For an onboarding-fixture failure, fix the frozen-spec/tool contract. Do not loosen a STOP condition merely to make the fixture green.
+
 ## Promotion history
 
 - Initial five-control network baseline: run `31224765817`.
@@ -93,4 +107,4 @@ For upstream drift, capture the artifact, verify the authoritative source, updat
 - Denton action routing: PR #6; post-merge run `31241061355`.
 - Collin reusable-archetype release: PR #7.
 - Travis reusable-archetype release: PR #8; post-merge run `31243494442`.
-- Williamson pre-promotion deterministic package: run `31246057814`; full packaged regression: run `31246190668`; candidate runtime SHA `52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de`.
+- Williamson release: PR #10; protected PR run `31246989220`; post-merge run `31247035390`; runtime SHA `52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de`.
