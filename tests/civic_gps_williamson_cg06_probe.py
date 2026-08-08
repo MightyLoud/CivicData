@@ -3,7 +3,7 @@
 
 This onboarding probe overlays a generated Williamson bundle onto a temporary
 copy of the currently released Civic GPS runtime. It does not package or release
-Williamson County. The proof must resolve real official county office addresses
+Williamson County. The proof must resolve real official county facility addresses
 through Census geocoding + official county precinct geometry + canonical roster.
 """
 from __future__ import annotations
@@ -124,7 +124,7 @@ spec = {
     "source_manifest": {
         "identity": "https://www.wilcotx.gov/188/Elected-Officials + current office-specific pages",
         "geometry": SERVICE,
-        "controls": "official Williamson County precinct office physical addresses",
+        "controls": "official Williamson County facility and precinct-office physical addresses",
     },
     "known_gaps": [
         {"gap_id": "GAP-WILLIAMSON-GPS-001", "layer": "williamson_action_endpoints", "status": "NOT_YET_RELEASED", "reason": "CG-06 proves office applicability only; civic actions are a later release."}
@@ -151,9 +151,9 @@ CASES = [
         "representatives": {A_COMM: "Cynthia Long", A_JP: "Angela Williams", A_CONST: "Jeff Anderson"},
     },
     {
-        "id": "williamson-p3-georgetown-annex",
-        "address": "100 Wilco Way, Georgetown, TX 78626",
-        "official_source": "https://www.wilcotx.gov/comm3",
+        "id": "williamson-p3-justice-center",
+        "address": "405 Martin Luther King Street, Georgetown, TX 78626",
+        "official_source": "https://www.wilcotx.gov/433/Court-at-Law-Three",
         "expected_key": "3",
         "representatives": {A_COMM: "Valerie Covey", A_JP: "Evelyn McLean", A_CONST: "Kevin Wilkie"},
     },
