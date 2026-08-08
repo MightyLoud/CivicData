@@ -14,12 +14,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`66f876c59809849b36ab837e942ac2465e2c32936cf44f1cbe8aa65795ee04c7`
+`ea4e10ac250582f01e0a5eabb74837cd987325dfafb30c4111121c4e7c950c9b`
 
 Current engine/contract set:
 
 - Overlay Engine: `v0.6.0`
-- Adapter registry artifact: `v0.5.0`
+- Adapter registry artifact: `v0.5.1`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 
@@ -58,12 +58,14 @@ Current engine/contract set:
    - Justice of the Peace Precinct 2
    - Constable Precinct 2
    - 9 applicable Denton offices
+   - 14 Denton action links
 
 7. **Denton / Flower Mound** — `6200 Canyon Falls Drive, Flower Mound, TX 76226`
    - Commissioner Precinct 4
    - Justice of the Peace Precinct 4
    - Constable Precinct 4
    - 9 applicable Denton offices
+   - 14 Denton action links
 
 8. **Dallas outside-Denton negative** — `1500 Marilla Street, Dallas, TX 75201`
    - Denton must not activate
@@ -79,7 +81,7 @@ Current engine/contract set:
     - Denton BASE plus the unambiguous Commissioner assignment must survive.
     - Points on opposite sides must resolve to distinct JP/Constable precincts.
 
-Denton action routing is not yet released. The runtime must expose that as `NOT_YET_RELEASED`; zero Denton action links are not interpreted as action-routing completeness.
+Denton action routing v0.1 is release-backed with 27 verified routes: five Commissioners Court participation/records routes, six countywide elected-office contacts, four Commissioner contacts, six Justice of the Peace court contacts, and six Constable contacts. A normal resolved Denton address returns 14 Denton action links: 11 countywide/body routes plus exactly three precinct-specific routes. Exact boundary conflicts suppress only the ambiguous precinct-specific route or routes while preserving all unambiguous Denton actions.
 
 ## Triggers
 
@@ -111,4 +113,4 @@ For upstream drift, capture the live artifact, verify the authoritative source, 
 
 The first successful five-control networked baseline was GitHub Actions run `31224765817` on August 7, 2026.
 
-Denton's pre-package promotion proof passed on run `31237951659`: two distinct interior controls, the Dallas outside-county negative, and both exact-boundary fail-closed controls passed while the original five controls remained green. The next required proof is the same Denton matrix executed against the packaged registry v0.5.0 runtime.
+Denton geography/office applicability was promoted through PR #5 and post-merge main run `31240231410`. Denton action routing v0.1 advances the packaged registry to v0.5.1; promotion requires the full baseline + Denton interior/negative/boundary matrix to pass against the new packaged runtime, including action-count and boundary-action filtering assertions.
