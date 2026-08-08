@@ -1,0 +1,46 @@
+name: Civic GPS Williamson CG-09 pin refresh
+
+on:
+  push:
+    branches:
+      - 'agent/civic-gps-williamson-cg09'
+    paths:
+      - '.github/workflows/civic-gps-williamson-cg09-pin-refresh.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/civic-gps-williamson-cg09
+      - name: Refresh registry-only version pins
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          files = [
+              Path('tests/civic_gps_denton_live_probe.py'),
+              Path('tests/civic_gps_denton_action_probe.py'),
+              Path('tests/civic_gps_collin_live_probe.py'),
+              Path('tests/civic_gps_travis_live_probe.py'),
+          ]
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+              if '0.5.3' not in text:
+                  raise SystemExit(f'expected stale 0.5.3 pin in {path}')
+              path.write_text(text.replace('0.5.3', '0.5.4'), encoding='utf-8')
+          PY
+      - name: Commit pin refresh only
+        shell: bash
+        run: |
+          git config user.name 'Creyton Loud'
+          git config user.email 'creytonloud2@gmail.com'
+          git add tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py
+          git diff --cached --check
+          git commit -m 'Refresh Civic GPS registry pins for v0.5.4 [skip ci]'
+          git push origin HEAD:agent/civic-gps-williamson-cg09
