@@ -1,0 +1,124 @@
+{
+  "schema_version": "civic-gps-county-onboarding/0.1.0",
+  "archetype": "TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1",
+  "county": {
+    "name": "Tarrant County",
+    "state": "TX",
+    "geoid": "48439",
+    "jurisdiction_id": "jur-us-tx-tarrant-county",
+    "division_id": "div-us-tx-tarrant-county",
+    "adapter_id": "ADAPTER-TX-TARRANT",
+    "response_id_prefix": "civic-gps-tarrant",
+    "release_filename": "civic_gps_tarrant_county_v0.1.json",
+    "observed_on": "2026-08-08"
+  },
+  "scope": {
+    "bounded": true,
+    "countywide_complete": false,
+    "unmodeled_status": "BOUNDED_V0_1_SCOPE",
+    "expected_total_offices": 26,
+    "countywide_offices": [
+      {"office_id": "office-us-tx-tarrant-county-judge", "title": "County Judge", "holder": "Tim O’Hare", "official_url": "https://www.tarrantcountytx.gov/en/county/supermenu-contents/government/elected-county-officials.html"},
+      {"office_id": "office-us-tx-tarrant-county-sheriff", "title": "Sheriff", "holder": "Bill E. Waybourn", "official_url": "https://www.tarrantcountytx.gov/en/county/supermenu-contents/government/elected-county-officials.html"},
+      {"office_id": "office-us-tx-tarrant-county-clerk", "title": "County Clerk", "holder": "Mary Louise Nicholson", "official_url": "https://www.tarrantcountytx.gov/en/county/supermenu-contents/government/elected-county-officials.html"},
+      {"office_id": "office-us-tx-tarrant-county-district-clerk", "title": "District Clerk", "holder": "Thomas A. Wilder", "official_url": "https://www.tarrantcountytx.gov/en/county/supermenu-contents/government/elected-county-officials.html"},
+      {"office_id": "office-us-tx-tarrant-county-tax-assessor-collector", "title": "Tax Assessor-Collector", "holder": "Rick Barnes", "official_url": "https://www.tarrantcountytx.gov/en/county/supermenu-contents/government/elected-county-officials.html"},
+      {"office_id": "office-us-tx-tarrant-county-criminal-district-attorney", "title": "Criminal District Attorney", "holder": "Phil Sorrells", "official_url": "https://www.tarrantcountytx.gov/en/county/supermenu-contents/government/elected-county-officials.html"}
+    ]
+  },
+  "sources": {
+    "snapshot_ref": "https://www.tarrantcountytx.gov/en/county/supermenu-contents/government/elected-county-officials.html",
+    "source_repository": "https://www.tarrantcountytx.gov/",
+    "manifest": {
+      "elected_officials": "https://www.tarrantcountytx.gov/en/county/supermenu-contents/government/elected-county-officials.html",
+      "commissioner_geometry": "https://mapit.tarrantcounty.com/arcgis/rest/services/BondProject/BondProjects/MapServer/3",
+      "jp_constable_geometry": "https://mapit.tarrantcounty.com/arcgis/rest/services/Dynamic/JusticeOfThePeace/MapServer/0",
+      "justice_courts": "https://www.tarrantcountytx.gov/content/main/en/justice-of-the-peace-courts.html",
+      "constables": "https://www.tarrantcountytx.gov/en/constables.html",
+      "controls": "official Tarrant County courthouse/subcourthouse addresses spanning JP/Constable precincts 1-8"
+    },
+    "identity_conflicts": [],
+    "source_health": [
+      {"source_id": "tarrant-current-commissioner-gis", "status": "OK"},
+      {"source_id": "tarrant-jp-constable-gis", "status": "OK"},
+      {"source_id": "tarrant-current-roster", "status": "OK"}
+    ]
+  },
+  "architecture": {"requires_custom_resolver_logic": false, "requires_consumer_schema_change": false},
+  "district_families": [
+    {
+      "family": "commissioner",
+      "adapter_id": "DIST-TX-TARRANT-COMMISSIONER",
+      "layer": "tarrant_county_commissioner_precinct",
+      "district_keys": ["1", "2", "3", "4"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1},
+      "holders": {"1": "Roderick Miles Jr", "2": "Alisa Simmons", "3": "Matt Krause", "4": "Manny Ramirez"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {"official": true, "service_url": "https://mapit.tarrantcounty.com/arcgis/rest/services/BondProject/BondProjects/MapServer/3", "district_field": "District_N", "district_field_type": "esriFieldTypeString", "numeric": true, "endpoint_authority_class": "OFFICIAL_COUNTY_GIS", "endpoint_provenance_url": "https://mapit.tarrantcounty.com/arcgis/rest/services/BondProject/BondProjects/MapServer/3", "endpoint_publisher": "Tarrant County Elections / GIS"},
+      "district_name_template": "Tarrant County Commissioner Precinct {district}",
+      "division_id_template": "div-us-tx-tarrant-county-commissioner-{district}",
+      "division_type": "county_commissioner_precinct",
+      "office_id_template": "office-us-tx-tarrant-county-commissioner-{district}",
+      "office_title_template": "Commissioner Precinct {district}",
+      "official_url": "https://www.tarrantcountytx.gov/en/county/supermenu-contents/government/elected-county-officials.html",
+      "coverage_reason": "Address-specific Commissioner precinct resolved from official Tarrant County current commissioner geometry."
+    },
+    {
+      "family": "justice_of_the_peace",
+      "adapter_id": "DIST-TX-TARRANT-JP",
+      "layer": "tarrant_county_jp_precinct",
+      "district_keys": ["1", "2", "3", "4", "5", "6", "7", "8"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "8": 1},
+      "holders": {"1": "Ralph Swearingin Jr.", "2": "Mary Tom Curnutt", "3": "William P. Brandt", "4": "Christopher Gregory", "5": "Sergio L. De Leon", "6": "Jason Charbonnet", "7": "Kenneth Sanders", "8": "Lisa R. Woodard"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {"official": true, "service_url": "https://mapit.tarrantcounty.com/arcgis/rest/services/Dynamic/JusticeOfThePeace/MapServer/0", "district_field": "JP", "district_field_type": "esriFieldTypeString", "numeric": true, "endpoint_authority_class": "OFFICIAL_COUNTY_GIS", "endpoint_provenance_url": "https://mapit.tarrantcounty.com/arcgis/rest/services/Dynamic/JusticeOfThePeace/MapServer/0", "endpoint_publisher": "Tarrant County GIS"},
+      "district_name_template": "Tarrant County Justice Precinct {district}",
+      "division_id_template": "div-us-tx-tarrant-county-jp-{district}",
+      "division_type": "justice_precinct",
+      "office_id_template": "office-us-tx-tarrant-county-jp-{district}",
+      "office_title_template": "Justice of the Peace Precinct {district}",
+      "official_url": "https://www.tarrantcountytx.gov/en/county/supermenu-contents/government/elected-county-officials.html",
+      "coverage_reason": "Address-specific Justice precinct resolved from official Tarrant County Justice of the Peace / Constable geometry."
+    },
+    {
+      "family": "constable",
+      "adapter_id": "DIST-TX-TARRANT-CONSTABLE",
+      "layer": "tarrant_county_constable_precinct",
+      "district_keys": ["1", "2", "3", "4", "5", "6", "7", "8"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 1, "8": 1},
+      "holders": {"1": "Dale Clark", "2": "David Woodruff", "3": "Darrell Huffman", "4": "Jody Johnson", "5": "Pedro \"Pete\" Munoz", "6": "Jon H. Siegel", "7": "Sandra Lee", "8": "Michael R. Campbell"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {"official": true, "service_url": "https://mapit.tarrantcounty.com/arcgis/rest/services/Dynamic/JusticeOfThePeace/MapServer/0", "district_field": "Constable", "district_field_type": "esriFieldTypeSmallInteger", "numeric": true, "endpoint_authority_class": "OFFICIAL_COUNTY_GIS", "endpoint_provenance_url": "https://mapit.tarrantcounty.com/arcgis/rest/services/Dynamic/JusticeOfThePeace/MapServer/0", "endpoint_publisher": "Tarrant County GIS"},
+      "district_name_template": "Tarrant County Constable Precinct {district}",
+      "division_id_template": "div-us-tx-tarrant-county-constable-{district}",
+      "division_type": "constable_precinct",
+      "office_id_template": "office-us-tx-tarrant-county-constable-{district}",
+      "office_title_template": "Constable Precinct {district}",
+      "official_url": "https://www.tarrantcountytx.gov/en/county/supermenu-contents/government/elected-county-officials.html",
+      "coverage_reason": "Address-specific Constable precinct resolved from the shared official Tarrant County Justice of the Peace / Constable geography; identity is canonical-release-only."
+    }
+  ],
+  "controls": {
+    "interiors": [
+      {"id": "tarrant-jp1-candidate", "address": "100 W Weatherford Street, Fort Worth, TX 76196"},
+      {"id": "tarrant-jp2-candidate", "address": "700 E Abram Street, Arlington, TX 76010"},
+      {"id": "tarrant-jp3-candidate", "address": "645 Grapevine Highway, Hurst, TX 76054"},
+      {"id": "tarrant-jp4-candidate", "address": "6713 Telephone Road, Lake Worth, TX 76135"},
+      {"id": "tarrant-jp5-candidate", "address": "350 W Belknap Street, Fort Worth, TX 76102"},
+      {"id": "tarrant-jp6-candidate", "address": "6551 Granbury Road, Fort Worth, TX 76133"},
+      {"id": "tarrant-jp7-candidate", "address": "1100 E Broad Street, Mansfield, TX 76063"},
+      {"id": "tarrant-jp8-candidate", "address": "3500 Miller Avenue, Fort Worth, TX 76119"}
+    ],
+    "outside_negative": {"address": "700 Lavaca Street, Austin, TX 78701", "expected": {"tarrant_jurisdiction_present": false}},
+    "boundary": {"required": true, "policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK", "shared_geometry_families": ["justice_of_the_peace", "constable"]}
+  },
+  "actions": {"status": "NOT_YET_RELEASED", "layer": "tarrant_action_endpoints", "reason": "Tarrant County civic-action routing is intentionally outside the County #5 CG-01→CG-03 fit-screen scope."},
+  "release_status": "PROBE_CURRENT",
+  "source_status": "FROZEN_FIT_SCREEN_PENDING_LIVE_CONTROLS",
+  "release_note": "Tarrant County is County #5, the first real consumer of the automated County Onboarding Pipeline v0.1. The frozen fit-screen scope models six deliberately bounded countywide offices plus Commissioner precincts 1-4 and Justice of the Peace / Constable precincts 1-8. Current officeholder identity comes from the official current elected-official roster; geography comes only from official Tarrant County ArcGIS services. Live GIS, interior, negative, boundary, package, and promotion gates remain pending after CG-03.",
+  "known_gaps": [
+    {"gap_id": "GAP-TARRANT-GPS-001", "status": "NOT_YET_RELEASED", "summary": "Tarrant County civic-action routing is not included in the County #5 fit-screen batch."},
+    {"gap_id": "GAP-TARRANT-GPS-002", "status": "BOUNDED_V0_1_SCOPE", "summary": "The v0.1 countywide set is deliberately bounded to six countywide offices; additional countywide and judicial offices are not yet modeled."},
+    {"gap_id": "GAP-TARRANT-GPS-003", "status": "LIVE_PROOF_PENDING", "summary": "CG-05 through CG-10 remain pending after the automated CG-01 through CG-03 fit decision."}
+  ]
+}
