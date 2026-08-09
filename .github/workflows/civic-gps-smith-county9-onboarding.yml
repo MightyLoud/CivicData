@@ -1,0 +1,145 @@
+name: 'Civic GPS Smith County #9 onboarding'
+
+on:
+  push:
+    branches:
+      - 'agent/civic-gps-smith-onboarding'
+    paths:
+      - '.github/workflows/civic-gps-smith-county9-onboarding.yml'
+      - 'tests/fixtures/civic_gps_county_onboarding/smith_county9_candidate_v0.1.json'
+      - 'tools/civic_gps_county_onboarding.py'
+      - 'tools/civic_gps_tx_county_archetype.py'
+
+permissions:
+  contents: read
+
+jobs:
+  fit-screen:
+    name: Smith County automated CG-01 to CG-03
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 'Check out County #9 branch'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile onboarding tooling
+        run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py
+
+      - name: Run frozen Smith spec twice
+        shell: bash
+        run: |
+          python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/smith_county9_candidate_v0.1.json --output-dir artifacts/civic-gps-smith-county9-a --expect SUPPORTED_V0_1
+          python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/smith_county9_candidate_v0.1.json --output-dir artifacts/civic-gps-smith-county9-b --expect SUPPORTED_V0_1
+
+      - name: Prove deterministic outputs and exact supported result
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          a = Path('artifacts/civic-gps-smith-county9-a')
+          b = Path('artifacts/civic-gps-smith-county9-b')
+
+          def snapshot(root):
+              return {
+                  str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+                  for path in sorted(root.rglob('*'))
+                  if path.is_file()
+              }
+
+          left, right = snapshot(a), snapshot(b)
+          if left != right:
+              raise SystemExit(f'non-deterministic outputs: {left} != {right}')
+
+          expected_files = {
+              'base-bundle-plan.json',
+              'builder-spec.json',
+              'canonical-release-preview.json',
+              'fit-report.json',
+              'manifest.json',
+              'proof-plan.json',
+              'source-precedence.json',
+          }
+          if set(left) != expected_files:
+              raise SystemExit(f'unexpected evidence files: {sorted(left)}')
+
+          report = json.loads((a / 'fit-report.json').read_text())
+          expected = {
+              'decision': 'GO',
+              'result': 'SUPPORTED_V0_1',
+              'stop_class': 'NONE',
+              'stop_classes': [],
+              'stop_reasons': {},
+              'tracker_fit_result': 'SUPPORTED_V0_1',
+              'architecture_change': 'NO',
+          }
+          actual = {key: report.get(key) for key in expected}
+          if actual != expected:
+              raise SystemExit(f'unexpected fit result: {actual} != {expected}')
+
+          proof = json.loads((a / 'proof-plan.json').read_text())
+          gates = {row['gate']: row['status'] for row in proof['gates']}
+          expected_gates = {
+              'CG-01': 'PASS',
+              'CG-02': 'PASS',
+              'CG-03': 'PASS',
+              'CG-04': 'READY',
+              'CG-05': 'READY',
+              'CG-06': 'READY',
+              'CG-07': 'READY',
+              'CG-08': 'READY',
+              'CG-09': 'READY',
+              'CG-10': 'READY',
+          }
+          if gates != expected_gates:
+              raise SystemExit(f'unexpected gate state: {gates} != {expected_gates}')
+
+          release = json.loads((a / 'canonical-release-preview.json').read_text())
+          offices = release['payload']['offices']
+          holders = release['payload']['officeholders']
+          office_ids = [row['office_id'] for row in offices]
+          holder_office_ids = [row['office_id'] for row in holders]
+          if len(offices) != 20 or len(holders) != 20:
+              raise SystemExit(f'expected 20 offices/holders, got {len(offices)}/{len(holders)}')
+          if len(set(office_ids)) != 20 or set(holder_office_ids) != set(office_ids):
+              raise SystemExit('canonical office/holder joins are not unique and complete')
+
+          bundle = json.loads((a / 'base-bundle-plan.json').read_text())
+          adapters = bundle['district_adapters']
+          if len(adapters) != 3:
+              raise SystemExit(f'expected three district adapters, got {len(adapters)}')
+          if any(row['failure_scope'] != 'ADAPTER' for row in adapters):
+              raise SystemExit('adapter failure scope changed')
+          if any(row['officeholder_identity_source'] != 'CANONICAL_RELEASE_ONLY' for row in adapters):
+              raise SystemExit('adapter identity-source contract changed')
+          if any(row['boundary_policy'] != 'MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK' for row in adapters):
+              raise SystemExit('boundary policy changed')
+
+          precedence = json.loads((a / 'source-precedence.json').read_text())
+          if precedence.get('status') != 'RESOLVED' or len(precedence.get('records', [])) != 1:
+              raise SystemExit(f'unexpected source precedence: {precedence}')
+
+          print(json.dumps({
+              'status': 'PASS',
+              'decision': report['decision'],
+              'result': report['result'],
+              'gates': gates,
+              'office_count': len(offices),
+              'holder_count': len(holders),
+              'files': left,
+          }, sort_keys=True))
+          PY
+
+      - name: 'Upload County #9 fit evidence'
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-smith-county9-${{ github.run_id }}
+          path: artifacts/civic-gps-smith-county9-a/
+          if-no-files-found: error
+          retention-days: 30
