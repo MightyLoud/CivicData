@@ -1,0 +1,176 @@
+{
+  "schema_version": "civic-gps-county-onboarding/0.1.0",
+  "archetype": "TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1",
+  "county": {
+    "name": "Grayson County",
+    "state": "TX",
+    "geoid": "48181",
+    "jurisdiction_id": "jur-us-tx-grayson-county",
+    "division_id": "div-us-tx-grayson-county",
+    "adapter_id": "ADAPTER-TX-GRAYSON",
+    "response_id_prefix": "civic-gps-grayson",
+    "release_filename": "civic_gps_grayson_county_v0.1.json",
+    "observed_on": "2026-08-09"
+  },
+  "scope": {
+    "bounded": true,
+    "countywide_complete": false,
+    "unmodeled_status": "BOUNDED_V0_1_SCOPE",
+    "expected_total_offices": 18,
+    "countywide_offices": [
+      {"office_id": "office-us-tx-grayson-county-judge", "title": "County Judge", "holder": "Bruce Dawsey", "official_url": "https://www.co.grayson.tx.us/page/co.officials"},
+      {"office_id": "office-us-tx-grayson-county-sheriff", "title": "Sheriff", "holder": "Tony Bennie", "official_url": "https://www.co.grayson.tx.us/page/co.officials"},
+      {"office_id": "office-us-tx-grayson-county-clerk", "title": "County Clerk", "holder": "Deana Patterson", "official_url": "https://www.co.grayson.tx.us/page/co.officials"},
+      {"office_id": "office-us-tx-grayson-county-district-clerk", "title": "District Clerk", "holder": "Kelly Ashmore", "official_url": "https://www.co.grayson.tx.us/page/co.officials"},
+      {"office_id": "office-us-tx-grayson-county-tax-assessor-collector", "title": "Tax Assessor-Collector", "holder": "Bruce Stidham", "official_url": "https://www.co.grayson.tx.us/page/co.officials"},
+      {"office_id": "office-us-tx-grayson-county-treasurer", "title": "County Treasurer", "holder": "Gayla Hawkins", "official_url": "https://www.co.grayson.tx.us/page/co.officials"}
+    ]
+  },
+  "sources": {
+    "snapshot_ref": "https://www.co.grayson.tx.us/page/co.officials",
+    "source_repository": "https://www.co.grayson.tx.us/",
+    "manifest": {
+      "elected_officials": "https://www.co.grayson.tx.us/page/co.officials",
+      "county_gis": "https://www.co.grayson.tx.us/page/dev.gis",
+      "county_maps": "https://www.co.grayson.tx.us/page/elec.maps",
+      "geometry_service": "https://maps.co.grayson.tx.us/arcgis/rest/services/Grayson/Grayson_County_Public_Interactive_Map/MapServer",
+      "commissioner_geometry": "https://maps.co.grayson.tx.us/arcgis/rest/services/Grayson/Grayson_County_Public_Interactive_Map/MapServer/15",
+      "jp_constable_geometry": "https://maps.co.grayson.tx.us/arcgis/rest/services/Grayson/Grayson_County_Public_Interactive_Map/MapServer/13",
+      "controls": "official Grayson County Justice of the Peace office addresses spanning JP precincts 1-4",
+      "geoid": "https://www.census.gov/quickfacts/fact/table/graysoncountytexas/BPS030224"
+    },
+    "identity_conflicts": [
+      {
+        "subject": "Justice of the Peace Precinct 2 roster presentation",
+        "resolution_status": "RESOLVED",
+        "canonical_value": "Dennis Michael",
+        "alternate_value": "Dennis Michael - Appointed 1/3/2025",
+        "winning_source": "https://www.co.grayson.tx.us/page/co.officials",
+        "alternate_source": "https://www.co.grayson.tx.us/page/co.officials",
+        "rule": "APPOINTMENT_STATUS_ANNOTATION_IS_NOT_PART_OF_CANONICAL_HOLDER_NAME"
+      }
+    ],
+    "source_health": [
+      {"source_id": "grayson-current-elected-officials", "status": "OK"},
+      {"source_id": "grayson-county-gis-index", "status": "OK"},
+      {"source_id": "grayson-commissioner-gis", "status": "OK"},
+      {"source_id": "grayson-jp-constable-gis", "status": "OK"},
+      {"source_id": "grayson-control-addresses", "status": "OK"}
+    ]
+  },
+  "architecture": {
+    "requires_custom_resolver_logic": false,
+    "requires_consumer_schema_change": false
+  },
+  "district_families": [
+    {
+      "family": "commissioner",
+      "adapter_id": "DIST-TX-GRAYSON-COMMISSIONER",
+      "layer": "grayson_county_commissioner_precinct",
+      "district_keys": ["1", "2", "3", "4"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1},
+      "holders": {"1": "Josh Marr", "2": "Art Arthur", "3": "Lindsay Wright", "4": "Matt Hardenburg"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://maps.co.grayson.tx.us/arcgis/rest/services/Grayson/Grayson_County_Public_Interactive_Map/MapServer/15",
+        "district_field": "COMMISSIONER",
+        "district_field_type": "esriFieldTypeString",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.co.grayson.tx.us/page/dev.gis",
+        "endpoint_publisher": "Grayson County GIS"
+      },
+      "district_name_template": "Grayson County Commissioner Precinct {district}",
+      "division_id_template": "div-us-tx-grayson-county-commissioner-{district}",
+      "division_type": "county_commissioner_precinct",
+      "office_id_template": "office-us-tx-grayson-county-commissioner-{district}",
+      "office_title_template": "Commissioner Precinct {district}",
+      "official_url": "https://www.co.grayson.tx.us/page/co.officials",
+      "coverage_reason": "Address-specific Commissioner precinct is available from the official Grayson County polygon layer; authoritative COMMISSIONER values are the numeric string keys 1-4."
+    },
+    {
+      "family": "justice_of_the_peace",
+      "adapter_id": "DIST-TX-GRAYSON-JP",
+      "layer": "grayson_county_jp_precinct",
+      "district_keys": ["1", "2", "3", "4"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1},
+      "holders": {"1": "Ginny Hampton", "2": "Dennis Michael", "3": "Damon Vannoy", "4": "Christina Fox"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://maps.co.grayson.tx.us/arcgis/rest/services/Grayson/Grayson_County_Public_Interactive_Map/MapServer/13",
+        "district_field": "JP_NAME",
+        "district_field_type": "esriFieldTypeString",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.co.grayson.tx.us/page/dev.gis",
+        "endpoint_publisher": "Grayson County GIS"
+      },
+      "district_name_template": "Grayson County Justice Precinct {district}",
+      "division_id_template": "div-us-tx-grayson-county-jp-{district}",
+      "division_type": "justice_precinct",
+      "office_id_template": "office-us-tx-grayson-county-jp-{district}",
+      "office_title_template": "Justice of the Peace Precinct {district}",
+      "official_url": "https://www.co.grayson.tx.us/page/co.officials",
+      "coverage_reason": "Address-specific Justice precinct is available from the official Grayson County JP/Constable polygon layer; authoritative JP_NAME values are the numeric string keys 1-4."
+    },
+    {
+      "family": "constable",
+      "adapter_id": "DIST-TX-GRAYSON-CONSTABLE",
+      "layer": "grayson_county_constable_precinct",
+      "district_keys": ["1", "2", "3", "4"],
+      "offices_per_key": {"1": 1, "2": 1, "3": 1, "4": 1},
+      "holders": {"1": "Tommy Carter", "2": "Cody Putman", "3": "Todd Booher", "4": "William R. (Bob) Douglas"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://maps.co.grayson.tx.us/arcgis/rest/services/Grayson/Grayson_County_Public_Interactive_Map/MapServer/13",
+        "district_field": "JP_NAME",
+        "district_field_type": "esriFieldTypeString",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.co.grayson.tx.us/page/dev.gis",
+        "endpoint_publisher": "Grayson County GIS"
+      },
+      "district_name_template": "Grayson County Constable Precinct {district}",
+      "division_id_template": "div-us-tx-grayson-county-constable-{district}",
+      "division_type": "constable_precinct",
+      "office_id_template": "office-us-tx-grayson-county-constable-{district}",
+      "office_title_template": "Constable Precinct {district}",
+      "official_url": "https://www.co.grayson.tx.us/page/co.officials",
+      "coverage_reason": "Address-specific Constable precinct shares the official Grayson County JP/Constable polygon layer; authoritative JP_NAME values are numeric strings 1-4 and identity is canonical-roster-only."
+    }
+  ],
+  "controls": {
+    "interiors": [
+      {"id": "grayson-jp1-candidate", "address": "100 W Houston Street, Suite 27, Sherman, TX 75090"},
+      {"id": "grayson-jp2-candidate", "address": "101 W Woodard Street, Denison, TX 75021"},
+      {"id": "grayson-jp3-candidate", "address": "509 N Union Street, Whitesboro, TX 76273"},
+      {"id": "grayson-jp4-candidate", "address": "117 S Main Street, Van Alstyne, TX 75495"}
+    ],
+    "outside_negative": {
+      "address": "700 Lavaca Street, Austin, TX 78701",
+      "expected": {"grayson_jurisdiction_present": false}
+    },
+    "boundary": {
+      "required": true,
+      "policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK",
+      "shared_geometry_families": ["justice_of_the_peace", "constable"]
+    }
+  },
+  "actions": {
+    "status": "NOT_YET_RELEASED",
+    "layer": "grayson_action_endpoints",
+    "reason": "Grayson County civic-action routing is intentionally outside the County #10 CG-01 intake scope."
+  },
+  "release_status": "PROBE_CURRENT",
+  "source_status": "FROZEN_CG01_FIT_NOT_RUN",
+  "release_note": "Grayson County is County #10 and a 4/4/4 candidate for County Onboarding Pipeline v0.1. The frozen CG-01 scope models six bounded countywide offices plus four Commissioner, four Justice of the Peace, and four Constable precinct offices. Current officeholder identity comes from the official Grayson County elected-officials roster. Commissioner geometry uses official county MapServer layer 15; Justice and Constable geometry share official county MapServer layer 13. Both layers expose authoritative numeric string keys. Automated CG-02 and CG-03 fit classification has not yet run.",
+  "known_gaps": [
+    {"gap_id": "GAP-GRAYSON-GPS-001", "status": "NOT_YET_RELEASED", "summary": "Grayson County civic-action routing is not included in the County #10 intake batch."},
+    {"gap_id": "GAP-GRAYSON-GPS-002", "status": "BOUNDED_V0_1_SCOPE", "summary": "The v0.1 countywide set is deliberately bounded to six countywide offices; additional countywide and judicial offices are not modeled."},
+    {"gap_id": "GAP-GRAYSON-GPS-003", "status": "FIT_CLASSIFICATION_PENDING", "summary": "CG-02 and CG-03 must confirm that the 4/4/4 family cardinalities and numeric-string district keys fit the unchanged onboarding contract."},
+    {"gap_id": "GAP-GRAYSON-GPS-004", "status": "LIVE_PROOF_PENDING", "summary": "Live GIS, interior, outside-negative, boundary, package, and promotion gates remain pending after CG-01."}
+  ]
+}
