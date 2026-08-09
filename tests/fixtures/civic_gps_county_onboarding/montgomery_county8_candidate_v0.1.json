@@ -1,0 +1,180 @@
+{
+  "schema_version": "civic-gps-county-onboarding/0.1.0",
+  "archetype": "TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1",
+  "county": {
+    "name": "Montgomery County",
+    "state": "TX",
+    "geoid": "48339",
+    "jurisdiction_id": "jur-us-tx-montgomery-county",
+    "division_id": "div-us-tx-montgomery-county",
+    "adapter_id": "ADAPTER-TX-MONTGOMERY",
+    "response_id_prefix": "civic-gps-montgomery",
+    "release_filename": "civic_gps_montgomery_county_v0.1.json",
+    "observed_on": "2026-08-08"
+  },
+  "scope": {
+    "bounded": true,
+    "countywide_complete": false,
+    "unmodeled_status": "BOUNDED_V0_1_SCOPE",
+    "expected_total_offices": 20,
+    "countywide_offices": [
+      {"office_id": "office-us-tx-montgomery-county-judge", "title": "County Judge", "holder": "Mark Keough", "official_url": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf"},
+      {"office_id": "office-us-tx-montgomery-county-sheriff", "title": "Sheriff", "holder": "Wesley Doolittle", "official_url": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf"},
+      {"office_id": "office-us-tx-montgomery-county-clerk", "title": "County Clerk", "holder": "L. Brandon Steinmann", "official_url": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf"},
+      {"office_id": "office-us-tx-montgomery-county-district-clerk", "title": "District Clerk", "holder": "Melisa Miller", "official_url": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf"},
+      {"office_id": "office-us-tx-montgomery-county-tax-assessor-collector", "title": "Tax Assessor-Collector", "holder": "Tammy J. McRae", "official_url": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf"},
+      {"office_id": "office-us-tx-montgomery-county-treasurer", "title": "County Treasurer", "holder": "Melanie Bush", "official_url": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf"}
+    ]
+  },
+  "sources": {
+    "snapshot_ref": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf",
+    "source_repository": "https://www.mctx.org/",
+    "manifest": {
+      "elected_officials": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf",
+      "county_commissioners": "https://www.mctx.org/departments/departments_a_-_c/commissioner_s_court/county_commissioners/index.php",
+      "justices_of_the_peace": "https://www.mctx.org/departments/departments_g_-_j/justices_of_the_peace/index.php",
+      "constables": "https://www.mctx.org/departments/departments_a_-_c/constables/index.php",
+      "county_gis_hub": "https://gis.mctx.org/",
+      "commissioner_geometry": "https://services1.arcgis.com/PRoAPGnMSUqvTrzq/arcgis/rest/services/CountyDistrict_Commissioner/FeatureServer/0",
+      "commissioner_geometry_item": "https://www.arcgis.com/home/item.html?id=ea4f547b5eec474b8eb6d022afe173b3",
+      "jp_constable_geometry": "https://services1.arcgis.com/PRoAPGnMSUqvTrzq/arcgis/rest/services/CountyDistrict_JPConstable/FeatureServer/0",
+      "jp_constable_geometry_item": "https://www.arcgis.com/home/item.html?id=72cabf90ebbe4e5c8d6b97b393108dbe",
+      "jp_constable_lookup": "https://www.arcgis.com/home/item.html?id=ba7239ecbe91432983720aedb1abfa84",
+      "controls": "official Montgomery County Justice of the Peace office addresses spanning JP precincts 1-5"
+    },
+    "identity_conflicts": [
+      {
+        "subject": "Constable Precinct 5",
+        "resolution_status": "RESOLVED",
+        "canonical_value": "Chris Jones",
+        "alternate_value": "Christopher Jones",
+        "winning_source": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf",
+        "corroborating_source": "https://www.mctx.org/departments/departments_a_-_c/constables/constable_precinct_5/index.php",
+        "alternate_source": "https://services1.arcgis.com/PRoAPGnMSUqvTrzq/arcgis/rest/services/CountyDistrict_JPConstable/FeatureServer/0",
+        "rule": "CURRENT_ELECTION_ROSTER_PLUS_OFFICE_SPECIFIC_PAGE_OVERRIDES_EXPANDED_GIS_DISPLAY_NAME"
+      }
+    ],
+    "source_health": [
+      {"source_id": "montgomery-current-election-roster", "status": "OK"},
+      {"source_id": "montgomery-commissioner-gis", "status": "OK"},
+      {"source_id": "montgomery-jp-constable-gis", "status": "OK"},
+      {"source_id": "montgomery-current-district-directories", "status": "OK"}
+    ]
+  },
+  "architecture": {
+    "requires_custom_resolver_logic": false,
+    "requires_consumer_schema_change": false
+  },
+  "district_families": [
+    {
+      "family": "commissioner",
+      "adapter_id": "DIST-TX-MONTGOMERY-COMMISSIONER",
+      "layer": "montgomery_county_commissioner_precinct",
+      "district_keys": ["C1", "C2", "C3", "C4"],
+      "offices_per_key": {"C1": 1, "C2": 1, "C3": 1, "C4": 1},
+      "holders": {"C1": "Robert Walker", "C2": "Charlie Riley", "C3": "Ritch Wheeler", "C4": "Matt Gray"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://services1.arcgis.com/PRoAPGnMSUqvTrzq/arcgis/rest/services/CountyDistrict_Commissioner/FeatureServer/0",
+        "district_field": "DISTRICTID",
+        "district_field_type": "esriFieldTypeString",
+        "numeric": false,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.arcgis.com/home/item.html?id=ea4f547b5eec474b8eb6d022afe173b3",
+        "endpoint_publisher": "Montgomery County IT-GIS"
+      },
+      "district_name_template": "Montgomery County Commissioner Precinct {district}",
+      "division_id_template": "div-us-tx-montgomery-county-commissioner-{district}",
+      "division_type": "county_commissioner_precinct",
+      "office_id_template": "office-us-tx-montgomery-county-commissioner-{district}",
+      "office_title_template": "Commissioner Precinct {district}",
+      "official_url": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf",
+      "coverage_reason": "Address-specific Commissioner precinct is available from official Montgomery County polygon geometry; the authoritative DISTRICTID values are raw string keys C1-C4."
+    },
+    {
+      "family": "justice_of_the_peace",
+      "adapter_id": "DIST-TX-MONTGOMERY-JP",
+      "layer": "montgomery_county_jp_precinct",
+      "district_keys": ["JP1", "JP2", "JP3", "JP4", "JP5"],
+      "offices_per_key": {"JP1": 1, "JP2": 1, "JP3": 1, "JP4": 1, "JP5": 1},
+      "holders": {"JP1": "Wayne L. Mack", "JP2": "G. Trey Spikes", "JP3": "Jay Mac Sanders", "JP4": "Jason Dunn", "JP5": "Matt Masden"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://services1.arcgis.com/PRoAPGnMSUqvTrzq/arcgis/rest/services/CountyDistrict_JPConstable/FeatureServer/0",
+        "district_field": "DISTRICTID",
+        "district_field_type": "esriFieldTypeString",
+        "numeric": false,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.arcgis.com/home/item.html?id=ba7239ecbe91432983720aedb1abfa84",
+        "endpoint_publisher": "Montgomery County IT-GIS"
+      },
+      "district_name_template": "Montgomery County Justice Precinct {district}",
+      "division_id_template": "div-us-tx-montgomery-county-jp-{district}",
+      "division_type": "justice_precinct",
+      "office_id_template": "office-us-tx-montgomery-county-jp-{district}",
+      "office_title_template": "Justice of the Peace Precinct {district}",
+      "official_url": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf",
+      "coverage_reason": "Address-specific Justice precinct is available from the official Montgomery County JP/Constable polygon layer; the authoritative DISTRICTID values are raw string keys JP1-JP5."
+    },
+    {
+      "family": "constable",
+      "adapter_id": "DIST-TX-MONTGOMERY-CONSTABLE",
+      "layer": "montgomery_county_constable_precinct",
+      "district_keys": ["JP1", "JP2", "JP3", "JP4", "JP5"],
+      "offices_per_key": {"JP1": 1, "JP2": 1, "JP3": 1, "JP4": 1, "JP5": 1},
+      "holders": {"JP1": "Philip Cash", "JP2": "David Eason", "JP3": "Ryan Gable", "JP4": "Kenneth \"Rowdy\" Hayden", "JP5": "Chris Jones"},
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://services1.arcgis.com/PRoAPGnMSUqvTrzq/arcgis/rest/services/CountyDistrict_JPConstable/FeatureServer/0",
+        "district_field": "DISTRICTID",
+        "district_field_type": "esriFieldTypeString",
+        "numeric": false,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.arcgis.com/home/item.html?id=ba7239ecbe91432983720aedb1abfa84",
+        "endpoint_publisher": "Montgomery County IT-GIS"
+      },
+      "district_name_template": "Montgomery County Constable Precinct {district}",
+      "division_id_template": "div-us-tx-montgomery-county-constable-{district}",
+      "division_type": "constable_precinct",
+      "office_id_template": "office-us-tx-montgomery-county-constable-{district}",
+      "office_title_template": "Constable Precinct {district}",
+      "official_url": "https://elections.mctx.org/pdf/votingpcts2026_r1.pdf",
+      "coverage_reason": "Address-specific Constable precinct shares the official Montgomery County JP/Constable polygon layer; the authoritative DISTRICTID values are raw string keys JP1-JP5 and officeholder identity is canonical-release-only."
+    }
+  ],
+  "controls": {
+    "interiors": [
+      {"id": "montgomery-jp1-candidate", "address": "300 South Danville, Willis, TX 77378"},
+      {"id": "montgomery-jp2-candidate", "address": "2241 North 1st Street, Conroe, TX 77301"},
+      {"id": "montgomery-jp3-candidate", "address": "1520 Lake Front Circle, The Woodlands, TX 77380"},
+      {"id": "montgomery-jp4-candidate", "address": "21130 Legion Road, New Caney, TX 77357"},
+      {"id": "montgomery-jp5-candidate", "address": "19100 Unity Park Drive, Magnolia, TX 77355"}
+    ],
+    "outside_negative": {
+      "address": "700 Lavaca Street, Austin, TX 78701",
+      "expected": {"montgomery_jurisdiction_present": false}
+    },
+    "boundary": {
+      "required": true,
+      "policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK",
+      "shared_geometry_families": ["justice_of_the_peace", "constable"]
+    }
+  },
+  "actions": {
+    "status": "NOT_YET_RELEASED",
+    "layer": "montgomery_action_endpoints",
+    "reason": "Montgomery County civic-action routing is intentionally outside the County #8 CG-01 intake scope."
+  },
+  "release_status": "PROBE_CURRENT",
+  "source_status": "FROZEN_CG01_FIT_NOT_RUN",
+  "release_note": "Montgomery County is County #8 and a structurally distinct 4/5/5 candidate for County Onboarding Pipeline v0.1. The frozen CG-01 scope models six deliberately bounded countywide offices plus four Commissioner, five Justice of the Peace, and five Constable precinct offices. Current officeholder identity comes from official Montgomery County election and office-specific sources. Commissioner geometry uses the official county Commissioner layer; Justice and Constable geometry share the official county JP/Constable layer. Both services expose authoritative prefixed string DISTRICTID values (C1-C4 and JP1-JP5), which are frozen without normalization. Automated CG-02 and CG-03 fit classification has not yet run.",
+  "known_gaps": [
+    {"gap_id": "GAP-MONTGOMERY-GPS-001", "status": "NOT_YET_RELEASED", "summary": "Montgomery County civic-action routing is not included in the County #8 intake batch."},
+    {"gap_id": "GAP-MONTGOMERY-GPS-002", "status": "BOUNDED_V0_1_SCOPE", "summary": "The v0.1 countywide set is deliberately bounded to six countywide offices; additional countywide and judicial offices are not modeled."},
+    {"gap_id": "GAP-MONTGOMERY-GPS-003", "status": "FIT_CLASSIFICATION_PENDING", "summary": "The official GIS keys are prefixed strings, not numeric district keys; CG-02 and CG-03 must classify this fact under the unchanged onboarding contract."},
+    {"gap_id": "GAP-MONTGOMERY-GPS-004", "status": "LIVE_PROOF_PENDING", "summary": "Live GIS, interior, outside-negative, boundary, package, and promotion gates remain pending after CG-01."}
+  ]
+}
