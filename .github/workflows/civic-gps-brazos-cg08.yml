@@ -1,0 +1,602 @@
+name: Civic GPS Brazos CG-08
+
+on:
+  push:
+    branches:
+      - agent/civic-gps-brazos-onboarding
+    paths:
+      - .github/workflows/civic-gps-brazos-cg08.yml
+      - tests/fixtures/civic_gps_county_onboarding/brazos_county7_candidate_v0.1.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  brazos-cg08:
+    name: Brazos exact-boundary compatibility proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: 'Check out County #7 branch'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Reconstruct exact released runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '4ef210434e15f7f8353437f139a0918beaafb3734f62aedfb3d0852bfee241b2  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+
+      - name: Run unchanged released Civic GPS matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tests/civic_gps_live_smoke.py
+          python tests/civic_gps_denton_live_probe.py
+          python tests/civic_gps_denton_negative_probe.py
+          python tests/civic_gps_denton_boundary_probe.py
+          python tests/civic_gps_denton_action_probe.py
+          python tests/civic_gps_collin_live_probe.py
+          python tests/civic_gps_travis_live_probe.py
+          python tests/civic_gps_williamson_live_probe.py
+          python tests/civic_gps_tarrant_live_probe.py
+          python tests/civic_gps_bastrop_live_probe.py
+
+      - name: Generate Brazos candidate from frozen onboarding spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf artifacts/civic-gps-brazos-cg08 artifacts/civic-gps-brazos-cg08-onboarding
+          mkdir -p artifacts/civic-gps-brazos-cg08
+          python tools/civic_gps_county_onboarding.py \
+            tests/fixtures/civic_gps_county_onboarding/brazos_county7_candidate_v0.1.json \
+            --output-dir artifacts/civic-gps-brazos-cg08-onboarding \
+            --expect SUPPORTED_V0_1
+
+      - name: Run Brazos CG-08 exact-boundary controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import importlib.util
+          import json
+          import math
+          import sys
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          import requests
+
+          ROOT = Path('.')
+          GPS = ROOT / 'civic_gps'
+          OUT = ROOT / 'artifacts' / 'civic-gps-brazos-cg08'
+          GENERATED = ROOT / 'artifacts' / 'civic-gps-brazos-cg08-onboarding'
+          SPEC_PATH = ROOT / 'tests' / 'fixtures' / 'civic_gps_county_onboarding' / 'brazos_county7_candidate_v0.1.json'
+          REGISTRY_PATH = GPS / 'registry.json'
+          ENGINE_PATH = GPS / 'engine.py'
+          RELEASE_NAME = 'civic_gps_brazos_county_v0.1.json'
+          RELEASE_PATH = GPS / RELEASE_NAME
+
+          J = 'jur-us-tx-brazos-county'
+          A_COMM = 'DIST-TX-BRAZOS-COMMISSIONER'
+          A_JP = 'DIST-TX-BRAZOS-JP'
+          A_CONST = 'DIST-TX-BRAZOS-CONSTABLE'
+          ADAPTERS = (A_COMM, A_JP, A_CONST)
+          SERVICE = 'https://services5.arcgis.com/s91b2wxhO15FkWh5/arcgis/rest/services/BRAZOS_CC_PCTS_11022021/FeatureServer/0'
+          FIELD = 'ID'
+          POLICY = 'MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK'
+          EXPECTED_LAYERS = {
+              'brazos_county_commissioner_precinct',
+              'brazos_county_jp_precinct',
+              'brazos_county_constable_precinct',
+          }
+          EXPECTED_REPS = {
+              '1': {
+                  A_COMM: 'Bentley Nettles',
+                  A_JP: 'Kenny Elliott',
+                  A_CONST: 'Jeff Reeves',
+              },
+              '2': {
+                  A_COMM: 'Chuck Konderla',
+                  A_JP: 'Terrence P. Nunn',
+                  A_CONST: 'Donald Lampo',
+              },
+              '3': {
+                  A_COMM: 'Fred Brown',
+                  A_JP: 'Rick Hill',
+                  A_CONST: 'J.P. Ingram',
+              },
+              '4': {
+                  A_COMM: 'Wanda J. Watson',
+                  A_JP: 'Darrell Booker',
+                  A_CONST: 'Hezekiah Carter, Jr.',
+              },
+          }
+
+          spec_bytes = SPEC_PATH.read_bytes()
+          spec_sha = hashlib.sha256(spec_bytes).hexdigest()
+          if spec_sha != '6ac5cf62c2cad789087cceb10aa07ac5a36632e9c60d8a5ba09592c7f93825d7':
+              raise AssertionError(f'Brazos candidate spec SHA changed: {spec_sha}')
+          spec = json.loads(spec_bytes)
+
+          release = json.loads((GENERATED / 'canonical-release-preview.json').read_text(encoding='utf-8'))
+          bundle = json.loads((GENERATED / 'base-bundle-plan.json').read_text(encoding='utf-8'))
+          offices = release.get('payload', {}).get('offices', [])
+          holders = release.get('payload', {}).get('officeholders', [])
+          if len(offices) != 18 or len(holders) != 18:
+              raise AssertionError(
+                  f'Brazos CG-08 requires 18 offices / 18 holders; got {len(offices)} / {len(holders)}'
+              )
+          office_ids = {row.get('office_id') for row in offices}
+          holder_ids = {row.get('office_id') for row in holders}
+          if len(office_ids) != 18 or office_ids != holder_ids:
+              raise AssertionError('Brazos canonical office/holder join changed')
+
+          adapter_rows = {row['adapter_id']: row for row in bundle.get('district_adapters', [])}
+          if set(adapter_rows) != set(ADAPTERS):
+              raise AssertionError(f'Brazos adapter set changed: {sorted(adapter_rows)}')
+          for adapter_id in ADAPTERS:
+              adapter = adapter_rows[adapter_id]
+              if adapter.get('failure_scope') != 'ADAPTER':
+                  raise AssertionError(f'{adapter_id} must remain ADAPTER-scoped')
+              if adapter.get('boundary_policy') != POLICY:
+                  raise AssertionError(
+                      f'{adapter_id} boundary policy mismatch: {adapter.get("boundary_policy")}'
+                  )
+              if adapter.get('officeholder_identity_source') != 'CANONICAL_RELEASE_ONLY':
+                  raise AssertionError(f'{adapter_id} identity source changed')
+          if bundle.get('action_registry_files'):
+              raise AssertionError('Brazos action routing must remain unreleased')
+
+          original_registry_bytes = REGISTRY_PATH.read_bytes()
+          original_registry_sha = hashlib.sha256(original_registry_bytes).hexdigest()
+          registry = json.loads(original_registry_bytes)
+          if registry.get('engine_version') != '0.6.1' or registry.get('registry_artifact_version') != '0.5.6':
+              raise AssertionError(
+                  f'CG-08 requires released 0.6.1/0.5.6, got '
+                  f'{registry.get("engine_version")}/{registry.get("registry_artifact_version")}'
+              )
+          if any(row.get('adapter_id') == 'ADAPTER-TX-BRAZOS' for row in registry.get('bundles', [])):
+              raise AssertionError('Brazos must remain unpackaged before CG-08')
+
+          RELEASE_PATH.write_text(
+              json.dumps(release, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          registry.setdefault('bundles', []).append(bundle)
+          REGISTRY_PATH.write_text(
+              json.dumps(registry, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+              encoding='utf-8',
+          )
+
+          module_spec = importlib.util.spec_from_file_location(
+              'civic_gps_engine_brazos_cg08',
+              ENGINE_PATH,
+          )
+          engine_mod = importlib.util.module_from_spec(module_spec)
+          sys.modules[module_spec.name] = engine_mod
+          assert module_spec.loader is not None
+          module_spec.loader.exec_module(engine_mod)
+          resolver = engine_mod.CivicGPSOverlayEngine.from_file(
+              REGISTRY_PATH,
+              timeout_seconds=30.0,
+          )
+
+          session = requests.Session()
+          session.headers.update({
+              'User-Agent': 'CivicData-CivicGPS/0.1 (+https://github.com/MightyLoud/CivicData)',
+          })
+
+          def get_json(url: str, params: dict) -> dict:
+              response = session.get(url, params=params, timeout=30)
+              response.raise_for_status()
+              body = response.json()
+              if body.get('error'):
+                  raise AssertionError(f'ArcGIS error from {url}: {body["error"]}')
+              return body
+
+          def norm_key(raw) -> str:
+              if isinstance(raw, float) and raw.is_integer():
+                  return str(int(raw))
+              return str(raw).strip()
+
+          def all_features() -> list[dict]:
+              body = get_json(SERVICE.rstrip('/') + '/query', {
+                  'where': '1=1',
+                  'outFields': FIELD,
+                  'returnGeometry': 'true',
+                  'outSR': '4326',
+                  'f': 'json',
+              })
+              features = body.get('features') or []
+              if len(features) < 4:
+                  raise AssertionError(f'Expected four Brazos precinct polygons; got {len(features)}')
+              keys = {
+                  norm_key((feature.get('attributes') or {}).get(FIELD))
+                  for feature in features
+              }
+              if keys != {'1', '2', '3', '4'}:
+                  raise AssertionError(f'Brazos live precinct key set changed: {sorted(keys)}')
+              return features
+
+          def point_keys(
+              lon: float,
+              lat: float,
+              *,
+              distance_meters: int | None = None,
+          ) -> list[str]:
+              params = {
+                  'where': '1=1',
+                  'geometry': f'{lon:.12f},{lat:.12f}',
+                  'geometryType': 'esriGeometryPoint',
+                  'inSR': '4326',
+                  'spatialRel': 'esriSpatialRelIntersects',
+                  'outFields': FIELD,
+                  'returnGeometry': 'false',
+                  'f': 'json',
+              }
+              if distance_meters is not None:
+                  params['distance'] = str(distance_meters)
+                  params['units'] = 'esriSRUnit_Meter'
+              body = get_json(SERVICE.rstrip('/') + '/query', params)
+              values = []
+              for feature in body.get('features') or []:
+                  raw = (feature.get('attributes') or {}).get(FIELD)
+                  if raw not in (None, ''):
+                      values.append(norm_key(raw))
+              return sorted(set(values), key=int)
+
+          def rounded_point(point) -> tuple[float, float]:
+              return (round(float(point[0]), 8), round(float(point[1]), 8))
+
+          def segment_index(features: list[dict]) -> dict:
+              index = {}
+              for feature in features:
+                  district = norm_key((feature.get('attributes') or {}).get(FIELD))
+                  for ring in (feature.get('geometry') or {}).get('rings') or []:
+                      for a_raw, b_raw in zip(ring, ring[1:]):
+                          a = (float(a_raw[0]), float(a_raw[1]))
+                          b = (float(b_raw[0]), float(b_raw[1]))
+                          ka, kb = rounded_point(a), rounded_point(b)
+                          if ka == kb:
+                              continue
+                          segment = tuple(sorted((ka, kb)))
+                          index.setdefault(segment, []).append((district, a, b))
+              return index
+
+          def find_shared_boundary() -> dict:
+              candidates = []
+              for rows in segment_index(all_features()).values():
+                  shared_keys = sorted({row[0] for row in rows}, key=int)
+                  if len(shared_keys) < 2:
+                      continue
+                  a, b = rows[0][1], rows[0][2]
+                  candidates.append((
+                      math.hypot(b[0] - a[0], b[1] - a[1]),
+                      shared_keys,
+                      a,
+                      b,
+                  ))
+              candidates.sort(reverse=True, key=lambda row: row[0])
+              if not candidates:
+                  raise AssertionError('No shared Brazos precinct segment found')
+
+              for _, shared_keys, a, b in candidates:
+                  midpoint = ((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0)
+                  exact_service_keys = point_keys(*midpoint)
+                  topology_nearby_keys = point_keys(*midpoint, distance_meters=1)
+                  if (
+                      len(exact_service_keys) != 1
+                      or len(topology_nearby_keys) != 2
+                      or exact_service_keys[0] not in topology_nearby_keys
+                      or set(topology_nearby_keys) != set(shared_keys)
+                  ):
+                      continue
+                  dx, dy = b[0] - a[0], b[1] - a[1]
+                  norm = math.hypot(dx, dy)
+                  if norm == 0:
+                      continue
+                  nx, ny = -dy / norm, dx / norm
+                  for epsilon in (2e-7, 5e-7, 1e-6, 2e-6, 5e-6, 1e-5, 2e-5, 5e-5):
+                      side_a = (midpoint[0] + nx * epsilon, midpoint[1] + ny * epsilon)
+                      side_b = (midpoint[0] - nx * epsilon, midpoint[1] - ny * epsilon)
+                      side_a_keys = point_keys(*side_a)
+                      side_b_keys = point_keys(*side_b)
+                      if (
+                          len(side_a_keys) == 1
+                          and len(side_b_keys) == 1
+                          and side_a_keys[0] != side_b_keys[0]
+                          and {side_a_keys[0], side_b_keys[0]} == set(topology_nearby_keys)
+                      ):
+                          return {
+                              'midpoint': midpoint,
+                              'exact_service_keys': exact_service_keys,
+                              'topology_nearby_keys': topology_nearby_keys,
+                              'side_a': side_a,
+                              'side_a_key': side_a_keys[0],
+                              'side_b': side_b,
+                              'side_b_key': side_b_keys[0],
+                              'epsilon_degrees': epsilon,
+                              'shared_segment_keys': shared_keys,
+                          }
+              raise AssertionError(
+                  'Could not derive a two-sided Brazos topology/service boundary probe'
+              )
+
+          observed = datetime.now(timezone.utc).date().isoformat()
+          geo = {
+              'state': {'GEOID': '48', 'STATE': '48', 'NAME': 'Texas'},
+              'county': {'GEOID': '48041', 'NAME': 'Brazos County'},
+          }
+
+          def resolve_xy(label: str, point: tuple[float, float]) -> dict:
+              lon, lat = point
+              gc = {
+                  'longitude': lon,
+                  'latitude': lat,
+                  'matched_address': None,
+                  'geographies': {},
+                  'request_url': (
+                      f'derived-from-official-brazos-arcgis:{label}:'
+                      f'{lon:.12f},{lat:.12f}'
+                  ),
+              }
+              part = resolver._resolve_part(bundle, label, gc, geo, observed)
+              if not part.get('active'):
+                  raise AssertionError(f'[{label}] Brazos BASE did not remain active')
+              return part['payload']
+
+          def assignments(payload: dict) -> dict[str, str]:
+              return {
+                  row['adapter_id']: str(row['district_key'])
+                  for row in payload.get('district_assignments') or []
+                  if row.get('jurisdiction_id') == J
+              }
+
+          def representatives(payload: dict) -> dict[str, str | None]:
+              return {
+                  row['adapter_id']: row.get('representative')
+                  for row in payload.get('district_assignments') or []
+                  if row.get('jurisdiction_id') == J
+              }
+
+          def applicable(payload: dict) -> list[dict]:
+              return [
+                  row
+                  for row in payload.get('applicable_offices') or []
+                  if row.get('jurisdiction_id') == J
+              ]
+
+          def conflict_layers(payload: dict) -> set[str]:
+              return {
+                  str(row.get('layer'))
+                  for row in payload.get('coverage') or []
+                  if row.get('status') == 'CONFLICT'
+                  and str(row.get('layer') or '').startswith('brazos_county_')
+              }
+
+          def assert_no_actions(label: str, payload: dict) -> None:
+              actions = [
+                  row
+                  for row in payload.get('action_links') or []
+                  if row.get('jurisdiction_id') == J
+              ]
+              if actions:
+                  raise AssertionError(f'[{label}] Brazos actions must remain unreleased: {actions}')
+
+          countywide_ids = {
+              row['office_id']
+              for row in spec['scope']['countywide_offices']
+          }
+          if len(countywide_ids) != 6:
+              raise AssertionError(f'Expected six Brazos countywide office IDs; got {countywide_ids}')
+
+          boundary = find_shared_boundary()
+          exact = resolve_xy('brazos-shared-boundary-exact', tuple(boundary['midpoint']))
+          side_a = resolve_xy('brazos-shared-boundary-side-a', tuple(boundary['side_a']))
+          side_b = resolve_xy('brazos-shared-boundary-side-b', tuple(boundary['side_b']))
+
+          exact_assignments = assignments(exact)
+          exact_representatives = representatives(exact)
+          exact_service_key = boundary['exact_service_keys'][0]
+          expected_exact_assignments = {
+              adapter_id: exact_service_key for adapter_id in ADAPTERS
+          }
+          if exact_assignments != expected_exact_assignments:
+              raise AssertionError(
+                  f'Expected unchanged engine to expose the single-owner boundary behavior '
+                  f'{expected_exact_assignments}; got {exact_assignments}'
+              )
+          if exact_representatives != EXPECTED_REPS[exact_service_key]:
+              raise AssertionError(
+                  f'Exact boundary representative behavior changed: {exact_representatives}'
+              )
+          exact_applicable = applicable(exact)
+          exact_wide = [
+              row for row in exact_applicable
+              if row.get('applicability_scope') == 'JURISDICTION_WIDE'
+          ]
+          exact_district = [
+              row for row in exact_applicable
+              if row.get('applicability_scope') == 'DISTRICT_MATCH'
+          ]
+          if (len(exact_applicable), len(exact_wide), len(exact_district)) != (9, 6, 3):
+              raise AssertionError(
+                  f'Expected unchanged engine to expose 9 = 6 wide + 3 district offices, got '
+                  f'{len(exact_applicable)} = {len(exact_wide)} + {len(exact_district)}'
+              )
+          exact_wide_ids = {row.get('office_id') for row in exact_wide}
+          if exact_wide_ids != countywide_ids:
+              raise AssertionError(f'Exact boundary countywide office set mismatch: {exact_wide_ids}')
+          expected_exact_district_ids = {
+              f'office-us-tx-brazos-county-commissioner-{exact_service_key}',
+              f'office-us-tx-brazos-county-jp-{exact_service_key}',
+              f'office-us-tx-brazos-county-constable-{exact_service_key}',
+          }
+          exact_district_ids = {row.get('office_id') for row in exact_district}
+          if exact_district_ids != expected_exact_district_ids:
+              raise AssertionError(
+                  f'Exact boundary district office behavior changed: {exact_district_ids}'
+              )
+          exact_conflicts = conflict_layers(exact)
+          if exact_conflicts:
+              raise AssertionError(
+                  f'Expected unchanged engine to emit no conflicts for the single-owner response; '
+                  f'got {sorted(exact_conflicts)}'
+              )
+          assert_no_actions('exact', exact)
+
+          side_summaries = {}
+          for label, payload, expected_key in (
+              ('side_a', side_a, boundary['side_a_key']),
+              ('side_b', side_b, boundary['side_b_key']),
+          ):
+              got_assignments = assignments(payload)
+              expected_assignments = {adapter_id: expected_key for adapter_id in ADAPTERS}
+              if got_assignments != expected_assignments:
+                  raise AssertionError(
+                      f'[{label}] expected shared assignments {expected_assignments}, '
+                      f'got {got_assignments}'
+                  )
+              got_representatives = representatives(payload)
+              if got_representatives != EXPECTED_REPS[expected_key]:
+                  raise AssertionError(
+                      f'[{label}] canonical representatives mismatch: '
+                      f'expected {EXPECTED_REPS[expected_key]}, got {got_representatives}'
+                  )
+              got_applicable = applicable(payload)
+              wide = [
+                  row for row in got_applicable
+                  if row.get('applicability_scope') == 'JURISDICTION_WIDE'
+              ]
+              district = [
+                  row for row in got_applicable
+                  if row.get('applicability_scope') == 'DISTRICT_MATCH'
+              ]
+              if (len(got_applicable), len(wide), len(district)) != (9, 6, 3):
+                  raise AssertionError(
+                      f'[{label}] expected 9 = 6 wide + 3 district offices, got '
+                      f'{len(got_applicable)} = {len(wide)} + {len(district)}'
+                  )
+              wide_ids = {row.get('office_id') for row in wide}
+              if wide_ids != countywide_ids:
+                  raise AssertionError(f'[{label}] countywide office set mismatch: {wide_ids}')
+              expected_district_ids = {
+                  f'office-us-tx-brazos-county-commissioner-{expected_key}',
+                  f'office-us-tx-brazos-county-jp-{expected_key}',
+                  f'office-us-tx-brazos-county-constable-{expected_key}',
+              }
+              district_ids = {row.get('office_id') for row in district}
+              if district_ids != expected_district_ids:
+                  raise AssertionError(
+                      f'[{label}] district office set mismatch: '
+                      f'expected {expected_district_ids}, got {district_ids}'
+                  )
+              assert_no_actions(label, payload)
+              side_summaries[label] = {
+                  'point': boundary[label],
+                  'key': expected_key,
+                  'assignments': got_assignments,
+                  'representatives': got_representatives,
+                  'applicable_offices': 9,
+                  'wide_offices': 6,
+                  'district_offices': 3,
+              }
+
+          if side_summaries['side_a']['key'] == side_summaries['side_b']['key']:
+              raise AssertionError('Boundary side controls did not resolve distinct precincts')
+
+          for name, payload in (
+              ('brazos-shared-boundary-exact', exact),
+              ('brazos-shared-boundary-side-a', side_a),
+              ('brazos-shared-boundary-side-b', side_b),
+          ):
+              (OUT / f'{name}.json').write_text(
+                  json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+                  encoding='utf-8',
+              )
+
+          summary = {
+              'status': 'STOP',
+              'decision': 'STOP',
+              'result': 'UNSUPPORTED_PATTERN',
+              'stop_class': 'ARCHITECTURE_CHANGE_REQUIRED',
+              'stop_reason': (
+                  'Official shared geometry is topologically ambiguous at the exact boundary, '
+                  'but the configured ArcGIS point-intersection query returns one feature; '
+                  'the unchanged engine cannot enforce NEVER_TIE_BREAK.'
+              ),
+              'gate': 'CG-08',
+              'county': 'Brazos County, TX',
+              'geoid': '48041',
+              'engine_version': '0.6.1',
+              'released_registry_version': '0.5.6',
+              'released_runtime_sha256': (
+                  '4ef210434e15f7f8353437f139a0918beaafb3734f62aedfb3d0852bfee241b2'
+              ),
+              'original_registry_sha256': original_registry_sha,
+              'candidate_spec_sha256': spec_sha,
+              'candidate_overlay_only': True,
+              'candidate_packaged': False,
+              'policy': POLICY,
+              'official_geometry': {
+                  'service': SERVICE,
+                  'field': FIELD,
+              },
+              'boundary': {
+                  'midpoint': boundary['midpoint'],
+                  'topology_nearby_keys': boundary['topology_nearby_keys'],
+                  'exact_service_keys': boundary['exact_service_keys'],
+                  'shared_segment_keys': boundary['shared_segment_keys'],
+                  'observed_exact_assignments': exact_assignments,
+                  'observed_exact_representatives': exact_representatives,
+                  'observed_exact_applicable_offices': len(exact_applicable),
+                  'observed_exact_wide_offices': len(exact_wide),
+                  'observed_exact_district_offices': len(exact_district),
+                  'observed_exact_conflict_layers': sorted(exact_conflicts),
+                  'required_exact_assignments': 0,
+                  'required_exact_applicable_offices': 6,
+                  'required_exact_conflict_layers': sorted(EXPECTED_LAYERS),
+                  'distance_probe_meters': 1,
+                  'epsilon_degrees': boundary['epsilon_degrees'],
+                  'side_a': side_summaries['side_a'],
+                  'side_b': side_summaries['side_b'],
+              },
+              'required_change': 'GENERIC_TOPOLOGY_AWARE_BOUNDARY_DETECTION',
+              'actions': 'NOT_YET_RELEASED',
+              'next_gate': None,
+              'stopped_at': 'CG-08',
+              'stopped_before': 'CG-09',
+          }
+          (OUT / 'brazos-cg08-summary.json').write_text(
+              json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+          print('BRAZOS CG-08 ARCHITECTURE_CHANGE_REQUIRED STOP')
+          PY
+
+      - name: Upload CG-08 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-brazos-cg08-${{ github.run_id }}
+          path: |
+            artifacts/civic-gps-brazos-cg08/
+            artifacts/civic-gps-brazos-cg08-onboarding/
+          if-no-files-found: warn
+          retention-days: 30
