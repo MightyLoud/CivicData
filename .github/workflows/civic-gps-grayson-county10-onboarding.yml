@@ -18,9 +18,9 @@ permissions:
 
 jobs:
   fit-screen:
-    name: Grayson County automated CG-01 to CG-08
+    name: Grayson County automated CG-01 to CG-03
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     steps:
       - name: 'Check out County #10 branch'
         uses: actions/checkout@v4
@@ -29,9 +29,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Install live proof dependency
-        run: python -m pip install -r requirements-civic-gps.txt
 
       - name: Compile onboarding and live proof tooling
         run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py tests/civic_gps_grayson_live_probe.py
@@ -146,12 +143,56 @@ jobs:
           }, sort_keys=True))
           PY
 
-      - name: Run Grayson CG-04 through CG-08 proof twice
-        shell: bash
-        run: |
-          python tests/civic_gps_grayson_live_probe.py --output-dir artifacts/civic-gps-grayson-cg08-a
-          sleep 20
-          python tests/civic_gps_grayson_live_probe.py --output-dir artifacts/civic-gps-grayson-cg08-b
+  live-proof:
+    name: Grayson CG-04 to CG-08 live proof (${{ matrix.proof }})
+    needs: fit-screen
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        proof: ['a', 'b']
+    steps:
+      - name: 'Check out County #10 branch'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install live proof dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Run one independent Grayson live proof
+        run: python tests/civic_gps_grayson_live_probe.py --output-dir artifacts/civic-gps-grayson-cg08-${{ matrix.proof }}
+
+      - name: 'Upload independent Grayson live evidence'
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-grayson-cg08-${{ matrix.proof }}-${{ github.run_id }}
+          path: artifacts/civic-gps-grayson-cg08-${{ matrix.proof }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  verify-live-proof:
+    name: Verify deterministic Grayson CG-04 to CG-08 evidence
+    needs: live-proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download independent proof A
+        uses: actions/download-artifact@v4
+        with:
+          name: civic-gps-grayson-cg08-a-${{ github.run_id }}
+          path: evidence/a
+
+      - name: Download independent proof B
+        uses: actions/download-artifact@v4
+        with:
+          name: civic-gps-grayson-cg08-b-${{ github.run_id }}
+          path: evidence/b
 
       - name: Prove deterministic Grayson CG-04 through CG-08 result
         shell: bash
@@ -160,8 +201,8 @@ jobs:
           from pathlib import Path
           import hashlib, json
 
-          left_path = Path('artifacts/civic-gps-grayson-cg08-a/grayson-cg08-summary.json')
-          right_path = Path('artifacts/civic-gps-grayson-cg08-b/grayson-cg08-summary.json')
+          left_path = Path('evidence/a/grayson-cg08-summary.json')
+          right_path = Path('evidence/b/grayson-cg08-summary.json')
           left_bytes, right_bytes = left_path.read_bytes(), right_path.read_bytes()
           if left_bytes != right_bytes:
               raise SystemExit('Grayson CG-04 through CG-08 summary is not deterministic')
@@ -187,6 +228,8 @@ jobs:
               raise SystemExit('Commissioner-only boundary did not preserve eight Grayson offices')
           if boundaries.get('jp_constable_only', {}).get('exact_applicable_offices') != 7:
               raise SystemExit('JP/Constable-only boundary did not preserve seven Grayson offices')
+          if boundaries.get('engine_input_mode') != 'LIVE_VERIFIED_REPLAY':
+              raise SystemExit('Boundary engine inputs were not grounded in live-verified topology')
           if summary.get('actions') != 'NOT_YET_RELEASED' or summary.get('candidate_packaged') is not False:
               raise SystemExit('Grayson proof crossed the CG-09 or action-routing boundary')
           print(json.dumps({
@@ -202,9 +245,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: civic-gps-grayson-county10-cg08-${{ github.run_id }}
-          path: |
-            artifacts/civic-gps-grayson-county10-a/
-            artifacts/civic-gps-grayson-cg08-a/
-            artifacts/civic-gps-grayson-cg08-b/grayson-cg08-summary.json
+          path: evidence/
           if-no-files-found: error
           retention-days: 30
