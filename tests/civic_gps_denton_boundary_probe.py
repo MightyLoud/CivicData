@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Packaged Denton County exact-boundary fail-closed proof for Civic GPS v0.6.1."""
+"""Packaged Denton County exact-boundary fail-closed proof for Civic GPS v0.6.2."""
 from __future__ import annotations
 
 import importlib.util

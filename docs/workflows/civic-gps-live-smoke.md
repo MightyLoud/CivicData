@@ -12,12 +12,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`4ef210434e15f7f8353437f139a0918beaafb3734f62aedfb3d0852bfee241b2`
+`bc40a0aa46fcdbd5b2c73976747ef702d9a64fd051832c615ba4aba1016a7427`
 
 Current contract set:
 
-- Overlay Engine: `v0.6.1`
-- Adapter registry artifact: `v0.5.6`
+- Overlay Engine: `v0.6.2`
+- Adapter registry artifact: `v0.5.8`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 - County onboarding frozen-spec schema: `civic-gps-county-onboarding/0.1.0`
@@ -30,6 +30,7 @@ Before any networked smoke tests, the gate runs the offline County Onboarding Pi
 - Hays County must classify `MULTI_OFFICE_PER_DISTRICT` and must not emit a builder spec, release preview, or bundle preview.
 - All seven named STOP classes must have executable deterministic detectors.
 - Running the same frozen Williamson spec twice must produce byte-identical JSON outputs.
+- The generic topology probe must fail closed at adapter scope when a bounded ArcGIS distance query exposes multiple adjacent polygons, preserve normal interiors, preserve unconfigured-adapter behavior, and reject invalid probe distances.
 
 These tests are intentionally offline. They validate the frozen-spec contract; later CG gates validate live sources.
 
@@ -94,6 +95,18 @@ Required packaged controls:
 - Shared exact boundary — live official Bastrop County geometry must intersect precincts on the exact point, suppress Commissioner, JP, and Constable together, preserve the 6 countywide offices, and emit all three conflict layers. Points immediately on opposite sides must each resolve all three district families to one precinct and restore 9 offices.
 
 Bastrop release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Bastrop action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
+
+### Brazos County
+
+Brazos is the sixth production county archetype and the fourth county completed through the automated County Onboarding Pipeline.
+
+Required packaged controls:
+
+- Four permanent interiors cover shared Commissioner / JP / Constable keys 1–4; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins.
+- Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Brazos jurisdiction, assignments, offices, actions, or coverage.
+- Shared exact boundary — live official Brazos County geometry must expose both adjacent precincts through the configured one-meter topology probe, suppress Commissioner, JP, and Constable together, preserve the 6 countywide offices, and emit all three conflict layers. Points immediately on opposite sides must each resolve all three district families to one precinct and restore 9 offices.
+
+Brazos release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Brazos action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
 
 ## Triggers
 

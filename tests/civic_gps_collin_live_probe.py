@@ -34,9 +34,9 @@ GIS_COMM_SERVICE = "https://maps.collincountytx.gov/server/rest/services/Electio
 GIS_JPC_SERVICE = "https://maps.collincountytx.gov/server/rest/services/Election/VotingPrecincts_Edited_PlanC2333/FeatureServer/4"
 
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.1" or registry.get("registry_artifact_version") != "0.5.6":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
     raise AssertionError(
-        f"Collin release proof requires engine 0.6.1 / registry 0.5.6, got "
+        f"Collin release proof requires engine 0.6.2 / registry 0.5.8, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-COLLIN"), None)
@@ -116,7 +116,7 @@ if any(row.get("jurisdiction_id") == J for row in out_payload["district_assignme
     raise AssertionError("Outside-Dallas negative leaked Collin assignments/offices/actions")
 
 SESSION = requests.Session()
-SESSION.headers.update({"User-Agent": "CivicGPS/0.6.1 (+https://github.com/MightyLoud/CivicData)"})
+SESSION.headers.update({"User-Agent": "CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"})
 
 def get_json(url: str, params: dict) -> dict:
     response = SESSION.get(url, params=params, timeout=30)
@@ -191,7 +191,7 @@ class FakeResponse:
 
 class FixedPointSession:
     def __init__(self, lon: float, lat: float):
-        self.lon = lon; self.lat = lat; self.real = requests.Session(); self.real.headers.update({"User-Agent": "CivicGPS/0.6.1 (+https://github.com/MightyLoud/CivicData)"})
+        self.lon = lon; self.lat = lat; self.real = requests.Session(); self.real.headers.update({"User-Agent": "CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"})
     def get(self, url, params=None, timeout=None):
         if "geocoding.geo.census.gov" in url:
             return FakeResponse({"result": {"addressMatches": [{"matchedAddress": "COLLIN BOUNDARY CONTROL", "coordinates": {"x": self.lon, "y": self.lat}, "geographies": {"States": [{"GEOID": "48", "STATE": "48"}], "Counties": [{"GEOID": "48085", "COUNTY": "085"}]}}]}})

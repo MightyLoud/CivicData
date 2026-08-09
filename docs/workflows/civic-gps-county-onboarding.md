@@ -83,6 +83,7 @@ A supported county must preserve:
 - `failure_scope = ADAPTER` for district adapters;
 - `officeholder_identity_source = CANONICAL_RELEASE_ONLY`;
 - `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`;
+- a bounded one-meter topology probe on generated district adapters so source services that report a single owner at an exact shared edge still fail closed;
 - explicit `BOUNDED_V0_1_SCOPE` rather than implied completeness;
 - explicit `NOT_YET_RELEASED` for civic-action routing when actions have not been built.
 

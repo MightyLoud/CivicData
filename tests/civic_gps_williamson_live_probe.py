@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Packaged Williamson County release proof for Civic GPS v0.6.1 / registry v0.5.6."""
+"""Packaged Williamson County release proof for Civic GPS v0.6.2 / registry v0.5.8."""
 from __future__ import annotations
 
 import importlib.util
@@ -37,9 +37,9 @@ def load_module(name: str, path: Path):
 
 engine_mod = load_module("civic_gps_engine_williamson_packaged", ENGINE_PATH)
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.1" or registry.get("registry_artifact_version") != "0.5.6":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
     raise AssertionError(
-        f"Williamson packaged proof requires engine 0.6.1 / registry 0.5.6, got "
+        f"Williamson packaged proof requires engine 0.6.2 / registry 0.5.8, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-WILLIAMSON"), None)
@@ -113,7 +113,7 @@ if any(str(row.get("layer") or "").startswith("williamson_") for row in out_payl
     raise AssertionError("Outside-Austin control leaked Williamson coverage")
 
 SESSION = requests.Session()
-SESSION.headers.update({"User-Agent": "CivicGPS/0.6.1 (+https://github.com/MightyLoud/CivicData)"})
+SESSION.headers.update({"User-Agent": "CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"})
 
 
 def get_json(params: dict) -> dict:
@@ -190,7 +190,7 @@ class FixedPointSession:
         self.lon = lon
         self.lat = lat
         self.real = requests.Session()
-        self.real.headers.update({"User-Agent": "CivicGPS/0.6.1 (+https://github.com/MightyLoud/CivicData)"})
+        self.real.headers.update({"User-Agent": "CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"})
     def get(self, url, params=None, timeout=None):
         if "geocoding.geo.census.gov" in url:
             return FakeResponse({"result": {"addressMatches": [{"matchedAddress": "WILLIAMSON PACKAGE BOUNDARY", "coordinates": {"x": self.lon, "y": self.lat}, "geographies": {"States": [{"GEOID": "48", "STATE": "48"}], "Counties": [{"GEOID": "48491", "COUNTY": "491"}]}}]}})
@@ -236,8 +236,8 @@ summary = {
     "status": "PASS",
     "county": "Williamson County, TX",
     "geoid": "48491",
-    "engine_version": "0.6.1",
-    "registry_artifact_version": "0.5.6",
+    "engine_version": "0.6.2",
+    "registry_artifact_version": "0.5.8",
     "release_offices": 18,
     "release_holders": 18,
     "interior_controls": interiors,
