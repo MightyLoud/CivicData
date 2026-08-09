@@ -12,12 +12,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`567c809839a2bcbafff7da432e28bf7e6fa23e5c2dff9639cf11ad4f87759d60`
+`4ef210434e15f7f8353437f139a0918beaafb3734f62aedfb3d0852bfee241b2`
 
 Current contract set:
 
 - Overlay Engine: `v0.6.1`
-- Adapter registry artifact: `v0.5.5`
+- Adapter registry artifact: `v0.5.6`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 - County onboarding frozen-spec schema: `civic-gps-county-onboarding/0.1.0`
@@ -83,6 +83,18 @@ Required packaged controls:
 
 Tarrant release scope is 26 offices / 26 holders = 6 deliberately bounded countywide + 4 Commissioner + 8 JP + 8 Constable. Tarrant action routing remains `NOT_YET_RELEASED`; additional countywide elected offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
 
+### Bastrop County
+
+Bastrop is the fifth production output of the county archetype and the third county completed through the automated County Onboarding Pipeline.
+
+Required packaged controls:
+
+- Four permanent interiors cover shared Commissioner / JP / Constable keys 1–4; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins.
+- Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Bastrop jurisdiction, assignments, offices, actions, or coverage.
+- Shared exact boundary — live official Bastrop County geometry must intersect precincts on the exact point, suppress Commissioner, JP, and Constable together, preserve the 6 countywide offices, and emit all three conflict layers. Points immediately on opposite sides must each resolve all three district families to one precinct and restore 9 offices.
+
+Bastrop release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Bastrop action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
+
 ## Triggers
 
 The gate runs:
@@ -122,3 +134,5 @@ For an onboarding-fixture failure, fix the frozen-spec/tool contract. Do not loo
 - Travis reusable-archetype release: PR #8; post-merge run `31243494442`.
 - Williamson release: PR #10; protected PR run `31246989220`; post-merge run `31247035390`; runtime SHA `52e60a83b42c65cd03bf81c3169c54c86d8c7750686d5d827838ec636b4e26de`.
 - Tarrant pre-promotion package: run `31274189655`; full packaged regression: run `31274416507`; candidate runtime SHA `567c809839a2bcbafff7da432e28bf7e6fa23e5c2dff9639cf11ad4f87759d60`.
+- Tarrant release: PR #13; protected PR run `31276147217`; post-merge main run `31276568030`; runtime SHA `567c809839a2bcbafff7da432e28bf7e6fa23e5c2dff9639cf11ad4f87759d60`.
+- Bastrop pre-promotion package: run `31287876849`; full packaged regression: run `31288077812`; candidate runtime SHA `4ef210434e15f7f8353437f139a0918beaafb3734f62aedfb3d0852bfee241b2`.
