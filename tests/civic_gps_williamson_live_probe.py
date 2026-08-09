@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import math
+import os
 import sys
 from pathlib import Path
 
@@ -24,6 +25,7 @@ A_COMM = "DIST-TX-WILLIAMSON-COMMISSIONER"
 A_JP = "DIST-TX-WILLIAMSON-JP"
 A_CONST = "DIST-TX-WILLIAMSON-CONSTABLE"
 EXPECTED_ADAPTERS = {A_COMM, A_JP, A_CONST}
+EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.5.8")
 
 
 def load_module(name: str, path: Path):
@@ -37,9 +39,9 @@ def load_module(name: str, path: Path):
 
 engine_mod = load_module("civic_gps_engine_williamson_packaged", ENGINE_PATH)
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != EXPECTED_REGISTRY_VERSION:
     raise AssertionError(
-        f"Williamson packaged proof requires engine 0.6.2 / registry 0.5.8, got "
+        f"Williamson packaged proof requires engine 0.6.2 / registry {EXPECTED_REGISTRY_VERSION}, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-WILLIAMSON"), None)
@@ -237,7 +239,7 @@ summary = {
     "county": "Williamson County, TX",
     "geoid": "48491",
     "engine_version": "0.6.2",
-    "registry_artifact_version": "0.5.8",
+    "registry_artifact_version": EXPECTED_REGISTRY_VERSION,
     "release_offices": 18,
     "release_holders": 18,
     "interior_controls": interiors,
