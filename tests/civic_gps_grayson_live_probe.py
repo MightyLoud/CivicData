@@ -137,6 +137,7 @@ CASES = [
 TRANSIENT_NETWORK_MARKERS = (
     "timed out", "timeout", "connection", "temporarily unavailable", "remote disconnected", "502", "503", "504"
 )
+UPSTREAM_ATTEMPTS = 5
 
 
 def load_module(name: str, path: Path):
@@ -214,8 +215,9 @@ SESSION.headers.update({"User-Agent": "CivicGPS/0.6.2 (+https://github.com/Might
 
 
 def get_json(url: str, params: dict) -> dict:
-    for attempt in range(1, 4):
+    for attempt in range(1, UPSTREAM_ATTEMPTS + 1):
         try:
+            time.sleep(0.2)
             response = SESSION.get(url, params=params, timeout=45)
             response.raise_for_status()
             body = response.json()
@@ -223,9 +225,9 @@ def get_json(url: str, params: dict) -> dict:
                 raise AssertionError(f"ArcGIS error from {url}: {body['error']}")
             return body
         except requests.RequestException:
-            if attempt == 3:
+            if attempt == UPSTREAM_ATTEMPTS:
                 raise
-            time.sleep(2 ** (attempt - 1))
+            time.sleep(min(2 ** (attempt - 1), 10))
     raise AssertionError(f"Unreachable ArcGIS retry state for {url}")
 
 
@@ -554,14 +556,14 @@ def main() -> int:
         )
 
         def resolve_live(label: str, address: str) -> dict:
-            for attempt in range(1, 4):
+            for attempt in range(1, UPSTREAM_ATTEMPTS + 1):
                 result = resolver.resolve(address, observed_on="2026-08-09")
                 error = result.get("error") or {}
-                if not transient_upstream(error) or attempt == 3:
+                if not transient_upstream(error) or attempt == UPSTREAM_ATTEMPTS:
                     if "error" in result:
                         raise AssertionError(f"[{label}] engine error: {result['error']}")
                     return result
-                time.sleep(2 ** (attempt - 1))
+                time.sleep(min(2 ** (attempt - 1), 10))
             raise AssertionError(f"[{label}] unreachable retry state")
 
         interior_summaries = []
@@ -624,7 +626,8 @@ def main() -> int:
             raise AssertionError("Outside-Austin control leaked Grayson coverage")
 
         def resolve_point(label: str, point: tuple[float, float]) -> dict:
-            for attempt in range(1, 4):
+            time.sleep(1)
+            for attempt in range(1, UPSTREAM_ATTEMPTS + 1):
                 fixed = engine_mod.CivicGPSOverlayEngine(
                     active_registry,
                     registry_root=runtime_gps,
@@ -633,18 +636,19 @@ def main() -> int:
                 )
                 result = fixed.resolve(label, observed_on="2026-08-09")
                 error = result.get("error") or {}
-                if not transient_upstream(error) or attempt == 3:
+                if not transient_upstream(error) or attempt == UPSTREAM_ATTEMPTS:
                     if "error" in result:
                         raise AssertionError(f"[{label}] boundary engine error: {result['error']}")
                     write_json(output / f"{label}.json", result)
                     return result["payload"]
-                time.sleep(2 ** (attempt - 1))
+                time.sleep(min(2 ** (attempt - 1), 10))
             raise AssertionError(f"[{label}] unreachable retry state")
 
         comm_boundary = find_isolated_boundary(
             (COMM_SERVICE, COMM_FIELD),
             (JPC_SERVICE, JPC_FIELD),
         )
+        time.sleep(2)
         comm_other_key = comm_boundary["other"][0]
         comm_exact = resolve_point("grayson-commissioner-boundary-exact", comm_boundary["midpoint"])
         comm_assignments = assignment_map(comm_exact)
@@ -676,6 +680,7 @@ def main() -> int:
             (JPC_SERVICE, JPC_FIELD),
             (COMM_SERVICE, COMM_FIELD),
         )
+        time.sleep(2)
         jpc_other_key = jpc_boundary["other"][0]
         jpc_exact = resolve_point("grayson-jp-constable-boundary-exact", jpc_boundary["midpoint"])
         jpc_assignments = assignment_map(jpc_exact)
