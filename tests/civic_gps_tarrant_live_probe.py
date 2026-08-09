@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Packaged Tarrant County CG-09 proof for Civic GPS v0.6.2 / registry v0.5.7."""
+"""Packaged Tarrant County CG-09 proof for Civic GPS v0.6.2 / registry v0.5.8."""
 from __future__ import annotations
 
 import hashlib
@@ -64,9 +64,9 @@ def applicable(payload: dict) -> list[dict]:
 
 engine_mod = load_module("civic_gps_engine_tarrant_packaged", ENGINE_PATH)
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.7":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
     raise AssertionError(
-        "Tarrant packaged proof requires engine 0.6.2 / registry 0.5.7, got "
+        "Tarrant packaged proof requires engine 0.6.2 / registry 0.5.8, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next(
@@ -498,7 +498,7 @@ summary = {
     "county": "Tarrant County, TX",
     "geoid": "48439",
     "engine_version": "0.6.2",
-    "registry_artifact_version": "0.5.7",
+    "registry_artifact_version": "0.5.8",
     "runtime_sha256": runtime_sha,
     "release_offices": 26,
     "release_holders": 26,

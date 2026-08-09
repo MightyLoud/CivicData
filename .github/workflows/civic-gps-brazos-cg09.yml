@@ -1,0 +1,101 @@
+name: Civic GPS Brazos CG-09
+
+on:
+  push:
+    branches:
+      - agent/civic-gps-brazos-onboarding
+    paths:
+      - civic_gps_runtime_parts/**
+      - tests/civic_gps_brazos_live_probe.py
+      - .github/workflows/civic-gps-brazos-cg09.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: civic-gps-brazos-cg09-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  brazos-cg09:
+    name: Brazos deterministic package proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out County #7 branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Reconstruct and verify exact candidate package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo 'bc40a0aa46fcdbd5b2c73976747ef702d9a64fd051832c615ba4aba1016a7427  civic_gps_runtime.zip' | sha256sum --check --strict
+          python - <<'PY'
+          import io
+          import json
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          package = Path('civic_gps_runtime.zip').read_bytes()
+          with ZipFile(io.BytesIO(package)) as archive:
+              names = archive.namelist()
+              if len(names) != 19 or len(names) != len(set(names)):
+                  raise AssertionError(f'Expected 19 unique package entries, got {len(names)}')
+              if any(name.endswith(('.orig', '.rej')) for name in names):
+                  raise AssertionError('Patch residue must not enter the runtime package')
+              registry = json.loads(archive.read('civic_gps/registry.json'))
+              if registry.get('engine_version') != '0.6.2':
+                  raise AssertionError(f"Unexpected engine: {registry.get('engine_version')}")
+              if registry.get('registry_artifact_version') != '0.5.8':
+                  raise AssertionError(
+                      f"Unexpected registry: {registry.get('registry_artifact_version')}"
+                  )
+              bundle = next(
+                  (
+                      row for row in registry.get('bundles', [])
+                      if row.get('adapter_id') == 'ADAPTER-TX-BRAZOS'
+                  ),
+                  None,
+              )
+              if not bundle:
+                  raise AssertionError('Brazos bundle is missing from the candidate package')
+              if bundle.get('release_files') != ['civic_gps_brazos_county_v0.1.json']:
+                  raise AssertionError(f"Unexpected release files: {bundle.get('release_files')}")
+              if bundle.get('action_registry_files'):
+                  raise AssertionError('Brazos actions must remain unreleased')
+              probes = {
+                  row.get('boundary_probe_distance_meters')
+                  for row in bundle.get('district_adapters', [])
+              }
+              if probes != {1}:
+                  raise AssertionError(f'Brazos topology-probe configuration changed: {probes}')
+          print('BRAZOS DETERMINISTIC PACKAGE INTEGRITY PASS')
+          PY
+          unzip -q civic_gps_runtime.zip
+
+      - name: Compile packaged Brazos proof
+        run: python -m py_compile civic_gps/engine.py tests/civic_gps_brazos_live_probe.py
+
+      - name: Run packaged Brazos CG-09 controls
+        run: python tests/civic_gps_brazos_live_probe.py
+
+      - name: Upload CG-09 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-brazos-cg09-${{ github.run_id }}
+          path: artifacts/civic-gps-brazos-cg09/
+          if-no-files-found: warn
+          retention-days: 30

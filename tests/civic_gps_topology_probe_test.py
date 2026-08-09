@@ -129,7 +129,7 @@ def registry(probe_distance=1) -> dict:
         "schema_version": "civic-gps-adapter-registry/0.2.0",
         "consumer_schema_version": "civic-gps-response/0.3.0",
         "engine_version": "0.6.2",
-        "registry_artifact_version": "0.5.7",
+        "registry_artifact_version": "0.5.8",
         "geocoder": {
             "url": "https://geocoder.test/geographies/onelineaddress",
             "benchmark": "Public_AR_Current",

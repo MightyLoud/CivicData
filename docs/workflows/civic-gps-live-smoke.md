@@ -12,12 +12,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`2bfed8878e5e67fa26ff6fa7edfdaf63f972d2fb729fa1530b45237651f2afe1`
+`bc40a0aa46fcdbd5b2c73976747ef702d9a64fd051832c615ba4aba1016a7427`
 
 Current contract set:
 
 - Overlay Engine: `v0.6.2`
-- Adapter registry artifact: `v0.5.7`
+- Adapter registry artifact: `v0.5.8`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 - County onboarding frozen-spec schema: `civic-gps-county-onboarding/0.1.0`
@@ -95,6 +95,18 @@ Required packaged controls:
 - Shared exact boundary — live official Bastrop County geometry must intersect precincts on the exact point, suppress Commissioner, JP, and Constable together, preserve the 6 countywide offices, and emit all three conflict layers. Points immediately on opposite sides must each resolve all three district families to one precinct and restore 9 offices.
 
 Bastrop release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Bastrop action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
+
+### Brazos County
+
+Brazos is the sixth county-archetype candidate and the fourth county packaged through the automated County Onboarding Pipeline.
+
+Required candidate-package controls:
+
+- Four permanent interiors cover shared Commissioner / JP / Constable keys 1–4; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins.
+- Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Brazos jurisdiction, assignments, offices, actions, or coverage.
+- Shared exact boundary — live official Brazos County geometry must expose both adjacent precincts through the configured one-meter topology probe, suppress Commissioner, JP, and Constable together, preserve the 6 countywide offices, and emit all three conflict layers. Points immediately on opposite sides must each resolve all three district families to one precinct and restore 9 offices.
+
+Brazos candidate scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Brazos action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`; production promotion remains the separate `CG-10` gate.
 
 ## Triggers
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Packaged Williamson County release proof for Civic GPS v0.6.2 / registry v0.5.7."""
+"""Packaged Williamson County release proof for Civic GPS v0.6.2 / registry v0.5.8."""
 from __future__ import annotations
 
 import importlib.util
@@ -37,9 +37,9 @@ def load_module(name: str, path: Path):
 
 engine_mod = load_module("civic_gps_engine_williamson_packaged", ENGINE_PATH)
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.7":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
     raise AssertionError(
-        f"Williamson packaged proof requires engine 0.6.2 / registry 0.5.7, got "
+        f"Williamson packaged proof requires engine 0.6.2 / registry 0.5.8, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-WILLIAMSON"), None)
@@ -237,7 +237,7 @@ summary = {
     "county": "Williamson County, TX",
     "geoid": "48491",
     "engine_version": "0.6.2",
-    "registry_artifact_version": "0.5.7",
+    "registry_artifact_version": "0.5.8",
     "release_offices": 18,
     "release_holders": 18,
     "interior_controls": interiors,

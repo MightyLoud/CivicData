@@ -34,9 +34,9 @@ GIS_COMM_SERVICE = "https://maps.collincountytx.gov/server/rest/services/Electio
 GIS_JPC_SERVICE = "https://maps.collincountytx.gov/server/rest/services/Election/VotingPrecincts_Edited_PlanC2333/FeatureServer/4"
 
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.7":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
     raise AssertionError(
-        f"Collin release proof requires engine 0.6.2 / registry 0.5.7, got "
+        f"Collin release proof requires engine 0.6.2 / registry 0.5.8, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-COLLIN"), None)
