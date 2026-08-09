@@ -123,6 +123,21 @@ Required packaged controls:
 
 Smith release scope is 20 offices / 20 holders = 6 deliberately bounded countywide + 4 Commissioner + 5 JP + 5 Constable. Smith action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
 
+### Grayson County CG-09 candidate
+
+Grayson is County #10 and the sixth county candidate packaged through the automated County Onboarding Pipeline. CG-09 builds the candidate twice, installs it only in branch CI checkouts, runs this entire maintained regression matrix, and then runs Grayson's live proof twice on independent sequential runners. The pinned production runtime above is not changed by this gate.
+
+Candidate contract:
+
+- Registry artifact: `v0.6.0`.
+- Candidate runtime SHA-256: `70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b`.
+- Four permanent interiors cover Commissioner keys 1–3 and shared JP/Constable keys 1–4; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins.
+- Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Grayson jurisdiction, assignments, offices, actions, or coverage.
+- Commissioner exact boundary — live official geometry must suppress only Commissioner while preserving JP/Constable key 1 and 8 Grayson offices; both sides restore 9 offices.
+- Shared JP/Constable exact boundary — live official geometry must suppress JP and Constable together while preserving Commissioner key 2 and 7 Grayson offices; both sides restore 9 offices.
+
+Grayson candidate scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Grayson action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`; production promotion remains the separate `CG-10` gate.
+
 ## Triggers
 
 The gate runs:

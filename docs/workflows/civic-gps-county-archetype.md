@@ -57,6 +57,8 @@ Acceptance fixtures are permanent:
 
 Normal interiors in these archetype counties return the explicitly bounded jurisdiction-wide office set plus exactly one office from each resolved district family. Boundary conflicts never tie-break.
 
+Grayson County is the next candidate: 4 Commissioner + 4 JP + 4 Constable precincts. It uses independent official Commissioner geometry and shared JP/Constable geometry, so the two boundary classes fail closed independently. Its deterministic CG-09 candidate is registry `v0.6.0` / runtime SHA `70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b`; the production runtime remains unchanged until the separate protected CG-10 gate.
+
 Generated county adapters use the generic one-meter topology probe supported by engine v0.6.2. The engine first performs the existing exact point-intersection query, then checks a bounded ArcGIS distance query. If that probe does not return exactly one polygon matching the exact result, only the affected adapter is marked `CONFLICT`; no district officeholder is guessed, while unaffected families and jurisdiction-wide offices remain available.
 
 ## Known unsupported pattern: Hays County
@@ -94,3 +96,5 @@ Bastrop's v0.1 geography/office package contains 18 canonical offices / 18 holde
 Brazos's v0.1 geography/office package contains 18 canonical offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. All three district families share the official P1–P4 geometry and use the generic one-meter topology probe. Action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`.
 
 Smith's v0.1 geography/office package contains 20 canonical offices / 20 holders = 6 deliberately bounded countywide + 4 Commissioner + 5 JP + 5 Constable. Commissioner and JP/Constable use independent boundary layers, preserving unaffected district assignments and countywide offices when either layer conflicts. Action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`.
+
+Grayson's v0.1 geography/office candidate contains 18 canonical offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Commissioner and JP/Constable use independent boundary layers, preserving unaffected district assignments and countywide offices when either layer conflicts. Action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`; protected promotion remains a separate `CG-10` gate.

@@ -1,0 +1,479 @@
+name: 'Civic GPS Grayson County CG-09 candidate gate'
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'agent/civic-gps-grayson-intake'
+    paths:
+      - '.github/workflows/civic-gps-grayson-cg09.yml'
+      - 'tools/civic_gps_package_grayson_candidate.py'
+      - 'tools/civic_gps_county_onboarding.py'
+      - 'tools/civic_gps_tx_county_archetype.py'
+      - 'tests/civic_gps_grayson_live_probe.py'
+      - 'tests/civic_gps_smith_live_probe.py'
+      - 'tests/civic_gps_live_smoke.py'
+      - 'tests/civic_gps_denton_live_probe.py'
+      - 'tests/civic_gps_denton_negative_probe.py'
+      - 'tests/civic_gps_denton_boundary_probe.py'
+      - 'tests/civic_gps_denton_action_probe.py'
+      - 'tests/civic_gps_collin_live_probe.py'
+      - 'tests/civic_gps_travis_live_probe.py'
+      - 'tests/civic_gps_williamson_live_probe.py'
+      - 'tests/civic_gps_tarrant_live_probe.py'
+      - 'tests/civic_gps_bastrop_live_probe.py'
+      - 'tests/civic_gps_brazos_live_probe.py'
+      - 'tests/civic_gps_county_onboarding_test.py'
+      - 'tests/civic_gps_topology_probe_test.py'
+      - 'tests/fixtures/civic_gps_county_onboarding/**'
+      - 'civic_gps_runtime_parts/part.*'
+      - 'requirements-civic-gps.txt'
+      - 'docs/workflows/civic-gps-county-archetype.md'
+      - 'docs/workflows/civic-gps-live-smoke.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: civic-gps-grayson-cg09-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: '1'
+  GRAYSON_BASE_RUNTIME_SHA256: '49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a'
+  GRAYSON_CANDIDATE_RUNTIME_SHA256: '70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b'
+  CIVIC_GPS_EXPECTED_REGISTRY_VERSION: '0.6.0'
+  CIVIC_GPS_EXPECTED_BUNDLE_COUNT: '13'
+  CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b'
+
+jobs:
+  package:
+    name: Build deterministic Grayson candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out Grayson County branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Compile candidate packager and proof
+        run: >-
+          python -m py_compile
+          tools/civic_gps_package_grayson_candidate.py
+          tools/civic_gps_county_onboarding.py
+          tools/civic_gps_tx_county_archetype.py
+          tests/civic_gps_grayson_live_probe.py
+          tests/civic_gps_smith_live_probe.py
+
+      - name: Build Grayson candidate package twice
+        shell: bash
+        run: |
+          python tools/civic_gps_package_grayson_candidate.py --output-dir artifacts/civic-gps-grayson-cg09-package-a
+          python tools/civic_gps_package_grayson_candidate.py --output-dir artifacts/civic-gps-grayson-cg09-package-b
+
+      - name: Prove deterministic candidate package and exact scope
+        shell: bash
+        run: |
+          diff -qr artifacts/civic-gps-grayson-cg09-package-a artifacts/civic-gps-grayson-cg09-package-b
+          echo "$GRAYSON_CANDIDATE_RUNTIME_SHA256  artifacts/civic-gps-grayson-cg09-package-a/civic_gps_grayson_candidate_runtime.zip" | sha256sum --check --strict
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          package = Path('artifacts/civic-gps-grayson-cg09-package-a')
+          manifest = json.loads((package / 'grayson-candidate-package-manifest.json').read_text())
+          expected = {
+              'status': 'PASS',
+              'gate': 'CG-09',
+              'next_gate': 'CG-10',
+              'stopped_before': 'CG-10',
+              'engine_version': '0.6.2',
+              'base_registry_artifact_version': '0.5.9',
+              'candidate_registry_artifact_version': '0.6.0',
+              'base_runtime_sha256': '49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a',
+              'candidate_runtime_sha256': '70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b',
+              'package_entry_count': 21,
+              'bundle_count': 13,
+              'release_offices': 18,
+              'release_holders': 18,
+              'actions': 'NOT_YET_RELEASED',
+              'candidate_packaged': True,
+              'production_runtime_changed': False,
+          }
+          actual = {key: manifest.get(key) for key in expected}
+          if actual != expected:
+              raise SystemExit(f'unexpected Grayson candidate manifest: {actual} != {expected}')
+          if manifest.get('grayson_action_registry_files') != []:
+              raise SystemExit('Grayson action routing was unexpectedly packaged')
+
+          runtime_path = package / 'civic_gps_grayson_candidate_runtime.zip'
+          if hashlib.sha256(runtime_path.read_bytes()).hexdigest() != manifest['candidate_runtime_sha256']:
+              raise SystemExit('candidate runtime bytes do not match the manifest')
+          with ZipFile(runtime_path) as archive:
+              names = sorted(archive.namelist())
+              if names != manifest['package_entries']:
+                  raise SystemExit('candidate ZIP entries do not match the manifest')
+              registry = json.loads(archive.read('civic_gps/registry.json'))
+              grayson = [row for row in registry['bundles'] if row.get('adapter_id') == 'ADAPTER-TX-GRAYSON']
+              if registry.get('registry_artifact_version') != '0.6.0' or len(grayson) != 1:
+                  raise SystemExit('candidate registry does not contain exactly one Grayson bundle at v0.6.0')
+              if any(row.get('source_status') != 'LIVE_INTERIOR_NEGATIVE_BOUNDARY_PASS' for row in grayson[0]['district_adapters']):
+                  raise SystemExit('Grayson candidate adapter proof status changed')
+          print(json.dumps(actual, sort_keys=True))
+          PY
+
+      - name: Upload deterministic Grayson package
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-grayson-cg09-package-${{ github.run_id }}
+          path: |
+            artifacts/civic-gps-grayson-cg09-package-a/
+            artifacts/civic-gps-grayson-cg09-package-b/grayson-candidate-package-manifest.json
+          if-no-files-found: error
+          retention-days: 30
+
+  full-regression:
+    name: Run full candidate regression
+    needs: package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Check out Grayson County branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Download exact Grayson candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: civic-gps-grayson-cg09-package-${{ github.run_id }}
+          path: artifacts/civic-gps-grayson-cg09-package-input
+
+      - name: Install isolated Grayson candidate runtime
+        shell: bash
+        run: |
+          candidate_zip="$(find artifacts/civic-gps-grayson-cg09-package-input -name civic_gps_grayson_candidate_runtime.zip -print -quit)"
+          test -n "$candidate_zip"
+          echo "$GRAYSON_CANDIDATE_RUNTIME_SHA256  $candidate_zip" | sha256sum --check --strict
+          unzip -q "$candidate_zip"
+          find civic_gps_runtime_parts -maxdepth 1 -type f -name 'part.*' -delete
+          split -b 8000 -d -a 2 "$candidate_zip" civic_gps_runtime_parts/part.
+          cat civic_gps_runtime_parts/part.* > artifacts/civic-gps-grayson-cg09-reconstructed.zip
+          echo "$GRAYSON_CANDIDATE_RUNTIME_SHA256  artifacts/civic-gps-grayson-cg09-reconstructed.zip" | sha256sum --check --strict
+          test "$(python -c "import json; print(json.load(open('civic_gps/registry.json'))['registry_artifact_version'])")" = '0.6.0'
+
+      - name: Compile complete regression matrix
+        run: >-
+          python -m py_compile
+          tools/civic_gps_package_grayson_candidate.py
+          tools/civic_gps_county_onboarding.py
+          tools/civic_gps_tx_county_archetype.py
+          tests/civic_gps_county_onboarding_test.py
+          tests/civic_gps_topology_probe_test.py
+          tests/civic_gps_live_smoke.py
+          tests/civic_gps_denton_live_probe.py
+          tests/civic_gps_denton_negative_probe.py
+          tests/civic_gps_denton_boundary_probe.py
+          tests/civic_gps_denton_action_probe.py
+          tests/civic_gps_collin_live_probe.py
+          tests/civic_gps_travis_live_probe.py
+          tests/civic_gps_williamson_live_probe.py
+          tests/civic_gps_tarrant_live_probe.py
+          tests/civic_gps_bastrop_live_probe.py
+          tests/civic_gps_brazos_live_probe.py
+          tests/civic_gps_smith_live_probe.py
+          tests/civic_gps_grayson_live_probe.py
+
+      - name: Run deterministic County Onboarding Pipeline fixtures
+        shell: bash
+        run: |
+          python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/williamson_supported_v0.1.json --output-dir artifacts/civic-gps-county-onboarding/williamson --expect SUPPORTED_V0_1
+          python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/hays_multi_office_stop_v0.1.json --output-dir artifacts/civic-gps-county-onboarding/hays --expect MULTI_OFFICE_PER_DISTRICT
+          python tests/civic_gps_county_onboarding_test.py
+          python tests/civic_gps_topology_probe_test.py
+
+      - name: Run baseline real-network Civic GPS controls
+        run: python tests/civic_gps_live_smoke.py
+
+      - name: Run packaged Denton regression
+        shell: bash
+        run: |
+          python tests/civic_gps_denton_live_probe.py
+          python tests/civic_gps_denton_negative_probe.py
+          python tests/civic_gps_denton_boundary_probe.py
+          python tests/civic_gps_denton_action_probe.py
+
+      - name: Run packaged Collin County regression
+        run: python tests/civic_gps_collin_live_probe.py
+
+      - name: Run packaged Travis County regression
+        run: python tests/civic_gps_travis_live_probe.py
+
+      - name: Run packaged Williamson County regression
+        run: python tests/civic_gps_williamson_live_probe.py
+
+      - name: Run packaged Tarrant County regression
+        run: python tests/civic_gps_tarrant_live_probe.py
+
+      - name: Run packaged Bastrop County regression
+        run: python tests/civic_gps_bastrop_live_probe.py
+
+      - name: Run packaged Brazos County regression
+        run: python tests/civic_gps_brazos_live_probe.py
+
+      - name: Run packaged Smith County regression
+        run: >-
+          python tests/civic_gps_smith_live_probe.py
+          --packaged
+          --expected-runtime-sha256 "$GRAYSON_CANDIDATE_RUNTIME_SHA256"
+          --output-dir artifacts/civic-gps-smith-on-grayson-candidate
+
+      - name: Record full regression completion
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          summary = {
+              'status': 'PASS',
+              'gate': 'CG-09',
+              'candidate_runtime_sha256': '70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b',
+              'candidate_registry_artifact_version': '0.6.0',
+              'full_regression_matrix': [
+                  'county-onboarding-fixtures',
+                  'topology-probe',
+                  'baseline-live-smoke',
+                  'denton-live-negative-boundary-action',
+                  'collin-live-negative-boundary',
+                  'travis-live-negative-boundary',
+                  'williamson-live-negative-boundary',
+                  'tarrant-live-negative-boundary',
+                  'bastrop-live-negative-boundary',
+                  'brazos-live-negative-boundary',
+                  'smith-live-negative-independent-boundaries',
+              ],
+              'production_runtime_changed': False,
+              'actions': 'NOT_YET_RELEASED',
+              'next_gate': 'CG-10',
+          }
+          path = Path('artifacts/civic-gps-grayson-cg09-regression-summary.json')
+          path.write_text(json.dumps(summary, sort_keys=True, indent=2) + '\n')
+          print(json.dumps(summary, sort_keys=True))
+          PY
+
+      - name: Upload full regression evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-grayson-cg09-regression-${{ github.run_id }}
+          path: |
+            artifacts/civic-gps-grayson-cg09-regression-summary.json
+            artifacts/civic-gps-county-onboarding/
+            artifacts/civic-gps-live-smoke/
+            artifacts/civic-gps-travis-archetype/
+            artifacts/civic-gps-williamson-cg09/
+            artifacts/civic-gps-tarrant-cg09/
+            artifacts/civic-gps-bastrop-cg09/
+            artifacts/civic-gps-brazos-cg09/
+            artifacts/civic-gps-smith-on-grayson-candidate/
+          if-no-files-found: error
+          retention-days: 30
+
+  grayson-live:
+    name: Grayson packaged live proof ${{ matrix.pass_id }}
+    needs: full-regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        pass_id: [a, b]
+    steps:
+      - name: Check out Grayson County branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Download exact Grayson candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: civic-gps-grayson-cg09-package-${{ github.run_id }}
+          path: artifacts/civic-gps-grayson-cg09-package-input
+
+      - name: Install isolated Grayson candidate runtime
+        shell: bash
+        run: |
+          candidate_zip="$(find artifacts/civic-gps-grayson-cg09-package-input -name civic_gps_grayson_candidate_runtime.zip -print -quit)"
+          test -n "$candidate_zip"
+          echo "$GRAYSON_CANDIDATE_RUNTIME_SHA256  $candidate_zip" | sha256sum --check --strict
+          unzip -q "$candidate_zip"
+          find civic_gps_runtime_parts -maxdepth 1 -type f -name 'part.*' -delete
+          split -b 8000 -d -a 2 "$candidate_zip" civic_gps_runtime_parts/part.
+
+      - name: Run one packaged Grayson live proof
+        run: >-
+          python tests/civic_gps_grayson_live_probe.py
+          --packaged
+          --expected-runtime-sha256 "$GRAYSON_CANDIDATE_RUNTIME_SHA256"
+          --output-dir artifacts/civic-gps-grayson-cg09-${{ matrix.pass_id }}
+
+      - name: Upload isolated Grayson proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-grayson-cg09-live-${{ matrix.pass_id }}-${{ github.run_id }}
+          path: artifacts/civic-gps-grayson-cg09-${{ matrix.pass_id }}/
+          if-no-files-found: error
+          retention-days: 30
+
+  verify:
+    name: Verify deterministic Grayson CG-09 evidence
+    needs:
+      - package
+      - full-regression
+      - grayson-live
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Download deterministic candidate package
+        uses: actions/download-artifact@v4
+        with:
+          name: civic-gps-grayson-cg09-package-${{ github.run_id }}
+          path: artifacts/package
+
+      - name: Download full regression evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: civic-gps-grayson-cg09-regression-${{ github.run_id }}
+          path: artifacts/regression
+
+      - name: Download Grayson proof a
+        uses: actions/download-artifact@v4
+        with:
+          name: civic-gps-grayson-cg09-live-a-${{ github.run_id }}
+          path: artifacts/live-a
+
+      - name: Download Grayson proof b
+        uses: actions/download-artifact@v4
+        with:
+          name: civic-gps-grayson-cg09-live-b-${{ github.run_id }}
+          path: artifacts/live-b
+
+      - name: Close CG-09 only and assemble durable evidence
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import shutil
+          from pathlib import Path
+
+          def one(root: str, name: str) -> Path:
+              matches = list(Path(root).rglob(name))
+              if len(matches) != 1:
+                  raise SystemExit(f'expected one {name} under {root}, found {matches}')
+              return matches[0]
+
+          left_path = one('artifacts/live-a', 'grayson-cg09-summary.json')
+          right_path = one('artifacts/live-b', 'grayson-cg09-summary.json')
+          left_bytes = left_path.read_bytes()
+          right_bytes = right_path.read_bytes()
+          if left_bytes != right_bytes:
+              raise SystemExit('Grayson CG-09 summaries are not deterministic')
+          summary = json.loads(left_bytes)
+          expected = {
+              'status': 'PASS',
+              'gates': {'CG-09': 'PASS'},
+              'engine_version': '0.6.2',
+              'registry_artifact_version': '0.6.0',
+              'runtime_sha256': '70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b',
+              'base_runtime_sha256': '49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a',
+              'candidate_runtime_sha256': '70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b',
+              'production_runtime_changed': False,
+              'candidate_packaged': True,
+              'actions': 'NOT_YET_RELEASED',
+              'next_gate': 'CG-10',
+              'stopped_before': 'CG-10',
+          }
+          actual = {key: summary.get(key) for key in expected}
+          if actual != expected:
+              raise SystemExit(f'unexpected Grayson CG-09 result: {actual} != {expected}')
+          if len(summary.get('interior_controls') or []) != 4:
+              raise SystemExit('Grayson CG-09 must retain four interior controls')
+          if summary.get('outside_negative', {}).get('grayson_leakage') != 0:
+              raise SystemExit('Grayson CG-09 outside-negative leaked county output')
+          boundaries = summary.get('boundaries') or {}
+          if boundaries.get('commissioner_only', {}).get('exact_applicable_offices') != 8:
+              raise SystemExit('Commissioner-only boundary did not preserve eight Grayson offices')
+          if boundaries.get('jp_constable_only', {}).get('exact_applicable_offices') != 7:
+              raise SystemExit('JP/Constable-only boundary did not preserve seven Grayson offices')
+
+          manifest_paths = list(Path('artifacts/package').rglob('grayson-candidate-package-manifest.json'))
+          if len(manifest_paths) != 2 or manifest_paths[0].read_bytes() != manifest_paths[1].read_bytes():
+              raise SystemExit(f'expected two byte-identical package manifests, found {manifest_paths}')
+          manifest = json.loads(manifest_paths[0].read_text())
+          regression = json.loads(one('artifacts/regression', 'civic-gps-grayson-cg09-regression-summary.json').read_text())
+          if manifest.get('candidate_runtime_sha256') != expected['candidate_runtime_sha256']:
+              raise SystemExit('package manifest runtime SHA changed')
+          if regression.get('status') != 'PASS' or regression.get('next_gate') != 'CG-10':
+              raise SystemExit(f'full regression evidence is incomplete: {regression}')
+
+          final = Path('artifacts/civic-gps-grayson-cg09-final')
+          shutil.copytree('artifacts/package', final / 'package')
+          shutil.copytree('artifacts/regression', final / 'regression')
+          shutil.copytree('artifacts/live-a', final / 'live-a')
+          shutil.copytree('artifacts/live-b', final / 'live-b')
+          verification = {
+              'status': 'PASS',
+              'gate': 'CG-09',
+              'candidate_runtime_sha256': expected['candidate_runtime_sha256'],
+              'candidate_registry_artifact_version': '0.6.0',
+              'grayson_summary_sha256': hashlib.sha256(left_bytes).hexdigest(),
+              'grayson_live_proof_runs': 2,
+              'grayson_live_runners': 'INDEPENDENT_SEQUENTIAL',
+              'full_regression_count': len(regression['full_regression_matrix']),
+              'production_runtime_changed': False,
+              'actions': 'NOT_YET_RELEASED',
+              'next_gate': 'CG-10',
+              'stopped_before': 'CG-10',
+          }
+          (final / 'grayson-cg09-verification.json').write_text(
+              json.dumps(verification, sort_keys=True, indent=2) + '\n'
+          )
+          print(json.dumps(verification, sort_keys=True))
+          PY
+
+      - name: Upload final Grayson CG-09 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-grayson-county10-cg09-${{ github.run_id }}
+          path: artifacts/civic-gps-grayson-cg09-final/
+          if-no-files-found: error
+          retention-days: 30
