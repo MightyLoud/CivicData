@@ -128,7 +128,7 @@ jobs:
 
           spec_bytes = SPEC_PATH.read_bytes()
           spec_sha = hashlib.sha256(spec_bytes).hexdigest()
-          if spec_sha != 'f91f98ec040c153f12cff82bf5be91ac32dbee3e9616048120a95d6f0c8f0077':
+          if spec_sha != '5360fc458d3d78b7c70e178021c8440e7d8bed53ef6095acaae7467a042f728e':
               raise AssertionError(f'Bastrop candidate spec SHA changed: {spec_sha}')
           spec = json.loads(spec_bytes)
 
