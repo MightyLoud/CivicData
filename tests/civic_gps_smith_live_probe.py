@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smith County CG-04 through CG-08 live proof on the unchanged v0.6.2 runtime."""
+"""Smith County live proof for the CG-08 base runtime or CG-09 candidate package."""
 from __future__ import annotations
 
 import argparse
@@ -62,6 +62,7 @@ SPEC_PATH = ROOT / "tests/fixtures/civic_gps_county_onboarding/smith_county9_can
 ONBOARDING_TOOL = ROOT / "tools/civic_gps_county_onboarding.py"
 RUNTIME_PARTS = ROOT / "civic_gps_runtime_parts"
 RUNTIME_SHA256 = "bc40a0aa46fcdbd5b2c73976747ef702d9a64fd051832c615ba4aba1016a7427"
+CANDIDATE_RUNTIME_SHA256 = "49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a"
 J = "jur-us-tx-smith-county"
 TRAVIS = "jur-us-tx-travis-county"
 A_COMM = "DIST-TX-SMITH-COMMISSIONER"
@@ -384,6 +385,59 @@ def validate_roster_and_bundle(onboarding: Path) -> tuple[dict, dict, dict]:
     return report, release, bundle
 
 
+def validate_packaged_candidate(runtime_gps: Path, registry: dict) -> dict:
+    if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.9":
+        raise AssertionError(f"Smith candidate requires engine 0.6.2 / registry 0.5.9: {registry}")
+    registry_without_hash = copy.deepcopy(registry)
+    recorded_registry_sha = registry_without_hash.pop("canonical_content_sha256", None)
+    if not recorded_registry_sha or recorded_registry_sha != canonical_sha(registry_without_hash):
+        raise AssertionError("Smith candidate registry canonical content SHA mismatch")
+    smith_bundles = [
+        row for row in registry.get("bundles") or [] if row.get("adapter_id") == "ADAPTER-TX-SMITH"
+    ]
+    if len(registry.get("bundles") or []) != 12 or len(smith_bundles) != 1:
+        raise AssertionError("Smith candidate must contain exactly 12 bundles and one Smith bundle")
+    bundle = smith_bundles[0]
+    adapter_rows = {row.get("adapter_id"): row for row in bundle.get("district_adapters") or []}
+    if set(adapter_rows) != set(ADAPTERS) or any(
+        row.get("source_status") != "LIVE_INTERIOR_NEGATIVE_BOUNDARY_PASS"
+        for row in adapter_rows.values()
+    ):
+        raise AssertionError(f"Smith candidate adapter proof status changed: {adapter_rows}")
+    gap_statuses = {
+        row.get("gap_id"): row.get("status") for row in bundle.get("known_gaps") or []
+    }
+    if gap_statuses != {
+        "GAP-SMITH-GPS-001": "NOT_YET_RELEASED",
+        "GAP-SMITH-GPS-002": "BOUNDED_V0_1_SCOPE",
+        "GAP-SMITH-GPS-003": "SOURCE_PRECEDENCE_RESOLVED",
+        "GAP-SMITH-GPS-004": "PROTECTED_PROMOTION_PENDING",
+    }:
+        raise AssertionError(f"Smith candidate known-gap states changed: {gap_statuses}")
+    if any(path.name.startswith("civic_gps_action_registry_smith") for path in runtime_gps.glob("*.json")):
+        raise AssertionError("Smith action routing must not be packaged in CG-09")
+
+    release_path = runtime_gps / "civic_gps_smith_county_v0.1.json"
+    if not release_path.is_file():
+        raise AssertionError("Smith candidate release file is absent")
+    release = json.loads(release_path.read_text(encoding="utf-8"))
+    release_without_hash = copy.deepcopy(release)
+    recorded_release_sha = release_without_hash["meta"].pop("canonical_content_sha256", None)
+    if not recorded_release_sha or recorded_release_sha != canonical_sha(release_without_hash):
+        raise AssertionError("Packaged Smith release canonical content SHA mismatch")
+    if release.get("meta", {}).get("release_status") != "RELEASE_BACKED_CURRENT":
+        raise AssertionError("Packaged Smith release status must be RELEASE_BACKED_CURRENT")
+    jurisdictions = release.get("payload", {}).get("jurisdictions") or []
+    if len(jurisdictions) != 1 or jurisdictions[0].get("status") != "RELEASE_BACKED_CURRENT":
+        raise AssertionError(f"Packaged Smith jurisdiction status changed: {jurisdictions}")
+    offices = release.get("payload", {}).get("offices") or []
+    holders = release.get("payload", {}).get("officeholders") or []
+    roster = {row.get("office_id"): row.get("canonical_name") for row in holders}
+    if len(offices) != 20 or len(holders) != 20 or roster != EXPECTED_ROSTER:
+        raise AssertionError("Packaged Smith 20-office / 20-holder canonical roster changed")
+    return bundle
+
+
 def validate_applicable(label: str, payload: dict, expected: dict[str, str]) -> None:
     matched = applicable(payload)
     wide = [row for row in matched if row.get("applicability_scope") == "JURISDICTION_WIDE"]
@@ -416,6 +470,16 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/civic-gps-smith-cg08")
     parser.add_argument(
+        "--packaged",
+        action="store_true",
+        help="Validate the deterministic CG-09 candidate already installed in runtime parts.",
+    )
+    parser.add_argument(
+        "--expected-runtime-sha256",
+        default=CANDIDATE_RUNTIME_SHA256,
+        help="Exact candidate runtime SHA required in --packaged mode.",
+    )
+    parser.add_argument(
         "--use-frozen-geocodes",
         action="store_true",
         help="Use the live-verified Census coordinates for local restricted-sandbox validation.",
@@ -442,31 +506,41 @@ def main() -> int:
 
     runtime_bytes = b"".join(part.read_bytes() for part in sorted(RUNTIME_PARTS.glob("part.*")))
     runtime_sha = hashlib.sha256(runtime_bytes).hexdigest()
-    if runtime_sha != RUNTIME_SHA256:
-        raise AssertionError(f"Production runtime SHA changed: {runtime_sha}")
+    expected_runtime_sha = args.expected_runtime_sha256 if args.packaged else RUNTIME_SHA256
+    if runtime_sha != expected_runtime_sha:
+        mode = "candidate" if args.packaged else "production"
+        raise AssertionError(f"Smith {mode} runtime SHA changed: {runtime_sha}")
+    if args.packaged and runtime_sha == RUNTIME_SHA256:
+        raise AssertionError("CG-09 packaged proof cannot run against the unchanged production runtime")
 
     if service_keys(COMM_SERVICE, COMM_FIELD) != ["1", "2", "3", "4"]:
         raise AssertionError("Smith live Commissioner key set changed")
     if service_keys(JPC_SERVICE, JPC_FIELD) != ["1", "2", "3", "4", "5"]:
         raise AssertionError("Smith live JP/Constable key set changed")
 
-    with tempfile.TemporaryDirectory(prefix="civic-gps-smith-cg08-") as temp_name:
+    gate = "CG-09" if args.packaged else "CG-08"
+    gate_slug = "cg09" if args.packaged else "cg08"
+    with tempfile.TemporaryDirectory(prefix=f"civic-gps-smith-{gate_slug}-") as temp_name:
         temp_root = Path(temp_name)
         with ZipFile(io.BytesIO(runtime_bytes)) as runtime_archive:
             runtime_archive.extractall(temp_root)
         runtime_gps = temp_root / "civic_gps"
-        engine_mod = load_module("civic_gps_engine_smith_cg08", runtime_gps / "engine.py")
+        engine_mod = load_module(f"civic_gps_engine_smith_{gate_slug}", runtime_gps / "engine.py")
         registry = json.loads((runtime_gps / "registry.json").read_text(encoding="utf-8"))
-        if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
-            raise AssertionError(f"Smith proof requires engine 0.6.2 / registry 0.5.8: {registry}")
-        if any(row.get("adapter_id") == "ADAPTER-TX-SMITH" for row in registry.get("bundles") or []):
-            raise AssertionError("Smith must not already exist in the packaged production registry")
-        augmented = copy.deepcopy(registry)
-        augmented["bundles"].append(bundle)
-        release_name = json.loads(SPEC_PATH.read_text(encoding="utf-8"))["county"]["release_filename"]
-        write_json(runtime_gps / release_name, release)
+        if args.packaged:
+            active_registry = registry
+            bundle = validate_packaged_candidate(runtime_gps, registry)
+        else:
+            if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
+                raise AssertionError(f"Smith proof requires engine 0.6.2 / registry 0.5.8: {registry}")
+            if any(row.get("adapter_id") == "ADAPTER-TX-SMITH" for row in registry.get("bundles") or []):
+                raise AssertionError("Smith must not already exist in the packaged production registry")
+            active_registry = copy.deepcopy(registry)
+            active_registry["bundles"].append(bundle)
+            release_name = json.loads(SPEC_PATH.read_text(encoding="utf-8"))["county"]["release_filename"]
+            write_json(runtime_gps / release_name, release)
         resolver = engine_mod.CivicGPSOverlayEngine(
-            augmented,
+            active_registry,
             registry_root=runtime_gps,
             timeout_seconds=45.0,
         )
@@ -476,7 +550,7 @@ def main() -> int:
             if args.use_frozen_geocodes:
                 lon, lat, county_geoid, county_code = FROZEN_GEOCODES[label]
                 active_resolver = engine_mod.CivicGPSOverlayEngine(
-                    augmented,
+                    active_registry,
                     registry_root=runtime_gps,
                     session=FixedPointSession(lon, lat, county_geoid, county_code),
                     timeout_seconds=45.0,
@@ -547,7 +621,7 @@ def main() -> int:
 
         def resolve_point(label: str, point: tuple[float, float]) -> dict:
             fixed = engine_mod.CivicGPSOverlayEngine(
-                augmented,
+                active_registry,
                 registry_root=runtime_gps,
                 session=FixedPointSession(point[0], point[1]),
                 timeout_seconds=45.0,
@@ -615,11 +689,17 @@ def main() -> int:
         "status": "PASS",
         "county": "Smith County, TX",
         "geoid": "48423",
-        "gates": {gate: "PASS" for gate in ("CG-04", "CG-05", "CG-06", "CG-07", "CG-08")},
+        "gates": (
+            {"CG-09": "PASS"}
+            if args.packaged
+            else {proof_gate: "PASS" for proof_gate in ("CG-04", "CG-05", "CG-06", "CG-07", "CG-08")}
+        ),
         "fit_result": report["result"],
         "engine_version": "0.6.2",
-        "registry_artifact_version": "0.5.8",
+        "registry_artifact_version": "0.5.9" if args.packaged else "0.5.8",
         "runtime_sha256": runtime_sha,
+        "base_runtime_sha256": RUNTIME_SHA256,
+        "candidate_runtime_sha256": runtime_sha if args.packaged else None,
         "production_runtime_changed": False,
         "release_offices": 20,
         "release_holders": 20,
@@ -651,13 +731,13 @@ def main() -> int:
             "policy": POLICY,
         },
         "actions": "NOT_YET_RELEASED",
-        "candidate_packaged": False,
-        "next_gate": "CG-09",
-        "stopped_before": "CG-09",
+        "candidate_packaged": args.packaged,
+        "next_gate": "CG-10" if args.packaged else "CG-09",
+        "stopped_before": "CG-10" if args.packaged else "CG-09",
     }
-    write_json(output / "smith-cg08-summary.json", summary)
+    write_json(output / f"smith-{gate_slug}-summary.json", summary)
     print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
-    print("SMITH CG-04 THROUGH CG-08 PASS")
+    print("SMITH CG-09 PACKAGED PROOF PASS" if args.packaged else "SMITH CG-04 THROUGH CG-08 PASS")
     return 0
 
 
