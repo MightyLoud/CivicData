@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import math
+import os
 import sys
 from pathlib import Path
 import requests
@@ -15,6 +16,7 @@ OUTPUT = ROOT / "artifacts" / "civic-gps-live-smoke" / "collin"
 OUTPUT.mkdir(parents=True, exist_ok=True)
 ENGINE_PATH = GPS / "engine.py"
 REGISTRY_PATH = GPS / "registry.json"
+EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.5.8")
 
 def load_module(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -34,9 +36,9 @@ GIS_COMM_SERVICE = "https://maps.collincountytx.gov/server/rest/services/Electio
 GIS_JPC_SERVICE = "https://maps.collincountytx.gov/server/rest/services/Election/VotingPrecincts_Edited_PlanC2333/FeatureServer/4"
 
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != EXPECTED_REGISTRY_VERSION:
     raise AssertionError(
-        f"Collin release proof requires engine 0.6.2 / registry 0.5.8, got "
+        f"Collin release proof requires engine 0.6.2 / registry {EXPECTED_REGISTRY_VERSION}, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-COLLIN"), None)
