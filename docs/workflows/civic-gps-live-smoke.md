@@ -12,12 +12,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a`
+`70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b`
 
 Current contract set:
 
 - Overlay Engine: `v0.6.2`
-- Adapter registry artifact: `v0.5.9`
+- Adapter registry artifact: `v0.6.0`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 - County onboarding frozen-spec schema: `civic-gps-county-onboarding/0.1.0`
@@ -122,6 +122,21 @@ Required packaged controls:
 - Shared JP/Constable exact boundary — live official geometry must suppress JP and Constable together while preserving Commissioner key 1 and 7 Smith offices; both sides restore 9 offices.
 
 Smith release scope is 20 offices / 20 holders = 6 deliberately bounded countywide + 4 Commissioner + 5 JP + 5 Constable. Smith action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
+
+### Grayson County
+
+Grayson is the eighth production county archetype and the sixth county completed through the automated County Onboarding Pipeline. Its protected release consumes the exact deterministic CG-09 package that passed two independent Grayson live proofs plus the entire maintained regression matrix.
+
+Required packaged controls:
+
+- Registry artifact: `v0.6.0`.
+- Runtime SHA-256: `70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b`.
+- Four permanent interiors cover Commissioner keys 1–3 and shared JP/Constable keys 1–4; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins.
+- Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Grayson jurisdiction, assignments, offices, actions, or coverage.
+- Commissioner exact boundary — live official geometry must suppress only Commissioner while preserving JP/Constable key 1 and 8 Grayson offices; both sides restore 9 offices.
+- Shared JP/Constable exact boundary — live official geometry must suppress JP and Constable together while preserving Commissioner key 2 and 7 Grayson offices; both sides restore 9 offices.
+
+Grayson release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Grayson action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
 
 ## Triggers
 
