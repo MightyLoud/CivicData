@@ -7,6 +7,7 @@ import hashlib
 import importlib.util
 import json
 import math
+import os
 import sys
 import time
 from pathlib import Path
@@ -29,6 +30,11 @@ A_JP = "DIST-TX-BASTROP-JP"
 A_CONST = "DIST-TX-BASTROP-CONSTABLE"
 ADAPTERS = (A_COMM, A_JP, A_CONST)
 POLICY = "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK"
+EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.5.8")
+EXPECTED_RUNTIME_SHA256 = os.environ.get(
+    "CIVIC_GPS_EXPECTED_RUNTIME_SHA256",
+    "bc40a0aa46fcdbd5b2c73976747ef702d9a64fd051832c615ba4aba1016a7427",
+)
 EXPECTED_LAYERS = {
     "bastrop_county_commissioner_precinct",
     "bastrop_county_jp_precinct",
@@ -116,9 +122,9 @@ def assert_no_actions(label: str, payload: dict) -> None:
 
 engine_mod = load_module("civic_gps_engine_bastrop_packaged", ENGINE_PATH)
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != EXPECTED_REGISTRY_VERSION:
     raise AssertionError(
-        "Bastrop packaged proof requires engine 0.6.2 / registry 0.5.8, got "
+        f"Bastrop packaged proof requires engine 0.6.2 / registry {EXPECTED_REGISTRY_VERSION}, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next(
@@ -553,7 +559,7 @@ runtime_sha = hashlib.sha256(
         for part in sorted((ROOT / "civic_gps_runtime_parts").glob("part.*"))
     )
 ).hexdigest()
-if runtime_sha != "bc40a0aa46fcdbd5b2c73976747ef702d9a64fd051832c615ba4aba1016a7427":
+if runtime_sha != EXPECTED_RUNTIME_SHA256:
     raise AssertionError(f"Packaged Bastrop runtime SHA changed: {runtime_sha}")
 
 summary = {
@@ -562,7 +568,7 @@ summary = {
     "county": "Bastrop County, TX",
     "geoid": "48021",
     "engine_version": "0.6.2",
-    "registry_artifact_version": "0.5.8",
+    "registry_artifact_version": EXPECTED_REGISTRY_VERSION,
     "runtime_sha256": runtime_sha,
     "release_offices": 18,
     "release_holders": 18,
