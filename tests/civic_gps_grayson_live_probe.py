@@ -134,7 +134,7 @@ CASES = [
         "jp_key": "4",
     },
 ]
-TRANSIENT_CENSUS_MARKERS = (
+TRANSIENT_NETWORK_MARKERS = (
     "timed out", "timeout", "connection", "temporarily unavailable", "remote disconnected", "502", "503", "504"
 )
 
@@ -195,17 +195,38 @@ def conflict_layers(payload: dict) -> set[str]:
     }
 
 
+def transient_upstream(error: dict) -> bool:
+    details = error.get("details") or {}
+    url = str(details.get("url") or "")
+    upstream = str(details.get("error") or "").lower()
+    supported_upstream = url.startswith("https://geocoding.geo.census.gov/geocoder/") or url.startswith(
+        "https://maps.co.grayson.tx.us/arcgis/rest/services/Grayson/"
+    )
+    return (
+        error.get("code") == "UPSTREAM_REQUEST_FAILED"
+        and supported_upstream
+        and any(marker in upstream for marker in TRANSIENT_NETWORK_MARKERS)
+    )
+
+
 SESSION = requests.Session()
 SESSION.headers.update({"User-Agent": "CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"})
 
 
 def get_json(url: str, params: dict) -> dict:
-    response = SESSION.get(url, params=params, timeout=45)
-    response.raise_for_status()
-    body = response.json()
-    if body.get("error"):
-        raise AssertionError(f"ArcGIS error from {url}: {body['error']}")
-    return body
+    for attempt in range(1, 4):
+        try:
+            response = SESSION.get(url, params=params, timeout=45)
+            response.raise_for_status()
+            body = response.json()
+            if body.get("error"):
+                raise AssertionError(f"ArcGIS error from {url}: {body['error']}")
+            return body
+        except requests.RequestException:
+            if attempt == 3:
+                raise
+            time.sleep(2 ** (attempt - 1))
+    raise AssertionError(f"Unreachable ArcGIS retry state for {url}")
 
 
 def normalize_key(raw: object) -> str:
@@ -536,15 +557,7 @@ def main() -> int:
             for attempt in range(1, 4):
                 result = resolver.resolve(address, observed_on="2026-08-09")
                 error = result.get("error") or {}
-                details = error.get("details") or {}
-                upstream = str(details.get("error") or "").lower()
-                transient = (
-                    error.get("code") == "UPSTREAM_REQUEST_FAILED"
-                    and error.get("message") == "GEOCODER request failed."
-                    and str(details.get("url") or "").startswith("https://geocoding.geo.census.gov/geocoder/")
-                    and any(marker in upstream for marker in TRANSIENT_CENSUS_MARKERS)
-                )
-                if not transient or attempt == 3:
+                if not transient_upstream(error) or attempt == 3:
                     if "error" in result:
                         raise AssertionError(f"[{label}] engine error: {result['error']}")
                     return result
@@ -611,17 +624,22 @@ def main() -> int:
             raise AssertionError("Outside-Austin control leaked Grayson coverage")
 
         def resolve_point(label: str, point: tuple[float, float]) -> dict:
-            fixed = engine_mod.CivicGPSOverlayEngine(
-                active_registry,
-                registry_root=runtime_gps,
-                session=FixedPointSession(point[0], point[1]),
-                timeout_seconds=45.0,
-            )
-            result = fixed.resolve(label, observed_on="2026-08-09")
-            if "error" in result:
-                raise AssertionError(f"[{label}] boundary engine error: {result['error']}")
-            write_json(output / f"{label}.json", result)
-            return result["payload"]
+            for attempt in range(1, 4):
+                fixed = engine_mod.CivicGPSOverlayEngine(
+                    active_registry,
+                    registry_root=runtime_gps,
+                    session=FixedPointSession(point[0], point[1]),
+                    timeout_seconds=45.0,
+                )
+                result = fixed.resolve(label, observed_on="2026-08-09")
+                error = result.get("error") or {}
+                if not transient_upstream(error) or attempt == 3:
+                    if "error" in result:
+                        raise AssertionError(f"[{label}] boundary engine error: {result['error']}")
+                    write_json(output / f"{label}.json", result)
+                    return result["payload"]
+                time.sleep(2 ** (attempt - 1))
+            raise AssertionError(f"[{label}] unreachable retry state")
 
         comm_boundary = find_isolated_boundary(
             (COMM_SERVICE, COMM_FIELD),
