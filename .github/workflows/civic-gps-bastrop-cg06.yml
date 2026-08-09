@@ -74,6 +74,7 @@ jobs:
           import importlib.util
           import json
           import sys
+          import time
           from pathlib import Path
 
           ROOT = Path('.')
@@ -164,10 +165,46 @@ jobs:
                   A_COMM: 'David Glass', A_JP: 'Larry Dunne', A_CONST: 'Joey Dzienowski'}),
           ]
 
+          TRANSIENT_CENSUS_MARKERS = (
+              'timed out',
+              'timeout',
+              'connection',
+              'temporarily unavailable',
+              'remote disconnected',
+              '502',
+              '503',
+              '504',
+          )
+
+          def resolve_with_bounded_census_retry(case_id: str, address: str):
+              max_attempts = 3
+              for attempt in range(1, max_attempts + 1):
+                  result = resolver.resolve(address, observed_on=None)
+                  error = result.get('error') or {}
+                  details = error.get('details') or {}
+                  upstream_error = str(details.get('error') or '').lower()
+                  transient_census_failure = (
+                      error.get('code') == 'UPSTREAM_REQUEST_FAILED'
+                      and error.get('message') == 'GEOCODER request failed.'
+                      and str(details.get('url') or '').startswith(
+                          'https://geocoding.geo.census.gov/geocoder/'
+                      )
+                      and any(marker in upstream_error for marker in TRANSIENT_CENSUS_MARKERS)
+                  )
+                  if not error or not transient_census_failure or attempt == max_attempts:
+                      return result, attempt
+                  delay_seconds = 2 ** (attempt - 1)
+                  print(
+                      f'[{case_id}] transient Census geocoder failure on attempt '
+                      f'{attempt}/{max_attempts}; retrying in {delay_seconds}s'
+                  )
+                  time.sleep(delay_seconds)
+              raise AssertionError(f'[{case_id}] unreachable retry state')
+
           summaries = []
           keys_covered = set()
           for case_id, address, key, expected_reps in CASES:
-              result = resolver.resolve(address, observed_on=None)
+              result, resolution_attempts = resolve_with_bounded_census_retry(case_id, address)
               (OUT / f'{case_id}.json').write_text(
                   json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
                   encoding='utf-8',
@@ -248,6 +285,7 @@ jobs:
                   'district_office_ids': sorted(district_ids),
                   'coverage_layers': sorted(release_backed_layers),
                   'applicable_offices': 9,
+                  'resolution_attempts': resolution_attempts,
                   'status': 'PASS',
               })
 
@@ -274,6 +312,12 @@ jobs:
               'shared_keys_covered': sorted(keys_covered, key=int),
               'normal_applicable_offices': 9,
               'normal_composition': {'countywide': 6, 'district': 3},
+              'upstream_retry_policy': {
+                  'scope': 'TRANSIENT_CENSUS_GEOCODER_TRANSPORT_ONLY',
+                  'max_attempts': 3,
+                  'backoff_seconds': [2, 4],
+                  'deterministic_mismatches_retry': False,
+              },
               'actions': 'NOT_YET_RELEASED',
               'p3_control_note': (
                   'Uses official Bastrop County Cedar Creek Park at 5540 FM 535 because '
