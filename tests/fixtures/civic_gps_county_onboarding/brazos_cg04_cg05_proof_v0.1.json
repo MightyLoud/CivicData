@@ -1,0 +1,166 @@
+{
+  "schema_version": "civic-gps-brazos-cg04-cg05-proof/0.1.0",
+  "county": "Brazos County",
+  "county_geoid": "48041",
+  "observed_on": "2026-08-08",
+  "candidate_spec_sha256": "71e347e8383a7435a573cf72c7e75926e15859598c9c012109e99ac963877bdc",
+  "canonical_roster": {
+    "expected_total_offices": 18,
+    "identity_source_rule": "CANONICAL_RELEASE_ONLY",
+    "official_hosts": ["elections.brazoscountytx.gov"],
+    "records": [
+      {
+        "office_id": "office-us-tx-brazos-county-judge",
+        "title": "County Judge",
+        "holder": "Duane Peters",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["County Judge Duane Peters"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-sheriff",
+        "title": "Sheriff",
+        "holder": "Wayne Dicky",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Sheriff: Wayne Dicky"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-clerk",
+        "title": "County Clerk",
+        "holder": "Karen McQueen",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["County Clerk: Karen McQueen"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-district-clerk",
+        "title": "District Clerk",
+        "holder": "Gabriel Garcia",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["District Clerk: Gabriel Garcia"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-tax-assessor-collector",
+        "title": "Tax Assessor-Collector",
+        "holder": "Melissa Leonard",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Tax Assessor / Collector: Melissa Leonard"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-treasurer",
+        "title": "County Treasurer",
+        "holder": "Cristian Villarreal",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["County Treasurer: Cristian Villarreal"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-commissioner-1",
+        "title": "Commissioner Precinct 1",
+        "holder": "Bentley Nettles",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Commissioners", "Precinct 1: Bentley Nettles"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-commissioner-2",
+        "title": "Commissioner Precinct 2",
+        "holder": "Chuck Konderla",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Commissioners", "Precinct 2: Chuck Konderla"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-commissioner-3",
+        "title": "Commissioner Precinct 3",
+        "holder": "Fred Brown",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Commissioners", "Precinct 3: Fred Brown"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-commissioner-4",
+        "title": "Commissioner Precinct 4",
+        "holder": "Wanda J. Watson",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Commissioners", "Precinct 4: Wanda J. Watson"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-jp-1",
+        "title": "Justice of the Peace Precinct 1",
+        "holder": "Kenny Elliott",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Justice of the Peace", "Precinct 1: Kenny Elliott"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-jp-2",
+        "title": "Justice of the Peace Precinct 2",
+        "holder": "Terrence P. Nunn",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Justice of the Peace", "Precinct 2: Terrence P. Nunn"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-jp-3",
+        "title": "Justice of the Peace Precinct 3",
+        "holder": "Rick Hill",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Justice of the Peace", "Precinct 3: Rick Hill"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-jp-4",
+        "title": "Justice of the Peace Precinct 4",
+        "holder": "Darrell Booker",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Justice of the Peace", "Precinct 4: Darrell Booker"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-constable-1",
+        "title": "Constable Precinct 1",
+        "holder": "Jeff Reeves",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Constables", "Precinct 1: Jeff Reeves"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-constable-2",
+        "title": "Constable Precinct 2",
+        "holder": "Donald Lampo",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Constables", "Precinct 2: Donald Lampo"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-constable-3",
+        "title": "Constable Precinct 3",
+        "holder": "J.P. Ingram",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Constables", "Precinct 3: J.P. Ingram"]
+      },
+      {
+        "office_id": "office-us-tx-brazos-county-constable-4",
+        "title": "Constable Precinct 4",
+        "holder": "Hezekiah Carter, Jr.",
+        "source_url": "https://elections.brazoscountytx.gov/elected-officials/",
+        "required_fragments": ["Constables", "Precinct 4: Hezekiah Carter, Jr."]
+      }
+    ]
+  },
+  "gis": {
+    "service_url": "https://services5.arcgis.com/s91b2wxhO15FkWh5/arcgis/rest/services/BRAZOS_CC_PCTS_11022021/FeatureServer/0",
+    "provenance_url": "https://www.brazoscountytx.gov/608/Find-my-Precinct",
+    "webmap_data_url": "https://www.arcgis.com/sharing/rest/content/items/c8cbaf96e8244eb3ae4beee3e9a15184/data?f=json",
+    "feature_item_url": "https://www.arcgis.com/sharing/rest/content/items/4053c0dfb4ec40259fb2d375ff7116c9?f=json",
+    "official_hosts": ["www.brazoscountytx.gov", "www.arcgis.com", "services5.arcgis.com"],
+    "webmap_item_id": "c8cbaf96e8244eb3ae4beee3e9a15184",
+    "feature_item_id": "4053c0dfb4ec40259fb2d375ff7116c9",
+    "feature_item_title": "BRAZOS CC PCTS 11022021",
+    "webmap_layer_title": "Brazos County Justice of the Peace - Commissioners Court Precincts",
+    "layer_name": "BRAZOS_CC_PCTS_11022021",
+    "geometry_type": "esriGeometryPolygon",
+    "district_field": "ID",
+    "district_field_type": "esriFieldTypeInteger",
+    "district_keys": ["1", "2", "3", "4"],
+    "families": ["commissioner", "justice_of_the_peace", "constable"],
+    "resolver_kind": "ARCGIS_POINT_INTERSECT",
+    "failure_scope": "ADAPTER",
+    "boundary_policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK",
+    "provenance_fragments": [
+      "Find My County Commissioner",
+      "county commissioner, justice of the peace, and constable",
+      "View map of Brazos County Commissioners Court and Justice of the Peace Precincts"
+    ]
+  },
+  "stop_before": "CG-06"
+}

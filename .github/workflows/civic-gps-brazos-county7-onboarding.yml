@@ -7,19 +7,21 @@ on:
     paths:
       - '.github/workflows/civic-gps-brazos-county7-onboarding.yml'
       - 'tests/fixtures/civic_gps_county_onboarding/brazos_county7_candidate_v0.1.json'
+      - 'tests/fixtures/civic_gps_county_onboarding/brazos_cg04_cg05_proof_v0.1.json'
       - 'tools/civic_gps_county_onboarding.py'
       - 'tools/civic_gps_tx_county_archetype.py'
+      - 'tools/civic_gps_brazos_cg04_cg05.py'
 
 permissions:
   contents: read
 
 jobs:
-  fit-screen:
-    name: Brazos County automated CG-01 to CG-03
+  county-gates:
+    name: Brazos County automated CG-01 to CG-05
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
-      - name: Check out County #7 branch
+      - name: 'Check out County #7 branch'
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -27,8 +29,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Compile onboarding tooling
-        run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py
+      - name: Compile onboarding and live-proof tooling
+        run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_brazos_cg04_cg05.py
 
       - name: Run frozen Brazos spec twice
         shell: bash
@@ -37,7 +39,7 @@ jobs:
           python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/brazos_county7_candidate_v0.1.json --output-dir artifacts/civic-gps-brazos-county7-a --expect SUPPORTED_V0_1
           python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/brazos_county7_candidate_v0.1.json --output-dir artifacts/civic-gps-brazos-county7-b --expect SUPPORTED_V0_1
 
-      - name: Prove deterministic outputs
+      - name: Prove deterministic frozen outputs
         shell: bash
         run: |
           python - <<'PY'
@@ -57,10 +59,36 @@ jobs:
           print(json.dumps({'status':'PASS','files':sa}, sort_keys=True))
           PY
 
-      - name: Upload County #7 fit evidence
+      - name: Run live CG-04 and CG-05 twice
+        shell: bash
+        run: |
+          rm -rf artifacts/civic-gps-brazos-cg04-cg05-a artifacts/civic-gps-brazos-cg04-cg05-b
+          python tools/civic_gps_brazos_cg04_cg05.py tests/fixtures/civic_gps_county_onboarding/brazos_county7_candidate_v0.1.json tests/fixtures/civic_gps_county_onboarding/brazos_cg04_cg05_proof_v0.1.json --output-dir artifacts/civic-gps-brazos-cg04-cg05-a
+          python tools/civic_gps_brazos_cg04_cg05.py tests/fixtures/civic_gps_county_onboarding/brazos_county7_candidate_v0.1.json tests/fixtures/civic_gps_county_onboarding/brazos_cg04_cg05_proof_v0.1.json --output-dir artifacts/civic-gps-brazos-cg04-cg05-b
+
+      - name: Prove deterministic live assertions and CG-06 stop
+        shell: bash
+        run: |
+          cmp artifacts/civic-gps-brazos-cg04-cg05-a/cg04_cg05_evidence.json artifacts/civic-gps-brazos-cg04-cg05-b/cg04_cg05_evidence.json
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          p=Path('artifacts/civic-gps-brazos-cg04-cg05-a/cg04_cg05_evidence.json')
+          value=json.loads(p.read_text())
+          gates={row['gate']: row['status'] for row in value['gates']}
+          if gates['CG-04'] != 'PASS' or gates['CG-05'] != 'PASS' or gates['CG-06'] != 'READY':
+              raise SystemExit(f'unexpected gate state: {gates}')
+          if value['stopped_before'] != 'CG-06' or value['packaged'] is not False:
+              raise SystemExit('proof crossed the CG-06/package stop')
+          print(json.dumps({'status':'PASS','sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'stopped_before':'CG-06'}, sort_keys=True))
+          PY
+
+      - name: 'Upload County #7 CG-01 to CG-05 evidence'
         uses: actions/upload-artifact@v4
         with:
-          name: civic-gps-brazos-county7-${{ github.run_id }}
-          path: artifacts/civic-gps-brazos-county7-a/
+          name: civic-gps-brazos-county7-cg01-cg05-${{ github.run_id }}
+          path: |
+            artifacts/civic-gps-brazos-county7-a/
+            artifacts/civic-gps-brazos-cg04-cg05-a/
           if-no-files-found: error
           retention-days: 30
