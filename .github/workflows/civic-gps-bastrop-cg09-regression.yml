@@ -1,0 +1,105 @@
+name: Civic GPS Bastrop CG-09 packaged regression
+# Candidate contract: engine v0.6.1 / registry v0.5.6 / runtime 4ef21043.
+
+on:
+  push:
+    branches:
+      - agent/civic-gps-bastrop-cg09
+    paths:
+      - civic_gps_runtime_parts/**
+      - tests/civic_gps_bastrop_live_probe.py
+      - .github/workflows/civic-gps-bastrop-cg09-regression.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    name: Bastrop CG-09 package + full regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out CG-09 package candidate
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Reconstruct exact v0.5.6 runtime package
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '4ef210434e15f7f8353437f139a0918beaafb3734f62aedfb3d0852bfee241b2  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+
+      - name: Compile engine and packaged regression tests
+        run: >-
+          python -m py_compile
+          civic_gps/engine.py
+          tests/civic_gps_live_smoke.py
+          tests/civic_gps_denton_live_probe.py
+          tests/civic_gps_denton_negative_probe.py
+          tests/civic_gps_denton_boundary_probe.py
+          tests/civic_gps_denton_action_probe.py
+          tests/civic_gps_collin_live_probe.py
+          tests/civic_gps_travis_live_probe.py
+          tests/civic_gps_williamson_live_probe.py
+          tests/civic_gps_tarrant_live_probe.py
+          tests/civic_gps_bastrop_live_probe.py
+
+      - name: Run baseline real-network Civic GPS controls
+        run: python tests/civic_gps_live_smoke.py
+
+      - name: Run packaged Denton live controls
+        run: python tests/civic_gps_denton_live_probe.py
+
+      - name: Run packaged Denton outside-county negative control
+        run: python tests/civic_gps_denton_negative_probe.py
+
+      - name: Run packaged Denton boundary fail-closed controls
+        run: python tests/civic_gps_denton_boundary_probe.py
+
+      - name: Run Denton action selection contract
+        run: python tests/civic_gps_denton_action_probe.py
+
+      - name: Run packaged Collin County archetype controls
+        run: python tests/civic_gps_collin_live_probe.py
+
+      - name: Run packaged Travis County archetype controls
+        run: python tests/civic_gps_travis_live_probe.py
+
+      - name: Run packaged Williamson County archetype controls
+        run: python tests/civic_gps_williamson_live_probe.py
+
+      - name: Run packaged Tarrant County controls
+        run: python tests/civic_gps_tarrant_live_probe.py
+
+      - name: Run packaged Bastrop County controls
+        run: python tests/civic_gps_bastrop_live_probe.py
+
+      - name: Upload CG-09 regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-bastrop-cg09-regression-${{ github.run_id }}
+          path: |
+            artifacts/civic-gps-live-smoke/
+            artifacts/civic-gps-denton-live/
+            artifacts/civic-gps-denton-negative/
+            artifacts/civic-gps-denton-boundary/
+            artifacts/civic-gps-denton-action/
+            artifacts/civic-gps-collin-archetype/
+            artifacts/civic-gps-travis-archetype/
+            artifacts/civic-gps-williamson-cg09/
+            artifacts/civic-gps-tarrant-cg09/
+            artifacts/civic-gps-bastrop-cg09/
+          if-no-files-found: warn
+          retention-days: 30
