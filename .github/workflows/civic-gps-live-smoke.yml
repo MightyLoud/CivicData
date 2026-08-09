@@ -76,6 +76,10 @@ jobs:
     name: Civic GPS release gate
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      CIVIC_GPS_EXPECTED_REGISTRY_VERSION: '0.5.9'
+      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -143,7 +147,7 @@ jobs:
         run: python tests/civic_gps_brazos_live_probe.py
 
       - name: Run packaged Smith County archetype controls
-        run: python tests/civic_gps_smith_live_probe.py --packaged --expected-runtime-sha256 49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a --output-dir artifacts/civic-gps-smith-release
+        run: python tests/civic_gps_smith_live_probe.py --packaged --expected-runtime-sha256 "$CIVIC_GPS_EXPECTED_RUNTIME_SHA256"
 
       - name: Upload live responses
         if: always()
@@ -158,6 +162,6 @@ jobs:
             artifacts/civic-gps-tarrant-cg09/
             artifacts/civic-gps-bastrop-cg09/
             artifacts/civic-gps-brazos-cg09/
-            artifacts/civic-gps-smith-release/
+            artifacts/civic-gps-smith-cg10/
           if-no-files-found: warn
           retention-days: 30

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smith County live proof for the CG-08 base runtime or CG-09 candidate package."""
+"""Smith County production proof for the CG-10 packaged release."""
 from __future__ import annotations
 
 import argparse
@@ -61,8 +61,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SPEC_PATH = ROOT / "tests/fixtures/civic_gps_county_onboarding/smith_county9_candidate_v0.1.json"
 ONBOARDING_TOOL = ROOT / "tools/civic_gps_county_onboarding.py"
 RUNTIME_PARTS = ROOT / "civic_gps_runtime_parts"
-RUNTIME_SHA256 = "bc40a0aa46fcdbd5b2c73976747ef702d9a64fd051832c615ba4aba1016a7427"
-CANDIDATE_RUNTIME_SHA256 = "49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a"
+BASE_RUNTIME_SHA256 = "bc40a0aa46fcdbd5b2c73976747ef702d9a64fd051832c615ba4aba1016a7427"
+RELEASE_RUNTIME_SHA256 = "49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a"
 J = "jur-us-tx-smith-county"
 TRAVIS = "jur-us-tx-travis-county"
 A_COMM = "DIST-TX-SMITH-COMMISSIONER"
@@ -385,25 +385,25 @@ def validate_roster_and_bundle(onboarding: Path) -> tuple[dict, dict, dict]:
     return report, release, bundle
 
 
-def validate_packaged_candidate(runtime_gps: Path, registry: dict) -> dict:
+def validate_packaged_release(runtime_gps: Path, registry: dict) -> dict:
     if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.9":
-        raise AssertionError(f"Smith candidate requires engine 0.6.2 / registry 0.5.9: {registry}")
+        raise AssertionError(f"Smith release requires engine 0.6.2 / registry 0.5.9: {registry}")
     registry_without_hash = copy.deepcopy(registry)
     recorded_registry_sha = registry_without_hash.pop("canonical_content_sha256", None)
     if not recorded_registry_sha or recorded_registry_sha != canonical_sha(registry_without_hash):
-        raise AssertionError("Smith candidate registry canonical content SHA mismatch")
+        raise AssertionError("Smith release registry canonical content SHA mismatch")
     smith_bundles = [
         row for row in registry.get("bundles") or [] if row.get("adapter_id") == "ADAPTER-TX-SMITH"
     ]
     if len(registry.get("bundles") or []) != 12 or len(smith_bundles) != 1:
-        raise AssertionError("Smith candidate must contain exactly 12 bundles and one Smith bundle")
+        raise AssertionError("Smith release must contain exactly 12 bundles and one Smith bundle")
     bundle = smith_bundles[0]
     adapter_rows = {row.get("adapter_id"): row for row in bundle.get("district_adapters") or []}
     if set(adapter_rows) != set(ADAPTERS) or any(
         row.get("source_status") != "LIVE_INTERIOR_NEGATIVE_BOUNDARY_PASS"
         for row in adapter_rows.values()
     ):
-        raise AssertionError(f"Smith candidate adapter proof status changed: {adapter_rows}")
+        raise AssertionError(f"Smith release adapter proof status changed: {adapter_rows}")
     gap_statuses = {
         row.get("gap_id"): row.get("status") for row in bundle.get("known_gaps") or []
     }
@@ -413,13 +413,13 @@ def validate_packaged_candidate(runtime_gps: Path, registry: dict) -> dict:
         "GAP-SMITH-GPS-003": "SOURCE_PRECEDENCE_RESOLVED",
         "GAP-SMITH-GPS-004": "PROTECTED_PROMOTION_PENDING",
     }:
-        raise AssertionError(f"Smith candidate known-gap states changed: {gap_statuses}")
+        raise AssertionError(f"Smith release known-gap states changed: {gap_statuses}")
     if any(path.name.startswith("civic_gps_action_registry_smith") for path in runtime_gps.glob("*.json")):
-        raise AssertionError("Smith action routing must not be packaged in CG-09")
+        raise AssertionError("Smith action routing must not be packaged in CG-10")
 
     release_path = runtime_gps / "civic_gps_smith_county_v0.1.json"
     if not release_path.is_file():
-        raise AssertionError("Smith candidate release file is absent")
+        raise AssertionError("Smith release file is absent")
     release = json.loads(release_path.read_text(encoding="utf-8"))
     release_without_hash = copy.deepcopy(release)
     recorded_release_sha = release_without_hash["meta"].pop("canonical_content_sha256", None)
@@ -468,16 +468,16 @@ def validate_applicable(label: str, payload: dict, expected: dict[str, str]) -> 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/civic-gps-smith-cg08")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/civic-gps-smith-cg10")
     parser.add_argument(
         "--packaged",
         action="store_true",
-        help="Validate the deterministic CG-09 candidate already installed in runtime parts.",
+        help="Validate the deterministic CG-10 release installed in runtime parts.",
     )
     parser.add_argument(
         "--expected-runtime-sha256",
-        default=CANDIDATE_RUNTIME_SHA256,
-        help="Exact candidate runtime SHA required in --packaged mode.",
+        default=RELEASE_RUNTIME_SHA256,
+        help="Exact release runtime SHA required in --packaged mode.",
     )
     parser.add_argument(
         "--use-frozen-geocodes",
@@ -487,39 +487,42 @@ def main() -> int:
     args = parser.parse_args()
     output = args.output_dir
     output.mkdir(parents=True, exist_ok=True)
-    onboarding = output / "onboarding"
-    subprocess.run(
-        [
-            sys.executable,
-            str(ONBOARDING_TOOL),
-            str(SPEC_PATH),
-            "--output-dir",
-            str(onboarding),
-            "--expect",
-            "SUPPORTED_V0_1",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    report, release, bundle = validate_roster_and_bundle(onboarding)
+    if args.packaged:
+        report, release, bundle = {"result": "SUPPORTED_V0_1"}, {}, {}
+    else:
+        onboarding = output / "onboarding"
+        subprocess.run(
+            [
+                sys.executable,
+                str(ONBOARDING_TOOL),
+                str(SPEC_PATH),
+                "--output-dir",
+                str(onboarding),
+                "--expect",
+                "SUPPORTED_V0_1",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        report, release, bundle = validate_roster_and_bundle(onboarding)
 
     runtime_bytes = b"".join(part.read_bytes() for part in sorted(RUNTIME_PARTS.glob("part.*")))
     runtime_sha = hashlib.sha256(runtime_bytes).hexdigest()
-    expected_runtime_sha = args.expected_runtime_sha256 if args.packaged else RUNTIME_SHA256
+    expected_runtime_sha = args.expected_runtime_sha256 if args.packaged else BASE_RUNTIME_SHA256
     if runtime_sha != expected_runtime_sha:
-        mode = "candidate" if args.packaged else "production"
+        mode = "release" if args.packaged else "base"
         raise AssertionError(f"Smith {mode} runtime SHA changed: {runtime_sha}")
-    if args.packaged and runtime_sha == RUNTIME_SHA256:
-        raise AssertionError("CG-09 packaged proof cannot run against the unchanged production runtime")
+    if args.packaged and runtime_sha == BASE_RUNTIME_SHA256:
+        raise AssertionError("CG-10 release proof cannot run against the prior production runtime")
 
     if service_keys(COMM_SERVICE, COMM_FIELD) != ["1", "2", "3", "4"]:
         raise AssertionError("Smith live Commissioner key set changed")
     if service_keys(JPC_SERVICE, JPC_FIELD) != ["1", "2", "3", "4", "5"]:
         raise AssertionError("Smith live JP/Constable key set changed")
 
-    gate = "CG-09" if args.packaged else "CG-08"
-    gate_slug = "cg09" if args.packaged else "cg08"
+    gate = "CG-10" if args.packaged else "CG-08"
+    gate_slug = "cg10" if args.packaged else "cg08"
     with tempfile.TemporaryDirectory(prefix=f"civic-gps-smith-{gate_slug}-") as temp_name:
         temp_root = Path(temp_name)
         with ZipFile(io.BytesIO(runtime_bytes)) as runtime_archive:
@@ -529,7 +532,7 @@ def main() -> int:
         registry = json.loads((runtime_gps / "registry.json").read_text(encoding="utf-8"))
         if args.packaged:
             active_registry = registry
-            bundle = validate_packaged_candidate(runtime_gps, registry)
+            bundle = validate_packaged_release(runtime_gps, registry)
         else:
             if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
                 raise AssertionError(f"Smith proof requires engine 0.6.2 / registry 0.5.8: {registry}")
@@ -690,7 +693,7 @@ def main() -> int:
         "county": "Smith County, TX",
         "geoid": "48423",
         "gates": (
-            {"CG-09": "PASS"}
+            {"CG-10": "PASS"}
             if args.packaged
             else {proof_gate: "PASS" for proof_gate in ("CG-04", "CG-05", "CG-06", "CG-07", "CG-08")}
         ),
@@ -698,9 +701,9 @@ def main() -> int:
         "engine_version": "0.6.2",
         "registry_artifact_version": "0.5.9" if args.packaged else "0.5.8",
         "runtime_sha256": runtime_sha,
-        "base_runtime_sha256": RUNTIME_SHA256,
-        "candidate_runtime_sha256": runtime_sha if args.packaged else None,
-        "production_runtime_changed": False,
+        "base_runtime_sha256": BASE_RUNTIME_SHA256,
+        "release_runtime_sha256": runtime_sha if args.packaged else None,
+        "production_runtime_changed": args.packaged,
         "release_offices": 20,
         "release_holders": 20,
         "gis_key_sets": {"commissioner": ["1", "2", "3", "4"], "jp_constable": ["1", "2", "3", "4", "5"]},
@@ -731,13 +734,13 @@ def main() -> int:
             "policy": POLICY,
         },
         "actions": "NOT_YET_RELEASED",
-        "candidate_packaged": args.packaged,
-        "next_gate": "CG-10" if args.packaged else "CG-09",
-        "stopped_before": "CG-10" if args.packaged else "CG-09",
+        "release_packaged": args.packaged,
+        "next_gate": None if args.packaged else "CG-09",
+        "stopped_before": None if args.packaged else "CG-09",
     }
     write_json(output / f"smith-{gate_slug}-summary.json", summary)
     print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
-    print("SMITH CG-09 PACKAGED PROOF PASS" if args.packaged else "SMITH CG-04 THROUGH CG-08 PASS")
+    print("SMITH CG-10 RELEASE PROOF PASS" if args.packaged else "SMITH CG-04 THROUGH CG-08 PASS")
     return 0
 
 

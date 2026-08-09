@@ -114,6 +114,8 @@ Smith is the seventh production county archetype and the fifth county completed 
 
 Required packaged controls:
 
+- Registry artifact: `v0.5.9`.
+- Runtime SHA-256: `49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a`.
 - Five permanent interiors cover Commissioner keys 1–4 and shared JP/Constable keys 1–5; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins.
 - Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Smith jurisdiction, assignments, offices, actions, or coverage.
 - Commissioner exact boundary — live official geometry must suppress only Commissioner while preserving JP/Constable key 5 and 8 Smith offices; both sides restore 9 offices.
