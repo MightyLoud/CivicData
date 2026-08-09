@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Packaged Brazos County CG-09 proof for Civic GPS v0.6.2 / registry v0.5.8."""
+"""Packaged Brazos County regression for Civic GPS v0.6.2 / registry v0.5.9."""
 from __future__ import annotations
 
 import copy
@@ -8,6 +8,7 @@ import importlib.util
 import io
 import json
 import math
+import os
 import sys
 import time
 from pathlib import Path
@@ -31,6 +32,11 @@ A_JP = "DIST-TX-BRAZOS-JP"
 A_CONST = "DIST-TX-BRAZOS-CONSTABLE"
 ADAPTERS = (A_COMM, A_JP, A_CONST)
 POLICY = "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK"
+EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.5.9")
+EXPECTED_RUNTIME_SHA256 = os.environ.get(
+    "CIVIC_GPS_EXPECTED_RUNTIME_SHA256",
+    "49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a",
+)
 EXPECTED_LAYERS = {
     "brazos_county_commissioner_precinct",
     "brazos_county_jp_precinct",
@@ -124,9 +130,9 @@ runtime_bytes = b"".join(
 with ZipFile(io.BytesIO(runtime_bytes)) as runtime_archive:
     registry = json.loads(runtime_archive.read("civic_gps/registry.json"))
     release = json.loads(runtime_archive.read(f"civic_gps/{RELEASE_PATH.name}"))
-if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != EXPECTED_REGISTRY_VERSION:
     raise AssertionError(
-        "Brazos packaged proof requires engine 0.6.2 / registry 0.5.8, got "
+        f"Brazos packaged proof requires engine 0.6.2 / registry {EXPECTED_REGISTRY_VERSION}, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next(
@@ -571,7 +577,7 @@ if boundary_sides[0]["key"] == boundary_sides[1]["key"]:
     raise AssertionError("Boundary sides did not resolve distinct precincts")
 
 runtime_sha = hashlib.sha256(runtime_bytes).hexdigest()
-if runtime_sha != "bc40a0aa46fcdbd5b2c73976747ef702d9a64fd051832c615ba4aba1016a7427":
+if runtime_sha != EXPECTED_RUNTIME_SHA256:
     raise AssertionError(f"Packaged Brazos runtime SHA changed: {runtime_sha}")
 
 summary = {
@@ -580,7 +586,7 @@ summary = {
     "county": "Brazos County, TX",
     "geoid": "48041",
     "engine_version": "0.6.2",
-    "registry_artifact_version": "0.5.8",
+    "registry_artifact_version": EXPECTED_REGISTRY_VERSION,
     "runtime_sha256": runtime_sha,
     "release_offices": 18,
     "release_holders": 18,
