@@ -146,11 +146,11 @@ jobs:
           }, sort_keys=True))
           PY
 
-      - name: Discover exact Grayson boundary controls
+      - name: Run Grayson CG-04 through CG-08 proof twice
         shell: bash
         run: |
-          python tests/civic_gps_grayson_live_probe.py --discover-boundaries
-          exit 1
+          python tests/civic_gps_grayson_live_probe.py --output-dir artifacts/civic-gps-grayson-cg08-a
+          python tests/civic_gps_grayson_live_probe.py --output-dir artifacts/civic-gps-grayson-cg08-b
 
       - name: Prove deterministic Grayson CG-04 through CG-08 result
         shell: bash

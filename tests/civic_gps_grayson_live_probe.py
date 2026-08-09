@@ -8,7 +8,6 @@ import hashlib
 import importlib.util
 import io
 import json
-import math
 import subprocess
 import sys
 import tempfile
@@ -134,6 +133,26 @@ CASES = [
         "jp_key": "4",
     },
 ]
+COMM_BOUNDARY = {
+    "midpoint": (-96.68161049951132, 33.675940499664605),
+    "exact": ["3"],
+    "nearby": ["3", "4"],
+    "other": ["1"],
+    "side_a": (-96.68161046395731, 33.67593049972781),
+    "side_a_key": "3",
+    "side_b": (-96.68161053506533, 33.6759504996014),
+    "side_b_key": "4",
+}
+JPC_BOUNDARY = {
+    "midpoint": (-96.42372949974768, 33.47533400008217),
+    "exact": ["4"],
+    "nearby": ["1", "4"],
+    "other": ["2"],
+    "side_a": (-96.4237297296616, 33.47532400272554),
+    "side_a_key": "4",
+    "side_b": (-96.42372926983376, 33.4753439974388),
+    "side_b_key": "1",
+}
 TRANSIENT_NETWORK_MARKERS = (
     "timed out", "timeout", "connection", "temporarily unavailable", "remote disconnected", "502", "503", "504"
 )
@@ -282,107 +301,6 @@ def point_keys(
     )
 
 
-def service_features(service: str, field: str) -> list[dict]:
-    body = get_json(
-        service.rstrip("/") + "/query",
-        {
-            "where": "1=1",
-            "outFields": field,
-            "returnGeometry": "true",
-            "outSR": "4326",
-            "f": "json",
-        },
-    )
-    features = body.get("features") or []
-    keys = {
-        normalize_key((feature.get("attributes") or {}).get(field))
-        for feature in features
-    }
-    if keys != {"1", "2", "3", "4"}:
-        raise AssertionError(f"Live {field} geometry key set changed: {sorted(keys)}")
-    return features
-
-
-def rounded_point(point: tuple[float, float]) -> tuple[float, float]:
-    return round(float(point[0]), 8), round(float(point[1]), 8)
-
-
-def segment_index(features: list[dict], field: str) -> dict:
-    index: dict = {}
-    for feature in features:
-        district = normalize_key((feature.get("attributes") or {}).get(field))
-        for ring in (feature.get("geometry") or {}).get("rings") or []:
-            for a_raw, b_raw in zip(ring, ring[1:]):
-                a = (float(a_raw[0]), float(a_raw[1]))
-                b = (float(b_raw[0]), float(b_raw[1]))
-                key_a, key_b = rounded_point(a), rounded_point(b)
-                if key_a == key_b:
-                    continue
-                index.setdefault(tuple(sorted((key_a, key_b))), []).append((district, a, b))
-    return index
-
-
-def find_isolated_boundary(
-    primary: tuple[str, str],
-    other: tuple[str, str],
-) -> dict:
-    service, field = primary
-    candidates = []
-    for rows in segment_index(service_features(service, field), field).values():
-        shared_keys = sorted({row[0] for row in rows}, key=int)
-        if len(shared_keys) != 2:
-            continue
-        a, b = rows[0][1], rows[0][2]
-        length = math.hypot(b[0] - a[0], b[1] - a[1])
-        candidates.append((length, shared_keys, a, b))
-    candidates.sort(
-        key=lambda row: (-row[0], row[1], rounded_point(row[2]), rounded_point(row[3]))
-    )
-    for _, shared_keys, a, b in candidates:
-        midpoint = ((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0)
-        exact_keys = point_keys(service, field, midpoint)
-        nearby_keys = point_keys(service, field, midpoint, distance_meters=1)
-        other_keys = point_keys(*other, midpoint, distance_meters=1)
-        if (
-            len(exact_keys) != 1
-            or len(nearby_keys) != 2
-            or exact_keys[0] not in nearby_keys
-            or set(nearby_keys) != set(shared_keys)
-            or len(other_keys) != 1
-        ):
-            continue
-        dx, dy = b[0] - a[0], b[1] - a[1]
-        norm = math.hypot(dx, dy)
-        if norm == 0:
-            continue
-        nx, ny = -dy / norm, dx / norm
-        for epsilon in (2e-7, 5e-7, 1e-6, 2e-6, 5e-6, 1e-5, 2e-5, 5e-5):
-            side_a = (midpoint[0] + nx * epsilon, midpoint[1] + ny * epsilon)
-            side_b = (midpoint[0] - nx * epsilon, midpoint[1] - ny * epsilon)
-            side_a_keys = point_keys(service, field, side_a, distance_meters=1)
-            side_b_keys = point_keys(service, field, side_b, distance_meters=1)
-            if (
-                len(side_a_keys) == 1
-                and len(side_b_keys) == 1
-                and side_a_keys[0] != side_b_keys[0]
-                and {side_a_keys[0], side_b_keys[0]} == set(nearby_keys)
-                and point_keys(*other, side_a, distance_meters=1) == other_keys
-                and point_keys(*other, side_b, distance_meters=1) == other_keys
-            ):
-                return {
-                    "midpoint": midpoint,
-                    "exact": exact_keys,
-                    "nearby": nearby_keys,
-                    "other": other_keys,
-                    "side_a": side_a,
-                    "side_a_key": side_a_keys[0],
-                    "side_b": side_b,
-                    "side_b_key": side_b_keys[0],
-                    "epsilon_degrees": epsilon,
-                }
-    raise AssertionError(f"Could not derive isolated boundary for {field}")
-
-
 class FakeResponse:
     def __init__(self, body: dict):
         self._body = body
@@ -505,21 +423,7 @@ def validate_applicable(label: str, payload: dict, expected: dict[str, str]) -> 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/civic-gps-grayson-cg08")
-    parser.add_argument("--discover-boundaries", action="store_true")
     args = parser.parse_args()
-    if args.discover_boundaries:
-        controls = {
-            "commissioner": find_isolated_boundary(
-                (COMM_SERVICE, COMM_FIELD),
-                (JPC_SERVICE, JPC_FIELD),
-            ),
-            "jp_constable": find_isolated_boundary(
-                (JPC_SERVICE, JPC_FIELD),
-                (COMM_SERVICE, COMM_FIELD),
-            ),
-        }
-        print("GRAYSON_BOUNDARY_CONTROLS=" + json.dumps(controls, sort_keys=True))
-        return 0
     output = args.output_dir
     output.mkdir(parents=True, exist_ok=True)
     onboarding = output / "onboarding"
@@ -658,11 +562,24 @@ def main() -> int:
                 time.sleep(min(2 ** (attempt - 1), 10))
             raise AssertionError(f"[{label}] unreachable retry state")
 
-        comm_boundary = find_isolated_boundary(
+        def validate_frozen_boundary(
+            primary: tuple[str, str],
+            other: tuple[str, str],
+            control: dict,
+        ) -> None:
+            if point_keys(*primary, control["midpoint"]) != control["exact"]:
+                raise AssertionError(f"Boundary exact service keys changed: {control}")
+            if point_keys(*primary, control["midpoint"], distance_meters=1) != control["nearby"]:
+                raise AssertionError(f"Boundary 1m topology keys changed: {control}")
+            if point_keys(*other, control["midpoint"], distance_meters=1) != control["other"]:
+                raise AssertionError(f"Boundary isolation layer changed: {control}")
+
+        comm_boundary = COMM_BOUNDARY
+        validate_frozen_boundary(
             (COMM_SERVICE, COMM_FIELD),
             (JPC_SERVICE, JPC_FIELD),
+            comm_boundary,
         )
-        time.sleep(2)
         comm_other_key = comm_boundary["other"][0]
         comm_exact = resolve_point("grayson-commissioner-boundary-exact", comm_boundary["midpoint"])
         comm_assignments = assignment_map(comm_exact)
@@ -690,11 +607,12 @@ def main() -> int:
             validate_applicable(f"commissioner-boundary-{side}", payload, expected)
             comm_sides.append({"side": side, "commissioner_key": control_key, "status": "PASS"})
 
-        jpc_boundary = find_isolated_boundary(
+        jpc_boundary = JPC_BOUNDARY
+        validate_frozen_boundary(
             (JPC_SERVICE, JPC_FIELD),
             (COMM_SERVICE, COMM_FIELD),
+            jpc_boundary,
         )
-        time.sleep(2)
         jpc_other_key = jpc_boundary["other"][0]
         jpc_exact = resolve_point("grayson-jp-constable-boundary-exact", jpc_boundary["midpoint"])
         jpc_assignments = assignment_map(jpc_exact)
