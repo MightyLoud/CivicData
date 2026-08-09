@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -13,6 +14,7 @@ OUTPUT = ROOT / "artifacts" / "civic-gps-live-smoke"
 OUTPUT.mkdir(parents=True, exist_ok=True)
 ENGINE_PATH = GPS / "engine.py"
 REGISTRY_PATH = GPS / "registry.json"
+EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.5.8")
 
 spec = importlib.util.spec_from_file_location("civic_gps_engine_denton", ENGINE_PATH)
 engine_mod = importlib.util.module_from_spec(spec)
@@ -28,8 +30,10 @@ A_CONST = "DIST-TX-DENTON-CONSTABLE"
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
 if registry.get("engine_version") != "0.6.2":
     raise AssertionError(f"Expected engine 0.6.2 registry contract, got {registry.get('engine_version')}")
-if registry.get("registry_artifact_version") != "0.5.8":
-    raise AssertionError(f"Expected packaged registry 0.5.8, got {registry.get('registry_artifact_version')}")
+if registry.get("registry_artifact_version") != EXPECTED_REGISTRY_VERSION:
+    raise AssertionError(
+        f"Expected packaged registry {EXPECTED_REGISTRY_VERSION}, got {registry.get('registry_artifact_version')}"
+    )
 denton_bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-DENTON"), None)
 if not denton_bundle:
     raise AssertionError("Packaged Denton bundle is missing")
