@@ -1,5 +1,5 @@
 name: Civic GPS Bastrop CG-09 packaged regression
-# Candidate contract: engine v0.6.1 / registry v0.5.6 / runtime 4ef21043.
+# Candidate contract: engine v0.6.1 / registry v0.5.6 / runtime 4ef21043; packaged probe pins aligned.
 
 on:
   push:
