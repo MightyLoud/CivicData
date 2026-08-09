@@ -1,0 +1,91 @@
+--- a/civic_gps/engine.py
++++ b/civic_gps/engine.py
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env python3
+-"""Composable Civic GPS address resolver v0.6.1.
++"""Composable Civic GPS address resolver v0.6.2.
+-
++
+ Geography-specific routing lives in a registry. One BASE civic stack may be
+ composed with zero or more OVERLAY stacks (transit, school, fire, utility, etc.).
+@@ -14,6 +14,8 @@
+ from urllib.parse import urlencode
+ import requests
+-
++
++MAX_BOUNDARY_PROBE_DISTANCE_METERS = 10.0
++
+ class HTTPSession(Protocol):
+     def get(self, url: str, *, params: Mapping[str, Any], timeout: float) -> Any: ...
+-
++
+@@ -96,7 +98,7 @@
+         self.registry=copy.deepcopy(dict(registry)); self.root=Path(registry_root)
+         if session is None:
+             self.session=requests.Session()
+-            self.session.headers.update({"User-Agent":"CivicGPS/0.6.1 (+https://github.com/MightyLoud/CivicData)"})
++            self.session.headers.update({"User-Agent":"CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"})
+         else:
+             self.session=session
+         self.timeout_seconds=timeout_seconds; self._cache={}
+@@ -234,9 +236,41 @@
+         if len(feats)==0:
+             if ad.get("required",True): raise CivicGPSResolverError("DISTRICT_NOT_RESOLVED","No configured district polygon intersected the geocoded point.",{"adapter_id":ad["adapter_id"]})
+             return None,[],None,None
++        ambiguity_reason="Multiple district polygons intersected the point; overlay omitted rather than guessing."
++        ambiguity_summary="Multiple district polygons intersected; no representative was guessed."
++        ambiguity_code=None
++        if len(feats)==1 and ad.get("boundary_probe_distance_meters") is not None:
++            probe_params=dict(params)
++            probe_params["distance"]=str(ad["boundary_probe_distance_meters"])
++            probe_params["units"]="esriSRUnit_Meter"
++            probe_body=self._get_json(q,probe_params,ad["adapter_id"]); probe_feats=probe_body.get("features") or []
++            if len(probe_feats)>1:
++                ambiguity_code="BOUNDARY_PROBE_AMBIGUOUS"
++                ambiguity_reason="Topology-aware boundary probe found multiple district polygons; overlay omitted rather than guessing."
++                ambiguity_summary="Topology-aware boundary probe found multiple district polygons; no representative was guessed."
++            elif len(probe_feats)==0:
++                ambiguity_code="BOUNDARY_PROBE_NOT_RESOLVED"
++                ambiguity_reason="Topology-aware boundary probe found no district polygon; overlay omitted rather than guessing."
++                ambiguity_summary="Topology-aware boundary probe found no district polygon; no representative was guessed."
++            else:
++                exact_raw=(feats[0].get("attributes") or {}).get(ad["district_field"])
++                probe_raw=(probe_feats[0].get("attributes") or {}).get(ad["district_field"])
++                normalization=ad.get("district_key_normalization","NUMERIC" if "district" in ad.get("division_id_template","") else "PRESERVE")
++                try:
++                    keys_consistent=_normalize_key(exact_raw,normalization)==_normalize_key(probe_raw,normalization)
++                except CivicGPSResolverError:
++                    keys_consistent=False
++                if not keys_consistent:
++                    ambiguity_code="BOUNDARY_PROBE_INCONSISTENT"
++                    ambiguity_reason="Topology-aware boundary probe disagreed with the exact district result; overlay omitted rather than guessing."
++                    ambiguity_summary="Topology-aware boundary probe disagreed with the exact district result; no representative was guessed."
++        if ambiguity_code:
++            if ad.get("failure_scope","RESPONSE").upper()=="ADAPTER":
++                return None,[],{"layer":ad.get("layer","district_overlay"),"status":"CONFLICT","reason":ambiguity_reason},{"gap_id":f"GAP-{_slug(ad['adapter_id']).upper()}-AMBIGUOUS","status":"CONFLICT","summary":ambiguity_summary}
++            raise CivicGPSResolverError(ambiguity_code,ambiguity_summary,{"adapter_id":ad["adapter_id"]})
+         if len(feats)>1:
+             if ad.get("failure_scope","RESPONSE").upper()=="ADAPTER":
+-                return None,[],{"layer":ad.get("layer","district_overlay"),"status":"CONFLICT","reason":"Multiple district polygons intersected the point; overlay omitted rather than guessing."},{"gap_id":f"GAP-{_slug(ad['adapter_id']).upper()}-AMBIGUOUS","status":"CONFLICT","summary":"Multiple district polygons intersected; no representative was guessed."}
++                return None,[],{"layer":ad.get("layer","district_overlay"),"status":"CONFLICT","reason":ambiguity_reason},{"gap_id":f"GAP-{_slug(ad['adapter_id']).upper()}-AMBIGUOUS","status":"CONFLICT","summary":ambiguity_summary}
+             raise CivicGPSResolverError("AMBIGUOUS_DISTRICT","Multiple district polygons intersected the geocoded point.",{"adapter_id":ad["adapter_id"],"feature_count":len(feats)})
+         attrs=feats[0].get("attributes") or {}; raw=attrs.get(ad["district_field"])
+         if raw in (None,""): raise CivicGPSResolverError("DISTRICT_FIELD_MISSING","Configured district field missing.",{"adapter_id":ad["adapter_id"],"district_field":ad["district_field"]})
+@@ -391,6 +425,17 @@
+                 if not did or did in dids: raise CivicGPSResolverError("REGISTRY_DUPLICATE_DISTRICT_ADAPTER","District adapter IDs must be unique.",{"adapter_id":did})
+                 dids.add(did)
+                 if not ad.get("service_url") and ad.get("required",True): raise CivicGPSResolverError("REGISTRY_REQUIRED_SOURCE_MISSING","Required district adapter lacks service_url.",{"adapter_id":did})
++                probe=ad.get("boundary_probe_distance_meters")
++                if probe is not None and (
++                    isinstance(probe,bool)
++                    or not isinstance(probe,(int,float))
++                    or not 0 < float(probe) <= MAX_BOUNDARY_PROBE_DISTANCE_METERS
++                ):
++                    raise CivicGPSResolverError(
++                        "REGISTRY_BOUNDARY_PROBE_INVALID",
++                        "boundary_probe_distance_meters must be a number greater than 0 and no more than 10.",
++                        {"adapter_id":did,"boundary_probe_distance_meters":probe},
++                    )
+             for rule in b.get("applicable_office_rules",[]):
+                 if not rule.get("jurisdiction_id"):
+                     raise CivicGPSResolverError("REGISTRY_APPLICABILITY_RULE_INVALID","Applicable-office rule requires jurisdiction_id.",{"adapter_id":bid})

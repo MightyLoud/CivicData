@@ -18,9 +18,11 @@ on:
       - 'tests/civic_gps_tarrant_live_probe.py'
       - 'tests/civic_gps_bastrop_live_probe.py'
       - 'tests/civic_gps_county_onboarding_test.py'
+      - 'tests/civic_gps_topology_probe_test.py'
       - 'tests/fixtures/civic_gps_county_onboarding/**'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'tools/civic_gps_county_onboarding.py'
+      - 'tools/civic_gps_engine_v0.6.2.patch'
       - 'schemas/civic_gps_county_onboarding_v0.1.schema.json'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
@@ -31,6 +33,7 @@ on:
     branches:
       - main
       - 'agent/civic-gps-live-smoke'
+      - 'agent/civic-gps-brazos-onboarding'
     paths:
       - 'civic_gps_runtime_parts/**'
       - 'tests/civic_gps_live_smoke.py'
@@ -44,9 +47,11 @@ on:
       - 'tests/civic_gps_tarrant_live_probe.py'
       - 'tests/civic_gps_bastrop_live_probe.py'
       - 'tests/civic_gps_county_onboarding_test.py'
+      - 'tests/civic_gps_topology_probe_test.py'
       - 'tests/fixtures/civic_gps_county_onboarding/**'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'tools/civic_gps_county_onboarding.py'
+      - 'tools/civic_gps_engine_v0.6.2.patch'
       - 'schemas/civic_gps_county_onboarding_v0.1.schema.json'
       - 'requirements-civic-gps.txt'
       - '.github/workflows/civic-gps-live-smoke.yml'
@@ -86,11 +91,11 @@ jobs:
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
-          echo '4ef210434e15f7f8353437f139a0918beaafb3734f62aedfb3d0852bfee241b2  civic_gps_runtime.zip' | sha256sum --check --strict
+          echo '2bfed8878e5e67fa26ff6fa7edfdaf63f972d2fb729fa1530b45237651f2afe1  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
       - name: Compile engine, onboarding tool, and smoke tests
-        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py tests/civic_gps_bastrop_live_probe.py
+        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_topology_probe_test.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py tests/civic_gps_bastrop_live_probe.py
 
       - name: Run deterministic County Onboarding Pipeline fixtures
         shell: bash
@@ -99,6 +104,7 @@ jobs:
           python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/williamson_supported_v0.1.json --output-dir artifacts/civic-gps-county-onboarding/williamson --expect SUPPORTED_V0_1
           python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/hays_multi_office_stop_v0.1.json --output-dir artifacts/civic-gps-county-onboarding/hays --expect MULTI_OFFICE_PER_DISTRICT
           python tests/civic_gps_county_onboarding_test.py
+          python tests/civic_gps_topology_probe_test.py
 
       - name: Run baseline real-network Civic GPS controls
         run: python tests/civic_gps_live_smoke.py

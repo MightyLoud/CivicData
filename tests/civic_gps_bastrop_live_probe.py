@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Packaged Bastrop County CG-09 proof for Civic GPS v0.6.1 / registry v0.5.6."""
+"""Packaged Bastrop County CG-09 proof for Civic GPS v0.6.2 / registry v0.5.7."""
 from __future__ import annotations
 
 import copy
@@ -116,9 +116,9 @@ def assert_no_actions(label: str, payload: dict) -> None:
 
 engine_mod = load_module("civic_gps_engine_bastrop_packaged", ENGINE_PATH)
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.1" or registry.get("registry_artifact_version") != "0.5.6":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.7":
     raise AssertionError(
-        "Bastrop packaged proof requires engine 0.6.1 / registry 0.5.6, got "
+        "Bastrop packaged proof requires engine 0.6.2 / registry 0.5.7, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next(
@@ -301,7 +301,7 @@ if any(
     raise AssertionError("Outside-Austin control leaked Bastrop coverage")
 
 SESSION = requests.Session()
-SESSION.headers.update({"User-Agent": "CivicGPS/0.6.1 (+https://github.com/MightyLoud/CivicData)"})
+SESSION.headers.update({"User-Agent": "CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"})
 
 
 def get_json(url: str, params: dict) -> dict:
@@ -441,7 +441,7 @@ class FixedPointSession:
         self.lat = lat
         self.real = requests.Session()
         self.real.headers.update(
-            {"User-Agent": "CivicGPS/0.6.1 (+https://github.com/MightyLoud/CivicData)"}
+            {"User-Agent": "CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"}
         )
 
     def get(self, url, params=None, timeout=None):
@@ -553,7 +553,7 @@ runtime_sha = hashlib.sha256(
         for part in sorted((ROOT / "civic_gps_runtime_parts").glob("part.*"))
     )
 ).hexdigest()
-if runtime_sha != "4ef210434e15f7f8353437f139a0918beaafb3734f62aedfb3d0852bfee241b2":
+if runtime_sha != "2bfed8878e5e67fa26ff6fa7edfdaf63f972d2fb729fa1530b45237651f2afe1":
     raise AssertionError(f"Packaged Bastrop runtime SHA changed: {runtime_sha}")
 
 summary = {
@@ -561,8 +561,8 @@ summary = {
     "gate": "CG-09",
     "county": "Bastrop County, TX",
     "geoid": "48021",
-    "engine_version": "0.6.1",
-    "registry_artifact_version": "0.5.6",
+    "engine_version": "0.6.2",
+    "registry_artifact_version": "0.5.7",
     "runtime_sha256": runtime_sha,
     "release_offices": 18,
     "release_holders": 18,

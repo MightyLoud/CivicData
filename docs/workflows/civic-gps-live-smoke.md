@@ -12,12 +12,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`4ef210434e15f7f8353437f139a0918beaafb3734f62aedfb3d0852bfee241b2`
+`2bfed8878e5e67fa26ff6fa7edfdaf63f972d2fb729fa1530b45237651f2afe1`
 
 Current contract set:
 
-- Overlay Engine: `v0.6.1`
-- Adapter registry artifact: `v0.5.6`
+- Overlay Engine: `v0.6.2`
+- Adapter registry artifact: `v0.5.7`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 - County onboarding frozen-spec schema: `civic-gps-county-onboarding/0.1.0`
@@ -30,6 +30,7 @@ Before any networked smoke tests, the gate runs the offline County Onboarding Pi
 - Hays County must classify `MULTI_OFFICE_PER_DISTRICT` and must not emit a builder spec, release preview, or bundle preview.
 - All seven named STOP classes must have executable deterministic detectors.
 - Running the same frozen Williamson spec twice must produce byte-identical JSON outputs.
+- The generic topology probe must fail closed at adapter scope when a bounded ArcGIS distance query exposes multiple adjacent polygons, preserve normal interiors, preserve unconfigured-adapter behavior, and reject invalid probe distances.
 
 These tests are intentionally offline. They validate the frozen-spec contract; later CG gates validate live sources.
 

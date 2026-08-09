@@ -34,9 +34,9 @@ GIS_COMM = f"{GIS_BASE}/0"
 GIS_JPC = f"{GIS_BASE}/2"
 
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.1" or registry.get("registry_artifact_version") != "0.5.6":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.7":
     raise AssertionError(
-        f"Travis release proof requires engine 0.6.1 / registry 0.5.6, got "
+        f"Travis release proof requires engine 0.6.2 / registry 0.5.7, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next((b for b in registry.get("bundles", []) if b.get("adapter_id") == "ADAPTER-TX-TRAVIS"), None)
@@ -112,7 +112,7 @@ if any(row.get("jurisdiction_id") == J for row in out_payload["district_assignme
     raise AssertionError("Outside-Dallas negative leaked Travis assignments/offices/actions")
 
 SESSION = requests.Session()
-SESSION.headers.update({"User-Agent": "CivicGPS/0.6.1 (+https://github.com/MightyLoud/CivicData)"})
+SESSION.headers.update({"User-Agent": "CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"})
 def get_json(url: str, params: dict) -> dict:
     response = SESSION.get(url, params=params, timeout=45); response.raise_for_status(); body = response.json()
     if body.get("error"): raise AssertionError(f"ArcGIS error from {url}: {body['error']}")
@@ -166,7 +166,7 @@ class FakeResponse:
     def json(self): return self._body
 class FixedPointSession:
     def __init__(self, lon: float, lat: float):
-        self.lon=lon; self.lat=lat; self.real=requests.Session(); self.real.headers.update({"User-Agent":"CivicGPS/0.6.1 (+https://github.com/MightyLoud/CivicData)"})
+        self.lon=lon; self.lat=lat; self.real=requests.Session(); self.real.headers.update({"User-Agent":"CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"})
     def get(self,url,params=None,timeout=None):
         if "geocoding.geo.census.gov" in url:
             return FakeResponse({"result":{"addressMatches":[{"matchedAddress":"TRAVIS BOUNDARY CONTROL","coordinates":{"x":self.lon,"y":self.lat},"geographies":{"States":[{"GEOID":"48","STATE":"48"}],"Counties":[{"GEOID":"48453","COUNTY":"453"}]}}]}})
@@ -196,7 +196,7 @@ for side in (jp_a,jp_b):
     assigns={x["adapter_id"]:str(x["district_key"]) for x in side["payload"]["district_assignments"] if x.get("jurisdiction_id")==J}
     if set(assigns)!={A_COMM,A_JP,A_CONST}: raise AssertionError(f"JP/Constable boundary side did not fully resolve: {assigns}")
 
-summary={"status":"PASS","archetype":"TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1","engine_version":"0.6.1","base_registry_version":"0.5.6","engine_change_required":False,"consumer_schema_change_required":False,"release_offices":20,"countywide_offices":6,"district_families":3,"interior_controls":summaries,"outside_negative":"PASS","boundaries":{"commissioner":{"status":"PASS","exact_keys":comm_boundary["mid_keys"],"side_a_key":comm_boundary["side_a_key"],"side_b_key":comm_boundary["side_b_key"],"applicable_offices_exact":8},"jp_constable":{"status":"PASS","exact_keys":jp_boundary["mid_keys"],"side_a_key":jp_boundary["side_a_key"],"side_b_key":jp_boundary["side_b_key"],"applicable_offices_exact":7}},"known_gaps":{"countywide_scope":"BOUNDED_V0_1_SCOPE","actions":"NOT_YET_RELEASED"}}
+summary={"status":"PASS","archetype":"TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1","engine_version":"0.6.2","base_registry_version":"0.5.7","engine_change_required":False,"consumer_schema_change_required":False,"release_offices":20,"countywide_offices":6,"district_families":3,"interior_controls":summaries,"outside_negative":"PASS","boundaries":{"commissioner":{"status":"PASS","exact_keys":comm_boundary["mid_keys"],"side_a_key":comm_boundary["side_a_key"],"side_b_key":comm_boundary["side_b_key"],"applicable_offices_exact":8},"jp_constable":{"status":"PASS","exact_keys":jp_boundary["mid_keys"],"side_a_key":jp_boundary["side_a_key"],"side_b_key":jp_boundary["side_b_key"],"applicable_offices_exact":7}},"known_gaps":{"countywide_scope":"BOUNDED_V0_1_SCOPE","actions":"NOT_YET_RELEASED"}}
 (OUTPUT/"summary.json").write_text(json.dumps(summary,sort_keys=True,indent=2)+"\n",encoding="utf-8")
 print(json.dumps(summary,sort_keys=True,indent=2))
 print("PASS: Packaged Travis County reusable archetype proof")

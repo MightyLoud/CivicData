@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   brazos-cg08:
-    name: Brazos exact-boundary compatibility proof
+    name: Brazos topology-hardening acceptance proof
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -31,18 +31,20 @@ jobs:
       - name: Install Civic GPS dependency
         run: python -m pip install -r requirements-civic-gps.txt
 
-      - name: Reconstruct exact released runtime
+      - name: Reconstruct exact candidate runtime
         shell: bash
         run: |
           set -euo pipefail
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
-          echo '4ef210434e15f7f8353437f139a0918beaafb3734f62aedfb3d0852bfee241b2  civic_gps_runtime.zip' | sha256sum --check --strict
+          echo '2bfed8878e5e67fa26ff6fa7edfdaf63f972d2fb729fa1530b45237651f2afe1  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
-      - name: Run unchanged released Civic GPS matrix
+      - name: Run candidate Civic GPS regression matrix
         shell: bash
         run: |
           set -euo pipefail
+          python tests/civic_gps_county_onboarding_test.py
+          python tests/civic_gps_topology_probe_test.py
           python tests/civic_gps_live_smoke.py
           python tests/civic_gps_denton_live_probe.py
           python tests/civic_gps_denton_negative_probe.py
@@ -157,6 +159,8 @@ jobs:
                   raise AssertionError(
                       f'{adapter_id} boundary policy mismatch: {adapter.get("boundary_policy")}'
                   )
+              if adapter.get('boundary_probe_distance_meters') != 1:
+                  raise AssertionError(f'{adapter_id} topology probe must remain one meter')
               if adapter.get('officeholder_identity_source') != 'CANONICAL_RELEASE_ONLY':
                   raise AssertionError(f'{adapter_id} identity source changed')
           if bundle.get('action_registry_files'):
@@ -165,9 +169,9 @@ jobs:
           original_registry_bytes = REGISTRY_PATH.read_bytes()
           original_registry_sha = hashlib.sha256(original_registry_bytes).hexdigest()
           registry = json.loads(original_registry_bytes)
-          if registry.get('engine_version') != '0.6.1' or registry.get('registry_artifact_version') != '0.5.6':
+          if registry.get('engine_version') != '0.6.2' or registry.get('registry_artifact_version') != '0.5.7':
               raise AssertionError(
-                  f'CG-08 requires released 0.6.1/0.5.6, got '
+                  f'CG-08 hardening requires candidate 0.6.2/0.5.7, got '
                   f'{registry.get("engine_version")}/{registry.get("registry_artifact_version")}'
               )
           if any(row.get('adapter_id') == 'ADAPTER-TX-BRAZOS' for row in registry.get('bundles', [])):
@@ -314,8 +318,8 @@ jobs:
                   for epsilon in (2e-7, 5e-7, 1e-6, 2e-6, 5e-6, 1e-5, 2e-5, 5e-5):
                       side_a = (midpoint[0] + nx * epsilon, midpoint[1] + ny * epsilon)
                       side_b = (midpoint[0] - nx * epsilon, midpoint[1] - ny * epsilon)
-                      side_a_keys = point_keys(*side_a)
-                      side_b_keys = point_keys(*side_b)
+                      side_a_keys = point_keys(*side_a, distance_meters=1)
+                      side_b_keys = point_keys(*side_b, distance_meters=1)
                       if (
                           len(side_a_keys) == 1
                           and len(side_b_keys) == 1
@@ -412,18 +416,15 @@ jobs:
 
           exact_assignments = assignments(exact)
           exact_representatives = representatives(exact)
-          exact_service_key = boundary['exact_service_keys'][0]
-          expected_exact_assignments = {
-              adapter_id: exact_service_key for adapter_id in ADAPTERS
-          }
-          if exact_assignments != expected_exact_assignments:
+          if exact_assignments:
               raise AssertionError(
-                  f'Expected unchanged engine to expose the single-owner boundary behavior '
-                  f'{expected_exact_assignments}; got {exact_assignments}'
+                  f'Topology-hardened exact boundary silently assigned districts: '
+                  f'{exact_assignments}'
               )
-          if exact_representatives != EXPECTED_REPS[exact_service_key]:
+          if exact_representatives:
               raise AssertionError(
-                  f'Exact boundary representative behavior changed: {exact_representatives}'
+                  f'Topology-hardened exact boundary leaked representatives: '
+                  f'{exact_representatives}'
               )
           exact_applicable = applicable(exact)
           exact_wide = [
@@ -434,28 +435,18 @@ jobs:
               row for row in exact_applicable
               if row.get('applicability_scope') == 'DISTRICT_MATCH'
           ]
-          if (len(exact_applicable), len(exact_wide), len(exact_district)) != (9, 6, 3):
+          if (len(exact_applicable), len(exact_wide), len(exact_district)) != (6, 6, 0):
               raise AssertionError(
-                  f'Expected unchanged engine to expose 9 = 6 wide + 3 district offices, got '
+                  f'Exact boundary must preserve 6 = 6 wide + 0 district offices, got '
                   f'{len(exact_applicable)} = {len(exact_wide)} + {len(exact_district)}'
               )
           exact_wide_ids = {row.get('office_id') for row in exact_wide}
           if exact_wide_ids != countywide_ids:
               raise AssertionError(f'Exact boundary countywide office set mismatch: {exact_wide_ids}')
-          expected_exact_district_ids = {
-              f'office-us-tx-brazos-county-commissioner-{exact_service_key}',
-              f'office-us-tx-brazos-county-jp-{exact_service_key}',
-              f'office-us-tx-brazos-county-constable-{exact_service_key}',
-          }
-          exact_district_ids = {row.get('office_id') for row in exact_district}
-          if exact_district_ids != expected_exact_district_ids:
-              raise AssertionError(
-                  f'Exact boundary district office behavior changed: {exact_district_ids}'
-              )
           exact_conflicts = conflict_layers(exact)
-          if exact_conflicts:
+          if exact_conflicts != EXPECTED_LAYERS:
               raise AssertionError(
-                  f'Expected unchanged engine to emit no conflicts for the single-owner response; '
+                  f'Exact boundary must emit all three conflict layers; '
                   f'got {sorted(exact_conflicts)}'
               )
           assert_no_actions('exact', exact)
@@ -531,22 +522,17 @@ jobs:
               )
 
           summary = {
-              'status': 'STOP',
-              'decision': 'STOP',
-              'result': 'UNSUPPORTED_PATTERN',
-              'stop_class': 'ARCHITECTURE_CHANGE_REQUIRED',
-              'stop_reason': (
-                  'Official shared geometry is topologically ambiguous at the exact boundary, '
-                  'but the configured ArcGIS point-intersection query returns one feature; '
-                  'the unchanged engine cannot enforce NEVER_TIE_BREAK.'
-              ),
+              'status': 'PASS',
+              'decision': 'GO',
+              'result': 'SUPPORTED_V0_1',
+              'stop_class': 'NONE',
               'gate': 'CG-08',
               'county': 'Brazos County, TX',
               'geoid': '48041',
-              'engine_version': '0.6.1',
-              'released_registry_version': '0.5.6',
-              'released_runtime_sha256': (
-                  '4ef210434e15f7f8353437f139a0918beaafb3734f62aedfb3d0852bfee241b2'
+              'engine_version': '0.6.2',
+              'candidate_registry_version': '0.5.7',
+              'candidate_runtime_sha256': (
+                  '2bfed8878e5e67fa26ff6fa7edfdaf63f972d2fb729fa1530b45237651f2afe1'
               ),
               'original_registry_sha256': original_registry_sha,
               'candidate_spec_sha256': spec_sha,
@@ -562,24 +548,21 @@ jobs:
                   'topology_nearby_keys': boundary['topology_nearby_keys'],
                   'exact_service_keys': boundary['exact_service_keys'],
                   'shared_segment_keys': boundary['shared_segment_keys'],
-                  'observed_exact_assignments': exact_assignments,
-                  'observed_exact_representatives': exact_representatives,
-                  'observed_exact_applicable_offices': len(exact_applicable),
-                  'observed_exact_wide_offices': len(exact_wide),
-                  'observed_exact_district_offices': len(exact_district),
-                  'observed_exact_conflict_layers': sorted(exact_conflicts),
-                  'required_exact_assignments': 0,
-                  'required_exact_applicable_offices': 6,
-                  'required_exact_conflict_layers': sorted(EXPECTED_LAYERS),
+                  'exact_assignments': exact_assignments,
+                  'exact_representatives': exact_representatives,
+                  'exact_applicable_offices': len(exact_applicable),
+                  'exact_wide_offices': len(exact_wide),
+                  'exact_district_offices': len(exact_district),
+                  'exact_conflict_layers': sorted(exact_conflicts),
                   'distance_probe_meters': 1,
                   'epsilon_degrees': boundary['epsilon_degrees'],
                   'side_a': side_summaries['side_a'],
                   'side_b': side_summaries['side_b'],
               },
-              'required_change': 'GENERIC_TOPOLOGY_AWARE_BOUNDARY_DETECTION',
+              'hardening': 'GENERIC_TOPOLOGY_AWARE_BOUNDARY_DETECTION',
+              'hardening_status': 'PROVEN',
               'actions': 'NOT_YET_RELEASED',
-              'next_gate': None,
-              'stopped_at': 'CG-08',
+              'next_gate': 'CG-09',
               'stopped_before': 'CG-09',
           }
           (OUT / 'brazos-cg08-summary.json').write_text(
@@ -587,7 +570,7 @@ jobs:
               encoding='utf-8',
           )
           print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
-          print('BRAZOS CG-08 ARCHITECTURE_CHANGE_REQUIRED STOP')
+          print('BRAZOS CG-08 TOPOLOGY HARDENING PASS')
           PY
 
       - name: Upload CG-08 evidence

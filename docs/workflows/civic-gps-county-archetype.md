@@ -55,6 +55,8 @@ Acceptance fixtures are permanent:
 
 Normal interiors in these archetype counties return the explicitly bounded jurisdiction-wide office set plus exactly one office from each resolved district family. Boundary conflicts never tie-break.
 
+Generated county adapters use the generic one-meter topology probe supported by engine v0.6.2. The engine first performs the existing exact point-intersection query, then checks a bounded ArcGIS distance query. If that probe does not return exactly one polygon matching the exact result, only the affected adapter is marked `CONFLICT`; no district officeholder is guessed, while unaffected families and jurisdiction-wide offices remain available.
+
 ## Known unsupported pattern: Hays County
 
 Hays County exposed the first deliberate archetype stop condition. Its JP structure includes multiple JP places sharing a single precinct key. Civic GPS v0.1 currently produces one district assignment and one district-specific office per adapter/district key, so flattening Hays into the existing contract would silently omit representation.
