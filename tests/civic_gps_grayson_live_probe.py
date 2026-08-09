@@ -505,7 +505,21 @@ def validate_applicable(label: str, payload: dict, expected: dict[str, str]) -> 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/civic-gps-grayson-cg08")
+    parser.add_argument("--discover-boundaries", action="store_true")
     args = parser.parse_args()
+    if args.discover_boundaries:
+        controls = {
+            "commissioner": find_isolated_boundary(
+                (COMM_SERVICE, COMM_FIELD),
+                (JPC_SERVICE, JPC_FIELD),
+            ),
+            "jp_constable": find_isolated_boundary(
+                (JPC_SERVICE, JPC_FIELD),
+                (COMM_SERVICE, COMM_FIELD),
+            ),
+        }
+        print("GRAYSON_BOUNDARY_CONTROLS=" + json.dumps(controls, sort_keys=True))
+        return 0
     output = args.output_dir
     output.mkdir(parents=True, exist_ok=True)
     onboarding = output / "onboarding"
