@@ -313,11 +313,19 @@ class FakeResponse:
 
 
 class FixedPointSession:
-    def __init__(self, lon: float, lat: float, county_geoid: str = "48181", county_code: str = "181"):
+    def __init__(
+        self,
+        lon: float,
+        lat: float,
+        county_geoid: str = "48181",
+        county_code: str = "181",
+        arcgis_responses: dict[tuple[str, bool], list[str]] | None = None,
+    ):
         self.lon = lon
         self.lat = lat
         self.county_geoid = county_geoid
         self.county_code = county_code
+        self.arcgis_responses = arcgis_responses or {}
         self.real = requests.Session()
         self.real.headers.update({"User-Agent": "CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"})
 
@@ -339,6 +347,13 @@ class FixedPointSession:
                     }
                 }
             )
+        if url.startswith("https://maps.co.grayson.tx.us/") and params:
+            field = str(params.get("outFields") or "")
+            replay = self.arcgis_responses.get((field, "distance" in params))
+            if replay is not None:
+                return FakeResponse(
+                    {"features": [{"attributes": {field: key}} for key in replay]}
+                )
         return self.real.get(url, params=params, timeout=timeout)
 
 
@@ -543,24 +558,26 @@ def main() -> int:
         ):
             raise AssertionError("Outside-Austin control leaked Grayson coverage")
 
-        def resolve_point(label: str, point: tuple[float, float]) -> dict:
-            time.sleep(1)
-            for attempt in range(1, UPSTREAM_ATTEMPTS + 1):
-                fixed = engine_mod.CivicGPSOverlayEngine(
-                    active_registry,
-                    registry_root=runtime_gps,
-                    session=FixedPointSession(point[0], point[1]),
-                    timeout_seconds=45.0,
-                )
-                result = fixed.resolve(label, observed_on="2026-08-09")
-                error = result.get("error") or {}
-                if not transient_upstream(error) or attempt == UPSTREAM_ATTEMPTS:
-                    if "error" in result:
-                        raise AssertionError(f"[{label}] boundary engine error: {result['error']}")
-                    write_json(output / f"{label}.json", result)
-                    return result["payload"]
-                time.sleep(min(2 ** (attempt - 1), 10))
-            raise AssertionError(f"[{label}] unreachable retry state")
+        def resolve_point(
+            label: str,
+            point: tuple[float, float],
+            arcgis_responses: dict[tuple[str, bool], list[str]],
+        ) -> dict:
+            fixed = engine_mod.CivicGPSOverlayEngine(
+                active_registry,
+                registry_root=runtime_gps,
+                session=FixedPointSession(
+                    point[0],
+                    point[1],
+                    arcgis_responses=arcgis_responses,
+                ),
+                timeout_seconds=45.0,
+            )
+            result = fixed.resolve(label, observed_on="2026-08-09")
+            if "error" in result:
+                raise AssertionError(f"[{label}] boundary engine error: {result['error']}")
+            write_json(output / f"{label}.json", result)
+            return result["payload"]
 
         def validate_frozen_boundary(
             primary: tuple[str, str],
@@ -573,6 +590,11 @@ def main() -> int:
                 raise AssertionError(f"Boundary 1m topology keys changed: {control}")
             if point_keys(*other, control["midpoint"], distance_meters=1) != control["other"]:
                 raise AssertionError(f"Boundary isolation layer changed: {control}")
+            for side, expected in (("side_a", control["side_a_key"]), ("side_b", control["side_b_key"])):
+                if point_keys(*primary, control[side], distance_meters=1) != [expected]:
+                    raise AssertionError(f"Boundary {side} topology key changed: {control}")
+                if point_keys(*other, control[side], distance_meters=1) != control["other"]:
+                    raise AssertionError(f"Boundary {side} isolation changed: {control}")
 
         comm_boundary = COMM_BOUNDARY
         validate_frozen_boundary(
@@ -581,7 +603,16 @@ def main() -> int:
             comm_boundary,
         )
         comm_other_key = comm_boundary["other"][0]
-        comm_exact = resolve_point("grayson-commissioner-boundary-exact", comm_boundary["midpoint"])
+        comm_exact = resolve_point(
+            "grayson-commissioner-boundary-exact",
+            comm_boundary["midpoint"],
+            {
+                (COMM_FIELD, False): comm_boundary["exact"],
+                (COMM_FIELD, True): comm_boundary["nearby"],
+                (JPC_FIELD, False): comm_boundary["other"],
+                (JPC_FIELD, True): comm_boundary["other"],
+            },
+        )
         comm_assignments = assignment_map(comm_exact)
         expected_comm_exact = {A_JP: comm_other_key, A_CONST: comm_other_key}
         if comm_assignments != expected_comm_exact:
@@ -600,6 +631,12 @@ def main() -> int:
             payload = resolve_point(
                 f"grayson-commissioner-boundary-{side}",
                 comm_boundary[side.replace("-", "_")],
+                {
+                    (COMM_FIELD, False): [control_key],
+                    (COMM_FIELD, True): [control_key],
+                    (JPC_FIELD, False): comm_boundary["other"],
+                    (JPC_FIELD, True): comm_boundary["other"],
+                },
             )
             expected = {A_COMM: control_key, A_JP: comm_other_key, A_CONST: comm_other_key}
             if assignment_map(payload) != expected:
@@ -614,7 +651,16 @@ def main() -> int:
             jpc_boundary,
         )
         jpc_other_key = jpc_boundary["other"][0]
-        jpc_exact = resolve_point("grayson-jp-constable-boundary-exact", jpc_boundary["midpoint"])
+        jpc_exact = resolve_point(
+            "grayson-jp-constable-boundary-exact",
+            jpc_boundary["midpoint"],
+            {
+                (COMM_FIELD, False): jpc_boundary["other"],
+                (COMM_FIELD, True): jpc_boundary["other"],
+                (JPC_FIELD, False): jpc_boundary["exact"],
+                (JPC_FIELD, True): jpc_boundary["nearby"],
+            },
+        )
         jpc_assignments = assignment_map(jpc_exact)
         expected_jpc_exact = {A_COMM: jpc_other_key}
         if jpc_assignments != expected_jpc_exact:
@@ -633,6 +679,12 @@ def main() -> int:
             payload = resolve_point(
                 f"grayson-jp-constable-boundary-{side}",
                 jpc_boundary[side.replace("-", "_")],
+                {
+                    (COMM_FIELD, False): jpc_boundary["other"],
+                    (COMM_FIELD, True): jpc_boundary["other"],
+                    (JPC_FIELD, False): [control_key],
+                    (JPC_FIELD, True): [control_key],
+                },
             )
             expected = {A_COMM: jpc_other_key, A_JP: control_key, A_CONST: control_key}
             if assignment_map(payload) != expected:
@@ -679,6 +731,7 @@ def main() -> int:
             },
             "distance_probe_meters": 1,
             "policy": POLICY,
+            "engine_input_mode": "LIVE_VERIFIED_REPLAY",
         },
         "actions": "NOT_YET_RELEASED",
         "candidate_packaged": False,

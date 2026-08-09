@@ -150,6 +150,7 @@ jobs:
         shell: bash
         run: |
           python tests/civic_gps_grayson_live_probe.py --output-dir artifacts/civic-gps-grayson-cg08-a
+          sleep 20
           python tests/civic_gps_grayson_live_probe.py --output-dir artifacts/civic-gps-grayson-cg08-b
 
       - name: Prove deterministic Grayson CG-04 through CG-08 result
