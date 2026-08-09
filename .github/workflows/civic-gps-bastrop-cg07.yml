@@ -1,0 +1,324 @@
+name: Civic GPS Bastrop CG-07
+
+on:
+  push:
+    branches:
+      - agent/civic-gps-bastrop-onboarding
+    paths:
+      - .github/workflows/civic-gps-bastrop-cg07.yml
+      - tests/fixtures/civic_gps_county_onboarding/bastrop_county6_candidate_v0.1.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bastrop-cg07:
+    name: Bastrop outside-negative leakage proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: 'Check out County #6 branch'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Reconstruct exact released runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '567c809839a2bcbafff7da432e28bf7e6fa23e5c2dff9639cf11ad4f87759d60  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+
+      - name: Run unchanged released Civic GPS matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tests/civic_gps_live_smoke.py
+          python tests/civic_gps_denton_live_probe.py
+          python tests/civic_gps_denton_negative_probe.py
+          python tests/civic_gps_denton_boundary_probe.py
+          python tests/civic_gps_denton_action_probe.py
+          python tests/civic_gps_collin_live_probe.py
+          python tests/civic_gps_travis_live_probe.py
+          python tests/civic_gps_williamson_live_probe.py
+          python tests/civic_gps_tarrant_live_probe.py
+
+      - name: Generate Bastrop candidate from frozen onboarding spec
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf artifacts/civic-gps-bastrop-cg07 artifacts/civic-gps-bastrop-cg07-onboarding
+          mkdir -p artifacts/civic-gps-bastrop-cg07
+          python tools/civic_gps_county_onboarding.py \
+            tests/fixtures/civic_gps_county_onboarding/bastrop_county6_candidate_v0.1.json \
+            --output-dir artifacts/civic-gps-bastrop-cg07-onboarding \
+            --expect SUPPORTED_V0_1
+
+      - name: Run Bastrop CG-07 outside-negative control
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import importlib.util
+          import json
+          import sys
+          import time
+          from pathlib import Path
+
+          ROOT = Path('.')
+          GPS = ROOT / 'civic_gps'
+          OUT = ROOT / 'artifacts' / 'civic-gps-bastrop-cg07'
+          GENERATED = ROOT / 'artifacts' / 'civic-gps-bastrop-cg07-onboarding'
+          REGISTRY_PATH = GPS / 'registry.json'
+          ENGINE_PATH = GPS / 'engine.py'
+          RELEASE_NAME = 'civic_gps_bastrop_county_v0.1.json'
+          RELEASE_PATH = GPS / RELEASE_NAME
+          J = 'jur-us-tx-bastrop-county'
+          TRAVIS = 'jur-us-tx-travis-county'
+          ADDRESS = '700 Lavaca Street, Austin, TX 78701'
+          TRAVIS_EXPECTED = {
+              'DIST-TX-TRAVIS-COMMISSIONER': '3',
+              'DIST-TX-TRAVIS-JP': '5',
+              'DIST-TX-TRAVIS-CONSTABLE': '5',
+          }
+          TRANSIENT_CENSUS_MARKERS = (
+              'timed out',
+              'timeout',
+              'connection',
+              'temporarily unavailable',
+              'remote disconnected',
+              '502',
+              '503',
+              '504',
+          )
+
+          original_registry_bytes = REGISTRY_PATH.read_bytes()
+          original_registry_sha = hashlib.sha256(original_registry_bytes).hexdigest()
+          registry = json.loads(original_registry_bytes)
+          if registry.get('engine_version') != '0.6.1' or registry.get('registry_artifact_version') != '0.5.5':
+              raise AssertionError(
+                  f"CG-07 requires released 0.6.1/0.5.5, got "
+                  f"{registry.get('engine_version')}/{registry.get('registry_artifact_version')}"
+              )
+          if any(b.get('adapter_id') == 'ADAPTER-TX-BASTROP' for b in registry.get('bundles', [])):
+              raise AssertionError('Bastrop must not already be packaged before CG-07')
+
+          release = json.loads((GENERATED / 'canonical-release-preview.json').read_text(encoding='utf-8'))
+          bundle = json.loads((GENERATED / 'base-bundle-plan.json').read_text(encoding='utf-8'))
+          offices = release.get('payload', {}).get('offices', [])
+          holders = release.get('payload', {}).get('officeholders', [])
+          if len(offices) != 18 or len(holders) != 18:
+              raise AssertionError(
+                  f'Bastrop candidate must still contain 18 offices/holders, got '
+                  f'{len(offices)}/{len(holders)}'
+              )
+          office_ids = {row.get('office_id') for row in offices}
+          holder_ids = {row.get('office_id') for row in holders}
+          if len(office_ids) != 18 or office_ids != holder_ids:
+              raise AssertionError('Bastrop canonical office/holder join changed')
+          if any(row.get('failure_scope') != 'ADAPTER' for row in bundle.get('district_adapters', [])):
+              raise AssertionError('Bastrop district adapters must remain ADAPTER-scoped')
+          if bundle.get('action_registry_files'):
+              raise AssertionError('Bastrop action routing must remain unreleased')
+
+          RELEASE_PATH.write_text(
+              json.dumps(release, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          registry.setdefault('bundles', []).append(bundle)
+          REGISTRY_PATH.write_text(
+              json.dumps(registry, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+              encoding='utf-8',
+          )
+
+          def load_module(name: str, path: Path):
+              module_spec = importlib.util.spec_from_file_location(name, path)
+              mod = importlib.util.module_from_spec(module_spec)
+              sys.modules[name] = mod
+              assert module_spec.loader is not None
+              module_spec.loader.exec_module(mod)
+              return mod
+
+          def resolve_with_bounded_census_retry(resolver, address: str):
+              max_attempts = 3
+              for attempt in range(1, max_attempts + 1):
+                  result = resolver.resolve(address, observed_on=None)
+                  error = result.get('error') or {}
+                  details = error.get('details') or {}
+                  upstream_error = str(details.get('error') or '').lower()
+                  transient_census_failure = (
+                      error.get('code') == 'UPSTREAM_REQUEST_FAILED'
+                      and error.get('message') == 'GEOCODER request failed.'
+                      and str(details.get('url') or '').startswith(
+                          'https://geocoding.geo.census.gov/geocoder/'
+                      )
+                      and any(marker in upstream_error for marker in TRANSIENT_CENSUS_MARKERS)
+                  )
+                  if not error or not transient_census_failure or attempt == max_attempts:
+                      return result, attempt
+                  delay_seconds = 2 ** (attempt - 1)
+                  print(
+                      f'[bastrop-outside-austin] transient Census geocoder failure on attempt '
+                      f'{attempt}/{max_attempts}; retrying in {delay_seconds}s'
+                  )
+                  time.sleep(delay_seconds)
+              raise AssertionError('Unreachable retry state')
+
+          engine_mod = load_module('civic_gps_engine_bastrop_cg07', ENGINE_PATH)
+          resolver = engine_mod.CivicGPSOverlayEngine.from_file(
+              REGISTRY_PATH,
+              timeout_seconds=30.0,
+          )
+          result, resolution_attempts = resolve_with_bounded_census_retry(resolver, ADDRESS)
+          (OUT / 'bastrop-outside-austin.json').write_text(
+              json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          if 'error' in result:
+              raise AssertionError(f'Outside-Austin control engine error: {result["error"]}')
+
+          payload = result['payload']
+          jurisdictions = payload.get('jurisdictions') or []
+          assignments = payload.get('district_assignments') or []
+          applicable = payload.get('applicable_offices') or []
+          actions = payload.get('action_links') or []
+          coverage = payload.get('coverage') or []
+
+          jurisdiction_ids = {row.get('jurisdiction_id') for row in jurisdictions}
+          if TRAVIS not in jurisdiction_ids:
+              raise AssertionError(
+                  f'Outside control must remain a valid Travis resolution; got '
+                  f'{sorted(j for j in jurisdiction_ids if j)}'
+              )
+          if J in jurisdiction_ids:
+              raise AssertionError('Outside-Austin control unexpectedly activated Bastrop')
+
+          travis_assignments = {
+              row['adapter_id']: str(row['district_key'])
+              for row in assignments
+              if row.get('jurisdiction_id') == TRAVIS
+          }
+          if travis_assignments != TRAVIS_EXPECTED:
+              raise AssertionError(
+                  f'Outside control changed normal Travis assignments: '
+                  f'expected {TRAVIS_EXPECTED}, got {travis_assignments}'
+              )
+          travis_offices = [
+              row for row in applicable
+              if row.get('jurisdiction_id') == TRAVIS
+          ]
+          if len(travis_offices) != 9:
+              raise AssertionError(
+                  f'Outside control must preserve nine Travis offices, got '
+                  f'{len(travis_offices)}'
+              )
+
+          bastrop_assignments = [
+              row for row in assignments
+              if row.get('jurisdiction_id') == J
+          ]
+          bastrop_offices = [
+              row for row in applicable
+              if row.get('jurisdiction_id') == J
+          ]
+          bastrop_actions = [
+              row for row in actions
+              if row.get('jurisdiction_id') == J
+          ]
+          bastrop_coverage = [
+              row for row in coverage
+              if 'bastrop' in json.dumps(
+                  row,
+                  ensure_ascii=False,
+                  sort_keys=True,
+              ).lower()
+          ]
+
+          if bastrop_assignments:
+              raise AssertionError(
+                  f'Outside-Austin control leaked Bastrop assignments: '
+                  f'{bastrop_assignments}'
+              )
+          if bastrop_offices:
+              raise AssertionError(
+                  f'Outside-Austin control leaked Bastrop applicable offices: '
+                  f'{bastrop_offices}'
+              )
+          if bastrop_actions:
+              raise AssertionError(
+                  f'Outside-Austin control leaked Bastrop actions: '
+                  f'{bastrop_actions}'
+              )
+          if bastrop_coverage:
+              raise AssertionError(
+                  f'Outside-Austin control leaked Bastrop coverage: '
+                  f'{bastrop_coverage}'
+              )
+
+          summary = {
+              'status': 'PASS',
+              'gate': 'CG-07',
+              'county': 'Bastrop County, TX',
+              'geoid': '48021',
+              'address': ADDRESS,
+              'engine_version': '0.6.1',
+              'released_registry_version': '0.5.5',
+              'released_runtime_sha256': (
+                  '567c809839a2bcbafff7da432e28bf7e6fa23e5c2dff9639cf11ad4f87759d60'
+              ),
+              'original_registry_sha256': original_registry_sha,
+              'candidate_spec_sha256': (
+                  'f91f98ec040c153f12cff82bf5be91ac32dbee3e9616048120a95d6f0c8f0077'
+              ),
+              'candidate_overlay_only': True,
+              'candidate_packaged': False,
+              'resolution_attempts': resolution_attempts,
+              'valid_non_bastrop_resolution': {
+                  'travis_jurisdiction_present': True,
+                  'travis_assignments': travis_assignments,
+                  'travis_applicable_offices': len(travis_offices),
+              },
+              'bastrop_jurisdiction_present': False,
+              'bastrop_assignments': 0,
+              'bastrop_applicable_offices': 0,
+              'bastrop_actions': 0,
+              'bastrop_coverage_rows': 0,
+              'upstream_retry_policy': {
+                  'scope': 'TRANSIENT_CENSUS_GEOCODER_TRANSPORT_ONLY',
+                  'max_attempts': 3,
+                  'backoff_seconds': [2, 4],
+                  'deterministic_mismatches_retry': False,
+              },
+              'next_gate': 'CG-08',
+              'stopped_before': 'CG-08',
+          }
+          (OUT / 'bastrop-cg07-summary.json').write_text(
+              json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+          print('BASTROP CG-07 PASS')
+          PY
+
+      - name: Upload CG-07 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-bastrop-cg07-${{ github.run_id }}
+          path: |
+            artifacts/civic-gps-bastrop-cg07/
+            artifacts/civic-gps-bastrop-cg07-onboarding/
+          if-no-files-found: warn
+          retention-days: 30
