@@ -1,52 +1,54 @@
 #!/usr/bin/env python3
-"""Packaged Bastrop County CG-09 proof for Civic GPS v0.6.2 / registry v0.5.8."""
+"""Packaged Brazos County CG-09 proof for Civic GPS v0.6.2 / registry v0.5.8."""
 from __future__ import annotations
 
 import copy
 import hashlib
 import importlib.util
+import io
 import json
 import math
 import sys
 import time
 from pathlib import Path
+from zipfile import ZipFile
 
 import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 GPS = ROOT / "civic_gps"
-OUTPUT = ROOT / "artifacts" / "civic-gps-bastrop-cg09"
+OUTPUT = ROOT / "artifacts" / "civic-gps-brazos-cg09"
 OUTPUT.mkdir(parents=True, exist_ok=True)
 ENGINE_PATH = GPS / "engine.py"
 REGISTRY_PATH = GPS / "registry.json"
-RELEASE_PATH = GPS / "civic_gps_bastrop_county_v0.1.json"
-SERVICE = "https://maps.co.bastrop.tx.us/server/rest/services/Viewers/PublicGISViewerService/MapServer/8"
-FIELD = "precinct"
-J = "jur-us-tx-bastrop-county"
+RELEASE_PATH = GPS / "civic_gps_brazos_county_v0.1.json"
+SERVICE = "https://services5.arcgis.com/s91b2wxhO15FkWh5/arcgis/rest/services/BRAZOS_CC_PCTS_11022021/FeatureServer/0"
+FIELD = "ID"
+J = "jur-us-tx-brazos-county"
 TRAVIS = "jur-us-tx-travis-county"
-A_COMM = "DIST-TX-BASTROP-COMMISSIONER"
-A_JP = "DIST-TX-BASTROP-JP"
-A_CONST = "DIST-TX-BASTROP-CONSTABLE"
+A_COMM = "DIST-TX-BRAZOS-COMMISSIONER"
+A_JP = "DIST-TX-BRAZOS-JP"
+A_CONST = "DIST-TX-BRAZOS-CONSTABLE"
 ADAPTERS = (A_COMM, A_JP, A_CONST)
 POLICY = "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK"
 EXPECTED_LAYERS = {
-    "bastrop_county_commissioner_precinct",
-    "bastrop_county_jp_precinct",
-    "bastrop_county_constable_precinct",
+    "brazos_county_commissioner_precinct",
+    "brazos_county_jp_precinct",
+    "brazos_county_constable_precinct",
 }
 EXPECTED_REPS = {
-    "1": {A_COMM: "Butch Carmack", A_JP: "Cindy Allen", A_CONST: "Wayne Wood"},
-    "2": {A_COMM: "Clara Beckett", A_JP: "Zachary Carter", A_CONST: "James Scoggins"},
-    "3": {A_COMM: "Mark Meuth", A_JP: "Krystal Stabeno", A_CONST: "Tim Sparkman"},
-    "4": {A_COMM: "David Glass", A_JP: "Larry Dunne", A_CONST: "Joey Dzienowski"},
+    "1": {A_COMM: "Bentley Nettles", A_JP: "Kenny Elliott", A_CONST: "Jeff Reeves"},
+    "2": {A_COMM: "Chuck Konderla", A_JP: "Terrence P. Nunn", A_CONST: "Donald Lampo"},
+    "3": {A_COMM: "Fred Brown", A_JP: "Rick Hill", A_CONST: "J.P. Ingram"},
+    "4": {A_COMM: "Wanda J. Watson", A_JP: "Darrell Booker", A_CONST: "Hezekiah Carter, Jr."},
 }
 COUNTYWIDE_IDS = {
-    "office-us-tx-bastrop-county-judge",
-    "office-us-tx-bastrop-county-sheriff",
-    "office-us-tx-bastrop-county-clerk",
-    "office-us-tx-bastrop-county-district-clerk",
-    "office-us-tx-bastrop-county-tax-assessor-collector",
-    "office-us-tx-bastrop-county-treasurer",
+    "office-us-tx-brazos-county-judge",
+    "office-us-tx-brazos-county-sheriff",
+    "office-us-tx-brazos-county-clerk",
+    "office-us-tx-brazos-county-district-clerk",
+    "office-us-tx-brazos-county-tax-assessor-collector",
+    "office-us-tx-brazos-county-treasurer",
 }
 TRAVIS_EXPECTED = {
     "DIST-TX-TRAVIS-COMMISSIONER": "3",
@@ -111,29 +113,35 @@ def assert_no_actions(label: str, payload: dict) -> None:
         if row.get("jurisdiction_id") == J
     ]
     if actions:
-        raise AssertionError(f"[{label}] Bastrop actions must remain unreleased: {actions}")
+        raise AssertionError(f"[{label}] Brazos actions must remain unreleased: {actions}")
 
 
-engine_mod = load_module("civic_gps_engine_bastrop_packaged", ENGINE_PATH)
-registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+engine_mod = load_module("civic_gps_engine_brazos_packaged", ENGINE_PATH)
+runtime_bytes = b"".join(
+    part.read_bytes()
+    for part in sorted((ROOT / "civic_gps_runtime_parts").glob("part.*"))
+)
+with ZipFile(io.BytesIO(runtime_bytes)) as runtime_archive:
+    registry = json.loads(runtime_archive.read("civic_gps/registry.json"))
+    release = json.loads(runtime_archive.read(f"civic_gps/{RELEASE_PATH.name}"))
 if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
     raise AssertionError(
-        "Bastrop packaged proof requires engine 0.6.2 / registry 0.5.8, got "
+        "Brazos packaged proof requires engine 0.6.2 / registry 0.5.8, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next(
-    (row for row in registry.get("bundles", []) if row.get("adapter_id") == "ADAPTER-TX-BASTROP"),
+    (row for row in registry.get("bundles", []) if row.get("adapter_id") == "ADAPTER-TX-BRAZOS"),
     None,
 )
 if not bundle:
-    raise AssertionError("Packaged registry is missing ADAPTER-TX-BASTROP")
+    raise AssertionError("Packaged registry is missing ADAPTER-TX-BRAZOS")
 if bundle.get("release_files") != [RELEASE_PATH.name]:
-    raise AssertionError(f"Unexpected Bastrop release files: {bundle.get('release_files')}")
+    raise AssertionError(f"Unexpected Brazos release files: {bundle.get('release_files')}")
 if bundle.get("action_registry_files"):
-    raise AssertionError("Bastrop action routing must remain unreleased in CG-09")
+    raise AssertionError("Brazos action routing must remain unreleased in CG-09")
 adapters = {row.get("adapter_id"): row for row in bundle.get("district_adapters", [])}
 if set(adapters) != set(ADAPTERS):
-    raise AssertionError(f"Unexpected Bastrop adapters: {sorted(adapters)}")
+    raise AssertionError(f"Unexpected Brazos adapters: {sorted(adapters)}")
 for adapter_id, adapter in adapters.items():
     if adapter.get("failure_scope") != "ADAPTER":
         raise AssertionError(f"{adapter_id} must remain ADAPTER-scoped")
@@ -144,32 +152,31 @@ for adapter_id, adapter in adapters.items():
     if adapter.get("source_status") != "LIVE_INTERIOR_NEGATIVE_BOUNDARY_PASS":
         raise AssertionError(f"{adapter_id} packaged source status changed")
 gap = next(
-    (row for row in bundle.get("known_gaps", []) if row.get("gap_id") == "GAP-BASTROP-GPS-003"),
+    (row for row in bundle.get("known_gaps", []) if row.get("gap_id") == "GAP-BRAZOS-GPS-003"),
     None,
 )
 if not gap or gap.get("status") != "PROTECTED_PROMOTION_PENDING":
-    raise AssertionError(f"Bastrop package gap state changed: {gap}")
+    raise AssertionError(f"Brazos package gap state changed: {gap}")
 
-release = json.loads(RELEASE_PATH.read_text(encoding="utf-8"))
 if release.get("meta", {}).get("release_status") != "RELEASE_BACKED_CURRENT":
-    raise AssertionError("Bastrop packaged release status changed")
+    raise AssertionError("Brazos packaged release status changed")
 release_without_hash = copy.deepcopy(release)
 recorded_release_sha = release_without_hash["meta"].pop("canonical_content_sha256", None)
 if recorded_release_sha != canonical_sha(release_without_hash):
-    raise AssertionError("Bastrop canonical content SHA mismatch")
+    raise AssertionError("Brazos canonical content SHA mismatch")
 offices = release.get("payload", {}).get("offices", [])
 holders = release.get("payload", {}).get("officeholders", [])
 if len(offices) != 18 or len(holders) != 18:
     raise AssertionError(
-        f"Packaged Bastrop release must contain 18 offices / 18 holders, got "
+        f"Packaged Brazos release must contain 18 offices / 18 holders, got "
         f"{len(offices)} / {len(holders)}"
     )
 office_ids = {row.get("office_id") for row in offices}
 holder_ids = {row.get("office_id") for row in holders}
 if len(office_ids) != 18 or office_ids != holder_ids:
-    raise AssertionError("Packaged Bastrop office/officeholder identity join failed")
+    raise AssertionError("Packaged Brazos office/officeholder identity join failed")
 if not COUNTYWIDE_IDS.issubset(office_ids):
-    raise AssertionError("Packaged Bastrop bounded countywide office set changed")
+    raise AssertionError("Packaged Brazos bounded countywide office set changed")
 
 resolver = engine_mod.CivicGPSOverlayEngine.from_file(REGISTRY_PATH, timeout_seconds=30.0)
 
@@ -195,10 +202,10 @@ def resolve_live(label: str, address: str) -> tuple[dict, int]:
 
 
 CASES = [
-    ("bastrop-p1", "803 Pine Street, Bastrop, TX 78602", "1"),
-    ("bastrop-p2", "1624 NE Loop 230, Smithville, TX 78957", "2"),
-    ("bastrop-p3", "5540 FM 535, Cedar Creek, TX 78612", "3"),
-    ("bastrop-p4", "1125 Dildy Drive, Elgin, TX 78621", "4"),
+    ("brazos-p1", "412 William D Fitch Parkway, College Station, TX 77845", "1"),
+    ("brazos-p2", "977 N FM 2038, Bryan, TX 77808", "2"),
+    ("brazos-p3", "1500 George Bush Drive, College Station, TX 77840", "3"),
+    ("brazos-p4", "300 E 26th Street, Bryan, TX 77803", "4"),
 ]
 interior_summaries = []
 keys_covered = set()
@@ -210,7 +217,7 @@ for case_id, address, key in CASES:
     )
     payload = result["payload"]
     if J not in {row.get("jurisdiction_id") for row in payload.get("jurisdictions") or []}:
-        raise AssertionError(f"[{case_id}] Bastrop jurisdiction did not activate")
+        raise AssertionError(f"[{case_id}] Brazos jurisdiction did not activate")
     assignments = assignment_map(payload)
     expected_assignments = {adapter_id: key for adapter_id in ADAPTERS}
     if assignments != expected_assignments:
@@ -229,9 +236,9 @@ for case_id, address, key in CASES:
     if {row.get("office_id") for row in wide} != COUNTYWIDE_IDS:
         raise AssertionError(f"[{case_id}] bounded countywide office set changed")
     expected_district_ids = {
-        f"office-us-tx-bastrop-county-commissioner-{key}",
-        f"office-us-tx-bastrop-county-jp-{key}",
-        f"office-us-tx-bastrop-county-constable-{key}",
+        f"office-us-tx-brazos-county-commissioner-{key}",
+        f"office-us-tx-brazos-county-jp-{key}",
+        f"office-us-tx-brazos-county-constable-{key}",
     }
     if {row.get("office_id") for row in district} != expected_district_ids:
         raise AssertionError(f"[{case_id}] district office set changed")
@@ -239,7 +246,7 @@ for case_id, address, key in CASES:
         str(row.get("layer"))
         for row in payload.get("coverage") or []
         if row.get("status") == "RELEASE_BACKED"
-        and str(row.get("layer") or "").startswith("bastrop_county_")
+        and str(row.get("layer") or "").startswith("brazos_county_")
     }
     if release_layers != EXPECTED_LAYERS:
         raise AssertionError(f"[{case_id}] packaged coverage layers changed: {release_layers}")
@@ -257,13 +264,13 @@ for case_id, address, key in CASES:
         }
     )
 if keys_covered != {"1", "2", "3", "4"}:
-    raise AssertionError(f"Packaged interiors missed Bastrop keys: {sorted(keys_covered)}")
+    raise AssertionError(f"Packaged interiors missed Brazos keys: {sorted(keys_covered)}")
 
 outside, outside_attempts = resolve_live(
-    "bastrop-outside-austin",
+    "brazos-outside-austin",
     "700 Lavaca Street, Austin, TX 78701",
 )
-(OUTPUT / "bastrop-outside-austin.json").write_text(
+(OUTPUT / "brazos-outside-austin.json").write_text(
     json.dumps(outside, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
     encoding="utf-8",
 )
@@ -293,12 +300,12 @@ if any(
     + (outside_payload.get("applicable_offices") or [])
     + (outside_payload.get("action_links") or [])
 ):
-    raise AssertionError("Outside-Austin control leaked Bastrop assignments/offices/actions")
+    raise AssertionError("Outside-Austin control leaked Brazos assignments/offices/actions")
 if any(
-    "bastrop" in json.dumps(row, ensure_ascii=False, sort_keys=True).lower()
+    "brazos" in json.dumps(row, ensure_ascii=False, sort_keys=True).lower()
     for row in outside_payload.get("coverage") or []
 ):
-    raise AssertionError("Outside-Austin control leaked Bastrop coverage")
+    raise AssertionError("Outside-Austin control leaked Brazos coverage")
 
 SESSION = requests.Session()
 SESSION.headers.update({"User-Agent": "CivicGPS/0.6.2 (+https://github.com/MightyLoud/CivicData)"})
@@ -336,23 +343,32 @@ def all_features() -> list[dict]:
         for feature in features
     }
     if keys != {"1", "2", "3", "4"}:
-        raise AssertionError(f"Bastrop live precinct key set changed: {sorted(keys)}")
+        raise AssertionError(f"Brazos live precinct key set changed: {sorted(keys)}")
     return features
 
 
-def point_keys(lon: float, lat: float) -> list[str]:
+def point_keys(
+    lon: float,
+    lat: float,
+    *,
+    distance_meters: int | None = None,
+) -> list[str]:
+    params = {
+        "where": "1=1",
+        "geometry": f"{lon:.12f},{lat:.12f}",
+        "geometryType": "esriGeometryPoint",
+        "inSR": "4326",
+        "spatialRel": "esriSpatialRelIntersects",
+        "outFields": FIELD,
+        "returnGeometry": "false",
+        "f": "json",
+    }
+    if distance_meters is not None:
+        params["distance"] = str(distance_meters)
+        params["units"] = "esriSRUnit_Meter"
     body = get_json(
         SERVICE.rstrip("/") + "/query",
-        {
-            "where": "1=1",
-            "geometry": f"{lon:.12f},{lat:.12f}",
-            "geometryType": "esriGeometryPoint",
-            "inSR": "4326",
-            "spatialRel": "esriSpatialRelIntersects",
-            "outFields": FIELD,
-            "returnGeometry": "false",
-            "f": "json",
-        },
+        params,
     )
     values = []
     for feature in body.get("features") or []:
@@ -392,8 +408,14 @@ def find_shared_boundary() -> dict:
     candidates.sort(reverse=True, key=lambda row: row[0])
     for _, shared_keys, a, b in candidates:
         midpoint = ((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0)
-        midpoint_keys = point_keys(*midpoint)
-        if len(midpoint_keys) != 2:
+        exact_service_keys = point_keys(*midpoint)
+        topology_nearby_keys = point_keys(*midpoint, distance_meters=1)
+        if (
+            len(exact_service_keys) != 1
+            or len(topology_nearby_keys) != 2
+            or exact_service_keys[0] not in topology_nearby_keys
+            or set(topology_nearby_keys) != set(shared_keys)
+        ):
             continue
         dx, dy = b[0] - a[0], b[1] - a[1]
         norm = math.hypot(dx, dy)
@@ -403,17 +425,18 @@ def find_shared_boundary() -> dict:
         for epsilon in (2e-7, 5e-7, 1e-6, 2e-6, 5e-6, 1e-5, 2e-5, 5e-5):
             side_a = (midpoint[0] + nx * epsilon, midpoint[1] + ny * epsilon)
             side_b = (midpoint[0] - nx * epsilon, midpoint[1] - ny * epsilon)
-            side_a_keys = point_keys(*side_a)
-            side_b_keys = point_keys(*side_b)
+            side_a_keys = point_keys(*side_a, distance_meters=1)
+            side_b_keys = point_keys(*side_b, distance_meters=1)
             if (
                 len(side_a_keys) == 1
                 and len(side_b_keys) == 1
                 and side_a_keys[0] != side_b_keys[0]
-                and {side_a_keys[0], side_b_keys[0]} == set(midpoint_keys)
+                and {side_a_keys[0], side_b_keys[0]} == set(topology_nearby_keys)
             ):
                 return {
                     "midpoint": midpoint,
-                    "exact_intersections": midpoint_keys,
+                    "exact_service_keys": exact_service_keys,
+                    "topology_nearby_keys": topology_nearby_keys,
                     "shared_segment_keys": shared_keys,
                     "side_a": side_a,
                     "side_a_key": side_a_keys[0],
@@ -421,7 +444,7 @@ def find_shared_boundary() -> dict:
                     "side_b_key": side_b_keys[0],
                     "epsilon_degrees": epsilon,
                 }
-    raise AssertionError("Could not derive exact two-sided Bastrop boundary")
+    raise AssertionError("Could not derive exact two-sided Brazos boundary")
 
 
 class FakeResponse:
@@ -451,11 +474,11 @@ class FixedPointSession:
                     "result": {
                         "addressMatches": [
                             {
-                                "matchedAddress": "BASTROP PACKAGE BOUNDARY",
+                                "matchedAddress": "BRAZOS PACKAGE BOUNDARY",
                                 "coordinates": {"x": self.lon, "y": self.lat},
                                 "geographies": {
                                     "States": [{"GEOID": "48", "STATE": "48"}],
-                                    "Counties": [{"GEOID": "48021", "COUNTY": "021"}],
+                                    "Counties": [{"GEOID": "48041", "COUNTY": "041"}],
                                 },
                             }
                         ]
@@ -486,12 +509,12 @@ def conflict_layers(payload: dict) -> set[str]:
         str(row.get("layer"))
         for row in payload.get("coverage") or []
         if row.get("status") == "CONFLICT"
-        and str(row.get("layer") or "").startswith("bastrop_county_")
+        and str(row.get("layer") or "").startswith("brazos_county_")
     }
 
 
 boundary = find_shared_boundary()
-exact = resolve_point("bastrop-shared-boundary-exact", tuple(boundary["midpoint"]))
+exact = resolve_point("brazos-shared-boundary-exact", tuple(boundary["midpoint"]))
 exact_assignments = assignment_map(exact)
 if exact_assignments or representative_map(exact):
     raise AssertionError(
@@ -520,7 +543,7 @@ for label, point, expected_key in (
     ("side-a", boundary["side_a"], boundary["side_a_key"]),
     ("side-b", boundary["side_b"], boundary["side_b_key"]),
 ):
-    payload = resolve_point(f"bastrop-shared-boundary-{label}", tuple(point))
+    payload = resolve_point(f"brazos-shared-boundary-{label}", tuple(point))
     assignments = assignment_map(payload)
     expected_assignments = {adapter_id: expected_key for adapter_id in ADAPTERS}
     if assignments != expected_assignments:
@@ -547,20 +570,15 @@ for label, point, expected_key in (
 if boundary_sides[0]["key"] == boundary_sides[1]["key"]:
     raise AssertionError("Boundary sides did not resolve distinct precincts")
 
-runtime_sha = hashlib.sha256(
-    b"".join(
-        part.read_bytes()
-        for part in sorted((ROOT / "civic_gps_runtime_parts").glob("part.*"))
-    )
-).hexdigest()
+runtime_sha = hashlib.sha256(runtime_bytes).hexdigest()
 if runtime_sha != "bc40a0aa46fcdbd5b2c73976747ef702d9a64fd051832c615ba4aba1016a7427":
-    raise AssertionError(f"Packaged Bastrop runtime SHA changed: {runtime_sha}")
+    raise AssertionError(f"Packaged Brazos runtime SHA changed: {runtime_sha}")
 
 summary = {
     "status": "PASS",
     "gate": "CG-09",
-    "county": "Bastrop County, TX",
-    "geoid": "48021",
+    "county": "Brazos County, TX",
+    "geoid": "48041",
     "engine_version": "0.6.2",
     "registry_artifact_version": "0.5.8",
     "runtime_sha256": runtime_sha,
@@ -572,11 +590,13 @@ summary = {
         "travis_assignments": travis_assignments,
         "travis_applicable_offices": 9,
         "resolution_attempts": outside_attempts,
-        "bastrop_leakage": 0,
+        "brazos_leakage": 0,
     },
     "shared_boundary": {
         "midpoint": boundary["midpoint"],
-        "official_intersections": boundary["exact_intersections"],
+        "exact_service_keys": boundary["exact_service_keys"],
+        "topology_nearby_keys": boundary["topology_nearby_keys"],
+        "distance_probe_meters": 1,
         "exact_assignments": exact_assignments,
         "exact_applicable_offices": 6,
         "exact_conflict_layers": sorted(conflict_layers(exact)),
@@ -588,9 +608,9 @@ summary = {
     "next_gate": "CG-10",
     "stopped_before": "CG-10",
 }
-(OUTPUT / "packaged-bastrop-summary.json").write_text(
+(OUTPUT / "packaged-brazos-summary.json").write_text(
     json.dumps(summary, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
     encoding="utf-8",
 )
 print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
-print("BASTROP PACKAGED CG-09 PASS")
+print("BRAZOS PACKAGED CG-09 PASS")

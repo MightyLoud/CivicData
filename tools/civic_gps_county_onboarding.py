@@ -22,6 +22,7 @@ from typing import Any
 SCHEMA_VERSION = "civic-gps-county-onboarding/0.1.0"
 ARCHETYPE = "TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1"
 BOUNDARY_POLICY = "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK"
+BOUNDARY_PROBE_DISTANCE_METERS = 1
 TRACKER_SUPPORTED = "SUPPORTED_V0_1"
 TRACKER_UNSUPPORTED = "UNSUPPORTED_PATTERN"
 STOP_CLASSES = [
@@ -295,6 +296,7 @@ def build_builder_spec(spec: dict[str, Any]) -> dict[str, Any]:
             "endpoint_provenance_url": geometry["endpoint_provenance_url"],
             "endpoint_publisher": geometry["endpoint_publisher"],
             "coverage_reason": family["coverage_reason"],
+            "boundary_probe_distance_meters": BOUNDARY_PROBE_DISTANCE_METERS,
             "holders": holders,
             "selection_type": family.get("selection_type", "election"),
         })
@@ -380,6 +382,7 @@ def build_proof_plan(spec: dict[str, Any], report: dict[str, Any]) -> dict[str, 
                 "failure_scope": "ADAPTER",
                 "officeholder_identity_source": "CANONICAL_RELEASE_ONLY",
                 "boundary_policy": BOUNDARY_POLICY,
+                "boundary_probe_distance_meters": BOUNDARY_PROBE_DISTANCE_METERS,
             }
             for family in spec["district_families"]
         ],
@@ -473,6 +476,11 @@ def run_onboarding(spec: dict[str, Any], output_dir: Path, builder_path: Path | 
             raise ValueError("generated district adapter does not preserve CANONICAL_RELEASE_ONLY identity")
         if any(row.get("boundary_policy") != BOUNDARY_POLICY for row in bundle.get("district_adapters", [])):
             raise ValueError("generated district adapter does not preserve fail-closed boundary policy")
+        if any(
+            row.get("boundary_probe_distance_meters") != BOUNDARY_PROBE_DISTANCE_METERS
+            for row in bundle.get("district_adapters", [])
+        ):
+            raise ValueError("generated district adapter does not preserve topology-aware boundary probe")
 
         _write_json(output_dir / "canonical-release-preview.json", release)
         _write_json(output_dir / "base-bundle-plan.json", bundle)

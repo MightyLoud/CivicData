@@ -2,7 +2,7 @@
 """Build existing Civic GPS artifacts for Texas county precinct archetypes.
 
 This is a build helper, not a new resolver. It emits the same release payload and
-BASE bundle consumed by CivicGPSOverlayEngine v0.6.1.
+BASE bundle consumed by CivicGPSOverlayEngine v0.6.2.
 """
 from __future__ import annotations
 
@@ -86,7 +86,7 @@ def build_texas_county_precinct_artifacts(spec: dict) -> tuple[dict, dict]:
                 "selection_type": family.get("selection_type", "election"),
             })
 
-        district_adapters.append({
+        adapter = {
             "activation": {"jurisdiction_active": jurisdiction_id},
             "adapter_id": family["adapter_id"],
             "boundary_policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK",
@@ -110,7 +110,10 @@ def build_texas_county_precinct_artifacts(spec: dict) -> tuple[dict, dict]:
             "resolver_kind": "ARCGIS_POINT_INTERSECT",
             "service_url": family["service_url"],
             "source_status": spec.get("source_status", "LIVE_ARCHETYPE_PROOF_PENDING"),
-        })
+        }
+        if family.get("boundary_probe_distance_meters") is not None:
+            adapter["boundary_probe_distance_meters"] = family["boundary_probe_distance_meters"]
+        district_adapters.append(adapter)
         coverage_rules.append({
             "layer": family["layer"],
             "reason": family["coverage_reason"],

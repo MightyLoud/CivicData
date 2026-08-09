@@ -71,6 +71,13 @@ def main() -> int:
         assert_true(all(row["failure_scope"] == "ADAPTER" for row in bundle["district_adapters"]), "ADAPTER failure scope")
         assert_true(all(row["officeholder_identity_source"] == "CANONICAL_RELEASE_ONLY" for row in bundle["district_adapters"]), "canonical identity only")
         assert_true(all(row["boundary_policy"] == tool.BOUNDARY_POLICY for row in bundle["district_adapters"]), "fail-closed boundary policy")
+        assert_true(
+            all(
+                row["boundary_probe_distance_meters"] == tool.BOUNDARY_PROBE_DISTANCE_METERS
+                for row in bundle["district_adapters"]
+            ),
+            "topology-aware boundary probe",
+        )
         proof = first_result["proof_plan"]
         assert_equal(len(proof["proof_matrix"]["interiors"]), 4, "Williamson interior control count")
         assert_equal(proof["promotion_plan"]["required_status_context"], "Civic GPS release gate", "protected promotion status")
