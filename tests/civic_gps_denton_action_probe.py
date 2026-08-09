@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -15,6 +16,7 @@ ENGINE_PATH = GPS / "engine.py"
 REGISTRY_PATH = GPS / "registry.json"
 J_DENTON = "jur-us-tx-denton-county"
 ACTION_FILE = "civic_gps_action_registry_denton_v0.1.json"
+EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.5.8")
 
 spec = importlib.util.spec_from_file_location("civic_gps_engine_denton_actions", ENGINE_PATH)
 engine_mod = importlib.util.module_from_spec(spec)
@@ -23,8 +25,10 @@ assert spec.loader is not None
 spec.loader.exec_module(engine_mod)
 
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("registry_artifact_version") != "0.5.8":
-    raise AssertionError(f"Expected registry 0.5.8, got {registry.get('registry_artifact_version')}")
+if registry.get("registry_artifact_version") != EXPECTED_REGISTRY_VERSION:
+    raise AssertionError(
+        f"Expected registry {EXPECTED_REGISTRY_VERSION}, got {registry.get('registry_artifact_version')}"
+    )
 resolver = engine_mod.CivicGPSOverlayEngine.from_file(REGISTRY_PATH, timeout_seconds=30.0)
 action_registry = json.loads((GPS / ACTION_FILE).read_text(encoding="utf-8"))
 if action_registry.get("meta", {}).get("route_count") != 27:
