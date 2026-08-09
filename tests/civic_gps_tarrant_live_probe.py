@@ -6,6 +6,7 @@ import hashlib
 import importlib.util
 import json
 import math
+import os
 import sys
 from pathlib import Path
 
@@ -27,6 +28,7 @@ A_JP = "DIST-TX-TARRANT-JP"
 A_CONST = "DIST-TX-TARRANT-CONSTABLE"
 EXPECTED_ADAPTERS = {A_COMM, A_JP, A_CONST}
 POLICY = "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK"
+EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.5.8")
 
 
 def load_module(name: str, path: Path):
@@ -64,9 +66,9 @@ def applicable(payload: dict) -> list[dict]:
 
 engine_mod = load_module("civic_gps_engine_tarrant_packaged", ENGINE_PATH)
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.5.8":
+if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != EXPECTED_REGISTRY_VERSION:
     raise AssertionError(
-        "Tarrant packaged proof requires engine 0.6.2 / registry 0.5.8, got "
+        f"Tarrant packaged proof requires engine 0.6.2 / registry {EXPECTED_REGISTRY_VERSION}, got "
         f"{registry.get('engine_version')} / {registry.get('registry_artifact_version')}"
     )
 bundle = next(
@@ -498,7 +500,7 @@ summary = {
     "county": "Tarrant County, TX",
     "geoid": "48439",
     "engine_version": "0.6.2",
-    "registry_artifact_version": "0.5.8",
+    "registry_artifact_version": EXPECTED_REGISTRY_VERSION,
     "runtime_sha256": runtime_sha,
     "release_offices": 26,
     "release_holders": 26,
