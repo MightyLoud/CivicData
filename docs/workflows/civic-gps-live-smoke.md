@@ -108,6 +108,21 @@ Required packaged controls:
 
 Brazos release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Brazos action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
 
+### Smith County CG-09 candidate
+
+Smith is County #9 and the fifth county candidate packaged through the automated County Onboarding Pipeline. CG-09 builds the candidate twice, installs it only in the branch CI checkout, and runs this entire maintained regression matrix before running Smith's live proof twice. The pinned production runtime above is not changed by this gate.
+
+Candidate contract:
+
+- Registry artifact: `v0.5.9`.
+- Candidate runtime SHA-256: `49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a`.
+- Five permanent interiors cover Commissioner keys 1–4 and shared JP/Constable keys 1–5; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins.
+- Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Smith jurisdiction, assignments, offices, actions, or coverage.
+- Commissioner exact boundary — live official geometry must suppress only Commissioner while preserving JP/Constable key 5 and 8 Smith offices; both sides restore 9 offices.
+- Shared JP/Constable exact boundary — live official geometry must suppress JP and Constable together while preserving Commissioner key 1 and 7 Smith offices; both sides restore 9 offices.
+
+Smith candidate scope is 20 offices / 20 holders = 6 deliberately bounded countywide + 4 Commissioner + 5 JP + 5 Constable. Smith action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`; production promotion remains the separate `CG-10` gate.
+
 ## Triggers
 
 The gate runs:
