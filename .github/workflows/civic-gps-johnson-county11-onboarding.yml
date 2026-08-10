@@ -1,7 +1,14 @@
 name: 'Civic GPS Johnson County #11 onboarding'
 
 on:
-  # CG-02 freezes the automation without running the CG-03 fit classification.
+  push:
+    branches:
+      - 'agent/civic-gps-johnson-intake'
+    paths:
+      - '.github/workflows/civic-gps-johnson-county11-onboarding.yml'
+      - 'tests/fixtures/civic_gps_county_onboarding/johnson_county11_candidate_v0.1.json'
+      - 'tools/civic_gps_county_onboarding.py'
+      - 'tools/civic_gps_tx_county_archetype.py'
   workflow_dispatch:
 
 permissions:
