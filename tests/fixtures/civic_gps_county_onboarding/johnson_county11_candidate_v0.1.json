@@ -1,0 +1,308 @@
+{
+  "schema_version": "civic-gps-county-onboarding/0.1.0",
+  "archetype": "TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1",
+  "county": {
+    "name": "Johnson County",
+    "state": "TX",
+    "geoid": "48251",
+    "jurisdiction_id": "jur-us-tx-johnson-county",
+    "division_id": "div-us-tx-johnson-county",
+    "adapter_id": "ADAPTER-TX-JOHNSON",
+    "response_id_prefix": "civic-gps-johnson",
+    "release_filename": "civic_gps_johnson_county_v0.1.json",
+    "observed_on": "2026-08-09"
+  },
+  "scope": {
+    "bounded": true,
+    "countywide_complete": false,
+    "unmodeled_status": "BOUNDED_V0_1_SCOPE",
+    "expected_total_offices": 18,
+    "countywide_offices": [
+      {
+        "office_id": "office-us-tx-johnson-county-judge",
+        "title": "County Judge",
+        "holder": "Christopher Boedeker",
+        "official_url": "https://www.johnsoncountytx.org/government/county-judge"
+      },
+      {
+        "office_id": "office-us-tx-johnson-county-sheriff",
+        "title": "Sheriff",
+        "holder": "Adam King",
+        "official_url": "https://www.johnsoncountytx.org/departments/elections-office/campaign-finance-c-oh-reports"
+      },
+      {
+        "office_id": "office-us-tx-johnson-county-clerk",
+        "title": "County Clerk",
+        "holder": "April Long",
+        "official_url": "https://www.johnsoncountytx.org/government/county-clerk"
+      },
+      {
+        "office_id": "office-us-tx-johnson-county-district-clerk",
+        "title": "District Clerk",
+        "holder": "Dean Sullivan",
+        "official_url": "https://www.johnsoncountytx.org/government/district-clerk"
+      },
+      {
+        "office_id": "office-us-tx-johnson-county-tax-assessor-collector",
+        "title": "Tax Assessor-Collector",
+        "holder": "Scott Porter",
+        "official_url": "https://www.johnsoncountytx.org/departments/elections-office/campaign-finance-c-oh-reports"
+      },
+      {
+        "office_id": "office-us-tx-johnson-county-treasurer",
+        "title": "County Treasurer",
+        "holder": "Kathy Blackwell",
+        "official_url": "https://www.johnsoncountytx.org/government/county-treasurer"
+      }
+    ]
+  },
+  "sources": {
+    "snapshot_ref": "https://www.johnsoncountytx.org/departments/elections-office/campaign-finance-c-oh-reports",
+    "source_repository": "https://www.johnsoncountytx.org/",
+    "manifest": {
+      "current_elected_officials": "official Johnson County office pages and current campaign-finance incumbent records",
+      "county_gis": "https://www.johnsoncountytx.org/departments/geographic-information-system-gis/interactive-maps",
+      "county_precincts": "https://www.johnsoncountytx.org/departments/elections-office/precinct-maps",
+      "precinct_application": "https://jocotx.maps.arcgis.com/apps/webappviewer/index.html?id=fc6c7c88e1024b8493d64a554c38db16",
+      "precinct_webmap": "https://www.arcgis.com/sharing/rest/content/items/d0329206d4cd4c2a9746c8cbe26f38e7",
+      "shared_precinct_geometry": "https://services7.arcgis.com/gVohhGAlfFScDJGs/arcgis/rest/services/County_Precincts_2021/FeatureServer/0",
+      "commissioners": "https://www.johnsoncountytx.org/government/commissioners",
+      "justices_of_the_peace": "https://www.johnsoncountytx.org/government/justice-of-the-peace",
+      "constables": "https://www.johnsoncountytx.org/public-safety/constables",
+      "controls": "official Johnson County Commissioner maintenance-facility addresses spanning county precincts 1-4",
+      "geoid": "https://www.census.gov/quickfacts/fact/table/johnsoncountytexas/POP645223"
+    },
+    "identity_conflicts": [
+      {
+        "subject": "Justice of the Peace Precinct 1 GIS identity attribute",
+        "resolution_status": "RESOLVED",
+        "canonical_value": "DeeAnn Strother",
+        "alternate_value": "Ronny McBroom",
+        "winning_source": "https://www.johnsoncountytx.org/government/justice-of-the-peace/justice-of-the-peace-precinct-1",
+        "alternate_source": "https://services7.arcgis.com/gVohhGAlfFScDJGs/arcgis/rest/services/County_Precincts_2021/FeatureServer/0",
+        "rule": "GIS_GEOMETRY_ATTRIBUTES_NEVER_OVERRIDE_CANONICAL_RELEASE_IDENTITY"
+      },
+      {
+        "subject": "District Clerk current officeholder presentation",
+        "resolution_status": "RESOLVED",
+        "canonical_value": "Dean Sullivan",
+        "alternate_value": "David Lloyd (Incumbent campaign-finance label)",
+        "winning_source": "https://www.johnsoncountytx.org/government/district-clerk",
+        "alternate_source": "https://www.johnsoncountytx.org/departments/elections-office/campaign-finance-c-oh-reports",
+        "rule": "CURRENT_OFFICE_PAGE_OVERRIDES_HISTORICAL_OR_ELECTION_FILING_LABEL"
+      }
+    ],
+    "source_health": [
+      {
+        "source_id": "johnson-current-office-pages",
+        "status": "OK"
+      },
+      {
+        "source_id": "johnson-county-gis-index",
+        "status": "OK"
+      },
+      {
+        "source_id": "johnson-shared-precinct-gis",
+        "status": "OK"
+      },
+      {
+        "source_id": "johnson-control-addresses",
+        "status": "OK"
+      }
+    ]
+  },
+  "architecture": {
+    "requires_custom_resolver_logic": false,
+    "requires_consumer_schema_change": false
+  },
+  "district_families": [
+    {
+      "family": "commissioner",
+      "adapter_id": "DIST-TX-JOHNSON-COMMISSIONER",
+      "layer": "johnson_county_commissioner_precinct",
+      "district_keys": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "offices_per_key": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      },
+      "holders": {
+        "1": "Rick Bailey",
+        "2": "Kenny Howell",
+        "3": "Mike White",
+        "4": "Larry Woolley"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://services7.arcgis.com/gVohhGAlfFScDJGs/arcgis/rest/services/County_Precincts_2021/FeatureServer/0",
+        "district_field": "ID",
+        "district_field_type": "esriFieldTypeInteger",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.johnsoncountytx.org/departments/geographic-information-system-gis/interactive-maps",
+        "endpoint_publisher": "Johnson County GIS and Mapping"
+      },
+      "district_name_template": "Johnson County Commissioner Precinct {district}",
+      "division_id_template": "div-us-tx-johnson-county-commissioner-{district}",
+      "division_type": "county_commissioner_precinct",
+      "office_id_template": "office-us-tx-johnson-county-commissioner-{district}",
+      "office_title_template": "Commissioner Precinct {district}",
+      "official_url": "https://www.johnsoncountytx.org/government/commissioners",
+      "coverage_reason": "Address-specific Commissioner precinct is available from the official Johnson County polygon layer; authoritative integer ID values are 1-4. GIS identity attributes are non-canonical and are never used for officeholder joins."
+    },
+    {
+      "family": "justice_of_the_peace",
+      "adapter_id": "DIST-TX-JOHNSON-JP",
+      "layer": "johnson_county_jp_precinct",
+      "district_keys": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "offices_per_key": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      },
+      "holders": {
+        "1": "DeeAnn Strother",
+        "2": "Jeff Monk",
+        "3": "Andrew Nolan",
+        "4": "Robert Shaw"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://services7.arcgis.com/gVohhGAlfFScDJGs/arcgis/rest/services/County_Precincts_2021/FeatureServer/0",
+        "district_field": "ID",
+        "district_field_type": "esriFieldTypeInteger",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.johnsoncountytx.org/departments/geographic-information-system-gis/interactive-maps",
+        "endpoint_publisher": "Johnson County GIS and Mapping"
+      },
+      "district_name_template": "Johnson County Justice Precinct {district}",
+      "division_id_template": "div-us-tx-johnson-county-jp-{district}",
+      "division_type": "justice_precinct",
+      "office_id_template": "office-us-tx-johnson-county-jp-{district}",
+      "office_title_template": "Justice of the Peace Precinct {district}",
+      "official_url": "https://www.johnsoncountytx.org/government/justice-of-the-peace",
+      "coverage_reason": "Justice precinct uses the official Johnson County shared county-precinct polygon layer and integer ID values 1-4. Officeholder identity is frozen from current canonical office pages only."
+    },
+    {
+      "family": "constable",
+      "adapter_id": "DIST-TX-JOHNSON-CONSTABLE",
+      "layer": "johnson_county_constable_precinct",
+      "district_keys": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "offices_per_key": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      },
+      "holders": {
+        "1": "Matt Wylie",
+        "2": "Adam Crawford",
+        "3": "Steve Williams",
+        "4": "Troy Fuller"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://services7.arcgis.com/gVohhGAlfFScDJGs/arcgis/rest/services/County_Precincts_2021/FeatureServer/0",
+        "district_field": "ID",
+        "district_field_type": "esriFieldTypeInteger",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.johnsoncountytx.org/departments/geographic-information-system-gis/interactive-maps",
+        "endpoint_publisher": "Johnson County GIS and Mapping"
+      },
+      "district_name_template": "Johnson County Constable Precinct {district}",
+      "division_id_template": "div-us-tx-johnson-county-constable-{district}",
+      "division_type": "constable_precinct",
+      "office_id_template": "office-us-tx-johnson-county-constable-{district}",
+      "office_title_template": "Constable Precinct {district}",
+      "official_url": "https://www.johnsoncountytx.org/public-safety/constables",
+      "coverage_reason": "Constable precinct uses the official Johnson County shared county-precinct polygon layer and integer ID values 1-4. Officeholder identity is frozen from current canonical office pages only."
+    }
+  ],
+  "controls": {
+    "interiors": [
+      {
+        "id": "johnson-precinct1-candidate",
+        "address": "3400 FM 1434, Cleburne, TX 76033"
+      },
+      {
+        "id": "johnson-precinct2-candidate",
+        "address": "3425 County Road 920, Crowley, TX 76036"
+      },
+      {
+        "id": "johnson-precinct3-candidate",
+        "address": "10420 East FM 917, Alvarado, TX 76009"
+      },
+      {
+        "id": "johnson-precinct4-candidate",
+        "address": "4300 East FM 4, Cleburne, TX 76031"
+      }
+    ],
+    "outside_negative": {
+      "address": "700 Lavaca Street, Austin, TX 78701",
+      "expected": {
+        "johnson_jurisdiction_present": false
+      }
+    },
+    "boundary": {
+      "required": true,
+      "policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK",
+      "shared_geometry_families": [
+        "commissioner",
+        "justice_of_the_peace",
+        "constable"
+      ]
+    }
+  },
+  "actions": {
+    "status": "NOT_YET_RELEASED",
+    "layer": "johnson_action_endpoints",
+    "reason": "Johnson County civic-action routing is intentionally outside the County #11 CG-01 intake scope."
+  },
+  "release_status": "PROBE_CURRENT",
+  "source_status": "FROZEN_CG01_FIT_NOT_RUN",
+  "release_note": "Johnson County is County #11 and a 4/4/4 candidate for County Onboarding Pipeline v0.1. The frozen CG-01 scope models six bounded countywide offices plus four Commissioner, four Justice of the Peace, and four Constable precinct offices. The official county precinct application is linked from Johnson County GIS and uses one shared FeatureServer polygon layer whose authoritative integer ID values are 1-4. Current officeholder identity comes only from canonical Johnson County pages; non-canonical GIS identity attributes are explicitly excluded. Automated CG-02 and CG-03 fit classification has not yet run.",
+  "known_gaps": [
+    {
+      "gap_id": "GAP-JOHNSON-GPS-001",
+      "status": "NOT_YET_RELEASED",
+      "summary": "Johnson County civic-action routing is not included in the County #11 intake batch."
+    },
+    {
+      "gap_id": "GAP-JOHNSON-GPS-002",
+      "status": "BOUNDED_V0_1_SCOPE",
+      "summary": "The v0.1 countywide set is deliberately bounded to six countywide offices; additional countywide and judicial offices are not modeled."
+    },
+    {
+      "gap_id": "GAP-JOHNSON-GPS-003",
+      "status": "FIT_CLASSIFICATION_PENDING",
+      "summary": "CG-02 and CG-03 must confirm that the 4/4/4 family cardinalities and shared integer district keys fit the unchanged onboarding contract."
+    },
+    {
+      "gap_id": "GAP-JOHNSON-GPS-004",
+      "status": "LIVE_PROOF_PENDING",
+      "summary": "Live GIS, interior, outside-negative, boundary, package, and promotion gates remain pending after CG-01."
+    }
+  ]
+}
