@@ -18,6 +18,7 @@ on:
       - 'tests/civic_gps_tarrant_live_probe.py'
       - 'tests/civic_gps_bastrop_live_probe.py'
       - 'tests/civic_gps_brazos_live_probe.py'
+      - 'tests/civic_gps_brazos_action_probe.py'
       - 'tests/civic_gps_smith_live_probe.py'
       - 'tests/civic_gps_grayson_live_probe.py'
       - 'tests/civic_gps_county_onboarding_test.py'
@@ -49,6 +50,7 @@ on:
       - 'tests/civic_gps_tarrant_live_probe.py'
       - 'tests/civic_gps_bastrop_live_probe.py'
       - 'tests/civic_gps_brazos_live_probe.py'
+      - 'tests/civic_gps_brazos_action_probe.py'
       - 'tests/civic_gps_smith_live_probe.py'
       - 'tests/civic_gps_grayson_live_probe.py'
       - 'tests/civic_gps_county_onboarding_test.py'
@@ -80,9 +82,9 @@ jobs:
     timeout-minutes: 15
     env:
       PYTHONDONTWRITEBYTECODE: '1'
-      CIVIC_GPS_EXPECTED_REGISTRY_VERSION: '0.6.0'
+      CIVIC_GPS_EXPECTED_REGISTRY_VERSION: '0.6.1'
       CIVIC_GPS_EXPECTED_BUNDLE_COUNT: '13'
-      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b'
+      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '9cf08fabee633ae1863b71089c1695e07c55d4e17a735f9fbc52e1f92972f2e5'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -101,11 +103,11 @@ jobs:
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
-          echo '70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b  civic_gps_runtime.zip' | sha256sum --check --strict
+          echo '9cf08fabee633ae1863b71089c1695e07c55d4e17a735f9fbc52e1f92972f2e5  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
       - name: Compile engine, onboarding tool, and smoke tests
-        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_topology_probe_test.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py tests/civic_gps_bastrop_live_probe.py tests/civic_gps_brazos_live_probe.py tests/civic_gps_smith_live_probe.py tests/civic_gps_grayson_live_probe.py
+        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_topology_probe_test.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py tests/civic_gps_bastrop_live_probe.py tests/civic_gps_brazos_live_probe.py tests/civic_gps_brazos_action_probe.py tests/civic_gps_smith_live_probe.py tests/civic_gps_grayson_live_probe.py
 
       - name: Run deterministic County Onboarding Pipeline fixtures
         shell: bash
@@ -148,6 +150,9 @@ jobs:
 
       - name: Run packaged Brazos County archetype controls
         run: python tests/civic_gps_brazos_live_probe.py
+
+      - name: Run Brazos action selection contract
+        run: python tests/civic_gps_brazos_action_probe.py
 
       - name: Run packaged Smith County archetype controls
         run: python tests/civic_gps_smith_live_probe.py --packaged --expected-runtime-sha256 "$CIVIC_GPS_EXPECTED_RUNTIME_SHA256"

@@ -8,6 +8,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -63,6 +64,7 @@ ONBOARDING_TOOL = ROOT / "tools/civic_gps_county_onboarding.py"
 RUNTIME_PARTS = ROOT / "civic_gps_runtime_parts"
 BASE_RUNTIME_SHA256 = "49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a"
 RELEASE_RUNTIME_SHA256 = "70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b"
+EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.6.0")
 J = "jur-us-tx-grayson-county"
 TRAVIS = "jur-us-tx-travis-county"
 A_COMM = "DIST-TX-GRAYSON-COMMISSIONER"
@@ -409,8 +411,14 @@ def validate_roster_and_bundle(onboarding: Path) -> tuple[dict, dict, dict]:
 
 
 def validate_packaged_release(runtime_gps: Path, registry: dict) -> dict:
-    if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != "0.6.0":
-        raise AssertionError(f"Grayson release requires engine 0.6.2 / registry 0.6.0: {registry}")
+    if (
+        registry.get("engine_version") != "0.6.2"
+        or registry.get("registry_artifact_version") != EXPECTED_REGISTRY_VERSION
+    ):
+        raise AssertionError(
+            f"Grayson packaged regression requires engine 0.6.2 / registry "
+            f"{EXPECTED_REGISTRY_VERSION}: {registry}"
+        )
     registry_without_hash = copy.deepcopy(registry)
     recorded_registry_sha = registry_without_hash.pop("canonical_content_sha256", None)
     if not recorded_registry_sha or recorded_registry_sha != canonical_sha(registry_without_hash):
@@ -779,7 +787,7 @@ def main() -> int:
         ),
         "fit_result": report["result"],
         "engine_version": "0.6.2",
-        "registry_artifact_version": "0.6.0" if args.packaged else "0.5.9",
+        "registry_artifact_version": EXPECTED_REGISTRY_VERSION if args.packaged else "0.5.9",
         "runtime_sha256": runtime_sha,
         "base_runtime_sha256": BASE_RUNTIME_SHA256,
         "release_runtime_sha256": runtime_sha if args.packaged else None,

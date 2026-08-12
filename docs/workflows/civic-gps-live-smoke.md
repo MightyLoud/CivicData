@@ -12,12 +12,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b`
+`9cf08fabee633ae1863b71089c1695e07c55d4e17a735f9fbc52e1f92972f2e5`
 
 Current contract set:
 
 - Overlay Engine: `v0.6.2`
-- Adapter registry artifact: `v0.6.0`
+- Adapter registry artifact: `v0.6.1`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 - County onboarding frozen-spec schema: `civic-gps-county-onboarding/0.1.0`
@@ -102,11 +102,11 @@ Brazos is the sixth production county archetype and the fourth county completed 
 
 Required packaged controls:
 
-- Four permanent interiors cover shared Commissioner / JP / Constable keys 1–4; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins.
+- Four permanent interiors cover shared Commissioner / JP / Constable keys 1–4; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins and 14 action links = 5 court/body + 6 countywide + 3 resolved precinct contacts.
 - Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Brazos jurisdiction, assignments, offices, actions, or coverage.
-- Shared exact boundary — live official Brazos County geometry must expose both adjacent precincts through the configured one-meter topology probe, suppress Commissioner, JP, and Constable together, preserve the 6 countywide offices, and emit all three conflict layers. Points immediately on opposite sides must each resolve all three district families to one precinct and restore 9 offices.
+- Shared exact boundary — live official Brazos County geometry must expose both adjacent precincts through the configured one-meter topology probe, suppress Commissioner, JP, and Constable together, preserve the 6 countywide offices and 11 body/countywide action links, and emit all three conflict layers. Points immediately on opposite sides must each resolve all three district families to one precinct and restore 9 offices / 14 action links.
 
-Brazos release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Brazos action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
+Brazos release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Action routing v0.1 is `RELEASE_BACKED` with 23 official routes verified on 2026-08-11: 5 Commissioners Court participation/record/contact routes, 6 bounded countywide contacts, and 12 precinct contacts. The deterministic selection contract covers all four precincts, the shared-boundary suppression case, inactive-jurisdiction isolation, canonical hash integrity, and non-Brazos row isolation. Additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
 
 ### Smith County
 
@@ -114,8 +114,8 @@ Smith is the seventh production county archetype and the fifth county completed 
 
 Required packaged controls:
 
-- Registry artifact: `v0.5.9`.
-- Runtime SHA-256: `49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a`.
+- Registry artifact: current release-gate version `v0.6.1`.
+- Runtime SHA-256: `9cf08fabee633ae1863b71089c1695e07c55d4e17a735f9fbc52e1f92972f2e5`.
 - Five permanent interiors cover Commissioner keys 1–4 and shared JP/Constable keys 1–5; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins.
 - Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Smith jurisdiction, assignments, offices, actions, or coverage.
 - Commissioner exact boundary — live official geometry must suppress only Commissioner while preserving JP/Constable key 5 and 8 Smith offices; both sides restore 9 offices.
@@ -129,8 +129,8 @@ Grayson is the eighth production county archetype and the sixth county completed
 
 Required packaged controls:
 
-- Registry artifact: `v0.6.0`.
-- Runtime SHA-256: `70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b`.
+- Registry artifact: current release-gate version `v0.6.1`.
+- Runtime SHA-256: `9cf08fabee633ae1863b71089c1695e07c55d4e17a735f9fbc52e1f92972f2e5`.
 - Four permanent interiors cover Commissioner keys 1–3 and shared JP/Constable keys 1–4; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins.
 - Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Grayson jurisdiction, assignments, offices, actions, or coverage.
 - Commissioner exact boundary — live official geometry must suppress only Commissioner while preserving JP/Constable key 1 and 8 Grayson offices; both sides restore 9 offices.
