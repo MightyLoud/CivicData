@@ -12,12 +12,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b`
+`cd8a5807fdeb7ca0253885ec8192cf3468c8b0c29a4c099ba78c0707c9818d1a`
 
 Current contract set:
 
 - Overlay Engine: `v0.6.2`
-- Adapter registry artifact: `v0.6.0`
+- Adapter registry artifact: `v0.6.1`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 - County onboarding frozen-spec schema: `civic-gps-county-onboarding/0.1.0`
@@ -137,6 +137,20 @@ Required packaged controls:
 - Shared JP/Constable exact boundary — live official geometry must suppress JP and Constable together while preserving Commissioner key 2 and 7 Grayson offices; both sides restore 9 offices.
 
 Grayson release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Grayson action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
+
+### Lubbock County
+
+Lubbock is the ninth production county archetype and the seventh county completed through the automated County Onboarding Pipeline. Its protected release consumes the exact deterministic CG-09 package that passed the maintained regression matrix plus independent coordinate-only interior, outside-negative, and boundary proofs.
+
+Required packaged controls:
+
+- Registry artifact: `v0.6.1`.
+- Runtime SHA-256: `cd8a5807fdeb7ca0253885ec8192cf3468c8b0c29a4c099ba78c0707c9818d1a`.
+- Four permanent public official-geometry controls cover shared Commissioner / JP / Constable keys 1–4; each returns 9 offices = 6 countywide + Commissioner + JP + Constable with canonical officeholder joins.
+- Outside negative — the Census internal point for Travis County must activate Travis normally while contributing 0 Lubbock jurisdiction, assignments, offices, actions, or coverage.
+- Shared exact boundary — live official Lubbock County geometry must expose precincts 1 and 4 through the configured one-meter topology probe, suppress Commissioner, JP, and Constable together, preserve the 6 countywide offices, and emit all three conflict layers. Points immediately on opposite sides must each resolve all three district families to one precinct and restore 9 offices.
+
+Lubbock release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Lubbock action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
 
 ## Triggers
 
