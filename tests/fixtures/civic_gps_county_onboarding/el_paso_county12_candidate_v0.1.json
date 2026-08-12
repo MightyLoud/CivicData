@@ -1,0 +1,343 @@
+{
+  "schema_version": "civic-gps-county-onboarding/0.1.0",
+  "archetype": "TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1",
+  "county": {
+    "name": "El Paso County",
+    "state": "TX",
+    "geoid": "48141",
+    "jurisdiction_id": "jur-us-tx-el-paso-county",
+    "division_id": "div-us-tx-el-paso-county",
+    "adapter_id": "ADAPTER-TX-EL-PASO",
+    "response_id_prefix": "civic-gps-el-paso",
+    "release_filename": "civic_gps_el_paso_county_v0.1.json",
+    "observed_on": "2026-08-11"
+  },
+  "scope": {
+    "bounded": true,
+    "countywide_complete": false,
+    "unmodeled_status": "BOUNDED_V0_1_SCOPE",
+    "expected_total_offices": 25,
+    "countywide_offices": [
+      {
+        "office_id": "office-us-tx-el-paso-county-judge",
+        "title": "County Judge",
+        "holder": "Ricardo Samaniego",
+        "official_url": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials"
+      },
+      {
+        "office_id": "office-us-tx-el-paso-county-clerk",
+        "title": "County Clerk",
+        "holder": "Delia Briones",
+        "official_url": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials"
+      },
+      {
+        "office_id": "office-us-tx-el-paso-county-attorney",
+        "title": "County Attorney",
+        "holder": "Christina Sanchez",
+        "official_url": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials"
+      },
+      {
+        "office_id": "office-us-tx-el-paso-county-sheriff",
+        "title": "County Sheriff",
+        "holder": "Oscar Ugarte",
+        "official_url": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials"
+      },
+      {
+        "office_id": "office-us-tx-el-paso-county-tax-assessor-collector",
+        "title": "County Tax Assessor-Collector",
+        "holder": "Ruben P. Gonzalez",
+        "official_url": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials"
+      },
+      {
+        "office_id": "office-us-tx-el-paso-county-district-clerk",
+        "title": "District Clerk",
+        "holder": "Norma Favela Barceleau",
+        "official_url": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials"
+      }
+    ]
+  },
+  "sources": {
+    "snapshot_ref": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials",
+    "source_repository": "https://www.epcounty.com/",
+    "manifest": {
+      "elected_officials": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials",
+      "county_commissioners": "https://www.epcounty.com/165/Commissioners-Court",
+      "justices_and_constables": "https://www.epcounty.com/200/Constables",
+      "commissioner_maps": "https://epcountyvotestx.gov/maps/county-commissioner-maps",
+      "justice_maps": "https://epcountyvotestx.gov/maps/justice-of-the-peace-maps",
+      "county_gis": "https://www.epcounty.com/835/GIS",
+      "county_gis_webmap": "https://maps.epcounty.com/portal/home/item.html?id=0b4e626d91684cecb1e35828cf52092f",
+      "commissioner_geometry": "https://maps.epcounty.com/arcgis/rest/services/Website_Basemap/MapServer/10",
+      "jp_constable_geometry": "https://maps.epcounty.com/arcgis/rest/services/Website_Basemap/MapServer/11"
+    },
+    "identity_conflicts": [
+      {
+        "subject": "County Commissioner Precinct 1",
+        "resolution_status": "RESOLVED",
+        "canonical_value": "Jacqueline Butler",
+        "alternate_value": "Jackie Butler",
+        "winning_source": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials",
+        "alternate_source": "https://www.epcounty.com/194/Commissioner-Precinct-1",
+        "rule": "CURRENT_ELECTIONS_DIRECTORY_OVERRIDES_OFFICE_PAGE_SHORT_FORM"
+      },
+      {
+        "subject": "Constable Precinct 3",
+        "resolution_status": "RESOLVED",
+        "canonical_value": "Hector J. Bernal",
+        "alternate_value": "Hector Bernal",
+        "winning_source": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials",
+        "alternate_source": "https://www.epcounty.com/274/Constable-Precinct-3",
+        "rule": "CURRENT_ELECTIONS_DIRECTORY_PRESERVES_FULL_ELECTED_NAME"
+      }
+    ],
+    "source_health": [
+      {
+        "source_id": "el-paso-current-elected-officials",
+        "status": "OK"
+      },
+      {
+        "source_id": "el-paso-commissioner-map-service",
+        "status": "OK"
+      },
+      {
+        "source_id": "el-paso-jp-constable-map-service",
+        "status": "OK"
+      },
+      {
+        "source_id": "el-paso-current-office-directories",
+        "status": "OK"
+      }
+    ]
+  },
+  "architecture": {
+    "requires_custom_resolver_logic": true,
+    "requires_consumer_schema_change": false
+  },
+  "district_families": [
+    {
+      "family": "commissioner",
+      "adapter_id": "DIST-TX-EL-PASO-COMMISSIONER",
+      "layer": "el_paso_county_commissioner_precinct",
+      "district_keys": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "offices_per_key": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      },
+      "holders": {
+        "1": "Jacqueline Butler",
+        "2": "David Stout",
+        "3": "Iliana Holguin",
+        "4": "Sergio Coronado"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://maps.epcounty.com/arcgis/rest/services/Website_Basemap/MapServer/10",
+        "district_field": "Precinct",
+        "district_field_type": "esriFieldTypeString",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.epcounty.com/835/GIS",
+        "endpoint_publisher": "El Paso County GIS"
+      },
+      "district_name_template": "El Paso County Commissioner Precinct {district}",
+      "division_id_template": "div-us-tx-el-paso-county-commissioner-{district}",
+      "division_type": "county_commissioner_precinct",
+      "office_id_template": "office-us-tx-el-paso-county-commissioner-{district}",
+      "office_title_template": "County Commissioner Precinct {district}",
+      "official_url": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials",
+      "coverage_reason": "Address-specific Commissioner precinct is available from the official El Paso County polygon service using numeric string keys 1-4."
+    },
+    {
+      "family": "justice_of_the_peace",
+      "adapter_id": "DIST-TX-EL-PASO-JP",
+      "layer": "el_paso_county_jp_precinct",
+      "district_keys": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6-1",
+        "6-2",
+        "7"
+      ],
+      "offices_per_key": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "5": 1,
+        "6-1": 1,
+        "6-2": 1,
+        "7": 1
+      },
+      "holders": {
+        "1": "Robert T. Pearson",
+        "2": "Brian J. Haggerty",
+        "3": "Josh Herrera",
+        "4": "Rebeca Bustamante",
+        "5": "Lucilla Najera",
+        "6-1": "Ruben Lujan",
+        "6-2": "Enedina Nina Serna",
+        "7": "Humberto Enriquez"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://maps.epcounty.com/arcgis/rest/services/Website_Basemap/MapServer/11",
+        "district_field": "JPs",
+        "district_field_type": "esriFieldTypeString",
+        "numeric": false,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.epcounty.com/835/GIS",
+        "endpoint_publisher": "El Paso County GIS"
+      },
+      "district_name_template": "El Paso County Justice of the Peace Precinct {district}",
+      "division_id_template": "div-us-tx-el-paso-county-jp-{district}",
+      "division_type": "justice_precinct",
+      "office_id_template": "office-us-tx-el-paso-county-jp-{district}",
+      "office_title_template": "Justice of the Peace Precinct {district}",
+      "official_url": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials",
+      "coverage_reason": "Official El Paso County JP geometry exposes raw keys 1-5, 6-1, 6-2, and 7. The two hyphenated keys must remain unmodified during fit classification."
+    },
+    {
+      "family": "constable",
+      "adapter_id": "DIST-TX-EL-PASO-CONSTABLE",
+      "layer": "el_paso_county_constable_precinct",
+      "district_keys": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "offices_per_key": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "5": 1,
+        "6": 1,
+        "7": 1
+      },
+      "holders": {
+        "1": "Frank Almada",
+        "2": "Danny T. Zamora",
+        "3": "Hector J. Bernal",
+        "4": "Luis Aguilar",
+        "5": "Manny Lopez",
+        "6": "Javier Garcia",
+        "7": "Angie Sommers"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://maps.epcounty.com/arcgis/rest/services/Website_Basemap/MapServer/11",
+        "district_field": "JPs",
+        "district_field_type": "esriFieldTypeString",
+        "numeric": false,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.epcounty.com/835/GIS",
+        "endpoint_publisher": "El Paso County GIS"
+      },
+      "district_name_template": "El Paso County Constable Precinct {district}",
+      "division_id_template": "div-us-tx-el-paso-county-constable-{district}",
+      "division_type": "constable_precinct",
+      "office_id_template": "office-us-tx-el-paso-county-constable-{district}",
+      "office_title_template": "Constable Precinct {district}",
+      "official_url": "https://epcountyvotestx.gov/elected-officials-and-candidate-information/elected-officials",
+      "coverage_reason": "Constable Precinct 6 is one office applicable to both raw JP geometry keys 6-1 and 6-2. The v0.1 numeric-key adapter cannot perform that union without custom resolver logic."
+    }
+  ],
+  "controls": {
+    "interiors": [
+      {
+        "id": "el-paso-pct1-candidate",
+        "address": "424 Executive Center Boulevard, El Paso, TX 79902"
+      },
+      {
+        "id": "el-paso-pct2-candidate",
+        "address": "4641 Cohen Avenue, El Paso, TX 79924"
+      },
+      {
+        "id": "el-paso-pct3-candidate",
+        "address": "500 East San Antonio Avenue, El Paso, TX 79901"
+      },
+      {
+        "id": "el-paso-pct4-candidate",
+        "address": "2350 George Dieter Drive, El Paso, TX 79936"
+      },
+      {
+        "id": "el-paso-pct5-candidate",
+        "address": "9521 Socorro Road, El Paso, TX 79927"
+      },
+      {
+        "id": "el-paso-pct6-candidate",
+        "address": "190 North San Elizario Road, Clint, TX 79836"
+      },
+      {
+        "id": "el-paso-pct7-candidate",
+        "address": "435 East Vinton Road, Vinton, TX 79821"
+      }
+    ],
+    "outside_negative": {
+      "address": "700 Lavaca Street, Austin, TX 78701",
+      "expected": {
+        "el_paso_jurisdiction_present": false
+      }
+    },
+    "boundary": {
+      "required": true,
+      "policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK",
+      "shared_geometry_families": [
+        "justice_of_the_peace",
+        "constable"
+      ]
+    }
+  },
+  "actions": {
+    "status": "NOT_YET_RELEASED",
+    "layer": "el_paso_action_endpoints",
+    "reason": "El Paso County civic-action routing is intentionally outside the County #12 CG-01 intake scope."
+  },
+  "release_status": "PROBE_CURRENT",
+  "source_status": "FROZEN_CG01_FIT_NOT_RUN",
+  "release_note": "El Paso County is County #12. The frozen intake contains six bounded countywide offices, four Commissioner offices, eight Justice of the Peace offices, and seven Constable offices. Official County GIS supplies a numeric Commissioner layer and a shared JP/Constable layer whose raw JPs field uses 6-1 and 6-2. One Constable Precinct 6 office applies across both raw geometry keys. CG-03 must classify the unsupported raw-key and union mapping without normalizing or duplicating representation.",
+  "known_gaps": [
+    {
+      "gap_id": "GAP-EL-PASO-GPS-001",
+      "status": "NOT_YET_RELEASED",
+      "summary": "El Paso County civic-action routing is not included in the County #12 intake batch."
+    },
+    {
+      "gap_id": "GAP-EL-PASO-GPS-002",
+      "status": "BOUNDED_V0_1_SCOPE",
+      "summary": "The v0.1 countywide set is deliberately bounded to six offices; additional countywide and judicial offices are not modeled."
+    },
+    {
+      "gap_id": "GAP-EL-PASO-GPS-003",
+      "status": "FIT_CLASSIFICATION_PENDING",
+      "summary": "The official JP geometry contains non-numeric keys 6-1 and 6-2; they must not be coerced into the numeric-only v0.1 adapter."
+    },
+    {
+      "gap_id": "GAP-EL-PASO-GPS-004",
+      "status": "ARCHITECTURE_CHANGE_REQUIRED",
+      "summary": "One Constable Precinct 6 office applies across raw geometry keys 6-1 and 6-2, requiring a governed union or one-office-to-many-keys contract."
+    },
+    {
+      "gap_id": "GAP-EL-PASO-GPS-005",
+      "status": "LIVE_PROOF_PENDING",
+      "summary": "Live GIS, interior, outside-negative, boundary, package, and promotion gates remain pending after CG-01."
+    }
+  ]
+}
