@@ -11,12 +11,14 @@ on:
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json'
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg06_interiors_v0.1.json'
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg07_outside_v0.1.json'
+      - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg08_boundary_v0.1.json'
       - 'tools/civic_gps_county_onboarding.py'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'tools/civic_gps_lubbock_cg04.py'
       - 'tools/civic_gps_lubbock_cg05.py'
       - 'tools/civic_gps_lubbock_cg06.py'
       - 'tools/civic_gps_lubbock_cg07.py'
+      - 'tools/civic_gps_lubbock_cg08.py'
 
 permissions:
   contents: read
@@ -569,5 +571,138 @@ jobs:
         with:
           name: civic-gps-lubbock-county13-cg07-${{ github.run_id }}
           path: artifacts/civic-gps-lubbock-cg07-a/
+          if-no-files-found: error
+          retention-days: 30
+
+  boundary-fail-closed-proof:
+    name: Lubbock County CG-08 coordinate-only boundary fail-closed proof
+    needs: outside-negative-proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out County #13 branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile CG-08 proof tooling
+        run: python -m py_compile tools/civic_gps_lubbock_cg08.py
+
+      - name: Run live coordinate-only CG-08 proof twice
+        shell: bash
+        run: |
+          python tools/civic_gps_lubbock_cg08.py \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg06_interiors_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg07_outside_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg08_boundary_v0.1.json \
+            --output-dir artifacts/civic-gps-lubbock-cg08-a
+          python tools/civic_gps_lubbock_cg08.py \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg06_interiors_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg07_outside_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg08_boundary_v0.1.json \
+            --output-dir artifacts/civic-gps-lubbock-cg08-b
+
+      - name: Prove deterministic exact CG-08 result
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          left_path = Path('artifacts/civic-gps-lubbock-cg08-a/lubbock-cg08-evidence.json')
+          right_path = Path('artifacts/civic-gps-lubbock-cg08-b/lubbock-cg08-evidence.json')
+          left_bytes, right_bytes = left_path.read_bytes(), right_path.read_bytes()
+          if left_bytes != right_bytes:
+              raise SystemExit('Lubbock CG-08 evidence is not deterministic')
+
+          report = json.loads(left_bytes)
+          expected_gates = {
+              **{f'CG-{gate:02d}': 'PASS' for gate in range(1, 9)},
+              'CG-09': 'READY',
+              'CG-10': 'READY',
+          }
+          gates = {row['gate']: row['status'] for row in report['gates']}
+          if gates != expected_gates:
+              raise SystemExit(f'unexpected gate state: {gates}')
+          boundary = report['cg08_boundary_fail_closed']
+          if boundary.get('status') != 'PASS':
+              raise SystemExit('CG-08 boundary proof did not pass')
+          if boundary.get('input_mode') != 'OFFICIAL_POLYGON_TOPOLOGY_COORDINATE_ONLY':
+              raise SystemExit('CG-08 input mode changed')
+          if any(boundary.get(field) is not False for field in ('geocoder_used', 'address_input_used', 'personal_data_used')):
+              raise SystemExit('CG-08 used an address, geocoder, or personal data')
+          if boundary.get('boundary_probe_distance_meters') != 1 or boundary.get('boundary_probe_units') != 'esriSRUnit_Meter':
+              raise SystemExit('CG-08 one-meter topology contract changed')
+          exact = boundary.get('exact_boundary') or {}
+          expected_exact = {
+              'exact_point_keys': ['1'],
+              'one_meter_probe_keys': ['1', '4'],
+              'decision': 'CONFLICT',
+              'tie_break_used': False,
+              'conflict_family_count': 3,
+              'district_assignments': 0,
+              'district_office_joins': 0,
+              'countywide_applicable_offices': 6,
+              'total_applicable_offices': 6,
+              'actions': 0,
+          }
+          actual_exact = {field: exact.get(field) for field in expected_exact}
+          if actual_exact != expected_exact:
+              raise SystemExit(f'CG-08 exact boundary did not fail closed: {actual_exact}')
+          conflicts = exact.get('conflict_rows') or []
+          if len(conflicts) != 3 or {row.get('family') for row in conflicts} != {'commissioner', 'justice_of_the_peace', 'constable'}:
+              raise SystemExit('CG-08 did not conflict all three shared district families')
+          sides = boundary.get('side_controls') or []
+          if len(sides) != 2 or [row.get('expected_key') for row in sides] != ['4', '1']:
+              raise SystemExit('CG-08 opposite-side precinct restoration changed')
+          for row in sides:
+              key = row['expected_key']
+              if row.get('status') != 'PASS' or row.get('exact_keys') != [key] or row.get('one_meter_probe_keys') != [key]:
+                  raise SystemExit(f'CG-08 side {row.get("side")} did not resolve cleanly')
+              if row.get('district_assignments') != 3 or len(row.get('district_office_joins') or []) != 3:
+                  raise SystemExit(f'CG-08 side {row.get("side")} district joins changed')
+              if row.get('applicable_offices') != 9 or row.get('applicable_composition') != {'countywide': 6, 'district': 3}:
+                  raise SystemExit(f'CG-08 side {row.get("side")} applicable-office composition changed')
+          if boundary.get('side_unique_restored_district_office_joins') != 6:
+              raise SystemExit('CG-08 two-sided canonical restoration changed')
+          if report.get('candidate_spec_sha256') != '20dad659a7bb3b9cfcd8ec5979827eed328aeb346bd42287dce2a6247b655fe2':
+              raise SystemExit('frozen candidate SHA changed')
+          if report.get('cg07_proof_spec_sha256') != '9566b47c55f8b4ff2fc82c3e94886acf4d1503169c6bb8de6379e12d704b43d7':
+              raise SystemExit('CG-07 proof-spec SHA changed')
+          if report.get('stopped_before') != 'CG-09' or report.get('packaged') is not False:
+              raise SystemExit('CG-08 crossed the CG-09/package boundary')
+          if report.get('actions') != 'NOT_YET_RELEASED' or report.get('production_runtime_changed') is not False:
+              raise SystemExit('CG-08 crossed the action or production boundary')
+          print(json.dumps({
+              'status': 'PASS',
+              'gate': 'CG-08',
+              'exact_point_keys': exact['exact_point_keys'],
+              'one_meter_probe_keys': exact['one_meter_probe_keys'],
+              'conflict_families': exact['conflict_family_count'],
+              'district_assignments': exact['district_assignments'],
+              'district_office_joins': exact['district_office_joins'],
+              'countywide_applicable_offices': exact['countywide_applicable_offices'],
+              'side_restored_keys': [row['expected_key'] for row in sides],
+              'geocoder_used': boundary['geocoder_used'],
+              'proof_spec_sha256': report['proof_spec_sha256'],
+              'evidence_sha256': hashlib.sha256(left_bytes).hexdigest(),
+              'next_gate': 'CG-09',
+          }, sort_keys=True))
+          PY
+
+      - name: Upload County #13 CG-08 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-lubbock-county13-cg08-${{ github.run_id }}
+          path: artifacts/civic-gps-lubbock-cg08-a/
           if-no-files-found: error
           retention-days: 30

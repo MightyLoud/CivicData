@@ -1,0 +1,63 @@
+{
+  "schema_version": "civic-gps-lubbock-cg08-proof/0.1.0",
+  "county": "Lubbock County",
+  "county_geoid": "48303",
+  "observed_on": "2026-08-11",
+  "candidate_spec_sha256": "20dad659a7bb3b9cfcd8ec5979827eed328aeb346bd42287dce2a6247b655fe2",
+  "cg04_proof_spec_sha256": "d7d2b10a7837d651c21a2409d89de42c57bbb21d219f9ee9ee0ac35042cb3f45",
+  "cg05_proof_spec_sha256": "dd03ed2106b9a00f4b3fb47add5c2136bb4e55490395714cae81b8763832438e",
+  "cg06_proof_spec_sha256": "46cdf29a9164377dec9720a5587e03d8106a5e281fa5c7f004b6d9b3a27e0bf8",
+  "cg07_proof_spec_sha256": "9566b47c55f8b4ff2fc82c3e94886acf4d1503169c6bb8de6379e12d704b43d7",
+  "prior_cg07": {
+    "status": "PASS",
+    "head_sha": "786730759180b8ddfc3c0bddacbee972a273048c",
+    "run_id": 31567285269,
+    "job_id": 94021819722,
+    "evidence_sha256": "e569d97f26a862c154f95d7d111b4464a8665966476f51496e73d93202fd57d2"
+  },
+  "input_mode": "OFFICIAL_POLYGON_TOPOLOGY_COORDINATE_ONLY",
+  "geocoder_used": false,
+  "address_input_used": false,
+  "personal_data_used": false,
+  "gis": {
+    "official_hosts": ["gisserver.halff.com"],
+    "service_url": "https://gisserver.halff.com/ags/rest/services/Lubbock_CO/Reference_Layers/MapServer/0",
+    "district_field": "District_ID",
+    "district_keys": ["1", "2", "3", "4"],
+    "out_sr": 4326,
+    "segment_match_decimals": 8,
+    "point_precision_decimals": 12,
+    "boundary_probe_distance_meters": 1,
+    "boundary_probe_units": "esriSRUnit_Meter",
+    "boundary_policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK"
+  },
+  "control": {
+    "id": "lubbock-pct1-pct4-longest-shared-segment",
+    "shared_district_keys": ["1", "4"],
+    "segment_a": [-102.02643885485786, 33.56141363989066],
+    "segment_b": [-102.00910785105708, 33.561436640396856],
+    "midpoint": [-102.01777335295748, 33.561425140143754],
+    "expected_exact_point_keys": ["1"],
+    "expected_one_meter_probe_keys": ["1", "4"],
+    "side_offset_degrees": 0.00002,
+    "side_a": {
+      "point": [-102.01777337950007, 33.56144514012614],
+      "expected_key": "4"
+    },
+    "side_b": {
+      "point": [-102.01777332641488, 33.56140514016137],
+      "expected_key": "1"
+    }
+  },
+  "expected_outcome": {
+    "conflict_family_count": 3,
+    "district_assignments": 0,
+    "district_office_joins": 0,
+    "countywide_applicable_offices": 6,
+    "total_applicable_offices": 6,
+    "actions": 0,
+    "side_applicable_offices_each": 9,
+    "side_district_office_joins_each": 3
+  },
+  "stop_before": "CG-09"
+}
