@@ -9,6 +9,8 @@ on:
       - 'tests/fixtures/civic_gps_county_onboarding/johnson_county11_candidate_v0.1.json'
       - 'tools/civic_gps_county_onboarding.py'
       - 'tools/civic_gps_tx_county_archetype.py'
+      - 'tests/civic_gps_johnson_roster_probe.py'
+      - 'civic_gps_runtime_parts/part.*'
   workflow_dispatch:
 
 permissions:
@@ -16,7 +18,7 @@ permissions:
 
 jobs:
   fit-screen:
-    name: Johnson County automated CG-01 to CG-03
+    name: Johnson County automated CG-01 to CG-04
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -28,8 +30,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Compile onboarding tooling
-        run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py
+      - name: Compile onboarding and roster-proof tooling
+        run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py tests/civic_gps_johnson_roster_probe.py
 
       - name: Run frozen Johnson spec twice
         shell: bash
@@ -141,10 +143,75 @@ jobs:
           }, sort_keys=True))
           PY
 
-      - name: 'Upload County #11 fit evidence'
+      - name: Run Johnson CG-04 canonical-roster proof twice
+        shell: bash
+        run: |
+          python tests/civic_gps_johnson_roster_probe.py --output-dir artifacts/civic-gps-johnson-cg04-a
+          python tests/civic_gps_johnson_roster_probe.py --output-dir artifacts/civic-gps-johnson-cg04-b
+
+      - name: Prove deterministic Johnson CG-04 result and stop before CG-05
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          left_path = Path('artifacts/civic-gps-johnson-cg04-a/johnson-cg04-summary.json')
+          right_path = Path('artifacts/civic-gps-johnson-cg04-b/johnson-cg04-summary.json')
+          left_bytes, right_bytes = left_path.read_bytes(), right_path.read_bytes()
+          if left_bytes != right_bytes:
+              raise SystemExit('Johnson CG-04 summary is not deterministic')
+
+          summary = json.loads(left_bytes)
+          if summary.get('status') != 'PASS' or summary.get('gates') != {'CG-04': 'PASS'}:
+              raise SystemExit(f'unexpected CG-04 state: {summary}')
+          if summary.get('next_gate') != 'CG-05' or summary.get('stopped_before') != 'CG-05':
+              raise SystemExit(f'Johnson proof crossed the CG-05 boundary: {summary}')
+          if summary.get('release_offices') != 18 or summary.get('release_holders') != 18:
+              raise SystemExit('Johnson canonical release must contain 18 offices and 18 holders')
+          if len(summary.get('source_checks') or []) != 18:
+              raise SystemExit('Johnson CG-04 requires exactly 18 official-source roster checks')
+          if any(row.get('status') != 'PASS' for row in summary['source_checks']):
+              raise SystemExit('Johnson official-source roster verification is incomplete')
+          if summary.get('source_precedence') != {'record_count': 2, 'status': 'RESOLVED'}:
+              raise SystemExit('Johnson source-precedence proof changed')
+          if summary.get('actions') != 'NOT_YET_RELEASED':
+              raise SystemExit('Johnson action routing crossed its release boundary')
+          if summary.get('scope') != 'BOUNDED_V0_1_SCOPE':
+              raise SystemExit('Johnson bounded v0.1 scope changed')
+          if summary.get('candidate_packaged') is not False or summary.get('production_runtime_changed') is not False:
+              raise SystemExit('Johnson CG-04 may not package or change the production runtime')
+          if summary.get('runtime_sha256') != '70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b':
+              raise SystemExit(f'unexpected production runtime SHA: {summary.get("runtime_sha256")}')
+          if summary.get('engine_version') != '0.6.2' or summary.get('registry_artifact_version') != '0.6.0':
+              raise SystemExit('production engine/registry version changed')
+          if summary.get('production_main_commit') != '0a87ca6ea479c62782d470e0283c455a2f0e0df0':
+              raise SystemExit('recorded production-main commit changed')
+          if summary.get('production_main_tree') != 'f87ee58616b0c50fbe274e0337442a0efe73c331':
+              raise SystemExit('recorded production-main tree changed')
+          contracts = summary.get('adapter_contracts') or {}
+          if contracts.get('failure_scope') != 'ADAPTER':
+              raise SystemExit('adapter failure scope changed')
+          if contracts.get('officeholder_identity_source') != 'CANONICAL_RELEASE_ONLY':
+              raise SystemExit('adapter identity-source contract changed')
+          if contracts.get('boundary_policy') != 'MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK':
+              raise SystemExit('boundary policy changed')
+          print(json.dumps({
+              'status': 'PASS',
+              'gates': summary['gates'],
+              'summary_sha256': hashlib.sha256(left_bytes).hexdigest(),
+              'runtime_sha256': summary['runtime_sha256'],
+              'next_gate': summary['next_gate'],
+          }, sort_keys=True))
+          PY
+
+      - name: 'Upload County #11 CG-04 evidence'
         uses: actions/upload-artifact@v4
         with:
-          name: civic-gps-johnson-county11-${{ github.run_id }}
-          path: artifacts/civic-gps-johnson-county11-a/
+          name: civic-gps-johnson-county11-cg04-${{ github.run_id }}
+          path: |
+            artifacts/civic-gps-johnson-county11-a/
+            artifacts/civic-gps-johnson-cg04-a/
+            artifacts/civic-gps-johnson-cg04-b/johnson-cg04-summary.json
           if-no-files-found: error
           retention-days: 30
