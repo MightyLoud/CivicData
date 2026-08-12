@@ -10,6 +10,7 @@ on:
       - 'tools/civic_gps_county_onboarding.py'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'tests/civic_gps_johnson_roster_probe.py'
+      - 'tests/civic_gps_johnson_adapter_probe.py'
       - 'civic_gps_runtime_parts/part.*'
   workflow_dispatch:
 
@@ -18,7 +19,7 @@ permissions:
 
 jobs:
   fit-screen:
-    name: Johnson County automated CG-01 to CG-04
+    name: Johnson County automated CG-01 to CG-05
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -30,8 +31,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Compile onboarding and roster-proof tooling
-        run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py tests/civic_gps_johnson_roster_probe.py
+      - name: Compile onboarding and scoped proof tooling
+        run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py tests/civic_gps_johnson_roster_probe.py tests/civic_gps_johnson_adapter_probe.py
 
       - name: Run frozen Johnson spec twice
         shell: bash
@@ -205,13 +206,93 @@ jobs:
           }, sort_keys=True))
           PY
 
-      - name: 'Upload County #11 CG-04 evidence'
+      - name: Run Johnson CG-05 GIS/adapter proof twice
+        shell: bash
+        run: |
+          python tests/civic_gps_johnson_adapter_probe.py --output-dir artifacts/civic-gps-johnson-cg05-a
+          python tests/civic_gps_johnson_adapter_probe.py --output-dir artifacts/civic-gps-johnson-cg05-b
+
+      - name: Prove deterministic Johnson CG-05 result and stop before CG-06
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          left_path = Path('artifacts/civic-gps-johnson-cg05-a/johnson-cg05-summary.json')
+          right_path = Path('artifacts/civic-gps-johnson-cg05-b/johnson-cg05-summary.json')
+          left_bytes, right_bytes = left_path.read_bytes(), right_path.read_bytes()
+          if left_bytes != right_bytes:
+              raise SystemExit('Johnson CG-05 summary is not deterministic')
+
+          summary = json.loads(left_bytes)
+          if summary.get('status') != 'PASS' or summary.get('gates') != {'CG-05': 'PASS'}:
+              raise SystemExit(f'unexpected CG-05 state: {summary}')
+          if summary.get('prerequisite_gates') != {'CG-04': 'PASS'}:
+              raise SystemExit(f'unexpected CG-05 prerequisite state: {summary}')
+          if summary.get('next_gate') != 'CG-06' or summary.get('stopped_before') != 'CG-06':
+              raise SystemExit(f'Johnson proof crossed the CG-06 boundary: {summary}')
+          layer = summary.get('live_layer') or {}
+          if layer.get('status') != 'PASS' or layer.get('feature_count') != 4:
+              raise SystemExit(f'Johnson live-layer proof changed: {layer}')
+          if layer.get('keys') != ['1', '2', '3', '4']:
+              raise SystemExit(f'Johnson live district-key set changed: {layer}')
+          if layer.get('field') != 'ID' or layer.get('field_type') != 'esriFieldTypeInteger':
+              raise SystemExit(f'Johnson live district-field contract changed: {layer}')
+          if layer.get('geometry_type') != 'esriGeometryPolygon':
+              raise SystemExit(f'Johnson live geometry type changed: {layer}')
+          if summary.get('adapter_count') != 3 or len(summary.get('adapters') or []) != 3:
+              raise SystemExit('Johnson CG-05 requires exactly three adapter proofs')
+          if any(row.get('status') != 'PASS' for row in summary['adapters']):
+              raise SystemExit('Johnson adapter proof is incomplete')
+          if any(row.get('failure_scope') != 'ADAPTER' for row in summary['adapters']):
+              raise SystemExit('Johnson adapter failure scope changed')
+          if any(row.get('officeholder_identity_source') != 'CANONICAL_RELEASE_ONLY' for row in summary['adapters']):
+              raise SystemExit('Johnson adapter identity-source contract changed')
+          if any(row.get('district_key_normalization') != 'NUMERIC' for row in summary['adapters']):
+              raise SystemExit('Johnson adapter key normalization changed')
+          if any(row.get('resolver_kind') != 'ARCGIS_POINT_INTERSECT' for row in summary['adapters']):
+              raise SystemExit('Johnson adapter resolver kind changed')
+          if any(row.get('boundary_policy') != 'MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK' for row in summary['adapters']):
+              raise SystemExit('Johnson adapter boundary policy changed')
+          if any(row.get('endpoint_authority_class') != 'OFFICIAL_COUNTY_GIS' for row in summary['adapters']):
+              raise SystemExit('Johnson adapter authority class changed')
+          if any(row.get('query_enabled') is not True or row.get('required') is not True for row in summary['adapters']):
+              raise SystemExit('Johnson adapter required/query contract changed')
+          if summary.get('address_geocoder_calls') != 0 or summary.get('point_intersection_calls') != 0:
+              raise SystemExit('Johnson CG-05 crossed into address or point-intersection proof')
+          if summary.get('interior_controls_run') != 0:
+              raise SystemExit('Johnson CG-05 crossed into CG-06 interior controls')
+          if summary.get('actions') != 'NOT_YET_RELEASED' or summary.get('scope') != 'BOUNDED_V0_1_SCOPE':
+              raise SystemExit('Johnson release boundaries changed')
+          if summary.get('candidate_packaged') is not False or summary.get('production_runtime_changed') is not False:
+              raise SystemExit('Johnson CG-05 may not package or change the production runtime')
+          if summary.get('runtime_sha256') != '70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b':
+              raise SystemExit(f'unexpected production runtime SHA: {summary.get("runtime_sha256")}')
+          if summary.get('engine_version') != '0.6.2' or summary.get('registry_artifact_version') != '0.6.0':
+              raise SystemExit('production engine/registry version changed')
+          if summary.get('production_main_commit') != '0a87ca6ea479c62782d470e0283c455a2f0e0df0':
+              raise SystemExit('recorded production-main commit changed')
+          if summary.get('production_main_tree') != 'f87ee58616b0c50fbe274e0337442a0efe73c331':
+              raise SystemExit('recorded production-main tree changed')
+          print(json.dumps({
+              'status': 'PASS',
+              'gates': summary['gates'],
+              'summary_sha256': hashlib.sha256(left_bytes).hexdigest(),
+              'runtime_sha256': summary['runtime_sha256'],
+              'next_gate': summary['next_gate'],
+          }, sort_keys=True))
+          PY
+
+      - name: 'Upload County #11 CG-05 evidence'
         uses: actions/upload-artifact@v4
         with:
-          name: civic-gps-johnson-county11-cg04-${{ github.run_id }}
+          name: civic-gps-johnson-county11-cg05-${{ github.run_id }}
           path: |
             artifacts/civic-gps-johnson-county11-a/
             artifacts/civic-gps-johnson-cg04-a/
             artifacts/civic-gps-johnson-cg04-b/johnson-cg04-summary.json
+            artifacts/civic-gps-johnson-cg05-a/
+            artifacts/civic-gps-johnson-cg05-b/johnson-cg05-summary.json
           if-no-files-found: error
           retention-days: 30
