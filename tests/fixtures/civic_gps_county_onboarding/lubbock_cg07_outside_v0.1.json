@@ -1,0 +1,59 @@
+{
+  "schema_version": "civic-gps-lubbock-cg07-proof/0.1.0",
+  "county": "Lubbock County",
+  "county_geoid": "48303",
+  "observed_on": "2026-08-11",
+  "candidate_spec_sha256": "20dad659a7bb3b9cfcd8ec5979827eed328aeb346bd42287dce2a6247b655fe2",
+  "cg04_proof_spec_sha256": "d7d2b10a7837d651c21a2409d89de42c57bbb21d219f9ee9ee0ac35042cb3f45",
+  "cg05_proof_spec_sha256": "dd03ed2106b9a00f4b3fb47add5c2136bb4e55490395714cae81b8763832438e",
+  "cg06_proof_spec_sha256": "46cdf29a9164377dec9720a5587e03d8106a5e281fa5c7f004b6d9b3a27e0bf8",
+  "prior_cg06": {
+    "status": "PASS",
+    "head_sha": "200680e2d19aa49f7195be47098d4078b7919b71",
+    "run_id": 31565662082,
+    "job_id": 94017079683,
+    "evidence_sha256": "7d92ad231256a62598e021588a8765db0a4ea1a413aaf03efd9e8c73fa3e118d"
+  },
+  "input_mode": "OFFICIAL_COUNTY_INTERNAL_POINT_COORDINATE_ONLY",
+  "geocoder_used": false,
+  "address_input_used": false,
+  "personal_data_used": false,
+  "official_hosts": [
+    "tigerweb.geo.census.gov",
+    "gisserver.halff.com"
+  ],
+  "census_county_gis": {
+    "service_url": "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Current/MapServer/82",
+    "layer_name": "Counties",
+    "geometry_type": "esriGeometryPolygon",
+    "out_sr": 4326
+  },
+  "lubbock_gis": {
+    "service_url": "https://gisserver.halff.com/ags/rest/services/Lubbock_CO/Reference_Layers/MapServer/0",
+    "district_field": "District_ID",
+    "out_sr": 4326
+  },
+  "control": {
+    "id": "travis-county-census-internal-point",
+    "source_mode": "OFFICIAL_COUNTY_INTERNAL_POINT_COORDINATE_ONLY",
+    "state_fips": "48",
+    "county_fips": "453",
+    "expected_county_geoid": "48453",
+    "expected_county_name": "Travis County",
+    "internal_point": {
+      "longitude": "-097.6910527",
+      "latitude": "+30.2395263",
+      "spatial_reference": 4326
+    }
+  },
+  "expected_lubbock_outcome": {
+    "lubbock_feature_count": 0,
+    "lubbock_jurisdiction_present": false,
+    "lubbock_district_assignments": 0,
+    "lubbock_applicable_offices": 0,
+    "lubbock_coverage_rows": 0,
+    "lubbock_district_office_joins": 0,
+    "lubbock_actions": 0
+  },
+  "stop_before": "CG-08"
+}

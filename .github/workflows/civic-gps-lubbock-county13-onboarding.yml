@@ -10,11 +10,13 @@ on:
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json'
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json'
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg06_interiors_v0.1.json'
+      - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg07_outside_v0.1.json'
       - 'tools/civic_gps_county_onboarding.py'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'tools/civic_gps_lubbock_cg04.py'
       - 'tools/civic_gps_lubbock_cg05.py'
       - 'tools/civic_gps_lubbock_cg06.py'
+      - 'tools/civic_gps_lubbock_cg07.py'
 
 permissions:
   contents: read
@@ -449,5 +451,123 @@ jobs:
         with:
           name: civic-gps-lubbock-county13-cg06-${{ github.run_id }}
           path: artifacts/civic-gps-lubbock-cg06-a/
+          if-no-files-found: error
+          retention-days: 30
+
+  outside-negative-proof:
+    name: Lubbock County CG-07 coordinate-only outside-negative proof
+    needs: interior-control-proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out County #13 branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile CG-07 proof tooling
+        run: python -m py_compile tools/civic_gps_lubbock_cg07.py
+
+      - name: Run live coordinate-only CG-07 proof twice
+        shell: bash
+        run: |
+          python tools/civic_gps_lubbock_cg07.py \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg06_interiors_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg07_outside_v0.1.json \
+            --output-dir artifacts/civic-gps-lubbock-cg07-a
+          python tools/civic_gps_lubbock_cg07.py \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg06_interiors_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg07_outside_v0.1.json \
+            --output-dir artifacts/civic-gps-lubbock-cg07-b
+
+      - name: Prove deterministic exact CG-07 result
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          left_path = Path('artifacts/civic-gps-lubbock-cg07-a/lubbock-cg07-evidence.json')
+          right_path = Path('artifacts/civic-gps-lubbock-cg07-b/lubbock-cg07-evidence.json')
+          left_bytes, right_bytes = left_path.read_bytes(), right_path.read_bytes()
+          if left_bytes != right_bytes:
+              raise SystemExit('Lubbock CG-07 evidence is not deterministic')
+
+          report = json.loads(left_bytes)
+          expected_gates = {
+              'CG-01': 'PASS',
+              'CG-02': 'PASS',
+              'CG-03': 'PASS',
+              'CG-04': 'PASS',
+              'CG-05': 'PASS',
+              'CG-06': 'PASS',
+              'CG-07': 'PASS',
+              'CG-08': 'READY',
+              'CG-09': 'READY',
+              'CG-10': 'READY',
+          }
+          gates = {row['gate']: row['status'] for row in report['gates']}
+          if gates != expected_gates:
+              raise SystemExit(f'unexpected gate state: {gates}')
+          outside = report['cg07_outside_negative']
+          if outside.get('status') != 'PASS':
+              raise SystemExit('CG-07 outside-negative control did not pass')
+          if outside.get('input_mode') != 'OFFICIAL_COUNTY_INTERNAL_POINT_COORDINATE_ONLY':
+              raise SystemExit('CG-07 input mode changed')
+          if any(outside.get(field) is not False for field in ('geocoder_used', 'address_input_used', 'personal_data_used')):
+              raise SystemExit('CG-07 used an address, geocoder, or personal data')
+          census = outside.get('census_county_resolution') or {}
+          if census.get('feature_count') != 1 or census.get('geoid') != '48453' or census.get('name') != 'Travis County':
+              raise SystemExit(f'CG-07 outside county did not resolve exactly to Travis County: {census}')
+          isolation = outside.get('lubbock_isolation') or {}
+          expected_zero = {
+              'feature_count': 0,
+              'live_matches': [],
+              'jurisdiction_present': False,
+              'district_assignments': 0,
+              'applicable_offices': 0,
+              'coverage_rows': 0,
+              'district_office_joins': 0,
+              'actions': 0,
+          }
+          actual_zero = {field: isolation.get(field) for field in expected_zero}
+          if actual_zero != expected_zero:
+              raise SystemExit(f'CG-07 leaked Lubbock data: {actual_zero}')
+          if report.get('candidate_spec_sha256') != '20dad659a7bb3b9cfcd8ec5979827eed328aeb346bd42287dce2a6247b655fe2':
+              raise SystemExit('frozen candidate SHA changed')
+          if report.get('cg06_proof_spec_sha256') != '46cdf29a9164377dec9720a5587e03d8106a5e281fa5c7f004b6d9b3a27e0bf8':
+              raise SystemExit('CG-06 proof-spec SHA changed')
+          if report.get('stopped_before') != 'CG-08' or report.get('packaged') is not False:
+              raise SystemExit('CG-07 crossed the CG-08/package boundary')
+          if report.get('actions') != 'NOT_YET_RELEASED' or report.get('production_runtime_changed') is not False:
+              raise SystemExit('CG-07 crossed the action or production boundary')
+          print(json.dumps({
+              'status': 'PASS',
+              'gate': 'CG-07',
+              'census_county_geoid': census['geoid'],
+              'census_county_matches': census['feature_count'],
+              'lubbock_precinct_matches': isolation['feature_count'],
+              'lubbock_applicable_offices': isolation['applicable_offices'],
+              'geocoder_used': outside['geocoder_used'],
+              'proof_spec_sha256': report['proof_spec_sha256'],
+              'evidence_sha256': hashlib.sha256(left_bytes).hexdigest(),
+              'next_gate': 'CG-08',
+          }, sort_keys=True))
+          PY
+
+      - name: Upload County #13 CG-07 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-lubbock-county13-cg07-${{ github.run_id }}
+          path: artifacts/civic-gps-lubbock-cg07-a/
           if-no-files-found: error
           retention-days: 30
