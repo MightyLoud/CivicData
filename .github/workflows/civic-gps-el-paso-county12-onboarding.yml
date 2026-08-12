@@ -1,0 +1,101 @@
+name: 'Civic GPS El Paso County #12 onboarding'
+
+on:
+  push:
+    branches:
+      - 'agent/civic-gps-el-paso-intake'
+    paths:
+      - '.github/workflows/civic-gps-el-paso-county12-onboarding.yml'
+      - 'tests/fixtures/civic_gps_county_onboarding/el_paso_county12_candidate_v0.1.json'
+      - 'tools/civic_gps_county_onboarding.py'
+      - 'tools/civic_gps_tx_county_archetype.py'
+
+permissions:
+  contents: read
+
+jobs:
+  fit-screen:
+    name: El Paso County automated CG-01 to CG-03
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out County #12 branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile onboarding tooling
+        run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py
+
+      - name: Run frozen El Paso spec twice
+        shell: bash
+        run: |
+          python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/el_paso_county12_candidate_v0.1.json --output-dir artifacts/civic-gps-el-paso-county12-a --expect NON_NUMERIC_DISTRICT_KEY
+          python tools/civic_gps_county_onboarding.py tests/fixtures/civic_gps_county_onboarding/el_paso_county12_candidate_v0.1.json --output-dir artifacts/civic-gps-el-paso-county12-b --expect NON_NUMERIC_DISTRICT_KEY
+
+      - name: Prove deterministic outputs and exact named stop
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          a = Path('artifacts/civic-gps-el-paso-county12-a')
+          b = Path('artifacts/civic-gps-el-paso-county12-b')
+
+          def snapshot(root):
+              return {
+                  str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+                  for path in sorted(root.rglob('*'))
+                  if path.is_file()
+              }
+
+          left, right = snapshot(a), snapshot(b)
+          if left != right:
+              raise SystemExit(f'non-deterministic outputs: {left} != {right}')
+
+          report = json.loads((a / 'fit-report.json').read_text())
+          expected = {
+              'decision': 'STOP',
+              'result': 'NON_NUMERIC_DISTRICT_KEY',
+              'stop_class': 'NON_NUMERIC_DISTRICT_KEY',
+              'stop_classes': ['NON_NUMERIC_DISTRICT_KEY', 'ARCHITECTURE_CHANGE_REQUIRED'],
+              'tracker_fit_result': 'UNSUPPORTED_PATTERN',
+              'architecture_change': 'YES',
+          }
+          actual = {key: report.get(key) for key in expected}
+          if actual != expected:
+              raise SystemExit(f'unexpected fit result: {actual} != {expected}')
+
+          key_reasons = report.get('stop_reasons', {}).get('NON_NUMERIC_DISTRICT_KEY', [])
+          if len(key_reasons) != 2:
+              raise SystemExit(f'expected two raw-key reasons, got {key_reasons}')
+
+          architecture_reasons = report.get('stop_reasons', {}).get('ARCHITECTURE_CHANGE_REQUIRED', [])
+          if architecture_reasons != ['custom resolver logic is required']:
+              raise SystemExit(f'unexpected architecture reasons: {architecture_reasons}')
+
+          proof = json.loads((a / 'proof-plan.json').read_text())
+          gates = {row['gate']: row['status'] for row in proof['gates']}
+          if gates.get('CG-01') != 'PASS' or gates.get('CG-02') != 'PASS' or gates.get('CG-03') != 'STOP':
+              raise SystemExit(f'unexpected CG-01 to CG-03 statuses: {gates}')
+
+          print(json.dumps({
+              'status': 'PASS',
+              'decision': report['decision'],
+              'result': report['result'],
+              'stop_classes': report['stop_classes'],
+              'files': left,
+          }, sort_keys=True))
+          PY
+
+      - name: Upload County #12 fit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-el-paso-county12-${{ github.run_id }}
+          path: artifacts/civic-gps-el-paso-county12-a/
+          if-no-files-found: error
+          retention-days: 30
