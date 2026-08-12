@@ -11,6 +11,7 @@ on:
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'tests/civic_gps_johnson_roster_probe.py'
       - 'tests/civic_gps_johnson_adapter_probe.py'
+      - 'tests/civic_gps_johnson_interior_probe.py'
       - 'civic_gps_runtime_parts/part.*'
   workflow_dispatch:
 
@@ -19,9 +20,9 @@ permissions:
 
 jobs:
   fit-screen:
-    name: Johnson County automated CG-01 to CG-05
+    name: Johnson County automated CG-01 to CG-06
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: 'Check out County #11 branch'
         uses: actions/checkout@v4
@@ -32,7 +33,7 @@ jobs:
           python-version: '3.12'
 
       - name: Compile onboarding and scoped proof tooling
-        run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py tests/civic_gps_johnson_roster_probe.py tests/civic_gps_johnson_adapter_probe.py
+        run: python -m py_compile tools/civic_gps_county_onboarding.py tools/civic_gps_tx_county_archetype.py tests/civic_gps_johnson_roster_probe.py tests/civic_gps_johnson_adapter_probe.py tests/civic_gps_johnson_interior_probe.py
 
       - name: Run frozen Johnson spec twice
         shell: bash
@@ -198,7 +199,8 @@ jobs:
           if contracts.get('boundary_policy') != 'MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK':
               raise SystemExit('boundary policy changed')
           print(json.dumps({
-              'status': 'PASS',
+              'validation': 'PASS',
+              'gate_status': summary['status'],
               'gates': summary['gates'],
               'summary_sha256': hashlib.sha256(left_bytes).hexdigest(),
               'runtime_sha256': summary['runtime_sha256'],
@@ -284,15 +286,94 @@ jobs:
           }, sort_keys=True))
           PY
 
-      - name: 'Upload County #11 CG-05 evidence'
+      - name: Run Johnson CG-06 interior compatibility preflight twice
+        shell: bash
+        run: |
+          python tests/civic_gps_johnson_interior_probe.py --output-dir artifacts/civic-gps-johnson-cg06-a
+          python tests/civic_gps_johnson_interior_probe.py --output-dir artifacts/civic-gps-johnson-cg06-b
+
+      - name: Prove deterministic Johnson CG-06 blocker and stop before CG-07
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          left_path = Path('artifacts/civic-gps-johnson-cg06-a/johnson-cg06-summary.json')
+          right_path = Path('artifacts/civic-gps-johnson-cg06-b/johnson-cg06-summary.json')
+          left_bytes, right_bytes = left_path.read_bytes(), right_path.read_bytes()
+          if left_bytes != right_bytes:
+              raise SystemExit('Johnson CG-06 summary is not deterministic')
+
+          summary = json.loads(left_bytes)
+          if summary.get('status') != 'BLOCKED' or summary.get('gates') != {'CG-06': 'BLOCKED'}:
+              raise SystemExit(f'unexpected CG-06 state: {summary}')
+          if summary.get('prerequisite_gates') != {'CG-04': 'PASS', 'CG-05': 'PASS'}:
+              raise SystemExit(f'unexpected CG-06 prerequisite state: {summary}')
+          if summary.get('next_gate') is not None or summary.get('stopped_before') != 'CG-07':
+              raise SystemExit(f'Johnson proof crossed the CG-07 boundary: {summary}')
+          candidates = summary.get('direct_control_candidates') or []
+          if summary.get('direct_control_candidates_verified') != 4 or len(candidates) != 4:
+              raise SystemExit('Johnson CG-06 blocker proof requires four verified direct control candidates')
+          if [row.get('exact_key') for row in candidates] != ['1', '2', '3', '4']:
+              raise SystemExit(f'Johnson direct control candidate coverage changed: {candidates}')
+          if any(row.get('status') != 'DIRECT_SOURCE_CHECK_PASS' for row in candidates):
+              raise SystemExit(f'Johnson direct source checks changed: {candidates}')
+          if summary.get('interior_controls_attempted') != 1 or summary.get('interior_controls_passed') != 0:
+              raise SystemExit('Johnson CG-06 blocker cardinality changed')
+          blocker = summary.get('engine_blocker') or {}
+          if blocker.get('status') != 'REPRODUCED':
+              raise SystemExit(f'Johnson CG-06 blocker was not reproduced: {blocker}')
+          if blocker.get('reason') != 'OFFICIAL_LAYER_REJECTS_WGS84_DISTANCE_QUERY_SRID':
+              raise SystemExit(f'Johnson CG-06 blocker reason changed: {blocker}')
+          if blocker.get('engine_error_code') != 'UPSTREAM_API_ERROR' or blocker.get('official_service_error_code') != 400:
+              raise SystemExit(f'Johnson CG-06 source error changed: {blocker}')
+          if blocker.get('distance_probe_meters') != 1 or blocker.get('adapter_id') != 'DIST-TX-JOHNSON-COMMISSIONER':
+              raise SystemExit(f'Johnson CG-06 topology contract changed: {blocker}')
+          if summary.get('stop_class') != 'ARCHITECTURE_CHANGE_REQUIRED':
+              raise SystemExit('Johnson CG-06 stop class changed')
+          if summary.get('architecture_change') != 'GENERIC_HARDENING':
+              raise SystemExit('Johnson CG-06 must remain a generic-hardening blocker')
+          if summary.get('outside_negative_controls_run') != 0 or summary.get('boundary_controls_run') != 0:
+              raise SystemExit('Johnson CG-06 crossed into CG-07 or CG-08 controls')
+          if summary.get('adapter_failure_scope') != 'ADAPTER':
+              raise SystemExit('Johnson adapter failure scope changed')
+          if summary.get('officeholder_identity_source') != 'CANONICAL_RELEASE_ONLY':
+              raise SystemExit('Johnson adapter identity-source contract changed')
+          if summary.get('boundary_policy') != 'MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK':
+              raise SystemExit('Johnson boundary policy changed')
+          if summary.get('actions') != 'NOT_YET_RELEASED' or summary.get('scope') != 'BOUNDED_V0_1_SCOPE':
+              raise SystemExit('Johnson release boundaries changed')
+          if summary.get('candidate_packaged') is not False or summary.get('production_runtime_changed') is not False:
+              raise SystemExit('Johnson CG-06 may not package or change the production runtime')
+          if summary.get('runtime_sha256') != '70354e50668e1f5950cd35145f06b2591a85b688e31dc9cb042b96b3493a802b':
+              raise SystemExit(f'unexpected production runtime SHA: {summary.get("runtime_sha256")}')
+          if summary.get('engine_version') != '0.6.2' or summary.get('registry_artifact_version') != '0.6.0':
+              raise SystemExit('production engine/registry version changed')
+          if summary.get('production_main_commit') != '0a87ca6ea479c62782d470e0283c455a2f0e0df0':
+              raise SystemExit('recorded production-main commit changed')
+          if summary.get('production_main_tree') != 'f87ee58616b0c50fbe274e0337442a0efe73c331':
+              raise SystemExit('recorded production-main tree changed')
+          print(json.dumps({
+              'status': 'PASS',
+              'gates': summary['gates'],
+              'summary_sha256': hashlib.sha256(left_bytes).hexdigest(),
+              'runtime_sha256': summary['runtime_sha256'],
+              'next_gate': summary['next_gate'],
+          }, sort_keys=True))
+          PY
+
+      - name: 'Upload County #11 CG-06 blocker evidence'
         uses: actions/upload-artifact@v4
         with:
-          name: civic-gps-johnson-county11-cg05-${{ github.run_id }}
+          name: civic-gps-johnson-county11-cg06-blocked-${{ github.run_id }}
           path: |
             artifacts/civic-gps-johnson-county11-a/
             artifacts/civic-gps-johnson-cg04-a/
             artifacts/civic-gps-johnson-cg04-b/johnson-cg04-summary.json
             artifacts/civic-gps-johnson-cg05-a/
             artifacts/civic-gps-johnson-cg05-b/johnson-cg05-summary.json
+            artifacts/civic-gps-johnson-cg06-a/
+            artifacts/civic-gps-johnson-cg06-b/johnson-cg06-summary.json
           if-no-files-found: error
           retention-days: 30
