@@ -1,0 +1,143 @@
+{
+  "schema_version": "civic-gps-lubbock-cg04-proof/0.1.0",
+  "county": "Lubbock County",
+  "county_geoid": "48303",
+  "observed_on": "2026-08-11",
+  "candidate_spec_sha256": "20dad659a7bb3b9cfcd8ec5979827eed328aeb346bd42287dce2a6247b655fe2",
+  "canonical_roster": {
+    "expected_total_offices": 18,
+    "identity_source_rule": "CANONICAL_RELEASE_ONLY",
+    "official_hosts": [
+      "www.lubbockcounty.gov"
+    ],
+    "records": [
+      {
+        "office_id": "office-us-tx-lubbock-county-judge",
+        "title": "County Judge",
+        "holder": "Curtis Parrish",
+        "source_url": "https://www.lubbockcounty.gov/department/",
+        "required_fragments": ["Curtis Parrish", "County Judge"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-clerk",
+        "title": "County Clerk",
+        "holder": "Kelly Pinion",
+        "source_url": "https://www.lubbockcounty.gov/department/",
+        "required_fragments": ["Kelly Pinion", "County Clerk"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-criminal-district-attorney",
+        "title": "Criminal District Attorney",
+        "holder": "K. Sunshine Stanek",
+        "source_url": "https://www.lubbockcounty.gov/egov/apps/staff/directory.egov?id=28&view=detail",
+        "required_fragments": ["K. Sunshine Stanek", "Criminal District Attorney"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-sheriff",
+        "title": "Sheriff",
+        "holder": "Kelly Rowe",
+        "source_url": "https://www.lubbockcounty.gov/department/?fDD=29-0",
+        "required_fragments": ["Kelly S. Rowe", "Sheriff, Lubbock County"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-tax-assessor-collector",
+        "title": "Tax Assessor-Collector",
+        "holder": "Ronnie Keister",
+        "source_url": "https://www.lubbockcounty.gov/department/division.php?structureid=261",
+        "required_fragments": ["Ronnie Keister", "Lubbock County Tax Assessor-Collector"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-district-clerk",
+        "title": "District Clerk",
+        "holder": "Sara L. Smith",
+        "source_url": "https://www.lubbockcounty.gov/department/",
+        "required_fragments": ["Sara L. Smith", "District Clerk"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-commissioner-1",
+        "title": "County Commissioner Precinct 1",
+        "holder": "Mike Dalby",
+        "source_url": "https://www.lubbockcounty.gov/department/",
+        "required_fragments": ["Mike Dalby", "County Commissioner Precinct #1"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-commissioner-2",
+        "title": "County Commissioner Precinct 2",
+        "holder": "Jason Corley",
+        "source_url": "https://www.lubbockcounty.gov/department/",
+        "required_fragments": ["Jason Corley", "County Commissioner Precinct #2"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-commissioner-3",
+        "title": "County Commissioner Precinct 3",
+        "holder": "Cary Shaw",
+        "source_url": "https://www.lubbockcounty.gov/department/",
+        "required_fragments": ["Cary Shaw", "County Commissioner Precinct #3"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-commissioner-4",
+        "title": "County Commissioner Precinct 4",
+        "holder": "Jordan Rackler",
+        "source_url": "https://www.lubbockcounty.gov/department/",
+        "required_fragments": ["Jordan Rackler", "County Commissioner Precinct #4"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-jp-1",
+        "title": "Justice of the Peace Precinct 1",
+        "holder": "Betty Dills",
+        "source_url": "https://www.lubbockcounty.gov/department/?fDD=18-0",
+        "required_fragments": ["Betty Dills", "Justice of the Peace, Precinct #1"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-jp-2",
+        "title": "Justice of the Peace Precinct 2",
+        "holder": "Susan Rowley",
+        "source_url": "https://www.lubbockcounty.gov/department/?fDD=18-0",
+        "required_fragments": ["Susan Rowley", "Justice of the Peace, Precinct #2"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-jp-3",
+        "title": "Justice of the Peace Precinct 3",
+        "holder": "Francisco Gutierrez",
+        "source_url": "https://www.lubbockcounty.gov/department/?fDD=18-0",
+        "required_fragments": ["Francisco Gutierrez", "Justice of the Peace, Precinct #3"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-jp-4",
+        "title": "Justice of the Peace Precinct 4",
+        "holder": "Lance Cansino",
+        "source_url": "https://www.lubbockcounty.gov/department/?fDD=18-0",
+        "required_fragments": ["Lance Cansino", "Justice of the Peace, Precinct #4"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-constable-1",
+        "title": "Constable Precinct 1",
+        "holder": "Paul Hanna",
+        "source_url": "https://www.lubbockcounty.gov/department/index.php?structureid=5",
+        "required_fragments": ["Paul Hanna", "Precinct 1"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-constable-2",
+        "title": "Constable Precinct 2",
+        "holder": "Jody Barnes",
+        "source_url": "https://www.lubbockcounty.gov/department/index.php?structureid=5",
+        "required_fragments": ["Jody Barnes", "Precinct 2"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-constable-3",
+        "title": "Constable Precinct 3",
+        "holder": "Jose A. Sanchez",
+        "source_url": "https://www.lubbockcounty.gov/department/index.php?structureid=5",
+        "required_fragments": ["Jose A. Sanchez", "Precinct 3"]
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-constable-4",
+        "title": "Constable Precinct 4",
+        "holder": "Joe Pinson",
+        "source_url": "https://www.lubbockcounty.gov/department/index.php?structureid=5",
+        "required_fragments": ["Joe Pinson", "Precinct 4"]
+      }
+    ]
+  },
+  "stop_before": "CG-05"
+}

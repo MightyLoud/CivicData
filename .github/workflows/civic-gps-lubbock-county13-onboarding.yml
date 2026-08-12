@@ -7,8 +7,10 @@ on:
     paths:
       - '.github/workflows/civic-gps-lubbock-county13-onboarding.yml'
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json'
+      - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json'
       - 'tools/civic_gps_county_onboarding.py'
       - 'tools/civic_gps_tx_county_archetype.py'
+      - 'tools/civic_gps_lubbock_cg04.py'
 
 permissions:
   contents: read
@@ -145,5 +147,91 @@ jobs:
         with:
           name: civic-gps-lubbock-county13-${{ github.run_id }}
           path: artifacts/civic-gps-lubbock-county13-a/
+          if-no-files-found: error
+          retention-days: 30
+
+  canonical-roster-proof:
+    name: Lubbock County CG-04 canonical-roster proof
+    needs: fit-screen
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out County #13 branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile CG-04 proof tooling
+        run: python -m py_compile tools/civic_gps_lubbock_cg04.py
+
+      - name: Run live CG-04 proof twice
+        shell: bash
+        run: |
+          python tools/civic_gps_lubbock_cg04.py tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json --output-dir artifacts/civic-gps-lubbock-cg04-a
+          python tools/civic_gps_lubbock_cg04.py tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json --output-dir artifacts/civic-gps-lubbock-cg04-b
+
+      - name: Prove deterministic exact CG-04 result
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          left_path = Path('artifacts/civic-gps-lubbock-cg04-a/lubbock-cg04-evidence.json')
+          right_path = Path('artifacts/civic-gps-lubbock-cg04-b/lubbock-cg04-evidence.json')
+          left_bytes, right_bytes = left_path.read_bytes(), right_path.read_bytes()
+          if left_bytes != right_bytes:
+              raise SystemExit('Lubbock CG-04 evidence is not deterministic')
+
+          report = json.loads(left_bytes)
+          expected_gates = {
+              'CG-01': 'PASS',
+              'CG-02': 'PASS',
+              'CG-03': 'PASS',
+              'CG-04': 'PASS',
+              'CG-05': 'READY',
+              'CG-06': 'READY',
+              'CG-07': 'READY',
+              'CG-08': 'READY',
+              'CG-09': 'READY',
+              'CG-10': 'READY',
+          }
+          gates = {row['gate']: row['status'] for row in report['gates']}
+          if gates != expected_gates:
+              raise SystemExit(f'unexpected gate state: {gates}')
+          roster = report['cg04_canonical_roster']
+          if roster.get('status') != 'PASS':
+              raise SystemExit('CG-04 roster status is not PASS')
+          if roster.get('expected_total_offices') != 18 or roster.get('verified_total_offices') != 18:
+              raise SystemExit('CG-04 did not verify all 18 bounded offices')
+          records = roster.get('records') or []
+          if len(records) != 18 or len({row['office_id'] for row in records}) != 18:
+              raise SystemExit('CG-04 roster evidence is incomplete or duplicated')
+          if roster.get('identity_source_rule') != 'CANONICAL_RELEASE_ONLY' or roster.get('identity_conflicts') != 0:
+              raise SystemExit('CG-04 identity-source contract changed')
+          if report.get('candidate_spec_sha256') != '20dad659a7bb3b9cfcd8ec5979827eed328aeb346bd42287dce2a6247b655fe2':
+              raise SystemExit('frozen candidate SHA changed')
+          if report.get('stopped_before') != 'CG-05' or report.get('packaged') is not False:
+              raise SystemExit('CG-04 crossed the CG-05/package boundary')
+          if report.get('actions') != 'NOT_YET_RELEASED' or report.get('production_runtime_changed') is not False:
+              raise SystemExit('CG-04 crossed the action or production boundary')
+          print(json.dumps({
+              'status': 'PASS',
+              'gate': 'CG-04',
+              'verified_offices': roster['verified_total_offices'],
+              'source_pages': roster['source_page_count'],
+              'evidence_sha256': hashlib.sha256(left_bytes).hexdigest(),
+              'next_gate': 'CG-05',
+          }, sort_keys=True))
+          PY
+
+      - name: Upload County #13 CG-04 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-lubbock-county13-cg04-${{ github.run_id }}
+          path: artifacts/civic-gps-lubbock-cg04-a/
           if-no-files-found: error
           retention-days: 30
