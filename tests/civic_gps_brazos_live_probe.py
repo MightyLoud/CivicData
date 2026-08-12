@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Packaged Brazos County regression for Civic GPS v0.6.2 / registry v0.5.9."""
+"""Packaged Brazos County regression for Civic GPS v0.6.2 / registry v0.6.1."""
 from __future__ import annotations
 
 import copy
@@ -23,6 +23,7 @@ OUTPUT.mkdir(parents=True, exist_ok=True)
 ENGINE_PATH = GPS / "engine.py"
 REGISTRY_PATH = GPS / "registry.json"
 RELEASE_PATH = GPS / "civic_gps_brazos_county_v0.1.json"
+ACTION_FILE = "civic_gps_action_registry_brazos_v0.1.json"
 SERVICE = "https://services5.arcgis.com/s91b2wxhO15FkWh5/arcgis/rest/services/BRAZOS_CC_PCTS_11022021/FeatureServer/0"
 FIELD = "ID"
 J = "jur-us-tx-brazos-county"
@@ -32,10 +33,10 @@ A_JP = "DIST-TX-BRAZOS-JP"
 A_CONST = "DIST-TX-BRAZOS-CONSTABLE"
 ADAPTERS = (A_COMM, A_JP, A_CONST)
 POLICY = "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK"
-EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.5.9")
+EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.6.1")
 EXPECTED_RUNTIME_SHA256 = os.environ.get(
     "CIVIC_GPS_EXPECTED_RUNTIME_SHA256",
-    "49b54af31cb4687936a2dddb6a91f6305aa7b4977756a3db203562971296a23a",
+    "9cf08fabee633ae1863b71089c1695e07c55d4e17a735f9fbc52e1f92972f2e5",
 )
 EXPECTED_LAYERS = {
     "brazos_county_commissioner_precinct",
@@ -55,6 +56,19 @@ COUNTYWIDE_IDS = {
     "office-us-tx-brazos-county-district-clerk",
     "office-us-tx-brazos-county-tax-assessor-collector",
     "office-us-tx-brazos-county-treasurer",
+}
+BASE_ACTION_IDS = {
+    "ACT-BRAZOS-COMMISSIONERS-AGENDAS",
+    "ACT-BRAZOS-COMMISSIONERS-CALENDAR",
+    "ACT-BRAZOS-COMMISSIONERS-CONTACT",
+    "ACT-BRAZOS-COMMISSIONERS-PUBLIC-COMMENT",
+    "ACT-BRAZOS-COMMISSIONERS-WATCH",
+    "ACT-BRAZOS-CONTACT-COUNTY-CLERK",
+    "ACT-BRAZOS-CONTACT-COUNTY-JUDGE",
+    "ACT-BRAZOS-CONTACT-DISTRICT-CLERK",
+    "ACT-BRAZOS-CONTACT-SHERIFF",
+    "ACT-BRAZOS-CONTACT-TAX-ASSESSOR",
+    "ACT-BRAZOS-CONTACT-TREASURER",
 }
 TRAVIS_EXPECTED = {
     "DIST-TX-TRAVIS-COMMISSIONER": "3",
@@ -112,14 +126,33 @@ def applicable(payload: dict) -> list[dict]:
     ]
 
 
-def assert_no_actions(label: str, payload: dict) -> None:
-    actions = [
-        row
+def assert_brazos_actions(label: str, payload: dict, district_key: str | None) -> None:
+    action_ids = {
+        row.get("action_id")
         for row in payload.get("action_links") or []
         if row.get("jurisdiction_id") == J
+    }
+    expected = set(BASE_ACTION_IDS)
+    if district_key is not None:
+        expected.update(
+            {
+                f"ACT-BRAZOS-CONTACT-COMMISSIONER-P{district_key}",
+                f"ACT-BRAZOS-CONTACT-JP-P{district_key}",
+                f"ACT-BRAZOS-CONTACT-CONSTABLE-P{district_key}",
+            }
+        )
+    if action_ids != expected:
+        raise AssertionError(
+            f"[{label}] expected {len(expected)} Brazos actions {sorted(expected)}, "
+            f"got {len(action_ids)} {sorted(action_ids)}"
+        )
+    action_coverage = [
+        row
+        for row in payload.get("coverage") or []
+        if row.get("layer") == "brazos_action_endpoints"
     ]
-    if actions:
-        raise AssertionError(f"[{label}] Brazos actions must remain unreleased: {actions}")
+    if len(action_coverage) != 1 or action_coverage[0].get("status") != "RELEASE_BACKED":
+        raise AssertionError(f"[{label}] Brazos action coverage is not release-backed: {action_coverage}")
 
 
 engine_mod = load_module("civic_gps_engine_brazos_packaged", ENGINE_PATH)
@@ -130,6 +163,7 @@ runtime_bytes = b"".join(
 with ZipFile(io.BytesIO(runtime_bytes)) as runtime_archive:
     registry = json.loads(runtime_archive.read("civic_gps/registry.json"))
     release = json.loads(runtime_archive.read(f"civic_gps/{RELEASE_PATH.name}"))
+    action_registry = json.loads(runtime_archive.read(f"civic_gps/{ACTION_FILE}"))
 if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != EXPECTED_REGISTRY_VERSION:
     raise AssertionError(
         f"Brazos packaged proof requires engine 0.6.2 / registry {EXPECTED_REGISTRY_VERSION}, got "
@@ -143,8 +177,10 @@ if not bundle:
     raise AssertionError("Packaged registry is missing ADAPTER-TX-BRAZOS")
 if bundle.get("release_files") != [RELEASE_PATH.name]:
     raise AssertionError(f"Unexpected Brazos release files: {bundle.get('release_files')}")
-if bundle.get("action_registry_files"):
-    raise AssertionError("Brazos action routing must remain unreleased in CG-09")
+if bundle.get("action_registry_files") != [ACTION_FILE]:
+    raise AssertionError(f"Unexpected Brazos action registry files: {bundle.get('action_registry_files')}")
+if action_registry.get("meta", {}).get("route_count") != 23:
+    raise AssertionError("Packaged Brazos action registry must contain exactly 23 routes")
 adapters = {row.get("adapter_id"): row for row in bundle.get("district_adapters", [])}
 if set(adapters) != set(ADAPTERS):
     raise AssertionError(f"Unexpected Brazos adapters: {sorted(adapters)}")
@@ -157,12 +193,15 @@ for adapter_id, adapter in adapters.items():
         raise AssertionError(f"{adapter_id} identity source changed")
     if adapter.get("source_status") != "LIVE_INTERIOR_NEGATIVE_BOUNDARY_PASS":
         raise AssertionError(f"{adapter_id} packaged source status changed")
-gap = next(
-    (row for row in bundle.get("known_gaps", []) if row.get("gap_id") == "GAP-BRAZOS-GPS-003"),
-    None,
-)
-if not gap or gap.get("status") != "PROTECTED_PROMOTION_PENDING":
-    raise AssertionError(f"Brazos package gap state changed: {gap}")
+gap_statuses = {
+    row.get("gap_id"): row.get("status") for row in bundle.get("known_gaps", [])
+}
+if gap_statuses != {
+    "GAP-BRAZOS-GPS-001": "CLOSED",
+    "GAP-BRAZOS-GPS-002": "BOUNDED_V0_1_SCOPE",
+    "GAP-BRAZOS-GPS-003": "CLOSED",
+}:
+    raise AssertionError(f"Brazos package gap state changed: {gap_statuses}")
 
 if release.get("meta", {}).get("release_status") != "RELEASE_BACKED_CURRENT":
     raise AssertionError("Brazos packaged release status changed")
@@ -256,7 +295,7 @@ for case_id, address, key in CASES:
     }
     if release_layers != EXPECTED_LAYERS:
         raise AssertionError(f"[{case_id}] packaged coverage layers changed: {release_layers}")
-    assert_no_actions(case_id, payload)
+    assert_brazos_actions(case_id, payload, key)
     keys_covered.add(key)
     interior_summaries.append(
         {
@@ -265,6 +304,7 @@ for case_id, address, key in CASES:
             "assignments": assignments,
             "representatives": reps,
             "applicable_offices": 9,
+            "action_links": 14,
             "resolution_attempts": attempts,
             "status": "PASS",
         }
@@ -542,7 +582,7 @@ if {row.get("office_id") for row in exact_wide} != COUNTYWIDE_IDS:
     raise AssertionError("Exact boundary countywide office set changed")
 if conflict_layers(exact) != EXPECTED_LAYERS:
     raise AssertionError(f"Exact boundary conflict layers changed: {conflict_layers(exact)}")
-assert_no_actions("boundary-exact", exact)
+assert_brazos_actions("boundary-exact", exact, None)
 
 boundary_sides = []
 for label, point, expected_key in (
@@ -562,7 +602,7 @@ for label, point, expected_key in (
     district = [row for row in matched if row.get("applicability_scope") == "DISTRICT_MATCH"]
     if (len(matched), len(wide), len(district)) != (9, 6, 3):
         raise AssertionError(f"Boundary {label} must restore 9 = 6 + 3 offices")
-    assert_no_actions(f"boundary-{label}", payload)
+    assert_brazos_actions(f"boundary-{label}", payload, expected_key)
     boundary_sides.append(
         {
             "side": label,
@@ -570,6 +610,7 @@ for label, point, expected_key in (
             "assignments": assignments,
             "representatives": reps,
             "applicable_offices": 9,
+            "action_links": 14,
             "status": "PASS",
         }
     )
@@ -605,11 +646,18 @@ summary = {
         "distance_probe_meters": 1,
         "exact_assignments": exact_assignments,
         "exact_applicable_offices": 6,
+        "exact_action_links": 11,
         "exact_conflict_layers": sorted(conflict_layers(exact)),
         "sides": boundary_sides,
         "policy": POLICY,
     },
-    "actions": "NOT_YET_RELEASED",
+    "actions": {
+        "status": "RELEASE_BACKED",
+        "registry": ACTION_FILE,
+        "verified_routes": 23,
+        "normal_interior_links": 14,
+        "shared_boundary_links": 11,
+    },
     "candidate_packaged": True,
     "next_gate": "CG-10",
     "stopped_before": "CG-10",
