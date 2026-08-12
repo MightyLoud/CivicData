@@ -9,10 +9,12 @@ on:
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json'
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json'
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json'
+      - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg06_interiors_v0.1.json'
       - 'tools/civic_gps_county_onboarding.py'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'tools/civic_gps_lubbock_cg04.py'
       - 'tools/civic_gps_lubbock_cg05.py'
+      - 'tools/civic_gps_lubbock_cg06.py'
 
 permissions:
   contents: read
@@ -329,5 +331,123 @@ jobs:
         with:
           name: civic-gps-lubbock-county13-cg05-${{ github.run_id }}
           path: artifacts/civic-gps-lubbock-cg05-a/
+          if-no-files-found: error
+          retention-days: 30
+
+  interior-control-proof:
+    name: Lubbock County CG-06 coordinate-only interior proof
+    needs: gis-adapter-proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out County #13 branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile CG-06 proof tooling
+        run: python -m py_compile tools/civic_gps_lubbock_cg06.py
+
+      - name: Run live coordinate-only CG-06 proof twice
+        shell: bash
+        run: |
+          python tools/civic_gps_lubbock_cg06.py \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg06_interiors_v0.1.json \
+            --output-dir artifacts/civic-gps-lubbock-cg06-a
+          python tools/civic_gps_lubbock_cg06.py \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json \
+            tests/fixtures/civic_gps_county_onboarding/lubbock_cg06_interiors_v0.1.json \
+            --output-dir artifacts/civic-gps-lubbock-cg06-b
+
+      - name: Prove deterministic exact CG-06 result
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          left_path = Path('artifacts/civic-gps-lubbock-cg06-a/lubbock-cg06-evidence.json')
+          right_path = Path('artifacts/civic-gps-lubbock-cg06-b/lubbock-cg06-evidence.json')
+          left_bytes, right_bytes = left_path.read_bytes(), right_path.read_bytes()
+          if left_bytes != right_bytes:
+              raise SystemExit('Lubbock CG-06 evidence is not deterministic')
+
+          report = json.loads(left_bytes)
+          expected_gates = {
+              'CG-01': 'PASS',
+              'CG-02': 'PASS',
+              'CG-03': 'PASS',
+              'CG-04': 'PASS',
+              'CG-05': 'PASS',
+              'CG-06': 'PASS',
+              'CG-07': 'READY',
+              'CG-08': 'READY',
+              'CG-09': 'READY',
+              'CG-10': 'READY',
+          }
+          gates = {row['gate']: row['status'] for row in report['gates']}
+          if gates != expected_gates:
+              raise SystemExit(f'unexpected gate state: {gates}')
+          interior = report['cg06_interior_controls']
+          if interior.get('status') != 'PASS':
+              raise SystemExit('CG-06 interior controls did not pass')
+          if interior.get('input_mode') != 'OFFICIAL_POLYGON_COORDINATE_ONLY':
+              raise SystemExit('CG-06 input mode changed')
+          if interior.get('geocoder_used') is not False or interior.get('address_input_used') is not False:
+              raise SystemExit('CG-06 used an address or geocoder')
+          if interior.get('feature_count') != 4 or interior.get('keys_covered') != ['1', '2', '3', '4']:
+              raise SystemExit('CG-06 did not prove all four live precinct polygons')
+          if interior.get('families') != ['commissioner', 'justice_of_the_peace', 'constable']:
+              raise SystemExit('CG-06 district-family contract changed')
+          controls = interior.get('controls') or []
+          if len(controls) != 4 or interior.get('control_count') != 4:
+              raise SystemExit('CG-06 must retain four interior controls')
+          if interior.get('canonical_join_count') != 12:
+              raise SystemExit('CG-06 must prove 12 district-office joins')
+          if interior.get('normal_applicable_offices') != 9 or interior.get('normal_composition') != {'countywide': 6, 'district': 3}:
+              raise SystemExit('CG-06 applicable-office composition changed')
+          for row in controls:
+              key = row['district_key']
+              if row.get('status') != 'PASS' or row.get('live_matches') != [key]:
+                  raise SystemExit(f'CG-06 control {row.get("id")} did not resolve exactly')
+              if row.get('local_polygon_contains_point') is not True:
+                  raise SystemExit(f'CG-06 control {row.get("id")} is not locally interior')
+              if row.get('boundary_clearance_degrees', 0) < 0.01:
+                  raise SystemExit(f'CG-06 control {row.get("id")} is too close to a boundary')
+              if len(row.get('canonical_joins') or []) != 3 or row.get('applicable_offices') != 9:
+                  raise SystemExit(f'CG-06 control {row.get("id")} canonical join changed')
+          if report.get('candidate_spec_sha256') != '20dad659a7bb3b9cfcd8ec5979827eed328aeb346bd42287dce2a6247b655fe2':
+              raise SystemExit('frozen candidate SHA changed')
+          if report.get('proof_spec_sha256') != '46cdf29a9164377dec9720a5587e03d8106a5e281fa5c7f004b6d9b3a27e0bf8':
+              raise SystemExit('CG-06 proof-spec SHA changed')
+          if report.get('stopped_before') != 'CG-07' or report.get('packaged') is not False:
+              raise SystemExit('CG-06 crossed the CG-07/package boundary')
+          if report.get('actions') != 'NOT_YET_RELEASED' or report.get('production_runtime_changed') is not False:
+              raise SystemExit('CG-06 crossed the action or production boundary')
+          print(json.dumps({
+              'status': 'PASS',
+              'gate': 'CG-06',
+              'controls': len(controls),
+              'district_keys': interior['keys_covered'],
+              'canonical_joins': interior['canonical_join_count'],
+              'geocoder_used': interior['geocoder_used'],
+              'evidence_sha256': hashlib.sha256(left_bytes).hexdigest(),
+              'next_gate': 'CG-07',
+          }, sort_keys=True))
+          PY
+
+      - name: Upload County #13 CG-06 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-lubbock-county13-cg06-${{ github.run_id }}
+          path: artifacts/civic-gps-lubbock-cg06-a/
           if-no-files-found: error
           retention-days: 30
