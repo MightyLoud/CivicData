@@ -1,0 +1,55 @@
+{
+  "schema_version": "civic-gps-lubbock-cg05-proof/0.1.0",
+  "county": "Lubbock County",
+  "county_geoid": "48303",
+  "observed_on": "2026-08-11",
+  "candidate_spec_sha256": "20dad659a7bb3b9cfcd8ec5979827eed328aeb346bd42287dce2a6247b655fe2",
+  "prior_cg04": {
+    "status": "PASS",
+    "head_sha": "54925bb7a8341026ec1c109cc6c1f9839d969436",
+    "run_id": 31563633936,
+    "verified_offices": 18,
+    "evidence_sha256": "2d1e5d06563915f7026b272cadad1a43c5c7cab85f8d9f22fef64da67c9304da"
+  },
+  "gis": {
+    "official_hosts": [
+      "www.lubbockcounty.gov",
+      "lcits.maps.arcgis.com",
+      "www.arcgis.com",
+      "gisserver.halff.com"
+    ],
+    "approved_candidate_provenance_urls": [
+      "https://www.lubbockcounty.gov/department/",
+      "https://www.lubbockcounty.gov/egov/apps/document/center.egov?id=5120&view=item"
+    ],
+    "county_provenance_url": "https://www.lubbockcounty.gov/department/",
+    "county_required_fragments": [
+      "County Commissioner - Precinct 1",
+      "Precinct Interactive Map"
+    ],
+    "app_item_id": "ca89d7914bad4e5e9e007a95f85fb7e9",
+    "app_public_url": "https://lcits.maps.arcgis.com/apps/webappviewer/index.html?id=ca89d7914bad4e5e9e007a95f85fb7e9",
+    "app_item_url": "https://www.arcgis.com/sharing/rest/content/items/ca89d7914bad4e5e9e007a95f85fb7e9",
+    "app_data_url": "https://www.arcgis.com/sharing/rest/content/items/ca89d7914bad4e5e9e007a95f85fb7e9/data",
+    "app_title": "Reference Web App SQL19",
+    "webmap_item_id": "ac93d55e738c4083a27c9bf48ded7b0e",
+    "webmap_item_url": "https://www.arcgis.com/sharing/rest/content/items/ac93d55e738c4083a27c9bf48ded7b0e",
+    "webmap_data_url": "https://www.arcgis.com/sharing/rest/content/items/ac93d55e738c4083a27c9bf48ded7b0e/data",
+    "webmap_title": "Reference Map SQL19 Update",
+    "arcgis_owner": "LCTechLogin",
+    "webmap_layer_title": "Reference Layers",
+    "mapserver_url": "https://gisserver.halff.com/ags/rest/services/Lubbock_CO/Reference_Layers/MapServer",
+    "service_url": "https://gisserver.halff.com/ags/rest/services/Lubbock_CO/Reference_Layers/MapServer/0",
+    "layer_id": 0,
+    "layer_name": "Precinct Boundaries",
+    "geometry_type": "esriGeometryPolygon",
+    "district_field": "District_ID",
+    "district_field_alias": "District ID",
+    "district_field_type": "esriFieldTypeSmallInteger",
+    "district_keys": ["1", "2", "3", "4"],
+    "capabilities": ["Map", "Query", "Data"],
+    "resolver_kind": "ARCGIS_POINT_INTERSECT",
+    "boundary_policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK"
+  },
+  "stop_before": "CG-06"
+}

@@ -8,9 +8,11 @@ on:
       - '.github/workflows/civic-gps-lubbock-county13-onboarding.yml'
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json'
       - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg04_roster_v0.1.json'
+      - 'tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json'
       - 'tools/civic_gps_county_onboarding.py'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'tools/civic_gps_lubbock_cg04.py'
+      - 'tools/civic_gps_lubbock_cg05.py'
 
 permissions:
   contents: read
@@ -233,5 +235,99 @@ jobs:
         with:
           name: civic-gps-lubbock-county13-cg04-${{ github.run_id }}
           path: artifacts/civic-gps-lubbock-cg04-a/
+          if-no-files-found: error
+          retention-days: 30
+
+  gis-adapter-proof:
+    name: Lubbock County CG-05 live GIS-adapter proof
+    needs: canonical-roster-proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out County #13 branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile CG-05 proof tooling
+        run: python -m py_compile tools/civic_gps_lubbock_cg05.py
+
+      - name: Run live CG-05 proof twice
+        shell: bash
+        run: |
+          python tools/civic_gps_lubbock_cg05.py tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json --output-dir artifacts/civic-gps-lubbock-cg05-a
+          python tools/civic_gps_lubbock_cg05.py tests/fixtures/civic_gps_county_onboarding/lubbock_county13_candidate_v0.1.json tests/fixtures/civic_gps_county_onboarding/lubbock_cg05_gis_v0.1.json --output-dir artifacts/civic-gps-lubbock-cg05-b
+
+      - name: Prove deterministic exact CG-05 result
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          left_path = Path('artifacts/civic-gps-lubbock-cg05-a/lubbock-cg05-evidence.json')
+          right_path = Path('artifacts/civic-gps-lubbock-cg05-b/lubbock-cg05-evidence.json')
+          left_bytes, right_bytes = left_path.read_bytes(), right_path.read_bytes()
+          if left_bytes != right_bytes:
+              raise SystemExit('Lubbock CG-05 evidence is not deterministic')
+
+          report = json.loads(left_bytes)
+          expected_gates = {
+              'CG-01': 'PASS',
+              'CG-02': 'PASS',
+              'CG-03': 'PASS',
+              'CG-04': 'PASS',
+              'CG-05': 'PASS',
+              'CG-06': 'READY',
+              'CG-07': 'READY',
+              'CG-08': 'READY',
+              'CG-09': 'READY',
+              'CG-10': 'READY',
+          }
+          gates = {row['gate']: row['status'] for row in report['gates']}
+          if gates != expected_gates:
+              raise SystemExit(f'unexpected gate state: {gates}')
+          gis = report['cg05_gis_adapter']
+          if gis.get('status') != 'PASS' or gis.get('shared_geometry') is not True:
+              raise SystemExit('CG-05 shared GIS adapter did not pass')
+          if gis.get('families') != ['commissioner', 'justice_of_the_peace', 'constable']:
+              raise SystemExit('CG-05 district-family contract changed')
+          if len(gis.get('adapter_ids') or []) != 3:
+              raise SystemExit('CG-05 must retain three district adapters')
+          if gis.get('layer_name') != 'Precinct Boundaries' or gis.get('geometry_type') != 'esriGeometryPolygon':
+              raise SystemExit('CG-05 polygon layer identity changed')
+          if gis.get('district_field') != 'District_ID' or gis.get('district_field_type') != 'esriFieldTypeSmallInteger':
+              raise SystemExit('CG-05 district-field contract changed')
+          if gis.get('district_keys') != ['1', '2', '3', '4'] or gis.get('feature_count') != 4:
+              raise SystemExit('CG-05 live district keys/features changed')
+          if len(gis.get('provenance_chain') or []) != 7:
+              raise SystemExit('CG-05 provenance chain is incomplete')
+          if gis.get('failure_scope') != 'ADAPTER' or gis.get('officeholder_identity_source') != 'CANONICAL_RELEASE_ONLY':
+              raise SystemExit('CG-05 adapter isolation or identity-source contract changed')
+          if report.get('candidate_spec_sha256') != '20dad659a7bb3b9cfcd8ec5979827eed328aeb346bd42287dce2a6247b655fe2':
+              raise SystemExit('frozen candidate SHA changed')
+          if report.get('stopped_before') != 'CG-06' or report.get('packaged') is not False:
+              raise SystemExit('CG-05 crossed the CG-06/package boundary')
+          if report.get('actions') != 'NOT_YET_RELEASED' or report.get('production_runtime_changed') is not False:
+              raise SystemExit('CG-05 crossed the action or production boundary')
+          print(json.dumps({
+              'status': 'PASS',
+              'gate': 'CG-05',
+              'district_keys': gis['district_keys'],
+              'feature_count': gis['feature_count'],
+              'provenance_hops': len(gis['provenance_chain']),
+              'evidence_sha256': hashlib.sha256(left_bytes).hexdigest(),
+              'next_gate': 'CG-06',
+          }, sort_keys=True))
+          PY
+
+      - name: Upload County #13 CG-05 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: civic-gps-lubbock-county13-cg05-${{ github.run_id }}
+          path: artifacts/civic-gps-lubbock-cg05-a/
           if-no-files-found: error
           retention-days: 30
