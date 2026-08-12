@@ -1,0 +1,292 @@
+{
+  "schema_version": "civic-gps-county-onboarding/0.1.0",
+  "archetype": "TX_COUNTY_COMMISSIONER_JP_CONSTABLE_V0.1",
+  "county": {
+    "name": "Lubbock County",
+    "state": "TX",
+    "geoid": "48303",
+    "jurisdiction_id": "jur-us-tx-lubbock-county",
+    "division_id": "div-us-tx-lubbock-county",
+    "adapter_id": "ADAPTER-TX-LUBBOCK",
+    "response_id_prefix": "civic-gps-lubbock",
+    "release_filename": "civic_gps_lubbock_county_v0.1.json",
+    "observed_on": "2026-08-11"
+  },
+  "scope": {
+    "bounded": true,
+    "countywide_complete": false,
+    "unmodeled_status": "BOUNDED_V0_1_SCOPE",
+    "expected_total_offices": 18,
+    "countywide_offices": [
+      {
+        "office_id": "office-us-tx-lubbock-county-judge",
+        "title": "County Judge",
+        "holder": "Curtis Parrish",
+        "official_url": "https://www.lubbockcounty.gov/department/"
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-clerk",
+        "title": "County Clerk",
+        "holder": "Kelly Pinion",
+        "official_url": "https://www.lubbockcounty.gov/department/"
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-criminal-district-attorney",
+        "title": "Criminal District Attorney",
+        "holder": "K. Sunshine Stanek",
+        "official_url": "https://www.lubbockcounty.gov/egov/apps/staff/directory.egov?id=28&view=detail"
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-sheriff",
+        "title": "Sheriff",
+        "holder": "Kelly Rowe",
+        "official_url": "https://www.lubbockcounty.gov/egov/apps/staff/directory.egov?view=detail;id=80"
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-tax-assessor-collector",
+        "title": "Tax Assessor-Collector",
+        "holder": "Ronnie Keister",
+        "official_url": "https://www.lubbockcounty.gov/department/division.php?fDD=28"
+      },
+      {
+        "office_id": "office-us-tx-lubbock-county-district-clerk",
+        "title": "District Clerk",
+        "holder": "Sara L. Smith",
+        "official_url": "https://www.lubbockcounty.gov/department/"
+      }
+    ]
+  },
+  "sources": {
+    "snapshot_ref": "https://www.lubbockcounty.gov/department/",
+    "source_repository": "https://www.lubbockcounty.gov/",
+    "manifest": {
+      "county_officials": "https://www.lubbockcounty.gov/department/",
+      "justice_of_the_peace": "https://www.lubbockcounty.gov/department/?fDD=18-0",
+      "jp_constable_maps": "https://www.votelubbock.org/maps/justice-of-the-peace-and-constables-maps/",
+      "county_gis_webmap": "https://lcits.maps.arcgis.com/apps/webappviewer/index.html?id=ca89d7914bad4e5e9e007a95f85fb7e9",
+      "county_gis_provenance": "https://www.lubbockcounty.gov/department/",
+      "shared_precinct_geometry": "https://gisserver.halff.com/ags/rest/services/Lubbock_CO/Reference_Layers/MapServer/0",
+      "criminal_district_attorney": "https://www.lubbockcounty.gov/egov/apps/staff/directory.egov?id=28&view=detail",
+      "sheriff": "https://www.lubbockcounty.gov/egov/apps/staff/directory.egov?view=detail;id=80",
+      "tax_assessor_collector": "https://www.lubbockcounty.gov/department/division.php?fDD=28",
+      "geoid": "https://www.census.gov/quickfacts/fact/table/lubbockcountytexas/PST045225"
+    },
+    "identity_conflicts": [],
+    "source_health": [
+      {
+        "source_id": "lubbock-current-county-officials",
+        "status": "OK"
+      },
+      {
+        "source_id": "lubbock-current-jp-roster",
+        "status": "OK"
+      },
+      {
+        "source_id": "lubbock-current-constable-roster",
+        "status": "OK"
+      },
+      {
+        "source_id": "lubbock-official-county-linked-gis",
+        "status": "OK"
+      },
+      {
+        "source_id": "lubbock-shared-precinct-layer",
+        "status": "OK"
+      }
+    ]
+  },
+  "architecture": {
+    "requires_custom_resolver_logic": false,
+    "requires_consumer_schema_change": false
+  },
+  "district_families": [
+    {
+      "family": "commissioner",
+      "adapter_id": "DIST-TX-LUBBOCK-COMMISSIONER",
+      "layer": "lubbock_county_commissioner_precinct",
+      "district_keys": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "offices_per_key": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      },
+      "holders": {
+        "1": "Mike Dalby",
+        "2": "Jason Corley",
+        "3": "Cary Shaw",
+        "4": "Jordan Rackler"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://gisserver.halff.com/ags/rest/services/Lubbock_CO/Reference_Layers/MapServer/0",
+        "district_field": "District_ID",
+        "district_field_type": "esriFieldTypeSmallInteger",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.lubbockcounty.gov/department/",
+        "endpoint_publisher": "Lubbock County GIS / Halff"
+      },
+      "district_name_template": "Lubbock County Commissioner Precinct {district}",
+      "division_id_template": "div-us-tx-lubbock-county-commissioner-{district}",
+      "division_type": "county_commissioner_precinct",
+      "office_id_template": "office-us-tx-lubbock-county-commissioner-{district}",
+      "office_title_template": "County Commissioner Precinct {district}",
+      "official_url": "https://www.lubbockcounty.gov/department/",
+      "coverage_reason": "The official Lubbock County Commissioner pages link the county GIS web map; its Precinct Boundaries polygon layer exposes integer District_ID keys 1-4."
+    },
+    {
+      "family": "justice_of_the_peace",
+      "adapter_id": "DIST-TX-LUBBOCK-JP",
+      "layer": "lubbock_county_jp_precinct",
+      "district_keys": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "offices_per_key": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      },
+      "holders": {
+        "1": "Betty Dills",
+        "2": "Susan Rowley",
+        "3": "Francisco Gutierrez",
+        "4": "Lance Cansino"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://gisserver.halff.com/ags/rest/services/Lubbock_CO/Reference_Layers/MapServer/0",
+        "district_field": "District_ID",
+        "district_field_type": "esriFieldTypeSmallInteger",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.lubbockcounty.gov/egov/apps/document/center.egov?id=5120&view=item",
+        "endpoint_publisher": "Lubbock County GIS / Halff"
+      },
+      "district_name_template": "Lubbock County Justice Precinct {district}",
+      "division_id_template": "div-us-tx-lubbock-county-jp-{district}",
+      "division_type": "justice_precinct",
+      "office_id_template": "office-us-tx-lubbock-county-jp-{district}",
+      "office_title_template": "Justice of the Peace Precinct {district}",
+      "official_url": "https://www.lubbockcounty.gov/department/?fDD=18-0",
+      "coverage_reason": "Lubbock County publishes four Justice of the Peace precincts and routes users to its JP/Constable precinct map; the candidate shared layer uses integer District_ID keys 1-4."
+    },
+    {
+      "family": "constable",
+      "adapter_id": "DIST-TX-LUBBOCK-CONSTABLE",
+      "layer": "lubbock_county_constable_precinct",
+      "district_keys": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "offices_per_key": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      },
+      "holders": {
+        "1": "Paul Hanna",
+        "2": "Jody Barnes",
+        "3": "Jose A. Sanchez",
+        "4": "Joe Pinson"
+      },
+      "resolver_kind": "ARCGIS_POINT_INTERSECT",
+      "geometry": {
+        "official": true,
+        "service_url": "https://gisserver.halff.com/ags/rest/services/Lubbock_CO/Reference_Layers/MapServer/0",
+        "district_field": "District_ID",
+        "district_field_type": "esriFieldTypeSmallInteger",
+        "numeric": true,
+        "endpoint_authority_class": "OFFICIAL_COUNTY_GIS",
+        "endpoint_provenance_url": "https://www.lubbockcounty.gov/egov/apps/document/center.egov?id=5120&view=item",
+        "endpoint_publisher": "Lubbock County GIS / Halff"
+      },
+      "district_name_template": "Lubbock County Constable Precinct {district}",
+      "division_id_template": "div-us-tx-lubbock-county-constable-{district}",
+      "division_type": "constable_precinct",
+      "office_id_template": "office-us-tx-lubbock-county-constable-{district}",
+      "office_title_template": "Constable Precinct {district}",
+      "official_url": "https://www.lubbockcounty.gov/department/",
+      "coverage_reason": "Lubbock County publishes one Constable office for each precinct 1-4 and a shared JP/Constable precinct-map route; identity remains canonical-roster-only."
+    }
+  ],
+  "controls": {
+    "interiors": [
+      {
+        "id": "lubbock-pct1-candidate",
+        "address": "302 Main Street, Wolfforth, TX 79382"
+      },
+      {
+        "id": "lubbock-pct2-candidate",
+        "address": "130 South 9th Street, Slaton, TX 79364"
+      },
+      {
+        "id": "lubbock-pct3-candidate",
+        "address": "301 Main Street, Idalou, TX 79329"
+      },
+      {
+        "id": "lubbock-pct4-candidate",
+        "address": "801 Avenue G, Shallowater, TX 79363"
+      }
+    ],
+    "outside_negative": {
+      "address": "700 Lavaca Street, Austin, TX 78701",
+      "expected": {
+        "lubbock_jurisdiction_present": false
+      }
+    },
+    "boundary": {
+      "required": true,
+      "policy": "MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK",
+      "shared_geometry_families": [
+        "commissioner",
+        "justice_of_the_peace",
+        "constable"
+      ]
+    }
+  },
+  "actions": {
+    "status": "NOT_YET_RELEASED",
+    "layer": "lubbock_action_endpoints",
+    "reason": "Lubbock County civic-action routing is intentionally outside the County #13 CG-01 intake scope."
+  },
+  "release_status": "PROBE_CURRENT",
+  "source_status": "FROZEN_CG01_FIT_NOT_RUN",
+  "release_note": "Lubbock County is County #13 and a 4/4/4 candidate for County Onboarding Pipeline v0.1. The frozen CG-01 scope models six bounded countywide offices plus four Commissioner, four Justice of the Peace, and four Constable precinct offices. Current officeholder identity comes from official Lubbock County pages. The official county-linked GIS Precinct Boundaries layer contains four polygons and exposes authoritative integer District_ID keys 1-4. Automated CG-02 and CG-03 fit classification has not yet run.",
+  "known_gaps": [
+    {
+      "gap_id": "GAP-LUBBOCK-GPS-001",
+      "status": "NOT_YET_RELEASED",
+      "summary": "Lubbock County civic-action routing is not included in the County #13 intake batch."
+    },
+    {
+      "gap_id": "GAP-LUBBOCK-GPS-002",
+      "status": "BOUNDED_V0_1_SCOPE",
+      "summary": "The v0.1 countywide set is deliberately bounded to six offices; additional countywide and judicial offices are not modeled."
+    },
+    {
+      "gap_id": "GAP-LUBBOCK-GPS-003",
+      "status": "FIT_CLASSIFICATION_PENDING",
+      "summary": "CG-02 and CG-03 must confirm that the 4/4/4 family cardinalities and integer district keys fit the unchanged onboarding contract."
+    },
+    {
+      "gap_id": "GAP-LUBBOCK-GPS-004",
+      "status": "LIVE_PROOF_PENDING",
+      "summary": "Canonical-roster, live GIS, interior, outside-negative, boundary, package, and promotion gates remain pending after CG-01."
+    }
+  ]
+}
