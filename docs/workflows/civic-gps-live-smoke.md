@@ -12,12 +12,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`cd8a5807fdeb7ca0253885ec8192cf3468c8b0c29a4c099ba78c0707c9818d1a`
+`1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba`
 
 Current contract set:
 
 - Overlay Engine: `v0.6.2`
-- Adapter registry artifact: `v0.6.1`
+- Adapter registry artifact: `v0.6.2`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 - County onboarding frozen-spec schema: `civic-gps-county-onboarding/0.1.0`
@@ -83,6 +83,8 @@ Required packaged controls:
 - Shared JP/Constable exact boundary — live official geometry must suppress JP and Constable together while preserving the independently resolved Commissioner assignment; both sides restore 9 offices.
 
 Tarrant release scope is 26 offices / 26 holders = 6 deliberately bounded countywide + 4 Commissioner + 8 JP + 8 Constable. Tarrant action routing remains `NOT_YET_RELEASED`; additional countywide elected offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
+
+The Commissioner adapter uses Tarrant County GIS's `Dynamic/CommissionerPrecinct/MapServer/0` layer and its `District_N` field. This replaces the retired `BondProject/BondProjects/MapServer/3` service without changing district keys, rosters, or expected control results.
 
 ### Bastrop County
 

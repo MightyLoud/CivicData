@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Packaged Tarrant County regression for Civic GPS v0.6.2 / registry v0.5.9."""
+"""Maintained packaged Tarrant County regression for Civic GPS v0.6.2."""
 from __future__ import annotations
 
 import hashlib
@@ -19,7 +19,7 @@ OUTPUT.mkdir(parents=True, exist_ok=True)
 ENGINE_PATH = GPS / "engine.py"
 REGISTRY_PATH = GPS / "registry.json"
 RELEASE_PATH = GPS / "civic_gps_tarrant_county_v0.1.json"
-COMM_SERVICE = "https://mapit.tarrantcounty.com/arcgis/rest/services/BondProject/BondProjects/MapServer/3"
+COMM_SERVICE = "https://mapit.tarrantcounty.com/arcgis/rest/services/Dynamic/CommissionerPrecinct/MapServer/0"
 JPC_SERVICE = "https://mapit.tarrantcounty.com/arcgis/rest/services/Dynamic/JusticeOfThePeace/MapServer/0"
 J = "jur-us-tx-tarrant-county"
 TRAVIS = "jur-us-tx-travis-county"
