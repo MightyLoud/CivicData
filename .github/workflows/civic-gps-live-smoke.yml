@@ -67,8 +67,6 @@ on:
       - 'docs/workflows/civic-gps-county-onboarding.md'
   schedule:
     - cron: '23 15 * * 3'
-    # One-time unattended proof authorized for 2026-08-15; remove after the run is recorded.
-    - cron: '23 22 15 8 *'
 
 permissions:
   contents: read
