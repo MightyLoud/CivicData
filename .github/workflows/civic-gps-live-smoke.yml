@@ -82,9 +82,9 @@ jobs:
     timeout-minutes: 15
     env:
       PYTHONDONTWRITEBYTECODE: '1'
-      CIVIC_GPS_EXPECTED_REGISTRY_VERSION: '0.6.1'
+      CIVIC_GPS_EXPECTED_REGISTRY_VERSION: '0.6.2'
       CIVIC_GPS_EXPECTED_BUNDLE_COUNT: '14'
-      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: 'cd8a5807fdeb7ca0253885ec8192cf3468c8b0c29a4c099ba78c0707c9818d1a'
+      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -103,7 +103,7 @@ jobs:
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
-          echo 'cd8a5807fdeb7ca0253885ec8192cf3468c8b0c29a4c099ba78c0707c9818d1a  civic_gps_runtime.zip' | sha256sum --check --strict
+          echo '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
       - name: Compile engine, onboarding tool, and smoke tests

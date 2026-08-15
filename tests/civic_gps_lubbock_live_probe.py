@@ -8,6 +8,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 import sys
 import time
 import types
@@ -59,8 +60,8 @@ except ModuleNotFoundError:  # Local restricted sandboxes may lack the CI-instal
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_PARTS = ROOT / "civic_gps_runtime_parts"
 RELEASE_RUNTIME_SHA256 = "cd8a5807fdeb7ca0253885ec8192cf3468c8b0c29a4c099ba78c0707c9818d1a"
-EXPECTED_REGISTRY_VERSION = "0.6.1"
-EXPECTED_BUNDLE_COUNT = 14
+EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.6.1")
+EXPECTED_BUNDLE_COUNT = int(os.environ.get("CIVIC_GPS_EXPECTED_BUNDLE_COUNT", "14"))
 SERVICE = "https://gisserver.halff.com/ags/rest/services/Lubbock_CO/Reference_Layers/MapServer/0"
 FIELD = "District_ID"
 J = "jur-us-tx-lubbock-county"
@@ -265,8 +266,10 @@ def main() -> int:
 
     runtime_bytes = b"".join(part.read_bytes() for part in sorted(RUNTIME_PARTS.glob("part.*")))
     runtime_sha = hashlib.sha256(runtime_bytes).hexdigest()
-    if runtime_sha != args.expected_runtime_sha256 or runtime_sha != RELEASE_RUNTIME_SHA256:
+    if runtime_sha != args.expected_runtime_sha256:
         raise AssertionError(f"Lubbock CG-10 runtime SHA changed: {runtime_sha}")
+    if EXPECTED_REGISTRY_VERSION == "0.6.1" and runtime_sha != RELEASE_RUNTIME_SHA256:
+        raise AssertionError(f"Lubbock v0.6.1 release runtime SHA changed: {runtime_sha}")
 
     with ZipFile(io.BytesIO(runtime_bytes)) as archive:
         names = archive.namelist()
@@ -276,7 +279,9 @@ def main() -> int:
     if len(names) != 22 or len(names) != len(set(names)):
         raise AssertionError(f"Expected 22 unique runtime entries, got {len(names)}")
     if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != EXPECTED_REGISTRY_VERSION:
-        raise AssertionError("Lubbock release requires engine 0.6.2 / registry 0.6.1")
+        raise AssertionError(
+            f"Lubbock release requires engine 0.6.2 / registry {EXPECTED_REGISTRY_VERSION}"
+        )
     if len(registry.get("bundles") or []) != EXPECTED_BUNDLE_COUNT:
         raise AssertionError("Lubbock release requires exactly 14 registry bundles")
     registry_copy = copy.deepcopy(registry)
