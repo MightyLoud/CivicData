@@ -24,14 +24,18 @@ Election-only candidate identities are added only where the certified reports na
 - QA failures: 0; blocking gaps: 0; parity: true; election scope complete: true; unexplained loss: 0
 - Address controls: 115 Ramsdell Street and 555 Contra Costa Ave
 
-## Runtime boundary
+## Runtime boundary and remediation
 
-Civic GPS is geography-only. The Fircrest routing extension activates `jur-us-wa-fircrest` from Census place GEOID `5323970` and deliberately contains no office, officeholder, or action facts. The governed package owns representation, elections, candidates, provenance, QA, and warnings.
+The first live attempt failed closed because the Census address response for Fircrest resolved Pierce County but did not expose an `Incorporated Places` row, so a simple place-GEOID bundle could not activate Fircrest. No city identity was inferred from the address text or ZIP code.
 
-The new `full_essentials_catalog.py` consumer is jurisdiction-agnostic. Fircrest-specific information exists only in governed data, an onboarding spec, routing metadata, and tests. No Fircrest condition is added to consumer code.
+The remediation adds a generic `MUNICIPAL_BOUNDARY_OVERLAY` routing strategy. After the exact Civic GPS engine resolves the parent jurisdiction and geocoded point, the extension performs point-in-polygon against the Washington State Department of Transportation `City Limits` polygon layer. That layer is sourced from Washington State Office of Financial Management incorporated-municipality boundaries and exposes `CityFIPSLongPlaceCode`. Fircrest activates only when the point intersects the polygon filtered to `CityFIPSLongPlaceCode='5323970'`.
+
+Civic GPS remains geography-only. The Fircrest release contains zero offices and zero officeholders, the boundary overlay contains no applicable-office or action rules, and the governed package owns representation, elections, candidates, provenance, QA, and warnings. Pierce County may independently contribute its own released facts; the Fircrest overlay contributes zero Fircrest civic-fact rows.
+
+The new `full_essentials_catalog.py` consumer is jurisdiction-agnostic. Fircrest-specific information exists only in governed data, the onboarding spec, routing metadata, and tests. No Fircrest condition is added to consumer code.
 
 ## Acceptance
 
-EV-IMP-007 passes only if both live official addresses resolve through the exact Civic GPS runtime to Fircrest, the catalog selects the v0.2 Fircrest package, the consumer returns 7 applicable offices / 7 contests / 19 candidacies, write-in buckets remain non-person records, outputs are deterministic, Civic GPS contributes zero civic-fact rows, and canonical writes remain zero.
+EV-IMP-007 passes only if both live official addresses resolve through the exact Civic GPS engine plus the authoritative boundary overlay to `jur-us-wa-fircrest`, the catalog selects the v0.2 Fircrest package, the consumer returns 7 applicable offices / 7 contests / 19 candidacies, write-in buckets remain non-person records, outputs are deterministic, the Fircrest routing layer contributes zero civic-fact rows, and canonical writes remain zero.
 
 Publication and consumer writeback are not authorized by this implementation gate.
