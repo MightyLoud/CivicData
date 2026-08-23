@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Build/verify deterministic Empowered.Vote jurisdiction onboarding artifacts.
 
-This tool does not create civic facts. It consumes an already governed
-Jurisdiction Package artifact and produces only consumer routing metadata:
-a package-catalog entry, a routing-only Civic GPS extension bundle, and an
-acceptance report. The package remains authoritative for civic facts.
+This tool never creates civic facts. It consumes an already governed package
+and produces only consumer catalog metadata plus geography-only Civic GPS
+routing metadata. Routing may use a Census geography match or an authoritative
+municipal polygon overlay when the Census address response omits place.
 """
 from __future__ import annotations
 
@@ -38,6 +38,10 @@ def load_json(path: Path) -> dict[str, Any]:
     return data
 
 
+def routing_strategy(spec: dict[str, Any]) -> str:
+    return str(spec["routing"].get("strategy", "CENSUS_GEOID")).upper()
+
+
 def build_catalog_entry(spec: dict[str, Any]) -> dict[str, Any]:
     return {
         "entry_id": spec["entry_id"],
@@ -50,8 +54,10 @@ def build_catalog_entry(spec: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_routing_bundle(spec: dict[str, Any]) -> dict[str, Any]:
+def build_routing_bundle(spec: dict[str, Any]) -> dict[str, Any] | None:
     routing = spec["routing"]
+    if routing_strategy(spec) != "CENSUS_GEOID":
+        return None
     geoid = str(routing["geoid"])
     geography = str(routing.get("geography", "place"))
     return {
@@ -77,20 +83,49 @@ def build_routing_bundle(spec: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def build_boundary_overlay(spec: dict[str, Any]) -> dict[str, Any] | None:
+    routing = spec["routing"]
+    if routing_strategy(spec) != "MUNICIPAL_BOUNDARY_OVERLAY":
+        return None
+    for key in ("overlay_id", "parent_jurisdiction_id", "service_url", "where", "identity_field", "identity_value", "division_id", "division_name", "release_file"):
+        if not routing.get(key):
+            raise OnboardingError(f"boundary overlay missing field: {key}")
+    if str(routing["identity_value"]) != str(routing["geoid"]):
+        raise OnboardingError("boundary overlay identity value must equal governed package GEOID")
+    return {
+        "overlay_id": routing["overlay_id"],
+        "parent_jurisdiction_id": routing["parent_jurisdiction_id"],
+        "service_url": routing["service_url"],
+        "where": routing["where"],
+        "identity_field": routing["identity_field"],
+        "identity_value": str(routing["identity_value"]),
+        "jurisdiction_id": spec["civic_gps_jurisdiction_id"],
+        "division_id": routing["division_id"],
+        "division_name": routing["division_name"],
+        "division_type": routing.get("division_type", "municipality"),
+        "release_file": routing["release_file"],
+        **({"parent_division_id": routing["parent_division_id"]} if routing.get("parent_division_id") else {}),
+        **({"authority": routing["authority"]} if routing.get("authority") else {}),
+        **({"reference_url": routing["reference_url"]} if routing.get("reference_url") else {}),
+    }
+
+
 def count_current_holders(package: dict[str, Any]) -> int:
     return sum(
-        1
-        for row in package["records"]["role_terms"]
+        1 for row in package["records"]["role_terms"]
         if str(row.get("status") or row.get("currentness_status", "")).upper().startswith("CURRENT")
     )
 
 
-def find_existing(repo_root: Path, entry: dict[str, Any], bundle: dict[str, Any]) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+def find_existing(repo_root: Path, entry: dict[str, Any], routing_obj: dict[str, Any], strategy: str) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
     catalog = load_json(repo_root / "consumers/empowered_vote/package_catalog.v0.1.json")
     existing_entry = next((x for x in catalog.get("entries", []) if x.get("entry_id") == entry["entry_id"]), None)
     registry = load_json(repo_root / "civic_gps_extensions/registry_bundles.v0.1.json")
-    existing_bundle = next((x for x in registry.get("bundles", []) if x.get("adapter_id") == bundle["adapter_id"]), None)
-    return existing_entry, existing_bundle
+    if strategy == "CENSUS_GEOID":
+        existing_routing = next((x for x in registry.get("bundles", []) if x.get("adapter_id") == routing_obj["adapter_id"]), None)
+    else:
+        existing_routing = next((x for x in registry.get("municipal_boundary_overlays", []) if x.get("overlay_id") == routing_obj["overlay_id"]), None)
+    return existing_entry, existing_routing
 
 
 def run(spec_path: Path, repo_root: Path, out: Path, verify_current: bool) -> dict[str, Any]:
@@ -101,8 +136,15 @@ def run(spec_path: Path, repo_root: Path, out: Path, verify_current: bool) -> di
         if not spec.get(key):
             raise OnboardingError(f"missing field: {key}")
 
+    strategy = routing_strategy(spec)
+    if strategy not in {"CENSUS_GEOID", "MUNICIPAL_BOUNDARY_OVERLAY"}:
+        raise OnboardingError("unsupported routing strategy")
     entry = build_catalog_entry(spec)
     bundle = build_routing_bundle(spec)
+    boundary_overlay = build_boundary_overlay(spec)
+    routing_obj = bundle if bundle is not None else boundary_overlay
+    assert routing_obj is not None
+
     package = package_catalog.reconstruct_package(entry, repo_root)
     capabilities = package_source.package_capabilities(package)
     if spec["profile"] == "municipal_essentials" and not capabilities["full_essentials"]:
@@ -117,7 +159,7 @@ def run(spec_path: Path, repo_root: Path, out: Path, verify_current: bool) -> di
         raise OnboardingError("package schema drift")
     if str(package["jurisdiction"].get("geoid")) != str(spec["routing"]["geoid"]):
         raise OnboardingError("routing GEOID does not match governed package")
-    if bundle["applicable_office_rules"] or bundle["action_registry_files"]:
+    if bundle is not None and (bundle["applicable_office_rules"] or bundle["action_registry_files"]):
         raise OnboardingError("routing bundle attempted to acquire civic-fact authority")
 
     expected = spec.get("expected", {})
@@ -135,16 +177,17 @@ def run(spec_path: Path, repo_root: Path, out: Path, verify_current: bool) -> di
 
     existing_match = None
     if verify_current:
-        existing_entry, existing_bundle = find_existing(repo_root, entry, bundle)
+        existing_entry, existing_routing = find_existing(repo_root, entry, routing_obj, strategy)
         if existing_entry is None or canonical(existing_entry) != canonical(entry):
             raise OnboardingError("generated catalog entry does not match current governed entry")
-        if existing_bundle is None or canonical(existing_bundle) != canonical(bundle):
-            raise OnboardingError("generated routing bundle does not match current governed bundle")
+        if existing_routing is None or canonical(existing_routing) != canonical(routing_obj):
+            raise OnboardingError("generated routing metadata does not match current governed routing")
         existing_match = True
 
     out.mkdir(parents=True, exist_ok=True)
     (out / "package_catalog_entry.json").write_text(canonical(entry), encoding="utf-8")
-    (out / "civic_gps_routing_bundle.json").write_text(canonical(bundle), encoding="utf-8")
+    routing_filename = "civic_gps_routing_bundle.json" if bundle is not None else "civic_gps_boundary_overlay.json"
+    (out / routing_filename).write_text(canonical(routing_obj), encoding="utf-8")
     report = {
         "gate": "EV-IMP-006",
         "status": "PASS",
@@ -154,6 +197,7 @@ def run(spec_path: Path, repo_root: Path, out: Path, verify_current: bool) -> di
         "package_schema_version": package["schema_version"],
         "package_jurisdiction_id": package["jurisdiction"]["jurisdiction_id"],
         "civic_gps_jurisdiction_id": spec["civic_gps_jurisdiction_id"],
+        "routing_strategy": strategy,
         "observed": observed,
         "capabilities": capabilities,
         "routing_only": True,

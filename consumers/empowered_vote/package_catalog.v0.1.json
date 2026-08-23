@@ -30,6 +30,19 @@
         "archive_sha256": "7976f9037d3eb8cc377dc0d349d743de8f62201cc671b4e5f2718ac5fce9bf87",
         "package_subdir": "Akron_Jurisdiction_Package_v0.1_2026-08-23/package"
       }
+    },
+    {
+      "entry_id": "wa-fircrest-municipal-essentials-v0.2",
+      "profile": "municipal_essentials",
+      "civic_gps_jurisdiction_id": "jur-us-wa-fircrest",
+      "package_jurisdiction_id": "jurisdiction-wa-fircrest",
+      "package_schema_version": "0.2",
+      "artifact": {
+        "encoding": "base64-parts",
+        "parts_glob": "data/packages/wa/fircrest/Fircrest_Jurisdiction_Package_v0.2_2026-08-23.zip.b64.part*",
+        "archive_sha256": "5abb205fc316c6167a75c40b42875cf5a84681bd63b1e63af973103c0e4879ab",
+        "package_subdir": "Fircrest_Jurisdiction_Package_v0.2_2026-08-23/package"
+      }
     }
   ]
 }
