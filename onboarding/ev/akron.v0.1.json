@@ -1,0 +1,34 @@
+{
+  "spec_version": "0.1",
+  "entry_id": "co-akron-municipal-representation-v0.1",
+  "profile": "municipal_representation",
+  "civic_gps_jurisdiction_id": "jur-us-co-akron",
+  "package_jurisdiction_id": "jurisdiction-co-akron",
+  "package_schema_version": "0.1",
+  "artifact": {
+    "encoding": "base64-parts",
+    "parts_glob": "data/packages/co/akron/Akron_Jurisdiction_Package_v0.1_2026-08-23.zip.b64.part*",
+    "archive_sha256": "7976f9037d3eb8cc377dc0d349d743de8f62201cc671b4e5f2718ac5fce9bf87",
+    "package_subdir": "Akron_Jurisdiction_Package_v0.1_2026-08-23/package"
+  },
+  "routing": {
+    "adapter_id": "BASE-CO-AKRON",
+    "priority": 80,
+    "geography": "place",
+    "geoid": "0800925",
+    "division_id": "div-us-co-akron",
+    "division_name": "Akron",
+    "division_type": "municipality",
+    "release_files": ["../civic_gps_extensions/akron_release_v0.1.json"],
+    "district_adapters": [],
+    "known_gaps": []
+  },
+  "expected": {
+    "office_rows": 2,
+    "current_holders": 7,
+    "address_controls": 2,
+    "qa_fail_count": 0,
+    "blocking_gap_count": 0,
+    "parity_ok": true
+  }
+}
