@@ -27,6 +27,8 @@ on:
       - 'tests/civic_gps_lubbock_live_probe.py'
       - 'tests/civic_gps_county_onboarding_test.py'
       - 'tests/civic_gps_topology_probe_test.py'
+      - 'tests/empowered_vote_live_civic_gps_network_test.py'
+      - 'consumers/empowered_vote/live_civic_gps.py'
       - 'tests/fixtures/civic_gps_county_onboarding/**'
       - 'tools/civic_gps_tx_county_archetype.py'
       - 'tools/civic_gps_county_onboarding.py'
@@ -71,7 +73,7 @@ jobs:
           set -euo pipefail
           git diff --name-only '${{ github.event.pull_request.base.sha }}' '${{ github.event.pull_request.head.sha }}' > /tmp/civic-gps-changed-files.txt
           cat /tmp/civic-gps-changed-files.txt
-          if grep -Eq '^(civic_gps_runtime_parts/|tests/civic_gps_|tests/fixtures/civic_gps_county_onboarding/|tools/civic_gps_|schemas/civic_gps_|requirements-civic-gps\.txt$|\.github/workflows/civic-gps-live-smoke\.yml$|docs/workflows/civic-gps-)' /tmp/civic-gps-changed-files.txt; then
+          if grep -Eq '^(civic_gps_runtime_parts/|tests/civic_gps_|tests/empowered_vote_live_civic_gps_network_test\.py$|consumers/empowered_vote/live_civic_gps\.py$|tests/fixtures/civic_gps_county_onboarding/|tools/civic_gps_|schemas/civic_gps_|requirements-civic-gps\.txt$|\.github/workflows/civic-gps-live-smoke\.yml$|docs/workflows/civic-gps-)' /tmp/civic-gps-changed-files.txt; then
             echo 'run=true' >> "$GITHUB_OUTPUT"
           else
             echo 'run=false' >> "$GITHUB_OUTPUT"
@@ -103,7 +105,7 @@ jobs:
 
       - name: Compile engine, onboarding tool, and smoke tests
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
-        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_topology_probe_test.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py tests/civic_gps_bastrop_live_probe.py tests/civic_gps_brazos_live_probe.py tests/civic_gps_smith_live_probe.py tests/civic_gps_grayson_live_probe.py tests/civic_gps_lubbock_live_probe.py
+        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_topology_probe_test.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py tests/civic_gps_bastrop_live_probe.py tests/civic_gps_brazos_live_probe.py tests/civic_gps_smith_live_probe.py tests/civic_gps_grayson_live_probe.py tests/civic_gps_lubbock_live_probe.py consumers/empowered_vote/live_civic_gps.py tests/empowered_vote_live_civic_gps_network_test.py
 
       - name: Run deterministic County Onboarding Pipeline fixtures
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
@@ -118,6 +120,10 @@ jobs:
       - name: Run baseline real-network Civic GPS controls
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_live_smoke.py
+
+      - name: Run EV-IMP-003 live Civic GPS → governed package controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        run: python tests/empowered_vote_live_civic_gps_network_test.py
 
       - name: Run packaged Denton live controls
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
