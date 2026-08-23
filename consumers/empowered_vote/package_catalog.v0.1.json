@@ -17,6 +17,19 @@
         "adapter_id": "DIST-WA-TACOMA-COUNCIL",
         "division_template": "division:us/wa/tacoma/council_district_{district_key}"
       }
+    },
+    {
+      "entry_id": "co-akron-municipal-representation-v0.1",
+      "profile": "municipal_representation",
+      "civic_gps_jurisdiction_id": "jur-us-co-akron",
+      "package_jurisdiction_id": "jurisdiction-co-akron",
+      "package_schema_version": "0.1",
+      "artifact": {
+        "encoding": "base64-parts",
+        "parts_glob": "data/packages/co/akron/Akron_Jurisdiction_Package_v0.1_2026-08-23.zip.b64.part*",
+        "archive_sha256": "7976f9037d3eb8cc377dc0d349d743de8f62201cc671b4e5f2718ac5fce9bf87",
+        "package_subdir": "Akron_Jurisdiction_Package_v0.1_2026-08-23/package"
+      }
     }
   ]
 }
