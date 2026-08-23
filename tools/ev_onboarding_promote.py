@@ -16,7 +16,6 @@ import hashlib
 import importlib.util
 import json
 import os
-import shutil
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -44,6 +43,13 @@ def sha256_bytes(value: bytes) -> str:
 
 def sha256_file(path: Path) -> str:
     return sha256_bytes(path.read_bytes())
+
+
+def _json_equivalent(left: bytes, right: bytes) -> bool:
+    try:
+        return json.loads(left.decode("utf-8")) == json.loads(right.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return False
 
 
 def _allowed_path(rel: str) -> bool:
@@ -173,7 +179,7 @@ def apply_reviewed(repo_root: Path, package_jurisdiction_id: str, expected_bundl
             staged_bytes[rel] = content
             preimages[rel] = target.read_bytes() if target.exists() else None
             if action == "NOOP":
-                if preimages[rel] is None or preimages[rel] != content:
+                if preimages[rel] is None or not _json_equivalent(preimages[rel], content):
                     raise PromotionError(f"NOOP preimage drift: {rel}")
             elif action == "ADD" and rel.startswith("onboarding/ev/") and preimages[rel] is not None:
                 raise PromotionError(f"new onboarding spec path already exists: {rel}")
