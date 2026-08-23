@@ -12,6 +12,7 @@
     "package_subdir": "<archive-root>/package"
   },
   "routing": {
+    "strategy": "CENSUS_GEOID",
     "adapter_id": "BASE-<STATE>-<JURISDICTION>",
     "priority": 80,
     "geography": "place",
@@ -30,5 +31,9 @@
     "qa_fail_count": 0,
     "blocking_gap_count": 0,
     "parity_ok": true
-  }
+  },
+  "live_addresses": [
+    "<official in-jurisdiction address control 1>",
+    "<official in-jurisdiction address control 2>"
+  ]
 }

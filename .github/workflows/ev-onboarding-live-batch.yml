@@ -1,0 +1,52 @@
+name: EV onboarding live batch
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "onboarding/ev/**"
+      - "tools/ev_jurisdiction_onboarding.py"
+      - "tools/ev_onboarding_batch.py"
+      - "tools/ev_live_onboarding_batch.py"
+      - "consumers/empowered_vote/**"
+      - "civic_gps_extensions/**"
+      - "data/packages/**"
+      - ".github/workflows/ev-onboarding-live-batch.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-batch:
+    name: All governed EV jurisdictions live gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+      - name: Reconstruct exact Civic GPS runtime
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+      - name: Compile generic onboarding batch runners
+        run: python -m py_compile tools/ev_jurisdiction_onboarding.py tools/ev_onboarding_batch.py tools/ev_live_onboarding_batch.py
+      - name: Verify all production onboarding specs against governed artifacts
+        run: python tools/ev_onboarding_batch.py --repo-root . --output artifacts/ev-imp-008/deterministic
+      - name: Run all production live address controls
+        run: python tools/ev_live_onboarding_batch.py --repo-root . --output artifacts/ev-imp-008/live
+      - name: Upload EV-IMP-008 acceptance matrices
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-imp-008-onboarding-${{ github.run_id }}
+          path: artifacts/ev-imp-008/
+          if-no-files-found: warn
+          retention-days: 30
