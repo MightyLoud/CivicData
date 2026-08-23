@@ -46,6 +46,26 @@ CASES = [
         },
     },
     {
+        "id": "tacoma-d5-control",
+        "address": "1601 S 88th Street, Tacoma, WA",
+        "jurisdictions": {J_TACOMA, J_PIERCE},
+        "assignments": {
+            "DIST-WA-TACOMA-COUNCIL": "5",
+        },
+        "applicable_count": 11,
+        "required_offices": {
+            "office-tacoma-council-5",
+        },
+    },
+    {
+        "id": "lakewood-tacoma-negative",
+        "address": "6000 Main St SW, Lakewood, WA 98499",
+        "jurisdictions": {J_PIERCE},
+        "forbidden_jurisdictions": {J_TACOMA},
+        "assignments": {},
+        "applicable_count": 6,
+    },
+    {
         "id": "denver-rtd",
         "address": "1437 Bannock Street, Denver, CO 80202",
         "jurisdictions": {J_DENVER, J_RTD},
@@ -164,7 +184,7 @@ def main() -> int:
             print(f"RUN {case['id']}: {case['address']}", flush=True)
             summary = run_case(resolver, case, output_dir)
             summaries.append(summary)
-            print(f"PASS {case['id']}: {json.dumps(summary, sort_keys=True)}", flush=True)
+            print(f"PASS {case_id}: {json.dumps(summary, sort_keys=True)}", flush=True)
     except Exception as exc:
         summary_path = output_dir / "summary.json"
         summary_path.write_text(
