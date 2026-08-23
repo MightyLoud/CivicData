@@ -1,0 +1,15 @@
+{
+  "schema_version": "civic-gps-routing-extension-release/0.1",
+  "payload": {
+    "jurisdictions": [
+      {
+        "jurisdiction_id": "jur-us-wa-fircrest",
+        "name": "Fircrest",
+        "state": "WA"
+      }
+    ],
+    "offices": [],
+    "officeholders": []
+  },
+  "notes": "Routing-only geography activation. Civic facts remain governed by the Fircrest Jurisdiction Package."
+}
