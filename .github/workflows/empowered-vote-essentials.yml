@@ -5,8 +5,12 @@ on:
     paths:
       - "consumers/empowered_vote/**"
       - "tests/empowered_vote_essentials_test.py"
+      - "tests/empowered_vote_package_source_test.py"
       - "docs/empowered-vote-imp-001.md"
+      - "docs/empowered-vote-imp-002.md"
       - "docs/ev-imp-001-acceptance.json"
+      - "data/packages/wa/tacoma/**"
+      - "data/reference/wa/tacoma/**"
       - ".github/workflows/empowered-vote-essentials.yml"
   workflow_dispatch:
 
@@ -21,7 +25,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Compile adapter and renderer
-        run: python -m py_compile consumers/empowered_vote/adapter.py consumers/empowered_vote/render.py tests/empowered_vote_essentials_test.py
-      - name: Run fail-closed consumer tests
+      - name: Compile Empowered.Vote consumers
+        run: python -m py_compile consumers/empowered_vote/adapter.py consumers/empowered_vote/render.py consumers/empowered_vote/package_source.py tests/empowered_vote_essentials_test.py tests/empowered_vote_package_source_test.py
+      - name: Run frozen-payload consumer tests
         run: python tests/empowered_vote_essentials_test.py
+      - name: Run governed-package boundary and Tacoma package tests
+        run: python tests/empowered_vote_package_source_test.py
