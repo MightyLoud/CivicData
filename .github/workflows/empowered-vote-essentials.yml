@@ -77,4 +77,4 @@ jobs:
       - name: Run onboarding proposal generator tests
         run: python tests/ev_onboarding_proposal_test.py
       - name: Regenerate all production onboarding specs from governed packages
-        run: python tools/ev_onboarding_proposal.py --repo-root . --verify-production --output artifacts/ev-imp-009
+        run: PYTHONPATH=. python tools/ev_onboarding_proposal.py --repo-root . --verify-production --output artifacts/ev-imp-009
