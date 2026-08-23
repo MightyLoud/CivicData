@@ -12,6 +12,7 @@ on:
       - "tests/empowered_vote_live_civic_gps_network_test.py"
       - "tests/empowered_vote_package_catalog_test.py"
       - "tests/empowered_vote_second_jurisdiction_test.py"
+      - "tests/empowered_vote_third_jurisdiction_test.py"
       - "tests/ev_jurisdiction_onboarding_test.py"
       - "docs/empowered-vote-imp-001.md"
       - "docs/empowered-vote-imp-002.md"
@@ -19,10 +20,13 @@ on:
       - "docs/empowered-vote-imp-004.md"
       - "docs/empowered-vote-imp-005.md"
       - "docs/empowered-vote-imp-006.md"
+      - "docs/empowered-vote-imp-007.md"
       - "docs/ev-imp-001-acceptance.json"
       - "data/packages/wa/tacoma/**"
       - "data/reference/wa/tacoma/**"
       - "data/packages/co/akron/**"
+      - "data/packages/wa/fircrest/**"
+      - "data/reference/wa/fircrest/**"
       - "civic_gps_extensions/**"
       - ".github/workflows/empowered-vote-essentials.yml"
   workflow_dispatch:
@@ -39,7 +43,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile Empowered.Vote consumers and onboarding pipeline
-        run: python -m py_compile consumers/empowered_vote/adapter.py consumers/empowered_vote/render.py consumers/empowered_vote/package_source.py consumers/empowered_vote/live_civic_gps.py consumers/empowered_vote/package_catalog.py consumers/empowered_vote/representation.py consumers/empowered_vote/representation_catalog.py tools/ev_jurisdiction_onboarding.py tests/empowered_vote_essentials_test.py tests/empowered_vote_package_source_test.py tests/empowered_vote_live_civic_gps_test.py tests/empowered_vote_live_civic_gps_network_test.py tests/empowered_vote_package_catalog_test.py tests/empowered_vote_second_jurisdiction_test.py tests/ev_jurisdiction_onboarding_test.py
+        run: python -m py_compile consumers/empowered_vote/adapter.py consumers/empowered_vote/render.py consumers/empowered_vote/package_source.py consumers/empowered_vote/live_civic_gps.py consumers/empowered_vote/package_catalog.py consumers/empowered_vote/representation.py consumers/empowered_vote/representation_catalog.py consumers/empowered_vote/full_essentials_catalog.py tools/ev_jurisdiction_onboarding.py tests/empowered_vote_essentials_test.py tests/empowered_vote_package_source_test.py tests/empowered_vote_live_civic_gps_test.py tests/empowered_vote_live_civic_gps_network_test.py tests/empowered_vote_package_catalog_test.py tests/empowered_vote_second_jurisdiction_test.py tests/empowered_vote_third_jurisdiction_test.py tests/ev_jurisdiction_onboarding_test.py
       - name: Run frozen-payload consumer tests
         run: python tests/empowered_vote_essentials_test.py
       - name: Run governed-package boundary and Tacoma package tests
@@ -54,3 +58,7 @@ jobs:
         run: python tests/ev_jurisdiction_onboarding_test.py
       - name: Replay Akron onboarding spec against governed artifacts
         run: python tools/ev_jurisdiction_onboarding.py onboarding/ev/akron.v0.1.json --repo-root . --output artifacts/ev-imp-006/akron --verify-current
+      - name: Run third real jurisdiction Full Essentials tests
+        run: python tests/empowered_vote_third_jurisdiction_test.py
+      - name: Replay Fircrest onboarding spec against governed artifacts
+        run: python tools/ev_jurisdiction_onboarding.py onboarding/ev/fircrest.v0.1.json --repo-root . --output artifacts/ev-imp-007/fircrest --verify-current
