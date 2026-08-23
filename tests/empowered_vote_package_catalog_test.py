@@ -71,8 +71,8 @@ def synthetic_package() -> dict:
 
 def run() -> None:
     catalog = package_catalog.load_catalog()
-    assert len(catalog["entries"]) == 1
-    tacoma_entry = catalog["entries"][0]
+    assert len(catalog["entries"]) >= 2
+    tacoma_entry = next(row for row in catalog["entries"] if row["entry_id"] == "wa-tacoma-municipal-essentials-v0.2")
     assert tacoma_entry["civic_gps_jurisdiction_id"] == "jur-us-wa-tacoma"
 
     live = gps("jur-us-wa-tacoma", "DIST-WA-TACOMA-COUNCIL", "2")
@@ -126,6 +126,7 @@ def run() -> None:
     print(json.dumps({
         "status": "PASS",
         "catalog_version": "0.1",
+        "catalog_entries": len(catalog["entries"]),
         "real_tacoma_package": "PASS",
         "dynamic_selection": "PASS",
         "synthetic_second_jurisdiction": "PASS",
