@@ -12,16 +12,20 @@
     "package_subdir": "Fircrest_Jurisdiction_Package_v0.2_2026-08-23/package"
   },
   "routing": {
-    "adapter_id": "BASE-WA-FIRCREST",
-    "geography": "place",
+    "strategy": "MUNICIPAL_BOUNDARY_OVERLAY",
     "geoid": "5323970",
+    "overlay_id": "MUNI-WA-FIRCREST",
+    "parent_jurisdiction_id": "jur-us-wa-pierce",
+    "service_url": "https://data.wsdot.wa.gov/arcgis/rest/services/Shared/PoliAdminBndryData/FeatureServer/1",
+    "where": "CityFIPSLongPlaceCode='5323970'",
+    "identity_field": "CityFIPSLongPlaceCode",
+    "identity_value": "5323970",
     "division_id": "div-us-wa-fircrest",
     "division_name": "Fircrest",
     "division_type": "municipality",
-    "priority": 80,
-    "release_files": ["../civic_gps_extensions/fircrest_release_v0.1.json"],
-    "district_adapters": [],
-    "known_gaps": []
+    "release_file": "../civic_gps_extensions/fircrest_release_v0.1.json",
+    "authority": "Washington State Department of Transportation / Washington State Office of Financial Management",
+    "reference_url": "https://data.wsdot.wa.gov/arcgis/rest/services/Shared/PoliAdminBndryData/FeatureServer/1"
   },
   "expected": {
     "office_rows": 7,
