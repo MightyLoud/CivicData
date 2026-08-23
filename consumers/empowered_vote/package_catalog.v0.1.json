@@ -1,0 +1,22 @@
+{
+  "catalog_version": "0.1",
+  "entries": [
+    {
+      "entry_id": "wa-tacoma-municipal-essentials-v0.2",
+      "profile": "municipal_essentials",
+      "civic_gps_jurisdiction_id": "jur-us-wa-tacoma",
+      "package_jurisdiction_id": "jurisdiction:us/wa/tacoma",
+      "package_schema_version": "0.2",
+      "artifact": {
+        "encoding": "base64-parts",
+        "parts_glob": "data/packages/wa/tacoma/Tacoma_Jurisdiction_Package_v0.2_2026-08-23.zip.b64.part*",
+        "archive_sha256": "2c6219303eff3f49b4202f72048910ba970cd65353032b6bfda2975791701d53",
+        "package_subdir": "Tacoma_Jurisdiction_Package_v0.2_2026-08-23/package"
+      },
+      "district_binding": {
+        "adapter_id": "DIST-WA-TACOMA-COUNCIL",
+        "division_template": "division:us/wa/tacoma/council_district_{district_key}"
+      }
+    }
+  ]
+}
