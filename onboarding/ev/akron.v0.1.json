@@ -30,5 +30,9 @@
     "qa_fail_count": 0,
     "blocking_gap_count": 0,
     "parity_ok": true
-  }
+  },
+  "live_addresses": [
+    "250 Main Avenue, Akron, CO 80720",
+    "302 Main Avenue, Akron, CO 80720"
+  ]
 }
