@@ -184,7 +184,7 @@ def main() -> int:
             print(f"RUN {case['id']}: {case['address']}", flush=True)
             summary = run_case(resolver, case, output_dir)
             summaries.append(summary)
-            print(f"PASS {case_id}: {json.dumps(summary, sort_keys=True)}", flush=True)
+            print(f"PASS {case['id']}: {json.dumps(summary, sort_keys=True)}", flush=True)
     except Exception as exc:
         summary_path = output_dir / "summary.json"
         summary_path.write_text(
