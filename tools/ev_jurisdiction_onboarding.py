@@ -10,8 +10,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from consumers.empowered_vote import package_catalog, package_source
 
@@ -104,6 +109,8 @@ def run(spec_path: Path, repo_root: Path, out: Path, verify_current: bool) -> di
         raise OnboardingError("profile requires full_essentials package capability")
     if spec["profile"] == "municipal_representation" and not capabilities["representation"]:
         raise OnboardingError("profile requires representation package capability")
+    if spec["profile"] not in {"municipal_essentials", "municipal_representation"}:
+        raise OnboardingError("unsupported consumer profile")
     if package["jurisdiction"]["jurisdiction_id"] != spec["package_jurisdiction_id"]:
         raise OnboardingError("package jurisdiction drift")
     if str(package["schema_version"]) != str(spec["package_schema_version"]):
