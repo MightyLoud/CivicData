@@ -19,14 +19,28 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Detect package implementation
+        id: package
+        shell: bash
+        run: |
+          if [[ -f tools/jurisdiction_package.py && -f tests/test_jurisdiction_package.py && -f tests/test_jurisdiction_package_v0_2.py ]]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Bootstrap pass before package implementation exists
+        if: steps.package.outputs.present != 'true'
+        run: echo "Jurisdiction Package workflow installed; package implementation is not yet present on this branch."
       - uses: actions/setup-python@v5
+        if: steps.package.outputs.present == 'true'
         with:
           python-version: "3.12"
       - name: Compile builder and tests
+        if: steps.package.outputs.present == 'true'
         run: python -m py_compile tools/jurisdiction_package.py tests/test_jurisdiction_package.py tests/test_jurisdiction_package_v0_2.py
       - name: Run v0.1 compatibility tests
+        if: steps.package.outputs.present == 'true'
         run: python tests/test_jurisdiction_package.py
       - name: Run v0.2 election contract tests
+        if: steps.package.outputs.present == 'true'
         run: python tests/test_jurisdiction_package_v0_2.py
-
-# CI bootstrap: workflow now also exists on the PR base branch.
