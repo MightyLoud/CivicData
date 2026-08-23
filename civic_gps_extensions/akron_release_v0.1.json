@@ -1,0 +1,15 @@
+{
+  "schema_version": "civic-gps-routing-extension-release/0.1",
+  "payload": {
+    "jurisdictions": [
+      {
+        "jurisdiction_id": "jur-us-co-akron",
+        "name": "Akron",
+        "state": "CO"
+      }
+    ],
+    "offices": [],
+    "officeholders": []
+  },
+  "notes": "Routing-only geography activation. Civic facts remain governed by the Akron Jurisdiction Package."
+}
