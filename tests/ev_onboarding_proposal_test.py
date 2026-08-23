@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 TOOL = ROOT / "tools" / "ev_onboarding_proposal.py"
 spec = importlib.util.spec_from_file_location("ev_onboarding_proposal", TOOL)
 if spec is None or spec.loader is None:
