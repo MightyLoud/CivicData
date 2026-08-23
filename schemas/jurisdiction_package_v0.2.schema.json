@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civicdata.tech/schemas/jurisdiction_package_v0.2.schema.json",
+  "title": "CivicData Jurisdiction Package v0.2",
+  "type": "object",
+  "required": ["schema_version", "jurisdiction", "records", "provenance", "qa", "warnings"],
+  "properties": {
+    "schema_version": {"const": "0.2"},
+    "jurisdiction": {
+      "type": "object",
+      "required": ["jurisdiction_id", "name", "state_abbr", "geoid"],
+      "properties": {
+        "jurisdiction_id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "state_abbr": {"type": "string", "pattern": "^[A-Z]{2}$"},
+        "geoid": {"type": "string", "pattern": "^[0-9]+$"}
+      },
+      "additionalProperties": true
+    },
+    "records": {
+      "type": "object",
+      "required": [
+        "divisions", "bodies", "offices", "people", "role_terms",
+        "leadership_roles", "identifier_crosswalk", "elections", "contests", "candidacies"
+      ],
+      "properties": {
+        "divisions": {"type": "array", "items": {"type": "object"}},
+        "bodies": {"type": "array", "items": {"type": "object"}},
+        "offices": {"type": "array", "items": {"type": "object"}},
+        "people": {"type": "array", "items": {"type": "object"}},
+        "role_terms": {"type": "array", "items": {"type": "object"}},
+        "leadership_roles": {"type": "array", "items": {"type": "object"}},
+        "identifier_crosswalk": {"type": "array", "items": {"type": "object"}},
+        "elections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["election_id", "election_date", "source_ids"],
+            "properties": {
+              "election_id": {"type": "string", "minLength": 1},
+              "election_date": {"type": "string", "format": "date"},
+              "source_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+            },
+            "additionalProperties": true
+          }
+        },
+        "contests": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["contest_id", "election_id", "office_id", "contest_name", "source_ids"],
+            "properties": {
+              "contest_id": {"type": "string", "minLength": 1},
+              "election_id": {"type": "string", "minLength": 1},
+              "office_id": {"type": "string", "minLength": 1},
+              "contest_name": {"type": "string", "minLength": 1},
+              "source_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+            },
+            "additionalProperties": true
+          }
+        },
+        "candidacies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "candidacy_id", "contest_id", "candidate_kind", "source_candidate_id",
+              "candidate_name", "source_id", "outcome"
+            ],
+            "properties": {
+              "candidacy_id": {"type": "string", "minLength": 1},
+              "contest_id": {"type": "string", "minLength": 1},
+              "candidate_kind": {"enum": ["PERSON", "WRITE_IN_BUCKET"]},
+              "source_candidate_id": {"type": "string", "minLength": 1},
+              "person_id": {"type": ["string", "null"]},
+              "candidate_name": {"type": "string", "minLength": 1},
+              "ballot_name": {"type": ["string", "null"]},
+              "source_id": {"type": "string", "minLength": 1},
+              "outcome": {"enum": ["WINNER", "LOSER", "OTHER", "UNKNOWN"]},
+              "votes": {"type": ["integer", "null"], "minimum": 0},
+              "vote_share": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+            },
+            "allOf": [
+              {
+                "if": {"properties": {"candidate_kind": {"const": "PERSON"}}},
+                "then": {"required": ["person_id"], "properties": {"person_id": {"type": "string", "minLength": 1}}}
+              },
+              {
+                "if": {"properties": {"candidate_kind": {"const": "WRITE_IN_BUCKET"}}},
+                "then": {"properties": {"person_id": {"type": "null"}}}
+              }
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source_evidence", "source_assertions"],
+      "properties": {
+        "source_evidence": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+        "source_assertions": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": false
+    },
+    "qa": {
+      "type": "object",
+      "required": [
+        "parity_ok", "qa_fail_count", "blocking_gap_count", "address_tests", "checks",
+        "election_scope_complete", "unexplained_loss"
+      ],
+      "properties": {
+        "parity_ok": {"const": true},
+        "qa_fail_count": {"const": 0},
+        "blocking_gap_count": {"const": 0},
+        "address_tests": {"type": "array", "minItems": 2, "items": {"type": "object"}},
+        "checks": {"type": "array", "items": {"type": "object"}},
+        "election_scope_complete": {"const": true},
+        "unexplained_loss": {"const": 0}
+      },
+      "additionalProperties": true
+    },
+    "warnings": {"type": "array", "items": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

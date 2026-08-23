@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civicdata.tech/schemas/jurisdiction_package_v0.1.schema.json",
+  "title": "CivicData Jurisdiction Package v0.1",
+  "type": "object",
+  "required": ["schema_version", "jurisdiction", "records", "provenance", "qa", "warnings"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "jurisdiction": {
+      "type": "object",
+      "required": ["jurisdiction_id", "name", "state_abbr", "geoid"],
+      "properties": {
+        "jurisdiction_id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "state_abbr": {"type": "string", "pattern": "^[A-Z]{2}$"},
+        "geoid": {"type": "string", "pattern": "^[0-9]+$"}
+      },
+      "additionalProperties": true
+    },
+    "records": {
+      "type": "object",
+      "required": ["divisions", "bodies", "offices", "people", "role_terms", "leadership_roles", "identifier_crosswalk"],
+      "properties": {
+        "divisions": {"type": "array", "items": {"type": "object"}},
+        "bodies": {"type": "array", "items": {"type": "object"}},
+        "offices": {"type": "array", "items": {"type": "object"}},
+        "people": {"type": "array", "items": {"type": "object"}},
+        "role_terms": {"type": "array", "items": {"type": "object"}},
+        "leadership_roles": {"type": "array", "items": {"type": "object"}},
+        "identifier_crosswalk": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source_evidence", "source_assertions"],
+      "properties": {
+        "source_evidence": {"type": "array", "items": {"type": "object"}},
+        "source_assertions": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": false
+    },
+    "qa": {
+      "type": "object",
+      "required": ["parity_ok", "qa_fail_count", "blocking_gap_count", "address_tests", "checks"],
+      "properties": {
+        "parity_ok": {"const": true},
+        "qa_fail_count": {"const": 0},
+        "blocking_gap_count": {"const": 0},
+        "address_tests": {"type": "array", "minItems": 2, "items": {"type": "object"}},
+        "checks": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "warnings": {"type": "array", "items": {"type": "object"}}
+  },
+  "additionalProperties": false
+}
