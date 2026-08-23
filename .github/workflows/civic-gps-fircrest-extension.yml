@@ -10,7 +10,9 @@ on:
       - "consumers/empowered_vote/full_essentials_catalog.py"
       - "consumers/empowered_vote/package_catalog.v0.1.json"
       - "data/packages/wa/fircrest/**"
+      - "data/reference/wa/fircrest/**"
       - "onboarding/ev/fircrest.v0.1.json"
+      - "docs/empowered-vote-imp-007.md"
       - ".github/workflows/civic-gps-fircrest-extension.yml"
   workflow_dispatch:
 
