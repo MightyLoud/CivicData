@@ -5,34 +5,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'civic_gps_runtime_parts/**'
-      - 'tests/civic_gps_live_smoke.py'
-      - 'tests/civic_gps_denton_live_probe.py'
-      - 'tests/civic_gps_denton_negative_probe.py'
-      - 'tests/civic_gps_denton_boundary_probe.py'
-      - 'tests/civic_gps_denton_action_probe.py'
-      - 'tests/civic_gps_collin_live_probe.py'
-      - 'tests/civic_gps_travis_live_probe.py'
-      - 'tests/civic_gps_williamson_live_probe.py'
-      - 'tests/civic_gps_tarrant_live_probe.py'
-      - 'tests/civic_gps_bastrop_live_probe.py'
-      - 'tests/civic_gps_brazos_live_probe.py'
-      - 'tests/civic_gps_smith_live_probe.py'
-      - 'tests/civic_gps_grayson_live_probe.py'
-      - 'tests/civic_gps_lubbock_live_probe.py'
-      - 'tests/civic_gps_county_onboarding_test.py'
-      - 'tests/civic_gps_topology_probe_test.py'
-      - 'tests/fixtures/civic_gps_county_onboarding/**'
-      - 'tools/civic_gps_tx_county_archetype.py'
-      - 'tools/civic_gps_county_onboarding.py'
-      - 'tools/civic_gps_engine_v0.6.2.patch'
-      - 'schemas/civic_gps_county_onboarding_v0.1.schema.json'
-      - 'requirements-civic-gps.txt'
-      - '.github/workflows/civic-gps-live-smoke.yml'
-      - 'docs/workflows/civic-gps-live-smoke.md'
-      - 'docs/workflows/civic-gps-county-archetype.md'
-      - 'docs/workflows/civic-gps-county-onboarding.md'
   push:
     branches:
       - main
@@ -88,8 +60,29 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Civic GPS protected-path changes
+        id: scope
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only '${{ github.event.pull_request.base.sha }}' '${{ github.event.pull_request.head.sha }}' > /tmp/civic-gps-changed-files.txt
+          cat /tmp/civic-gps-changed-files.txt
+          if grep -Eq '^(civic_gps_runtime_parts/|tests/civic_gps_|tests/fixtures/civic_gps_county_onboarding/|tools/civic_gps_|schemas/civic_gps_|requirements-civic-gps\.txt$|\.github/workflows/civic-gps-live-smoke\.yml$|docs/workflows/civic-gps-)' /tmp/civic-gps-changed-files.txt; then
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Satisfy required gate for unrelated PR
+        if: github.event_name == 'pull_request' && steps.scope.outputs.run != 'true'
+        run: echo 'No Civic GPS protected paths changed; live Civic GPS probes are not applicable to this PR.'
 
       - name: Set up Python
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -97,9 +90,11 @@ jobs:
           cache-dependency-path: requirements-civic-gps.txt
 
       - name: Install Civic GPS runtime dependency
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python -m pip install -r requirements-civic-gps.txt
 
       - name: Reconstruct exact Civic GPS runtime package
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
@@ -107,9 +102,11 @@ jobs:
           unzip -q civic_gps_runtime.zip
 
       - name: Compile engine, onboarding tool, and smoke tests
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_topology_probe_test.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py tests/civic_gps_bastrop_live_probe.py tests/civic_gps_brazos_live_probe.py tests/civic_gps_smith_live_probe.py tests/civic_gps_grayson_live_probe.py tests/civic_gps_lubbock_live_probe.py
 
       - name: Run deterministic County Onboarding Pipeline fixtures
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         shell: bash
         run: |
           rm -rf artifacts/civic-gps-county-onboarding
@@ -119,49 +116,63 @@ jobs:
           python tests/civic_gps_topology_probe_test.py
 
       - name: Run baseline real-network Civic GPS controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_live_smoke.py
 
       - name: Run packaged Denton live controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_denton_live_probe.py
 
       - name: Run packaged Denton outside-county negative control
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_denton_negative_probe.py
 
       - name: Run packaged Denton boundary fail-closed controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_denton_boundary_probe.py
 
       - name: Run Denton action selection contract
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_denton_action_probe.py
 
       - name: Run packaged Collin County archetype controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_collin_live_probe.py
 
       - name: Run packaged Travis County archetype controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_travis_live_probe.py
 
       - name: Run packaged Williamson County archetype controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_williamson_live_probe.py
 
       - name: Run packaged Tarrant County archetype controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_tarrant_live_probe.py
 
       - name: Run packaged Bastrop County archetype controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_bastrop_live_probe.py
 
       - name: Run packaged Brazos County archetype controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_brazos_live_probe.py
 
       - name: Run packaged Smith County archetype controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_smith_live_probe.py --packaged --expected-runtime-sha256 "$CIVIC_GPS_EXPECTED_RUNTIME_SHA256"
 
       - name: Run packaged Grayson County archetype controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_grayson_live_probe.py --packaged --expected-runtime-sha256 "$CIVIC_GPS_EXPECTED_RUNTIME_SHA256"
 
       - name: Run packaged Lubbock County archetype controls
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_lubbock_live_probe.py --expected-runtime-sha256 "$CIVIC_GPS_EXPECTED_RUNTIME_SHA256"
 
       - name: Upload live responses
-        if: always()
+        if: always() && (github.event_name != 'pull_request' || steps.scope.outputs.run == 'true')
         uses: actions/upload-artifact@v4
         with:
           name: civic-gps-live-smoke-${{ github.run_id }}
