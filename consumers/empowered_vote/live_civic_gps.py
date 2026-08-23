@@ -14,7 +14,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from consumers.empowered_vote import package_source
+_PACKAGE_SOURCE_PATH = Path(__file__).with_name("package_source.py")
+_package_spec = importlib.util.spec_from_file_location("ev_package_source_for_live_gps", _PACKAGE_SOURCE_PATH)
+if _package_spec is None or _package_spec.loader is None:
+    raise ImportError("unable to load Empowered.Vote package source boundary")
+package_source = importlib.util.module_from_spec(_package_spec)
+sys.modules[_package_spec.name] = package_source
+_package_spec.loader.exec_module(package_source)
 
 TACOMA_BINDING = {
     "package_jurisdiction_id": "jurisdiction:us/wa/tacoma",
@@ -120,9 +126,6 @@ def build_essentials_from_civic_gps_result(
         if district_division_id not in package_divisions:
             return _fail(address, "CIVIC_GPS_DISTRICT_NOT_IN_PACKAGE", district_division_id)
 
-    # The existing package projection accepts a control-shaped geographic result.
-    # Create an isolated package copy with only this live result; the governed
-    # package itself is never mutated and remains the sole civic-fact authority.
     control = {
         "control_id": "EV-IMP-003-LIVE-CIVIC-GPS",
         "input": address,
@@ -159,7 +162,7 @@ def build_essentials_from_live_civic_gps(
     """Resolve an address through Civic GPS and join to governed package facts."""
     try:
         result = resolver.resolve(address, observed_on=None)
-    except Exception as exc:  # network/runtime exceptions must fail closed
+    except Exception as exc:
         return _fail(address, "CIVIC_GPS_RESOLUTION_EXCEPTION", str(exc))
     return build_essentials_from_civic_gps_result(package, address, result, binding=binding)
 
