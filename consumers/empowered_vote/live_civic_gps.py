@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Live Civic GPS geography bridge for Empowered.Vote.
 
-EV-IMP-003 narrows Civic GPS authority to address -> jurisdiction/district
-resolution. CivicData Jurisdiction Package v0.2 remains authoritative for
-bodies, offices, people, currentness, terms, elections, contests, candidacies,
-provenance, warnings, and all rendered civic facts.
+Civic GPS authority is limited to address -> jurisdiction/district resolution.
+Governed Jurisdiction Packages remain authoritative for all civic facts.
 """
 from __future__ import annotations
 
@@ -26,7 +24,7 @@ TACOMA_BINDING = {
     "package_jurisdiction_id": "jurisdiction:us/wa/tacoma",
     "civic_gps_jurisdiction_id": "jur-us-wa-tacoma",
     "district_adapter_id": "DIST-WA-TACOMA-COUNCIL",
-    "division_prefix": "division:us/wa/tacoma/council_district_",
+    "division_template": "division:us/wa/tacoma/council_district_{district_key}",
 }
 
 
@@ -97,9 +95,9 @@ def build_essentials_from_civic_gps_result(
     address: str,
     civic_gps_result: Any,
     *,
-    binding: dict[str, str] | None = None,
+    binding: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Join live Civic GPS geography to package-authoritative Essentials facts."""
+    """Join Civic GPS geography to package-authoritative Essentials facts."""
     binding = TACOMA_BINDING if binding is None else binding
     if package.get("jurisdiction", {}).get("jurisdiction_id") != binding.get("package_jurisdiction_id"):
         return _fail(address, "CIVIC_GPS_PACKAGE_BINDING_UNSUPPORTED")
@@ -108,16 +106,19 @@ def build_essentials_from_civic_gps_result(
     if normalized.get("status") != "PASS":
         return normalized
 
-    civic_jurisdiction_id = binding["civic_gps_jurisdiction_id"]
+    civic_jurisdiction_id = str(binding["civic_gps_jurisdiction_id"])
     active = civic_jurisdiction_id in normalized["jurisdiction_ids"]
     district_division_id: str | None = None
 
-    if active:
-        adapter_id = binding["district_adapter_id"]
+    if active and binding.get("district_adapter_id"):
+        adapter_id = str(binding["district_adapter_id"])
         district_key = normalized["district_assignments"].get(adapter_id)
         if district_key is None:
             return _fail(address, "CIVIC_GPS_REQUIRED_DISTRICT_MISSING", adapter_id)
-        district_division_id = f"{binding['division_prefix']}{district_key}"
+        template = binding.get("division_template")
+        if not template:
+            return _fail(address, "CIVIC_GPS_DIVISION_TEMPLATE_MISSING", adapter_id)
+        district_division_id = str(template).format(district_key=district_key)
         package_divisions = {
             str(row.get("division_id") or row.get("id"))
             for row in package.get("records", {}).get("divisions", [])
@@ -127,9 +128,12 @@ def build_essentials_from_civic_gps_result(
             return _fail(address, "CIVIC_GPS_DISTRICT_NOT_IN_PACKAGE", district_division_id)
 
     control = {
-        "control_id": "EV-IMP-003-LIVE-CIVIC-GPS",
+        "control_id": "EV-LIVE-CIVIC-GPS",
         "input": address,
         "result": True,
+        "jurisdiction_active": active,
+        "resolved_division_id": district_division_id,
+        # Backward-compatible field retained during migration.
         "fixture_tacoma_division_id": district_division_id,
         "resolved_jurisdictions": normalized["jurisdiction_ids"],
         "district_assignments": normalized["district_assignments"],
@@ -146,9 +150,7 @@ def build_essentials_from_civic_gps_result(
     model["address_resolution_source"] = "CIVIC_GPS_LIVE"
     model["matched_address"] = normalized.get("matched_address")
     model["canonical_writes"] = 0
-    model["deterministic_sha256"] = package_source.sha256_bytes(
-        package_source.canonical_json_bytes(model)
-    )
+    model["deterministic_sha256"] = package_source.sha256_bytes(package_source.canonical_json_bytes(model))
     return model
 
 
@@ -157,7 +159,7 @@ def build_essentials_from_live_civic_gps(
     address: str,
     resolver: Any,
     *,
-    binding: dict[str, str] | None = None,
+    binding: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Resolve an address through Civic GPS and join to governed package facts."""
     try:
