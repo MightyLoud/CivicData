@@ -28,9 +28,18 @@ def run() -> None:
         payload = gps["payload"]
         jurisdictions = {row["jurisdiction_id"] for row in payload["jurisdictions"]}
         assert "jur-us-wa-fircrest" in jurisdictions, (address, sorted(jurisdictions))
-        assert payload["applicable_offices"] == []
-        assert payload["officeholders"] == []
-        assert payload["action_links"] == []
+
+        # Pierce County may legitimately contribute its own released facts. The
+        # Fircrest boundary extension itself must contribute geography only.
+        fircrest_offices = [row for row in payload["offices"] if row.get("jurisdiction_id") == "jur-us-wa-fircrest"]
+        fircrest_applicable = [row for row in payload["applicable_offices"] if row.get("jurisdiction_id") == "jur-us-wa-fircrest"]
+        fircrest_actions = [row for row in payload["action_links"] if row.get("jurisdiction_id") == "jur-us-wa-fircrest"]
+        fircrest_office_ids = {row.get("office_id") for row in fircrest_offices}
+        fircrest_holders = [row for row in payload["officeholders"] if row.get("office_id") in fircrest_office_ids]
+        assert fircrest_offices == []
+        assert fircrest_applicable == []
+        assert fircrest_holders == []
+        assert fircrest_actions == []
 
         model = full_essentials_catalog.build_full_essentials_from_catalog(address, gps, repo_root=ROOT)
         assert model["status"] == "PASS", model
@@ -55,7 +64,7 @@ def run() -> None:
     print(json.dumps({
         "status": "PASS", "gate": "EV-IMP-007", "third_real_jurisdiction": "Fircrest, WA",
         "live_address_controls": len(results), "results": results,
-        "civic_gps_civic_fact_rows": 0, "canonical_writes": 0,
+        "fircrest_civic_gps_civic_fact_rows": 0, "canonical_writes": 0,
     }, sort_keys=True))
 
 
