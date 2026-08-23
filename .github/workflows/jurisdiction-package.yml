@@ -28,3 +28,5 @@ jobs:
         run: python tests/test_jurisdiction_package.py
       - name: Run v0.2 election contract tests
         run: python tests/test_jurisdiction_package_v0_2.py
+
+# CI bootstrap: workflow now also exists on the PR base branch.

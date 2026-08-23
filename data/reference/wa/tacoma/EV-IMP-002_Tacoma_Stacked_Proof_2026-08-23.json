@@ -1,0 +1,68 @@
+{
+  "address_results": {
+    "6000 Main St SW, Lakewood, WA 98499": {
+      "candidate_rows": 0,
+      "canonical_writes": 0,
+      "contests": 0,
+      "deterministic_sha256": "e99a277feade1e2ecb808823d28677e061ab923ea15158204de83d5cd35567b7",
+      "district_assignments": {
+        "DIST-WA-PIERCE-COUNCIL": "6"
+      },
+      "offices": 0,
+      "resolved_jurisdictions": [
+        "jur-us-wa-pierce"
+      ],
+      "status": "PASS"
+    },
+    "6500 South Sheridan Avenue, Tacoma, WA 98408": {
+      "candidate_rows": 15,
+      "canonical_writes": 0,
+      "contests": 5,
+      "deterministic_sha256": "b2cbbdc5e24f0a335346b31c8bb62b9f57920f5caa626d9df3ab41a08d6bfc2e",
+      "district_assignments": {
+        "DIST-WA-PIERCE-COUNCIL": "4",
+        "DIST-WA-TACOMA-COUNCIL": "5"
+      },
+      "offices": 6,
+      "resolved_jurisdictions": [
+        "jur-us-wa-pierce",
+        "jur-us-wa-tacoma"
+      ],
+      "status": "PASS"
+    },
+    "747 Market Street, Tacoma, WA 98402": {
+      "candidate_rows": 15,
+      "canonical_writes": 0,
+      "contests": 5,
+      "deterministic_sha256": "158b324f9041448afcd917331b3f003f465cf055bc88281c6df18b52443facab",
+      "district_assignments": {
+        "DIST-WA-PIERCE-COUNCIL": "4",
+        "DIST-WA-TACOMA-COUNCIL": "2"
+      },
+      "offices": 6,
+      "resolved_jurisdictions": [
+        "jur-us-wa-pierce",
+        "jur-us-wa-tacoma"
+      ],
+      "status": "PASS"
+    }
+  },
+  "canonical_writes": 0,
+  "determinism": "PASS",
+  "gate": "EV-IMP-002-STACKED-PROOF",
+  "jurisdiction_json_sha256": "da06fe9ad71c1c526bd86774925946206b952baf51f2bb1d9f0415ed22fe286d",
+  "package_schema_version": "0.2",
+  "primary_parity": {
+    "actual_candidate_rows": 15,
+    "actual_contests": 5,
+    "actual_offices": 6,
+    "expected_candidate_rows": 15,
+    "expected_contests": 5,
+    "expected_offices": 6
+  },
+  "status": "PASS",
+  "unsupported_address": {
+    "error": "ADDRESS_NOT_IN_GOVERNED_PACKAGE",
+    "status": "FAIL-CLOSED"
+  }
+}
