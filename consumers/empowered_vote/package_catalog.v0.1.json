@@ -40,7 +40,7 @@
       "artifact": {
         "encoding": "base64-parts",
         "parts_glob": "data/packages/wa/fircrest/Fircrest_Jurisdiction_Package_v0.2_2026-08-23.zip.b64.part*",
-        "archive_sha256": "2cb01b617ba910bab7d49b6c340da3d004f7c447d2c00e0ae0f218c265453fc4",
+        "archive_sha256": "5abb205fc316c6167a75c40b42875cf5a84681bd63b1e63af973103c0e4879ab",
         "package_subdir": "Fircrest_Jurisdiction_Package_v0.2_2026-08-23/package"
       }
     }
