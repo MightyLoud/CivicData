@@ -15,10 +15,12 @@ Election-only candidate identities are added only where the certified reports na
 - Jurisdiction: `jurisdiction-wa-fircrest`
 - GEOID: `5323970`
 - Schema: `0.2`
-- Package archive SHA-256: `2cb01b617ba910bab7d49b6c340da3d004f7c447d2c00e0ae0f218c265453fc4`
+- Package archive SHA-256: `5abb205fc316c6167a75c40b42875cf5a84681bd63b1e63af973103c0e4879ab`
+- `jurisdiction.json` SHA-256: `a830d96a0b74aea9dd998153cefc418ffe71737e3ef90cf6c798689956a40a47`
 - 1 division, 2 bodies, 7 offices, 12 people, 7 current role terms, 9 leadership roles
 - 2 elections, 7 contests, 19 candidacies
 - 12 named PERSON candidacies, 7 WRITE_IN_BUCKET candidacies
+- 16 governed SourceEvidence records; compact package projection intentionally omits redundant SourceAssertion rows while retaining source references on governed facts
 - QA failures: 0; blocking gaps: 0; parity: true; election scope complete: true; unexplained loss: 0
 - Address controls: 115 Ramsdell Street and 555 Contra Costa Ave
 
