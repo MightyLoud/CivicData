@@ -47,7 +47,7 @@ CASES = [
     },
     {
         "id": "tacoma-d5-control",
-        "address": "1601 S 88th Street, Tacoma, WA",
+        "address": "6500 South Sheridan Avenue, Tacoma, WA 98408",
         "jurisdictions": {J_TACOMA, J_PIERCE},
         "assignments": {
             "DIST-WA-TACOMA-COUNCIL": "5",
