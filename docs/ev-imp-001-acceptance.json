@@ -1,0 +1,28 @@
+{
+  "gate": "EV-IMP-001",
+  "status": "PASS_LOCAL_BOUNDED_PROOF",
+  "source_contract": "EV-CDT-001",
+  "fixture_id": "EV-CDT-001-FX01",
+  "source_snapshot_as_of": "2026-08-02",
+  "source_frozen_payload_file_sha256": "d2b007f9aeb053878f554ce0ba3fb0bdf1b1fe43ccf22c5a74f7ef14566af7ad",
+  "source_contract_canonical_payload_sha256": "f664631c5db286376fab47826909fc20cec2320c83bdb484ac780697e1d3b025",
+  "primary_control": "747 Market Street, Tacoma, WA 98402",
+  "primary_control_result": {
+    "resolved_jurisdictions": ["jur-us-wa-pierce", "jur-us-wa-tacoma"],
+    "tacoma_district": "2",
+    "detailed_tacoma_applicable_offices": 6,
+    "recent_certified_contests": 5,
+    "candidate_rows": 15,
+    "consumer_model_sha256": "feef7b5ef33a233dc7bc4fba04764b35f7f834499657a2b1393b6827e9fa556c"
+  },
+  "negative_control": {
+    "address": "6000 Main St SW, Lakewood, WA 98499",
+    "tacoma_detailed_offices": 0,
+    "status": "PASS"
+  },
+  "unsupported_address_behavior": "ADDRESS_NOT_IN_FROZEN_FIXTURE / FAIL-CLOSED",
+  "canonical_writes": 0,
+  "political_recommendation_or_scoring": false,
+  "determinism": "PASS",
+  "publication_authorized": false
+}

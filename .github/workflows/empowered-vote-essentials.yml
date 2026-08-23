@@ -1,0 +1,27 @@
+name: Empowered.Vote Essentials consumer
+
+on:
+  pull_request:
+    paths:
+      - "consumers/empowered_vote/**"
+      - "tests/empowered_vote_essentials_test.py"
+      - "docs/empowered-vote-imp-001.md"
+      - "docs/ev-imp-001-acceptance.json"
+      - ".github/workflows/empowered-vote-essentials.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ev-imp-001:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile adapter and renderer
+        run: python -m py_compile consumers/empowered_vote/adapter.py consumers/empowered_vote/render.py tests/empowered_vote_essentials_test.py
+      - name: Run fail-closed consumer tests
+        run: python tests/empowered_vote_essentials_test.py
