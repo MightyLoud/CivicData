@@ -1,0 +1,47 @@
+{
+  "spec_version": "0.1",
+  "entry_id": "wa-fircrest-municipal-essentials-v0.2",
+  "profile": "municipal_essentials",
+  "civic_gps_jurisdiction_id": "jur-us-wa-fircrest",
+  "package_jurisdiction_id": "jurisdiction-wa-fircrest",
+  "package_schema_version": "0.2",
+  "artifact": {
+    "encoding": "base64-parts",
+    "parts_glob": "data/packages/wa/fircrest/Fircrest_Jurisdiction_Package_v0.2_2026-08-23.zip.b64.part*",
+    "archive_sha256": "2cb01b617ba910bab7d49b6c340da3d004f7c447d2c00e0ae0f218c265453fc4",
+    "package_subdir": "Fircrest_Jurisdiction_Package_v0.2_2026-08-23/package"
+  },
+  "routing": {
+    "adapter_id": "BASE-WA-FIRCREST",
+    "geography": "place",
+    "geoid": "5323970",
+    "division_id": "div-us-wa-fircrest",
+    "division_name": "Fircrest",
+    "division_type": "municipality",
+    "priority": 80,
+    "release_files": [
+      "../civic_gps_extensions/fircrest_release_v0.1.json"
+    ],
+    "district_adapters": [],
+    "known_gaps": []
+  },
+  "expected": {
+    "office_rows": 7,
+    "current_holders": 7,
+    "address_controls": 2,
+    "qa_fail_count": 0,
+    "blocking_gap_count": 0,
+    "parity_ok": true
+  },
+  "full_essentials_expected": {
+    "elections": 2,
+    "contests": 7,
+    "candidacies": 19,
+    "named_person_candidacies": 12,
+    "write_in_buckets": 7
+  },
+  "live_addresses": [
+    "115 Ramsdell Street, Fircrest, WA 98466",
+    "555 Contra Costa Ave, Fircrest, WA 98466"
+  ]
+}
