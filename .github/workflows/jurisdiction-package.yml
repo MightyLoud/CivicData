@@ -1,0 +1,32 @@
+name: Jurisdiction Package contract
+
+on:
+  pull_request:
+    paths:
+      - "schemas/jurisdiction_package_v0.*.schema.json"
+      - "tools/jurisdiction_package.py"
+      - "tests/test_jurisdiction_package*.py"
+      - "docs/workflows/jurisdiction-package-v0.*.md"
+      - ".github/workflows/jurisdiction-package.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  jurisdiction-package:
+    name: Jurisdiction Package gate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile builder and tests
+        run: python -m py_compile tools/jurisdiction_package.py tests/test_jurisdiction_package.py tests/test_jurisdiction_package_v0_2.py
+      - name: Run v0.1 compatibility tests
+        run: python tests/test_jurisdiction_package.py
+      - name: Run v0.2 election contract tests
+        run: python tests/test_jurisdiction_package_v0_2.py
+
+# CI bootstrap: workflow now also exists on the PR base branch.
