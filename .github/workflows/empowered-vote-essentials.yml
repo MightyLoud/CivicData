@@ -8,9 +8,11 @@ on:
       - "tests/empowered_vote_package_source_test.py"
       - "tests/empowered_vote_live_civic_gps_test.py"
       - "tests/empowered_vote_live_civic_gps_network_test.py"
+      - "tests/empowered_vote_package_catalog_test.py"
       - "docs/empowered-vote-imp-001.md"
       - "docs/empowered-vote-imp-002.md"
       - "docs/empowered-vote-imp-003.md"
+      - "docs/empowered-vote-imp-004.md"
       - "docs/ev-imp-001-acceptance.json"
       - "data/packages/wa/tacoma/**"
       - "data/reference/wa/tacoma/**"
@@ -29,10 +31,12 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile Empowered.Vote consumers
-        run: python -m py_compile consumers/empowered_vote/adapter.py consumers/empowered_vote/render.py consumers/empowered_vote/package_source.py consumers/empowered_vote/live_civic_gps.py tests/empowered_vote_essentials_test.py tests/empowered_vote_package_source_test.py tests/empowered_vote_live_civic_gps_test.py tests/empowered_vote_live_civic_gps_network_test.py
+        run: python -m py_compile consumers/empowered_vote/adapter.py consumers/empowered_vote/render.py consumers/empowered_vote/package_source.py consumers/empowered_vote/live_civic_gps.py consumers/empowered_vote/package_catalog.py tests/empowered_vote_essentials_test.py tests/empowered_vote_package_source_test.py tests/empowered_vote_live_civic_gps_test.py tests/empowered_vote_live_civic_gps_network_test.py tests/empowered_vote_package_catalog_test.py
       - name: Run frozen-payload consumer tests
         run: python tests/empowered_vote_essentials_test.py
       - name: Run governed-package boundary and Tacoma package tests
         run: python tests/empowered_vote_package_source_test.py
       - name: Run live Civic GPS geography bridge unit tests
         run: python tests/empowered_vote_live_civic_gps_test.py
+      - name: Run governed package catalog tests
+        run: python tests/empowered_vote_package_catalog_test.py
