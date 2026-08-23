@@ -7,6 +7,7 @@ on:
       - "tools/ev_jurisdiction_onboarding.py"
       - "tools/ev_onboarding_batch.py"
       - "tools/ev_live_onboarding_batch.py"
+      - "tools/ev_onboarding_proposal.py"
       - "onboarding/ev/**"
       - "tests/empowered_vote_essentials_test.py"
       - "tests/empowered_vote_package_source_test.py"
@@ -18,6 +19,7 @@ on:
       - "tests/civic_gps_fircrest_extension_live_probe.py"
       - "tests/ev_jurisdiction_onboarding_test.py"
       - "tests/ev_onboarding_batch_test.py"
+      - "tests/ev_onboarding_proposal_test.py"
       - "docs/empowered-vote-imp-001.md"
       - "docs/empowered-vote-imp-002.md"
       - "docs/empowered-vote-imp-003.md"
@@ -26,6 +28,7 @@ on:
       - "docs/empowered-vote-imp-006.md"
       - "docs/empowered-vote-imp-007.md"
       - "docs/empowered-vote-imp-008.md"
+      - "docs/empowered-vote-imp-009.md"
       - "docs/ev-imp-001-acceptance.json"
       - "data/packages/wa/tacoma/**"
       - "data/reference/wa/tacoma/**"
@@ -48,7 +51,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile Empowered.Vote consumers and onboarding pipeline
-        run: python -m py_compile consumers/empowered_vote/adapter.py consumers/empowered_vote/render.py consumers/empowered_vote/package_source.py consumers/empowered_vote/live_civic_gps.py consumers/empowered_vote/package_catalog.py consumers/empowered_vote/representation.py consumers/empowered_vote/representation_catalog.py consumers/empowered_vote/full_essentials_catalog.py tools/ev_jurisdiction_onboarding.py tools/ev_onboarding_batch.py tools/ev_live_onboarding_batch.py tests/empowered_vote_essentials_test.py tests/empowered_vote_package_source_test.py tests/empowered_vote_live_civic_gps_test.py tests/empowered_vote_live_civic_gps_network_test.py tests/empowered_vote_package_catalog_test.py tests/empowered_vote_second_jurisdiction_test.py tests/empowered_vote_third_jurisdiction_test.py tests/ev_jurisdiction_onboarding_test.py tests/ev_onboarding_batch_test.py
+        run: python -m py_compile consumers/empowered_vote/adapter.py consumers/empowered_vote/render.py consumers/empowered_vote/package_source.py consumers/empowered_vote/live_civic_gps.py consumers/empowered_vote/package_catalog.py consumers/empowered_vote/representation.py consumers/empowered_vote/representation_catalog.py consumers/empowered_vote/full_essentials_catalog.py tools/ev_jurisdiction_onboarding.py tools/ev_onboarding_batch.py tools/ev_live_onboarding_batch.py tools/ev_onboarding_proposal.py tests/empowered_vote_essentials_test.py tests/empowered_vote_package_source_test.py tests/empowered_vote_live_civic_gps_test.py tests/empowered_vote_live_civic_gps_network_test.py tests/empowered_vote_package_catalog_test.py tests/empowered_vote_second_jurisdiction_test.py tests/empowered_vote_third_jurisdiction_test.py tests/ev_jurisdiction_onboarding_test.py tests/ev_onboarding_batch_test.py tests/ev_onboarding_proposal_test.py
       - name: Run frozen-payload consumer tests
         run: python tests/empowered_vote_essentials_test.py
       - name: Run governed-package boundary and Tacoma package tests
@@ -71,3 +74,7 @@ jobs:
         run: python tests/ev_onboarding_batch_test.py
       - name: Replay every production onboarding spec
         run: python tools/ev_onboarding_batch.py --repo-root . --output artifacts/ev-imp-008
+      - name: Run onboarding proposal generator tests
+        run: python tests/ev_onboarding_proposal_test.py
+      - name: Regenerate all production onboarding specs from governed packages
+        run: PYTHONPATH=. python tools/ev_onboarding_proposal.py --repo-root . --verify-production --output artifacts/ev-imp-009
