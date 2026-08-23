@@ -37,6 +37,43 @@
       "applicable_office_rules": [],
       "action_registry_files": [],
       "known_gaps": []
+    },
+    {
+      "adapter_id": "BASE-WA-FIRCREST",
+      "mode": "BASE",
+      "priority": 80,
+      "scope_match": {
+        "geography": "place",
+        "fields": ["GEOID"],
+        "equals": "5323970"
+      },
+      "division_rules": [
+        {
+          "division_id": "div-us-wa-fircrest",
+          "name": "Fircrest",
+          "type": "municipality",
+          "when": {
+            "geography": "place",
+            "fields": ["GEOID"],
+            "equals": "5323970"
+          }
+        }
+      ],
+      "jurisdictions": [
+        {
+          "jurisdiction_id": "jur-us-wa-fircrest",
+          "activation": {
+            "geography": "place",
+            "fields": ["GEOID"],
+            "equals": "5323970"
+          }
+        }
+      ],
+      "release_files": ["../civic_gps_extensions/fircrest_release_v0.1.json"],
+      "district_adapters": [],
+      "applicable_office_rules": [],
+      "action_registry_files": [],
+      "known_gaps": []
     }
   ]
 }
