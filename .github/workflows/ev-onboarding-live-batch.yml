@@ -13,10 +13,12 @@ on:
       - "tools/ev_onboarding_merge_eligibility.py"
       - "tools/ev_onboarding_merge_execute.py"
       - "tools/ev_onboarding_post_merge_verify.py"
+      - "tools/ev_onboarding_throughput_batch.py"
       - "tests/ev_onboarding_pr_ready_test.py"
       - "tests/ev_onboarding_merge_eligibility_test.py"
       - "tests/ev_onboarding_merge_execute_test.py"
       - "tests/ev_onboarding_post_merge_verify_test.py"
+      - "tests/ev_onboarding_throughput_batch_test.py"
       - "docs/empowered-vote-imp-013.md"
       - "docs/empowered-vote-imp-014.md"
       - "docs/empowered-vote-imp-015.md"
@@ -49,11 +51,15 @@ jobs:
           echo '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
       - name: Compile generic onboarding batch runners
-        run: python -m py_compile tools/ev_jurisdiction_onboarding.py tools/ev_onboarding_batch.py tools/ev_live_onboarding_batch.py tools/ev_onboarding_pr_ready.py tools/ev_onboarding_merge_eligibility.py tools/ev_onboarding_merge_execute.py tools/ev_onboarding_post_merge_verify.py tests/ev_onboarding_pr_ready_test.py tests/ev_onboarding_merge_eligibility_test.py tests/ev_onboarding_merge_execute_test.py tests/ev_onboarding_post_merge_verify_test.py
+        run: python -m py_compile tools/ev_jurisdiction_onboarding.py tools/ev_onboarding_batch.py tools/ev_live_onboarding_batch.py tools/ev_onboarding_pr_ready.py tools/ev_onboarding_merge_eligibility.py tools/ev_onboarding_merge_execute.py tools/ev_onboarding_post_merge_verify.py tools/ev_onboarding_throughput_batch.py tests/ev_onboarding_pr_ready_test.py tests/ev_onboarding_merge_eligibility_test.py tests/ev_onboarding_merge_execute_test.py tests/ev_onboarding_post_merge_verify_test.py tests/ev_onboarding_throughput_batch_test.py
       - name: Verify all production onboarding specs against governed artifacts
         run: python tools/ev_onboarding_batch.py --repo-root . --output artifacts/ev-imp-008/deterministic
       - name: Run all production live address controls
         run: python tools/ev_live_onboarding_batch.py --repo-root . --output artifacts/ev-imp-008/live
+      - name: Run throughput batch isolation tests
+        run: python tests/ev_onboarding_throughput_batch_test.py
+      - name: Classify actual staged governed package inventory
+        run: python tools/ev_onboarding_throughput_batch.py --repo-root . --output artifacts/ev-imp-017
       - name: Run CI-bound readiness unit tests
         run: python tests/ev_onboarding_pr_ready_test.py
       - name: Run final merge eligibility unit tests
