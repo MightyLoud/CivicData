@@ -13,6 +13,7 @@ on:
       - "tools/ev_onboarding_pr_request.py"
       - "tools/ev_onboarding_pr_ready.py"
       - "tools/ev_onboarding_merge_eligibility.py"
+      - "tools/ev_onboarding_merge_execute.py"
       - "onboarding/ev/**"
       - "tests/empowered_vote_essentials_test.py"
       - "tests/empowered_vote_package_source_test.py"
@@ -30,6 +31,7 @@ on:
       - "tests/ev_onboarding_pr_request_test.py"
       - "tests/ev_onboarding_pr_ready_test.py"
       - "tests/ev_onboarding_merge_eligibility_test.py"
+      - "tests/ev_onboarding_merge_execute_test.py"
       - "docs/empowered-vote-imp-001.md"
       - "docs/empowered-vote-imp-002.md"
       - "docs/empowered-vote-imp-003.md"
@@ -44,6 +46,7 @@ on:
       - "docs/empowered-vote-imp-012.md"
       - "docs/empowered-vote-imp-013.md"
       - "docs/empowered-vote-imp-014.md"
+      - "docs/empowered-vote-imp-015.md"
       - "docs/ev-imp-001-acceptance.json"
       - "data/packages/wa/tacoma/**"
       - "data/reference/wa/tacoma/**"
@@ -68,7 +71,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile Empowered.Vote consumers and onboarding pipeline
-        run: python -m py_compile consumers/empowered_vote/adapter.py consumers/empowered_vote/render.py consumers/empowered_vote/package_source.py consumers/empowered_vote/live_civic_gps.py consumers/empowered_vote/package_catalog.py consumers/empowered_vote/representation.py consumers/empowered_vote/representation_catalog.py consumers/empowered_vote/full_essentials_catalog.py tools/ev_jurisdiction_onboarding.py tools/ev_onboarding_batch.py tools/ev_live_onboarding_batch.py tools/ev_onboarding_proposal.py tools/ev_onboarding_materialize.py tools/ev_onboarding_promote.py tools/ev_onboarding_pr_request.py tools/ev_onboarding_pr_ready.py tools/ev_onboarding_merge_eligibility.py tests/empowered_vote_essentials_test.py tests/empowered_vote_package_source_test.py tests/empowered_vote_live_civic_gps_test.py tests/empowered_vote_live_civic_gps_network_test.py tests/empowered_vote_package_catalog_test.py tests/empowered_vote_second_jurisdiction_test.py tests/empowered_vote_third_jurisdiction_test.py tests/ev_jurisdiction_onboarding_test.py tests/ev_onboarding_batch_test.py tests/ev_onboarding_proposal_test.py tests/ev_onboarding_materialize_test.py tests/ev_onboarding_promote_test.py tests/ev_onboarding_pr_request_test.py tests/ev_onboarding_pr_ready_test.py tests/ev_onboarding_merge_eligibility_test.py
+        run: python -m py_compile consumers/empowered_vote/adapter.py consumers/empowered_vote/render.py consumers/empowered_vote/package_source.py consumers/empowered_vote/live_civic_gps.py consumers/empowered_vote/package_catalog.py consumers/empowered_vote/representation.py consumers/empowered_vote/representation_catalog.py consumers/empowered_vote/full_essentials_catalog.py tools/ev_jurisdiction_onboarding.py tools/ev_onboarding_batch.py tools/ev_live_onboarding_batch.py tools/ev_onboarding_proposal.py tools/ev_onboarding_materialize.py tools/ev_onboarding_promote.py tools/ev_onboarding_pr_request.py tools/ev_onboarding_pr_ready.py tools/ev_onboarding_merge_eligibility.py tools/ev_onboarding_merge_execute.py tests/empowered_vote_essentials_test.py tests/empowered_vote_package_source_test.py tests/empowered_vote_live_civic_gps_test.py tests/empowered_vote_live_civic_gps_network_test.py tests/empowered_vote_package_catalog_test.py tests/empowered_vote_second_jurisdiction_test.py tests/empowered_vote_third_jurisdiction_test.py tests/ev_jurisdiction_onboarding_test.py tests/ev_onboarding_batch_test.py tests/ev_onboarding_proposal_test.py tests/ev_onboarding_materialize_test.py tests/ev_onboarding_promote_test.py tests/ev_onboarding_pr_request_test.py tests/ev_onboarding_pr_ready_test.py tests/ev_onboarding_merge_eligibility_test.py tests/ev_onboarding_merge_execute_test.py
       - name: Run frozen-payload consumer tests
         run: python tests/empowered_vote_essentials_test.py
       - name: Run governed-package boundary and Tacoma package tests
@@ -111,3 +114,5 @@ jobs:
         run: python tests/ev_onboarding_pr_ready_test.py
       - name: Run final merge eligibility tests
         run: python tests/ev_onboarding_merge_eligibility_test.py
+      - name: Run explicit merge execution request tests
+        run: python tests/ev_onboarding_merge_execute_test.py
