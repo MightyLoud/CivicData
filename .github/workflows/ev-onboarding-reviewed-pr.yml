@@ -1,0 +1,121 @@
+name: EV reviewed onboarding draft PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_jurisdiction_id:
+        description: Governed package jurisdiction ID
+        required: true
+        type: string
+      reviewed_bundle_sha256:
+        description: Exact EV-IMP-011 reviewed bundle SHA-256
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  reviewed-draft-pr:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile reviewed onboarding promotion and PR tools
+        run: python -m py_compile tools/ev_onboarding_proposal.py tools/ev_onboarding_materialize.py tools/ev_onboarding_promote.py tools/ev_onboarding_pr_request.py
+      - name: Regenerate exact reviewed PR request
+        env:
+          PACKAGE_ID: ${{ inputs.package_jurisdiction_id }}
+          REVIEWED_SHA: ${{ inputs.reviewed_bundle_sha256 }}
+        run: |
+          PYTHONPATH=. python tools/ev_onboarding_pr_request.py \
+            --repo-root . \
+            --package-jurisdiction-id "$PACKAGE_ID" \
+            --reviewed-bundle-sha256 "$REVIEWED_SHA" \
+            --output artifacts/ev-imp-012
+      - name: Read request state
+        id: request
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          p=json.load(open('artifacts/ev-imp-012/pr-request.json'))
+          print('status='+p['status'])
+          print('branch='+str(p.get('branch','')))
+          print('title='+str(p.get('pull_request',{}).get('title','')).replace('\n',' '))
+          print('request_sha256='+str(p.get('request_sha256','')))
+          PY
+      - name: Stop on governed NOOP
+        if: steps.request.outputs.status == 'NOOP'
+        run: echo 'Reviewed onboarding is already materialized; no branch or PR required.'
+      - name: Apply exact reviewed bundle locally
+        if: steps.request.outputs.status == 'READY_FOR_DRAFT_PR'
+        env:
+          PACKAGE_ID: ${{ inputs.package_jurisdiction_id }}
+          REVIEWED_SHA: ${{ inputs.reviewed_bundle_sha256 }}
+        run: |
+          PYTHONPATH=. python tools/ev_onboarding_promote.py \
+            --repo-root . \
+            --package-jurisdiction-id "$PACKAGE_ID" \
+            --apply \
+            --expected-bundle-sha256 "$REVIEWED_SHA" \
+            --output artifacts/ev-imp-012/apply
+      - name: Enforce branch diff allowlist
+        if: steps.request.outputs.status == 'READY_FOR_DRAFT_PR'
+        shell: bash
+        run: |
+          git diff --name-only > /tmp/changed.txt
+          test -s /tmp/changed.txt
+          while IFS= read -r path; do
+            case "$path" in
+              onboarding/ev/*.v0.1.json|consumers/empowered_vote/package_catalog.v0.1.json|civic_gps_extensions/registry_bundles.v0.1.json) ;;
+              *) echo "Forbidden EV-IMP-012 path: $path" >&2; exit 1 ;;
+            esac
+          done < /tmp/changed.txt
+      - name: Create reviewed branch and commit
+        if: steps.request.outputs.status == 'READY_FOR_DRAFT_PR'
+        env:
+          BRANCH: ${{ steps.request.outputs.branch }}
+          PACKAGE_ID: ${{ inputs.package_jurisdiction_id }}
+          REVIEWED_SHA: ${{ inputs.reviewed_bundle_sha256 }}
+        run: |
+          git switch -c "$BRANCH"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add onboarding/ev consumers/empowered_vote/package_catalog.v0.1.json civic_gps_extensions/registry_bundles.v0.1.json
+          git commit -m "Onboard $PACKAGE_ID via reviewed bundle ${REVIEWED_SHA:0:12}"
+          git push --set-upstream origin "$BRANCH"
+      - name: Open draft pull request
+        if: steps.request.outputs.status == 'READY_FOR_DRAFT_PR'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.request.outputs.branch }}
+        run: |
+          python - <<'PY' > /tmp/pr-body.md
+          import json
+          p=json.load(open('artifacts/ev-imp-012/pr-request.json'))
+          print(p['pull_request']['body'])
+          PY
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "${{ steps.request.outputs.title }}" \
+            --body-file /tmp/pr-body.md \
+            --draft
+      - name: Assert automatic merge remains unauthorized
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          p=json.load(open('artifacts/ev-imp-012/pr-request.json'))
+          assert p.get('merge_authorized') is False
+          assert p.get('publication_authorized') is False
+          assert p.get('canonical_writes') == 0
+          print('EV-IMP-012 merge/publication boundary PASS')
+          PY
