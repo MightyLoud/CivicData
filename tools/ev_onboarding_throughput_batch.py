@@ -40,11 +40,18 @@ def run(root:Path,out:Path,ids:list[str]|None=None)->dict[str,Any]:
    if p.get('status')=='READY':
     try:
      plan=materialize.materialize(root,jid,out/'jurisdictions'/jid.replace(':','_').replace('/','_'))
-     row['materialization_status']=plan.get('status'); row['changed_files']=plan.get('changed_files',[]); row['disposition']='READY' if plan.get('status') in {'ADD','NOOP'} else 'BLOCKED'
+     changes=list(plan.get('changes',[]))
+     changes_required=int(plan.get('changes_required',0))
+     row['materialization_status']='ADD' if changes_required>0 else 'NOOP'
+     row['changes_required']=changes_required
+     row['changed_files']=[c.get('path') for c in changes if c.get('action')=='ADD']
+     row['disposition']='READY'
     except Exception as exc:
      row.update(materialization_status='ERROR',disposition='BLOCKED',error=f'{type(exc).__name__}: {exc}')
-   else:
+   elif p.get('status')=='REVIEW_REQUIRED':
     row.update(materialization_status='NOT_RUN',disposition='REVIEW_REQUIRED')
+   else:
+    row.update(materialization_status='NOT_RUN',disposition='BLOCKED')
   except Exception as exc:
    row.update(proposal_status='ERROR',materialization_status='NOT_RUN',disposition='BLOCKED',error=f'{type(exc).__name__}: {exc}')
   rows.append(row)
