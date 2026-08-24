@@ -6,11 +6,13 @@ jurisdiction is isolated to its own row and never blocks classification of the
 rest. No routing authority is inferred and no repository/canonical writes occur.
 """
 from __future__ import annotations
-import argparse, importlib.util, json
+import argparse, importlib.util, json, sys
 from collections import Counter
 from pathlib import Path
 from typing import Any
 ROOT=Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+ sys.path.insert(0,str(ROOT))
 
 def load(name,path):
  s=importlib.util.spec_from_file_location(name,path); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); return m
