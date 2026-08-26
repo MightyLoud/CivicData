@@ -157,6 +157,196 @@ def test_schema_is_enforced_and_assertion_hash_is_field_scoped():
     )
 
 
+def test_provenance_reconciliation_entity_and_format_attacks_fail_closed():
+    rows = packages()
+    base = rows[0]
+
+    changed = copy.deepcopy(base)
+    first_source = changed["provenance"]["source_record_refs"][0][
+        "source_record_id"
+    ]
+    for evidence in changed["provenance"]["source_evidence"]:
+        evidence["source_record_id"] = first_source
+    assert "source_record_evidence_coverage" in cep.validate_package(changed)
+
+    changed = copy.deepcopy(base)
+    first_context_source = changed["provenance"]["context_source_record_refs"][0][
+        "source_record_id"
+    ]
+    for evidence in changed["provenance"]["context_evidence"]:
+        evidence["source_record_id"] = first_context_source
+    assert (
+        "context_source_record_evidence_coverage"
+        in cep.validate_package(changed)
+    )
+
+    changed = copy.deepcopy(base)
+    changed["provenance"]["source_record_refs"][0]["record_type"] = "Structure"
+    assert (
+        "public_source_record_type_reconciliation"
+        in cep.validate_package(changed)
+    )
+
+    kyle = copy.deepcopy(
+        next(
+            row
+            for row in rows
+            if row["jurisdiction"]["source_jurisdiction_key"] == "39952"
+        )
+    )
+    first_excluded = copy.deepcopy(
+        kyle["reconciliation"]["excluded_source_records"][0]
+    )
+    kyle["reconciliation"]["excluded_source_records"] = [
+        copy.deepcopy(first_excluded) for _ in range(5)
+    ]
+    errors = cep.validate_package(kyle)
+    assert "duplicate_excluded_source_record_id" in errors
+    assert "duplicate_excluded_source_native_id" in errors
+    assert "excluded_source_record_type_reconciliation" in errors
+
+    kyle = copy.deepcopy(
+        next(
+            row
+            for row in rows
+            if row["jurisdiction"]["source_jurisdiction_key"] == "39952"
+        )
+    )
+    kyle["reconciliation"]["excluded_source_records"][0][
+        "source_record_id"
+    ] = kyle["provenance"]["source_record_refs"][0]["source_record_id"]
+    assert "excluded_source_record_overlap" in cep.validate_package(kyle)
+
+    changed = copy.deepcopy(base)
+    changed["records"]["contact_points"] = [
+        {
+            "contact_point_id": "contact-person-owned",
+            "person_id": changed["records"]["people"][0]["person_id"],
+            "contact_type": "EMAIL",
+            "contact_value_normalized": "public@example.com",
+            "sensitivity": "PUBLIC",
+            "publication_ok": "TRUE",
+            "source_evidence_id": changed["provenance"]["source_evidence"][0][
+                "source_evidence_id"
+            ],
+            "contact_status": "ACTIVE",
+        }
+    ]
+    assert cep.validate_package(changed) == []
+
+    changed = copy.deepcopy(base)
+    changed["records"]["contact_points"] = [
+        {
+            "contact_point_id": "contact-unowned",
+            "contact_type": "EMAIL",
+            "contact_value_normalized": "public@example.com",
+            "sensitivity": "PUBLIC",
+            "publication_ok": "TRUE",
+            "source_evidence_id": changed["provenance"]["source_evidence"][0][
+                "source_evidence_id"
+            ],
+            "contact_status": "ACTIVE",
+        }
+    ]
+    assert "contact_owner_cardinality" in cep.validate_package(changed)
+
+    changed = copy.deepcopy(base)
+    changed["records"]["contact_points"] = [
+        {
+            "contact_point_id": "contact-double-owned",
+            "person_id": changed["records"]["people"][0]["person_id"],
+            "candidacy_id": changed["records"]["candidacies"][0][
+                "candidacy_id"
+            ],
+            "contact_type": "EMAIL",
+            "contact_value_normalized": "public@example.com",
+            "sensitivity": "PUBLIC",
+            "publication_ok": "TRUE",
+            "source_evidence_id": changed["provenance"]["source_evidence"][0][
+                "source_evidence_id"
+            ],
+            "contact_status": "ACTIVE",
+        }
+    ]
+    assert "contact_owner_cardinality" in cep.validate_package(changed)
+
+    changed = copy.deepcopy(base)
+    office_id = changed["records"]["offices"][0]["office_id"]
+    old_person_id = changed["records"]["people"][0]["person_id"]
+    changed["records"]["people"][0]["person_id"] = office_id
+    for candidacy in changed["records"]["candidacies"]:
+        if candidacy["person_id"] == old_person_id:
+            candidacy["person_id"] = office_id
+    changed["provenance"]["evidence_links"][0]["target_entity"] = "Person"
+    changed["provenance"]["evidence_links"][0]["target_id"] = office_id
+    assert "cross_entity_id_collision" in cep.validate_package(changed)
+
+    changed = copy.deepcopy(base)
+    changed["provenance"]["source_evidence"][0]["observed_at"] = "not-a-date"
+    assert (
+        "schema:$.provenance.source_evidence[0].observed_at:format"
+        in cep.validate_package(changed)
+    )
+
+    changed = copy.deepcopy(base)
+    changed["records"]["jurisdiction_divisions"][0]["valid_from"] = "2026-W35-2"
+    assert (
+        "schema:$.records.jurisdiction_divisions[0].valid_from:format"
+        in cep.validate_package(changed)
+    )
+
+    changed = copy.deepcopy(base)
+    for key in ("source_url", "source_url_normalized"):
+        changed["provenance"]["source_evidence"][0][key] = (
+            "https://example.com/not valid"
+        )
+    errors = cep.validate_package(changed)
+    assert "schema:$.provenance.source_evidence[0].source_url:format" in errors
+    assert (
+        "schema:$.provenance.source_evidence[0].source_url_normalized:format"
+        in errors
+    )
+
+    duplicate_jurisdiction_bundle = copy.deepcopy(rows)
+    duplicate_jurisdiction_bundle[1]["jurisdiction"]["jurisdiction_id"] = (
+        duplicate_jurisdiction_bundle[0]["jurisdiction"]["jurisdiction_id"]
+    )
+    with tempfile.TemporaryDirectory() as output:
+        try:
+            cep.build_release(
+                {
+                    "contract_version": cep.CONTRACT_VERSION,
+                    "release_id": cep.RELEASE_ID,
+                    "packages": duplicate_jurisdiction_bundle,
+                },
+                pathlib.Path(output),
+            )
+        except ValueError as error:
+            assert str(error) == "duplicate bundle jurisdiction_id"
+        else:
+            raise AssertionError("duplicate jurisdiction_id must fail closed")
+
+    valid_bundle = {
+        "contract_version": cep.CONTRACT_VERSION,
+        "release_id": cep.RELEASE_ID,
+        "packages": rows,
+    }
+    with tempfile.TemporaryDirectory() as output:
+        output_root = pathlib.Path(output)
+        manifest = cep.build_release(valid_bundle, output_root)
+        duplicate_path = output_root / manifest["packages"][1]["path"] / "canonical.json"
+        duplicate_package = json.loads(duplicate_path.read_text(encoding="utf-8"))
+        duplicate_package["jurisdiction"]["jurisdiction_id"] = rows[0][
+            "jurisdiction"
+        ]["jurisdiction_id"]
+        duplicate_path.write_text(
+            cep.canonical_json(duplicate_package), encoding="utf-8"
+        )
+        assert "release_duplicate_jurisdiction_id" in cep.verify_release(
+            output_root
+        )
+
+
 def test_exact_package_set_and_reconciliation():
     rows = packages()
     assert len(rows) == 10
@@ -400,6 +590,7 @@ def test_fail_closed_controls():
 def run():
     test_schema_is_parseable_and_versioned()
     test_schema_is_enforced_and_assertion_hash_is_field_scoped()
+    test_provenance_reconciliation_entity_and_format_attacks_fail_closed()
     test_exact_package_set_and_reconciliation()
     test_aggregate_contract_totals()
     test_kyle_non_candidate_rows_are_accounted_not_published()

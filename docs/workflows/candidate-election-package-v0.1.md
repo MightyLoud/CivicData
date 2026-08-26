@@ -74,6 +74,7 @@ missing assertion hashes.
 Publish only normalized, source-supported facts. A ContactPoint is allowed only
 when all of the following are true:
 
+- exactly one of `person_id` or `candidacy_id` resolves inside the package
 - `sensitivity = PUBLIC`
 - `publication_ok = TRUE`
 - `contact_status = ACTIVE`
@@ -161,9 +162,13 @@ foreign keys, missing provenance, count mismatches, QA/parity/tracker failures,
 restricted-field leakage, non-public contact data, altered publication state,
 checksum errors, and non-deterministic output. Evidence assertion kinds are
 limited to `FIELD`, `IDENTITY`, and `RELATIONSHIP`, and each target ID must match
-the declared target-entity type. `ExternalIdentifier` is reserved in v0.1, so
-its record collection must remain empty. Dates and timestamps use canonical
-`YYYY-MM-DD` and RFC 3339 forms rather than permissive ISO 8601 alternatives.
+the declared target-entity type without cross-entity ID collisions. Every scoped
+and context SourceRecordRef must have matching evidence. Excluded records must be
+unique, disjoint from public/context provenance, and match the declared Gap and
+Retired counts. `ExternalIdentifier` is reserved in v0.1, so its record
+collection must remain empty. Dates and timestamps use canonical `YYYY-MM-DD`
+and RFC 3339 forms rather than permissive ISO 8601 alternatives, and source URIs
+reject whitespace and malformed network authorities.
 
 Schema validation applies every JSON Schema keyword used by the v0.1 Draft
 2020-12 contract. Package verification requires the exact flat output set,

@@ -236,8 +236,8 @@
         "jurisdiction_id": {"type": "string", "minLength": 1},
         "division_id": {"type": "string", "minLength": 1},
         "relationship_type": {"type": "string", "minLength": 1},
-        "valid_from": {"type": ["string", "null"]},
-        "valid_to": {"type": ["string", "null"]},
+        "valid_from": {"type": ["string", "null"], "format": "date"},
+        "valid_to": {"type": ["string", "null"], "format": "date"},
         "source_evidence_id": {"type": "string", "minLength": 1}
       },
       "additionalProperties": false
@@ -285,8 +285,8 @@
         "office_id": {"type": "string", "minLength": 1},
         "division_id": {"type": "string", "minLength": 1},
         "relationship_type": {"type": "string", "minLength": 1},
-        "valid_from": {"type": ["string", "null"]},
-        "valid_to": {"type": ["string", "null"]},
+        "valid_from": {"type": ["string", "null"], "format": "date"},
+        "valid_to": {"type": ["string", "null"], "format": "date"},
         "source_evidence_id": {"type": "string", "minLength": 1}
       },
       "additionalProperties": false
@@ -343,7 +343,7 @@
         "primary_source_record_id": {"type": "string", "minLength": 1},
         "candidacy_status": {"type": "string", "minLength": 1},
         "incumbent_status": {"type": "string"},
-        "candidacy_status_date": {"type": ["string", "null"]}
+        "candidacy_status_date": {"type": ["string", "null"], "format": "date"}
       },
       "additionalProperties": false
     },
@@ -411,8 +411,8 @@
         "source_url_normalized": {"type": "string", "format": "uri"},
         "source_type": {"type": "string", "minLength": 1},
         "authority_level": {"type": "string", "minLength": 1},
-        "observed_at": {"type": ["string", "null"]},
-        "retrieved_at": {"type": ["string", "null"]},
+        "observed_at": {"type": ["string", "null"], "format": "date"},
+        "retrieved_at": {"type": ["string", "null"], "format": "date"},
         "confidence": {"type": "string", "minLength": 1},
         "evidence_status": {"type": "string", "minLength": 1}
       },

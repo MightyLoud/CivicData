@@ -219,8 +219,20 @@ def _schema_format_matches(value: str, format_name: str) -> bool:
             parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
             return parsed.tzinfo is not None
         if format_name == "uri":
+            if re.search(r"[\x00-\x20\x7f]", value):
+                return False
+            if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", value) is None:
+                return False
             parsed = urlparse(value)
-            return bool(parsed.scheme and (parsed.netloc or parsed.scheme == "urn"))
+            if parsed.scheme.lower() in {"http", "https"}:
+                if not parsed.netloc or parsed.hostname is None:
+                    return False
+                try:
+                    parsed.port
+                except ValueError:
+                    return False
+                return True
+            return bool(parsed.scheme and (parsed.netloc or parsed.path))
     except ValueError:
         return False
     return True
@@ -404,6 +416,48 @@ def validate_package(package: dict[str, Any]) -> list[str]:
     if _rows(package, "external_identifiers"):
         errors.add("external_identifiers_reserved")
 
+    target_entity_rows = {
+        "Jurisdiction": (
+            [{"jurisdiction_id": jurisdiction_id}] if jurisdiction_id else []
+        ),
+        "Division": _rows(package, "divisions"),
+        "Jurisdiction_Division": _rows(package, "jurisdiction_divisions"),
+        "Election": _rows(package, "elections"),
+        "Office": _rows(package, "offices"),
+        "Office_Division": _rows(package, "office_divisions"),
+        "Contest": _rows(package, "contests"),
+        "Person": _rows(package, "people"),
+        "Candidacy": _rows(package, "candidacies"),
+        "ContactPoint": _rows(package, "contact_points"),
+        "ExternalIdentifier": _rows(package, "external_identifiers"),
+    }
+    target_id_keys = {
+        "Jurisdiction": "jurisdiction_id",
+        **{
+            entity: ID_KEYS[table]
+            for entity, table in (
+                ("Division", "divisions"),
+                ("Jurisdiction_Division", "jurisdiction_divisions"),
+                ("Election", "elections"),
+                ("Office", "offices"),
+                ("Office_Division", "office_divisions"),
+                ("Contest", "contests"),
+                ("Person", "people"),
+                ("Candidacy", "candidacies"),
+                ("ContactPoint", "contact_points"),
+                ("ExternalIdentifier", "external_identifiers"),
+            )
+        },
+    }
+    target_id_entities: dict[str, set[str]] = {}
+    for entity, rows in target_entity_rows.items():
+        for row in rows:
+            target_id = row.get(target_id_keys[entity])
+            if target_id:
+                target_id_entities.setdefault(str(target_id), set()).add(entity)
+    if any(len(entities) > 1 for entities in target_id_entities.values()):
+        errors.add("cross_entity_id_collision")
+
     public_source_rows = _provenance_rows(package, "source_record_refs")
     context_source_rows = _provenance_rows(package, "context_source_record_refs")
     public_source_ids = _id_set(public_source_rows, "source_record_id")
@@ -441,6 +495,18 @@ def validate_package(package: dict[str, Any]) -> list[str]:
             errors.add("context_evidence_source_fk")
         if evidence.get("evidence_status") != "ACTIVE":
             errors.add("context_evidence_status")
+    if public_source_ids - {
+        str(row.get("source_record_id"))
+        for row in scoped_evidence
+        if row.get("source_record_id")
+    }:
+        errors.add("source_record_evidence_coverage")
+    if context_source_ids - {
+        str(row.get("source_record_id"))
+        for row in context_evidence
+        if row.get("source_record_id")
+    }:
+        errors.add("context_source_record_evidence_coverage")
 
     for row in _rows(package, "jurisdiction_divisions"):
         if row.get("jurisdiction_id") != jurisdiction_id:
@@ -487,6 +553,8 @@ def validate_package(package: dict[str, Any]) -> list[str]:
         if row.get("primary_source_record_id") not in public_source_ids:
             errors.add("candidacy_source_fk")
     for row in _rows(package, "contact_points"):
+        if sum(bool(row.get(key)) for key in ("person_id", "candidacy_id")) != 1:
+            errors.add("contact_owner_cardinality")
         if row.get("person_id") and row.get("person_id") not in people:
             errors.add("contact_person_fk")
         if row.get("candidacy_id") and row.get("candidacy_id") not in candidacies:
@@ -556,6 +624,14 @@ def validate_package(package: dict[str, Any]) -> list[str]:
     )
     if expected_public_refs != len(public_source_rows):
         errors.add("public_source_record_reconciliation")
+    actual_public_types = Counter(
+        row.get("record_type") for row in public_source_rows
+    )
+    if any(
+        actual_public_types[record_type] != type_counts.get(record_type, 0)
+        for record_type in ("Candidate", "Structure")
+    ):
+        errors.add("public_source_record_type_reconciliation")
     if reconciliation.get("public_source_record_ref_count") != len(public_source_rows):
         errors.add("public_source_record_count")
     excluded = reconciliation.get("excluded_source_records", [])
@@ -564,6 +640,19 @@ def validate_package(package: dict[str, Any]) -> list[str]:
     expected_excluded = type_counts.get("Gap", 0) + type_counts.get("Retired", 0)
     if len(excluded) != expected_excluded:
         errors.add("excluded_source_record_count")
+    excluded_ids = _id_set(excluded, "source_record_id")
+    if _duplicate_values(excluded, "source_record_id"):
+        errors.add("duplicate_excluded_source_record_id")
+    if _duplicate_values(excluded, "source_native_id"):
+        errors.add("duplicate_excluded_source_native_id")
+    if excluded_ids & all_source_ids:
+        errors.add("excluded_source_record_overlap")
+    actual_excluded_types = Counter(row.get("record_type") for row in excluded)
+    if any(
+        actual_excluded_types[record_type] != type_counts.get(record_type, 0)
+        for record_type in ("Gap", "Retired")
+    ):
+        errors.add("excluded_source_record_type_reconciliation")
     if any(
         row.get("record_type") not in {"Gap", "Retired"}
         or row.get("reason") != "NON_PUBLIC_AUDIT_RECORD"
@@ -1053,6 +1142,18 @@ def build_release(bundle: dict[str, Any], repo_root: Path) -> dict[str, Any]:
         raise ValueError("duplicate bundle place_fp")
     if tuple(sorted(place_fps)) != EXPECTED_PLACE_FPS:
         raise ValueError("bundle package set")
+    jurisdiction_ids = [
+        str(package.get("jurisdiction", {}).get("jurisdiction_id", ""))
+        if isinstance(package, dict)
+        and isinstance(package.get("jurisdiction", {}), dict)
+        else ""
+        for package in packages
+    ]
+    if (
+        not all(jurisdiction_ids)
+        or len(jurisdiction_ids) != len(set(jurisdiction_ids))
+    ):
+        raise ValueError("duplicate bundle jurisdiction_id")
     package_manifests = []
     seen_paths: set[Path] = set()
     for package in sorted(
@@ -1126,6 +1227,7 @@ def verify_release(repo_root: Path) -> list[str]:
     )
     packages: list[dict[str, Any]] = []
     place_fps: list[str] = []
+    jurisdiction_ids: list[str] = []
     for canonical_path in canonical_paths:
         if canonical_path.is_symlink() or not canonical_path.is_file():
             errors.add("release_canonical_entry_type")
@@ -1145,6 +1247,7 @@ def verify_release(repo_root: Path) -> list[str]:
             else ""
         )
         place_fps.append(place_fp)
+        jurisdiction_ids.append(str(jurisdiction.get("jurisdiction_id", "")))
         packages.append(package)
         try:
             if canonical_path.parent != repo_root / package_relative_dir(package):
@@ -1163,6 +1266,11 @@ def verify_release(repo_root: Path) -> list[str]:
         errors.add("release_duplicate_place_fp")
     if tuple(sorted(place_fps)) != EXPECTED_PLACE_FPS:
         errors.add("release_package_set")
+    if (
+        not all(jurisdiction_ids)
+        or len(jurisdiction_ids) != len(set(jurisdiction_ids))
+    ):
+        errors.add("release_duplicate_jurisdiction_id")
 
     if tuple(sorted(place_fps)) == EXPECTED_PLACE_FPS:
         bundle = {
