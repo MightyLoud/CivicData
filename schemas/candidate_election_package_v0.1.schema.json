@@ -369,6 +369,16 @@
         "source_evidence_id": {"type": "string", "minLength": 1},
         "contact_status": {"const": "ACTIVE"}
       },
+      "oneOf": [
+        {
+          "required": ["person_id"],
+          "not": {"required": ["candidacy_id"]}
+        },
+        {
+          "required": ["candidacy_id"],
+          "not": {"required": ["person_id"]}
+        }
+      ],
       "additionalProperties": false
     },
     "source_record_ref": {

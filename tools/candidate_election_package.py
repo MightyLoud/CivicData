@@ -219,9 +219,15 @@ def _schema_format_matches(value: str, format_name: str) -> bool:
             parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
             return parsed.tzinfo is not None
         if format_name == "uri":
-            if re.search(r"[\x00-\x20\x7f]", value):
+            if re.search(r"[\\\x00-\x20\x7f]", value):
                 return False
             if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", value) is None:
+                return False
+            if re.search(r"%(?![0-9A-Fa-f]{2})", value):
+                return False
+            if re.fullmatch(
+                r"[A-Za-z0-9:/?#\[\]@!$&'()*+,;=._~%-]+", value
+            ) is None:
                 return False
             parsed = urlparse(value)
             if parsed.scheme.lower() in {"http", "https"}:
@@ -273,6 +279,19 @@ def _schema_validation_errors(
 
     for sub_schema in schema.get("allOf", []):
         errors.extend(_schema_validation_errors(value, sub_schema, root_schema, path))
+    one_of = schema.get("oneOf", [])
+    if one_of:
+        matches = sum(
+            not _schema_validation_errors(value, sub_schema, root_schema, path)
+            for sub_schema in one_of
+        )
+        if matches != 1:
+            errors.append(f"schema:{path}:oneOf")
+    not_schema = schema.get("not")
+    if isinstance(not_schema, dict) and not _schema_validation_errors(
+        value, not_schema, root_schema, path
+    ):
+        errors.append(f"schema:{path}:not")
     if_schema = schema.get("if")
     if isinstance(if_schema, dict):
         condition_matches = not _schema_validation_errors(
@@ -465,6 +484,13 @@ def validate_package(package: dict[str, Any]) -> list[str]:
     all_source_ids = public_source_ids | context_source_ids
     if _duplicate_values(public_source_rows + context_source_rows, "source_record_id"):
         errors.add("duplicate_source_record_id")
+    all_source_native_ids = _id_set(
+        public_source_rows + context_source_rows, "source_native_id"
+    )
+    if _duplicate_values(
+        public_source_rows + context_source_rows, "source_native_id"
+    ):
+        errors.add("duplicate_source_native_id")
     for source in public_source_rows:
         if source.get("record_type") not in {"Candidate", "Structure"}:
             errors.add("nonpublic_source_record")
@@ -641,12 +667,15 @@ def validate_package(package: dict[str, Any]) -> list[str]:
     if len(excluded) != expected_excluded:
         errors.add("excluded_source_record_count")
     excluded_ids = _id_set(excluded, "source_record_id")
+    excluded_native_ids = _id_set(excluded, "source_native_id")
     if _duplicate_values(excluded, "source_record_id"):
         errors.add("duplicate_excluded_source_record_id")
     if _duplicate_values(excluded, "source_native_id"):
         errors.add("duplicate_excluded_source_native_id")
     if excluded_ids & all_source_ids:
         errors.add("excluded_source_record_overlap")
+    if excluded_native_ids & all_source_native_ids:
+        errors.add("excluded_source_native_id_overlap")
     actual_excluded_types = Counter(row.get("record_type") for row in excluded)
     if any(
         actual_excluded_types[record_type] != type_counts.get(record_type, 0)

@@ -187,6 +187,12 @@ def test_provenance_reconciliation_entity_and_format_attacks_fail_closed():
         in cep.validate_package(changed)
     )
 
+    changed = copy.deepcopy(base)
+    changed["provenance"]["source_record_refs"][1]["source_native_id"] = (
+        changed["provenance"]["source_record_refs"][0]["source_native_id"]
+    )
+    assert "duplicate_source_native_id" in cep.validate_package(changed)
+
     kyle = copy.deepcopy(
         next(
             row
@@ -216,6 +222,18 @@ def test_provenance_reconciliation_entity_and_format_attacks_fail_closed():
         "source_record_id"
     ] = kyle["provenance"]["source_record_refs"][0]["source_record_id"]
     assert "excluded_source_record_overlap" in cep.validate_package(kyle)
+
+    kyle = copy.deepcopy(
+        next(
+            row
+            for row in rows
+            if row["jurisdiction"]["source_jurisdiction_key"] == "39952"
+        )
+    )
+    kyle["reconciliation"]["excluded_source_records"][0][
+        "source_native_id"
+    ] = kyle["provenance"]["source_record_refs"][0]["source_native_id"]
+    assert "excluded_source_native_id_overlap" in cep.validate_package(kyle)
 
     changed = copy.deepcopy(base)
     changed["records"]["contact_points"] = [
@@ -248,6 +266,9 @@ def test_provenance_reconciliation_entity_and_format_attacks_fail_closed():
             "contact_status": "ACTIVE",
         }
     ]
+    assert "schema:$.records.contact_points[0]:oneOf" in cep.validate_schema(
+        changed
+    )
     assert "contact_owner_cardinality" in cep.validate_package(changed)
 
     changed = copy.deepcopy(base)
@@ -268,6 +289,9 @@ def test_provenance_reconciliation_entity_and_format_attacks_fail_closed():
             "contact_status": "ACTIVE",
         }
     ]
+    assert "schema:$.records.contact_points[0]:oneOf" in cep.validate_schema(
+        changed
+    )
     assert "contact_owner_cardinality" in cep.validate_package(changed)
 
     changed = copy.deepcopy(base)
@@ -306,6 +330,28 @@ def test_provenance_reconciliation_entity_and_format_attacks_fail_closed():
         "schema:$.provenance.source_evidence[0].source_url_normalized:format"
         in errors
     )
+
+    for malformed_uri in (
+        "https://example.com/%ZZ",
+        "https://example.com\\invalid",
+        "https://example.com/{invalid}",
+    ):
+        changed = copy.deepcopy(base)
+        for key in ("source_url", "source_url_normalized"):
+            changed["provenance"]["source_evidence"][0][key] = malformed_uri
+        errors = cep.validate_package(changed)
+        assert "schema:$.provenance.source_evidence[0].source_url:format" in errors
+        assert (
+            "schema:$.provenance.source_evidence[0].source_url_normalized:format"
+            in errors
+        )
+
+    changed = copy.deepcopy(base)
+    for key in ("source_url", "source_url_normalized"):
+        changed["provenance"]["source_evidence"][0][key] = (
+            "https://example.com/valid%20path?x=1&y=2#fragment"
+        )
+    assert cep.validate_package(changed) == []
 
     duplicate_jurisdiction_bundle = copy.deepcopy(rows)
     duplicate_jurisdiction_bundle[1]["jurisdiction"]["jurisdiction_id"] = (
