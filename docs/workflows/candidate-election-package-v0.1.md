@@ -63,6 +63,12 @@ Candidate identity is represented by `Person` plus `Candidacy`. A Candidacy
 must resolve to one Person, one Contest, and one safe primary SourceRecordRef.
 Each Contest must resolve to one Election and one Office.
 
+`EvidenceLink.asserted_value_hash` is required for `FIELD` assertions. WB-020
+leaves it blank for `IDENTITY` and `RELATIONSHIP` links because those links bind
+the evidence directly to a stable target entity rather than duplicating a field
+value. The package preserves that governed distinction and does not synthesize
+missing assertion hashes.
+
 ## Public-field policy
 
 Publish only normalized, source-supported facts. A ContactPoint is allowed only
@@ -153,11 +159,19 @@ python tests/test_candidate_election_package.py
 The validator fails closed on schema/version drift, duplicate IDs, unresolved
 foreign keys, missing provenance, count mismatches, QA/parity/tracker failures,
 restricted-field leakage, non-public contact data, altered publication state,
-checksum errors, and non-deterministic output.
+checksum errors, and non-deterministic output. Schema validation applies every
+JSON Schema keyword used by the v0.1 Draft 2020-12 contract. Release validation
+also rebuilds the complete output in a temporary directory and requires exact
+byte equality, so omissions, additions, aggregate-count drift, false QA state,
+and a package set other than the fixed ten-place release fail closed.
+
+Pull requests that touch this contract run
+`.github/workflows/candidate-election-package.yml`, which compiles the builder,
+tests, and consumer example; executes positive and negative contract controls;
+and verifies the complete staged release.
 
 ## Publication boundary
 
 Every package and the aggregate manifest must remain
 `STAGED_NOT_PUBLISHED`. A merge, release, API deployment, or public
 distribution requires a separate exact authorization gate.
-

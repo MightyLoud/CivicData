@@ -83,6 +83,49 @@ def test_schema_is_parseable_and_versioned():
     )
 
 
+def test_schema_is_enforced_and_assertion_hash_is_field_scoped():
+    rows = packages()
+    assert all(cep.validate_schema(row) == [] for row in rows)
+    base = rows[0]
+    assert all(
+        row["assertion_kind"] in {"IDENTITY", "RELATIONSHIP"}
+        and "asserted_value_hash" not in row
+        for row in base["provenance"]["evidence_links"]
+    )
+
+    changed = copy.deepcopy(base)
+    del changed["source_authority"]["workbook_title"]
+    assert "schema:$.source_authority.workbook_title:required" in cep.validate_package(
+        changed
+    )
+
+    changed = copy.deepcopy(base)
+    changed["unexpected_top_level"] = "not allowed"
+    assert "schema:$.unexpected_top_level:additionalProperties" in cep.validate_package(
+        changed
+    )
+
+    changed = copy.deepcopy(base)
+    changed["generated_at"] = "not-a-date-time"
+    assert "schema:$.generated_at:format" in cep.validate_package(changed)
+
+    changed = copy.deepcopy(base)
+    del changed["provenance"]["source_evidence"][0]["source_url"]
+    assert (
+        "schema:$.provenance.source_evidence[0].source_url:required"
+        in cep.validate_package(changed)
+    )
+
+    changed = copy.deepcopy(base)
+    changed["provenance"]["evidence_links"][0]["assertion_kind"] = "FIELD"
+    assert (
+        "schema:$.provenance.evidence_links[0].asserted_value_hash:required"
+        in cep.validate_package(changed)
+    )
+    changed["provenance"]["evidence_links"][0]["asserted_value_hash"] = "0" * 64
+    assert cep.validate_package(changed) == []
+
+
 def test_exact_package_set_and_reconciliation():
     rows = packages()
     assert len(rows) == 10
@@ -185,6 +228,44 @@ def test_deterministic_release_rerun_is_byte_identical():
         assert first_files == committed_files
 
 
+def test_release_fails_closed_on_incomplete_or_tampered_aggregate():
+    rows = packages()
+    incomplete = {
+        "contract_version": cep.CONTRACT_VERSION,
+        "release_id": cep.RELEASE_ID,
+        "packages": rows[:1],
+    }
+    with tempfile.TemporaryDirectory() as output:
+        try:
+            cep.build_release(incomplete, pathlib.Path(output))
+        except ValueError as error:
+            assert str(error) == "bundle package set"
+        else:
+            raise AssertionError("one-package fixed release must fail closed")
+
+    bundle = {
+        "contract_version": cep.CONTRACT_VERSION,
+        "release_id": cep.RELEASE_ID,
+        "packages": rows,
+    }
+    with tempfile.TemporaryDirectory() as output:
+        output_root = pathlib.Path(output)
+        cep.build_release(bundle, output_root)
+        manifest_path = (
+            output_root
+            / "data"
+            / "normalized"
+            / "tx"
+            / f"{cep.RELEASE_ID}.manifest.json"
+        )
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["entity_totals"]["candidacies"] = 999
+        manifest["qa_summary"]["parity_ok"] = False
+        manifest_path.write_text(cep.canonical_json(manifest), encoding="utf-8")
+        errors = cep.verify_release(output_root)
+        assert any(error.startswith("release_output_mismatch:") for error in errors)
+
+
 def test_fail_closed_controls():
     base = packages()[0]
 
@@ -226,11 +307,13 @@ def test_fail_closed_controls():
 
 def run():
     test_schema_is_parseable_and_versioned()
+    test_schema_is_enforced_and_assertion_hash_is_field_scoped()
     test_exact_package_set_and_reconciliation()
     test_aggregate_contract_totals()
     test_kyle_non_candidate_rows_are_accounted_not_published()
     test_built_outputs_verify()
     test_deterministic_release_rerun_is_byte_identical()
+    test_release_fails_closed_on_incomplete_or_tampered_aggregate()
     test_fail_closed_controls()
     print(
         json.dumps(

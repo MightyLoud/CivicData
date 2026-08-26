@@ -426,8 +426,7 @@
         "target_entity",
         "target_id",
         "assertion_kind",
-        "assertion_name",
-        "asserted_value_hash"
+        "assertion_name"
       ],
       "properties": {
         "evidence_link_id": {"type": "string", "minLength": 1},
@@ -438,6 +437,15 @@
         "assertion_name": {"type": "string", "minLength": 1},
         "asserted_value_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
       },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"assertion_kind": {"const": "FIELD"}},
+            "required": ["assertion_kind"]
+          },
+          "then": {"required": ["asserted_value_hash"]}
+        }
+      ],
       "additionalProperties": false
     }
   }

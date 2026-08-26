@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import argparse
 import csv
+import datetime as dt
 import hashlib
 import json
 import re
 import shutil
+import tempfile
 from collections import Counter
 from pathlib import Path
 from typing import Any, Iterable
+from urllib.parse import urlparse
 
 CONTRACT_VERSION = "candidate-election-0.1"
 PACKAGE_TYPE = "candidate_election"
@@ -18,6 +21,23 @@ RELEASE_ID = "tx-candidate-election-2026-001"
 PUBLICATION_STATUS = "STAGED_NOT_PUBLISHED"
 SOURCE_WORKBOOK_ID = "WB-020"
 SOURCE_SPREADSHEET_ID = "1xG1J2fliSTOHoohhDGbsCM4OYUJq0ArEFFLlNYWA6D8"
+SCHEMA_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "schemas"
+    / "candidate_election_package_v0.1.schema.json"
+)
+EXPECTED_PLACE_FPS = (
+    "07552",
+    "08128",
+    "17917",
+    "26808",
+    "33794",
+    "35228",
+    "38548",
+    "39952",
+    "46824",
+    "47316",
+)
 
 RECORD_TABLES = (
     "divisions",
@@ -107,13 +127,19 @@ def package_relative_dir(package: dict[str, Any]) -> Path:
 
 
 def _rows(package: dict[str, Any], table: str) -> list[dict[str, Any]]:
-    value = package.get("records", {}).get(table)
-    return value if isinstance(value, list) else []
+    records = package.get("records", {})
+    if not isinstance(records, dict):
+        return []
+    value = records.get(table)
+    return [row for row in value if isinstance(row, dict)] if isinstance(value, list) else []
 
 
 def _provenance_rows(package: dict[str, Any], table: str) -> list[dict[str, Any]]:
-    value = package.get("provenance", {}).get(table)
-    return value if isinstance(value, list) else []
+    provenance = package.get("provenance", {})
+    if not isinstance(provenance, dict):
+        return []
+    value = provenance.get(table)
+    return [row for row in value if isinstance(row, dict)] if isinstance(value, list) else []
 
 
 def _id_set(rows: Iterable[dict[str, Any]], key: str) -> set[str]:
@@ -139,8 +165,152 @@ def _restricted_key_paths(value: Any, prefix: str = "$") -> list[str]:
     return findings
 
 
+def _schema_pointer(root: dict[str, Any], ref: str) -> dict[str, Any]:
+    if not ref.startswith("#/"):
+        raise ValueError(f"unsupported schema reference: {ref}")
+    value: Any = root
+    for part in ref[2:].split("/"):
+        value = value[part.replace("~1", "/").replace("~0", "~")]
+    if not isinstance(value, dict):
+        raise ValueError(f"schema reference is not an object: {ref}")
+    return value
+
+
+def _schema_type_matches(value: Any, schema_type: str) -> bool:
+    return {
+        "object": isinstance(value, dict),
+        "array": isinstance(value, list),
+        "string": isinstance(value, str),
+        "integer": isinstance(value, int) and not isinstance(value, bool),
+        "boolean": isinstance(value, bool),
+        "null": value is None,
+    }.get(schema_type, False)
+
+
+def _schema_format_matches(value: str, format_name: str) -> bool:
+    try:
+        if format_name == "date":
+            dt.date.fromisoformat(value)
+            return True
+        if format_name == "date-time":
+            parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+            return parsed.tzinfo is not None
+        if format_name == "uri":
+            parsed = urlparse(value)
+            return bool(parsed.scheme and (parsed.netloc or parsed.scheme == "urn"))
+    except ValueError:
+        return False
+    return True
+
+
+def _schema_validation_errors(
+    value: Any,
+    schema: dict[str, Any],
+    root_schema: dict[str, Any],
+    path: str = "$",
+) -> list[str]:
+    """Validate every JSON Schema keyword used by the v0.1 contract."""
+    if "$ref" in schema:
+        return _schema_validation_errors(
+            value,
+            _schema_pointer(root_schema, str(schema["$ref"])),
+            root_schema,
+            path,
+        )
+
+    errors: list[str] = []
+    schema_types = schema.get("type")
+    if schema_types is not None:
+        allowed_types = (
+            schema_types if isinstance(schema_types, list) else [schema_types]
+        )
+        if not any(
+            isinstance(schema_type, str)
+            and _schema_type_matches(value, schema_type)
+            for schema_type in allowed_types
+        ):
+            return [f"schema:{path}:type"]
+
+    if "const" in schema and value != schema["const"]:
+        errors.append(f"schema:{path}:const")
+    if "enum" in schema and value not in schema["enum"]:
+        errors.append(f"schema:{path}:enum")
+
+    for sub_schema in schema.get("allOf", []):
+        errors.extend(_schema_validation_errors(value, sub_schema, root_schema, path))
+    if_schema = schema.get("if")
+    if isinstance(if_schema, dict):
+        condition_matches = not _schema_validation_errors(
+            value, if_schema, root_schema, path
+        )
+        branch = schema.get("then") if condition_matches else schema.get("else")
+        if isinstance(branch, dict):
+            errors.extend(_schema_validation_errors(value, branch, root_schema, path))
+
+    if isinstance(value, dict):
+        properties = schema.get("properties", {})
+        for key in schema.get("required", []):
+            if key not in value:
+                errors.append(f"schema:{path}.{key}:required")
+        if schema.get("additionalProperties") is False:
+            for key in value:
+                if key not in properties:
+                    errors.append(f"schema:{path}.{key}:additionalProperties")
+        for key, child_schema in properties.items():
+            if key in value:
+                errors.extend(
+                    _schema_validation_errors(
+                        value[key], child_schema, root_schema, f"{path}.{key}"
+                    )
+                )
+
+    if isinstance(value, list):
+        if len(value) < schema.get("minItems", 0):
+            errors.append(f"schema:{path}:minItems")
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            for index, item in enumerate(value):
+                errors.extend(
+                    _schema_validation_errors(
+                        item, item_schema, root_schema, f"{path}[{index}]"
+                    )
+                )
+
+    if isinstance(value, str):
+        if len(value) < schema.get("minLength", 0):
+            errors.append(f"schema:{path}:minLength")
+        pattern = schema.get("pattern")
+        if pattern and re.search(pattern, value) is None:
+            errors.append(f"schema:{path}:pattern")
+        format_name = schema.get("format")
+        if format_name and not _schema_format_matches(value, format_name):
+            errors.append(f"schema:{path}:format")
+
+    if (
+        isinstance(value, int)
+        and not isinstance(value, bool)
+        and "minimum" in schema
+        and value < schema["minimum"]
+    ):
+        errors.append(f"schema:{path}:minimum")
+    return errors
+
+
+def validate_schema(package: dict[str, Any]) -> list[str]:
+    if not SCHEMA_PATH.exists():
+        return ["schema:file_missing"]
+    try:
+        schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ["schema:file_invalid"]
+    try:
+        return sorted(set(_schema_validation_errors(package, schema, schema)))
+    except (KeyError, TypeError, ValueError):
+        return ["schema:definition_invalid"]
+
+
 def validate_package(package: dict[str, Any]) -> list[str]:
-    errors: set[str] = set()
+    errors: set[str] = set(validate_schema(package))
     if package.get("contract_version") != CONTRACT_VERSION:
         errors.add("contract_version")
     if package.get("package_type") != PACKAGE_TYPE:
@@ -151,6 +321,8 @@ def validate_package(package: dict[str, Any]) -> list[str]:
         errors.add("publication_status")
 
     jurisdiction = package.get("jurisdiction", {})
+    if not isinstance(jurisdiction, dict):
+        jurisdiction = {}
     place_fp = str(jurisdiction.get("source_jurisdiction_key", ""))
     jurisdiction_id = jurisdiction.get("jurisdiction_id")
     if not re.fullmatch(r"[0-9]{5}", place_fp):
@@ -163,6 +335,8 @@ def validate_package(package: dict[str, Any]) -> list[str]:
         errors.add("jurisdiction_id")
 
     source_authority = package.get("source_authority", {})
+    if not isinstance(source_authority, dict):
+        source_authority = {}
     if source_authority.get("workbook_id") != SOURCE_WORKBOOK_ID:
         errors.add("source_workbook_id")
     if source_authority.get("spreadsheet_id") != SOURCE_SPREADSHEET_ID:
@@ -324,6 +498,8 @@ def validate_package(package: dict[str, Any]) -> list[str]:
             errors.add("evidence_link_target_fk")
 
     reconciliation = package.get("reconciliation", {})
+    if not isinstance(reconciliation, dict):
+        reconciliation = {}
     source_total = reconciliation.get("source_scope_total")
     if not (
         isinstance(source_total, int)
@@ -332,10 +508,15 @@ def validate_package(package: dict[str, Any]) -> list[str]:
     ):
         errors.add("source_normalized_qa_reconciliation")
     type_counts = reconciliation.get("record_type_counts", {})
+    if not isinstance(type_counts, dict):
+        type_counts = {}
     expected_types = {"Candidate", "Structure", "Gap", "Retired"}
     if set(type_counts) != expected_types:
         errors.add("record_type_keys")
-    elif sum(type_counts.values()) != source_total:
+    elif not all(
+        isinstance(value, int) and not isinstance(value, bool)
+        for value in type_counts.values()
+    ) or sum(type_counts.values()) != source_total:
         errors.add("record_type_total")
     if type_counts.get("Candidate") != len(candidacies):
         errors.add("candidate_candidacy_reconciliation")
@@ -347,6 +528,8 @@ def validate_package(package: dict[str, Any]) -> list[str]:
     if reconciliation.get("public_source_record_ref_count") != len(public_source_rows):
         errors.add("public_source_record_count")
     excluded = reconciliation.get("excluded_source_records", [])
+    if not isinstance(excluded, list):
+        excluded = []
     expected_excluded = type_counts.get("Gap", 0) + type_counts.get("Retired", 0)
     if len(excluded) != expected_excluded:
         errors.add("excluded_source_record_count")
@@ -360,6 +543,8 @@ def validate_package(package: dict[str, Any]) -> list[str]:
         errors.add("canonical_candidacy_total")
 
     qa = package.get("qa", {})
+    if not isinstance(qa, dict):
+        qa = {}
     required_qa = {
         "workflow_status": "9.00 – Complete",
         "complete_eligible": True,
@@ -651,14 +836,39 @@ def verify_built_package(out: Path) -> list[str]:
     sums_path = out / "SHA256SUMS.txt"
     if not canonical_path.exists() or not manifest_path.exists() or not sums_path.exists():
         return sorted(errors | {"missing_core_output"})
-    package = json.loads(canonical_path.read_text(encoding="utf-8"))
+    try:
+        package = json.loads(canonical_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return sorted(errors | {"canonical_invalid"})
+    if not isinstance(package, dict):
+        return sorted(errors | {"canonical_invalid"})
     errors.update(validate_package(package))
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return sorted(errors | {"manifest_invalid"})
+    if not isinstance(manifest, dict):
+        return sorted(errors | {"manifest_invalid"})
     if manifest.get("package_id") != package.get("package_id"):
         errors.add("manifest_package_id")
-    for file_row in manifest.get("files", []):
+    if all((out / name).is_file() for name in OUTPUT_FILES):
+        try:
+            expected_manifest = _manifest(package, out)
+        except (KeyError, OSError, TypeError, ValueError):
+            errors.add("manifest_rebuild_failed")
+            expected_manifest = None
+        if expected_manifest is not None and manifest != expected_manifest:
+            errors.add("manifest_content")
+    manifest_files = manifest.get("files", [])
+    if not isinstance(manifest_files, list):
+        errors.add("manifest_files")
+        manifest_files = []
+    for file_row in manifest_files:
+        if not isinstance(file_row, dict):
+            errors.add("manifest_files")
+            continue
         path = out / file_row.get("path", "")
-        if not path.exists():
+        if not path.is_file():
             errors.add("manifest_missing_file")
             continue
         if path.stat().st_size != file_row.get("bytes"):
@@ -667,7 +877,13 @@ def verify_built_package(out: Path) -> list[str]:
             errors.add("manifest_sha256")
     declared_sums: dict[str, str] = {}
     for line in sums_path.read_text(encoding="utf-8").splitlines():
+        if "  " not in line:
+            errors.add("checksum_format")
+            continue
         digest, name = line.split("  ", 1)
+        if not re.fullmatch(r"[0-9a-f]{64}", digest) or not name:
+            errors.add("checksum_format")
+            continue
         declared_sums[name] = digest
     checksum_targets = actual - {"SHA256SUMS.txt"}
     if set(declared_sums) != checksum_targets:
@@ -717,10 +933,15 @@ def _release_manifest(
                 "publication_status": PUBLICATION_STATUS,
             }
         )
+    generated_at_values = {
+        manifest["generated_at"] for manifest, _ in package_manifests
+    }
+    if len(generated_at_values) != 1:
+        raise ValueError("package generated_at values must match")
     return {
         "contract_version": CONTRACT_VERSION,
         "release_id": RELEASE_ID,
-        "generated_at": bundle["packages"][0]["generated_at"],
+        "generated_at": generated_at_values.pop(),
         "publication_status": PUBLICATION_STATUS,
         "state_abbr": "TX",
         "source_workbook_id": SOURCE_WORKBOOK_ID,
@@ -752,6 +973,17 @@ def build_release(bundle: dict[str, Any], repo_root: Path) -> dict[str, Any]:
     packages = bundle.get("packages")
     if not isinstance(packages, list) or not packages:
         raise ValueError("bundle packages")
+    place_fps = [
+        str(package.get("jurisdiction", {}).get("source_jurisdiction_key", ""))
+        if isinstance(package, dict)
+        and isinstance(package.get("jurisdiction", {}), dict)
+        else ""
+        for package in packages
+    ]
+    if len(place_fps) != len(set(place_fps)):
+        raise ValueError("duplicate bundle place_fp")
+    if tuple(sorted(place_fps)) != EXPECTED_PLACE_FPS:
+        raise ValueError("bundle package set")
     package_manifests = []
     seen_paths: set[Path] = set()
     for package in sorted(
@@ -774,34 +1006,112 @@ def build_release(bundle: dict[str, Any], repo_root: Path) -> dict[str, Any]:
     return release_manifest
 
 
+def _release_output_files(repo_root: Path) -> dict[Path, Path]:
+    tx_root = repo_root / "data" / "normalized" / "tx"
+    files = {
+        path.relative_to(repo_root): path
+        for path in tx_root.glob("*/candidate-election/2026/*")
+        if path.is_file()
+    }
+    release_path = tx_root / f"{RELEASE_ID}.manifest.json"
+    if release_path.is_file():
+        files[release_path.relative_to(repo_root)] = release_path
+    return files
+
+
 def verify_release(repo_root: Path) -> list[str]:
     errors: set[str] = set()
-    release_path = (
-        repo_root / "data" / "normalized" / "tx" / f"{RELEASE_ID}.manifest.json"
-    )
+    tx_root = repo_root / "data" / "normalized" / "tx"
+    release_path = tx_root / f"{RELEASE_ID}.manifest.json"
     if not release_path.exists():
         return ["release_manifest_missing"]
-    release = json.loads(release_path.read_text(encoding="utf-8"))
+    try:
+        release = json.loads(release_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ["release_manifest_invalid"]
+    if not isinstance(release, dict):
+        return ["release_manifest_invalid"]
     if release.get("contract_version") != CONTRACT_VERSION:
         errors.add("release_contract_version")
+    if release.get("release_id") != RELEASE_ID:
+        errors.add("release_id")
     if release.get("publication_status") != PUBLICATION_STATUS:
         errors.add("release_publication_status")
-    if release.get("package_count") != len(release.get("packages", [])):
+    if release.get("state_abbr") != "TX":
+        errors.add("release_state_abbr")
+    if release.get("source_workbook_id") != SOURCE_WORKBOOK_ID:
+        errors.add("release_source_workbook_id")
+    if release.get("source_spreadsheet_id") != SOURCE_SPREADSHEET_ID:
+        errors.add("release_source_spreadsheet_id")
+    release_packages = release.get("packages")
+    if not isinstance(release_packages, list):
+        errors.add("release_packages")
+        release_packages = []
+    if release.get("package_count") != len(release_packages):
         errors.add("release_package_count")
-    for package_row in release.get("packages", []):
-        package_dir = repo_root / package_row["path"]
-        errors.update(
-            f"{package_row['place_fp']}:{error}"
-            for error in verify_built_package(package_dir)
+
+    canonical_paths = sorted(
+        tx_root.glob("*/candidate-election/2026/canonical.json")
+    )
+    packages: list[dict[str, Any]] = []
+    place_fps: list[str] = []
+    for canonical_path in canonical_paths:
+        try:
+            package = json.loads(canonical_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            errors.add("release_canonical_invalid")
+            continue
+        if not isinstance(package, dict):
+            errors.add("release_canonical_invalid")
+            continue
+        jurisdiction = package.get("jurisdiction", {})
+        place_fp = (
+            str(jurisdiction.get("source_jurisdiction_key", ""))
+            if isinstance(jurisdiction, dict)
+            else ""
         )
-        if sha256_file(package_dir / "manifest.json") != package_row.get(
-            "manifest_sha256"
-        ):
-            errors.add(f"{package_row['place_fp']}:release_manifest_sha")
-        if sha256_file(package_dir / "canonical.json") != package_row.get(
-            "canonical_sha256"
-        ):
-            errors.add(f"{package_row['place_fp']}:release_canonical_sha")
+        place_fps.append(place_fp)
+        packages.append(package)
+        try:
+            if canonical_path.parent != repo_root / package_relative_dir(package):
+                errors.add(f"{place_fp}:package_path")
+        except (KeyError, TypeError, ValueError):
+            errors.add(f"{place_fp}:package_path")
+        try:
+            errors.update(
+                f"{place_fp}:{error}"
+                for error in verify_built_package(canonical_path.parent)
+            )
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError):
+            errors.add(f"{place_fp}:package_verify_failed")
+
+    if len(place_fps) != len(set(place_fps)):
+        errors.add("release_duplicate_place_fp")
+    if tuple(sorted(place_fps)) != EXPECTED_PLACE_FPS:
+        errors.add("release_package_set")
+
+    if tuple(sorted(place_fps)) == EXPECTED_PLACE_FPS:
+        bundle = {
+            "contract_version": CONTRACT_VERSION,
+            "release_id": RELEASE_ID,
+            "packages": packages,
+        }
+        try:
+            with tempfile.TemporaryDirectory() as temporary:
+                expected_root = Path(temporary)
+                build_release(bundle, expected_root)
+                expected_files = _release_output_files(expected_root)
+                actual_files = _release_output_files(repo_root)
+                if set(expected_files) != set(actual_files):
+                    errors.add("release_output_file_set")
+                for relative_path in set(expected_files) & set(actual_files):
+                    if (
+                        expected_files[relative_path].read_bytes()
+                        != actual_files[relative_path].read_bytes()
+                    ):
+                        errors.add(f"release_output_mismatch:{relative_path}")
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError):
+            errors.add("release_rebuild_failed")
     return sorted(errors)
 
 
