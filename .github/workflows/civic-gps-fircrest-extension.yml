@@ -1,0 +1,43 @@
+name: EV-IMP-007 Fircrest Civic GPS extension
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "civic_gps_extensions/**"
+      - "tests/civic_gps_fircrest_extension_live_probe.py"
+      - "consumers/empowered_vote/full_essentials_catalog.py"
+      - "consumers/empowered_vote/package_catalog.v0.1.json"
+      - "data/packages/wa/fircrest/**"
+      - "data/reference/wa/fircrest/**"
+      - "onboarding/ev/fircrest.v0.1.json"
+      - "docs/empowered-vote-imp-007.md"
+      - ".github/workflows/civic-gps-fircrest-extension.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fircrest-live:
+    name: Fircrest live geography → governed Full Essentials gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+      - name: Reconstruct exact Civic GPS runtime
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+      - name: Compile Fircrest extension and consumer
+        run: python -m py_compile civic_gps_extensions/loader.py consumers/empowered_vote/full_essentials_catalog.py tests/civic_gps_fircrest_extension_live_probe.py
+      - name: Run real-network Fircrest controls
+        run: python tests/civic_gps_fircrest_extension_live_probe.py

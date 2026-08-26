@@ -1,0 +1,59 @@
+{
+  "extension_version": "0.1",
+  "bundles": [
+    {
+      "adapter_id": "BASE-CO-AKRON",
+      "mode": "BASE",
+      "priority": 80,
+      "scope_match": {
+        "geography": "place",
+        "fields": ["GEOID"],
+        "equals": "0800925"
+      },
+      "division_rules": [
+        {
+          "division_id": "div-us-co-akron",
+          "name": "Akron",
+          "type": "municipality",
+          "when": {
+            "geography": "place",
+            "fields": ["GEOID"],
+            "equals": "0800925"
+          }
+        }
+      ],
+      "jurisdictions": [
+        {
+          "jurisdiction_id": "jur-us-co-akron",
+          "activation": {
+            "geography": "place",
+            "fields": ["GEOID"],
+            "equals": "0800925"
+          }
+        }
+      ],
+      "release_files": ["../civic_gps_extensions/akron_release_v0.1.json"],
+      "district_adapters": [],
+      "applicable_office_rules": [],
+      "action_registry_files": [],
+      "known_gaps": []
+    }
+  ],
+  "municipal_boundary_overlays": [
+    {
+      "overlay_id": "MUNI-WA-FIRCREST",
+      "parent_jurisdiction_id": "jur-us-wa-pierce",
+      "service_url": "https://data.wsdot.wa.gov/arcgis/rest/services/Shared/PoliAdminBndryData/FeatureServer/1",
+      "where": "CityFIPSLongPlaceCode='5323970'",
+      "identity_field": "CityFIPSLongPlaceCode",
+      "identity_value": "5323970",
+      "jurisdiction_id": "jur-us-wa-fircrest",
+      "division_id": "div-us-wa-fircrest",
+      "division_name": "Fircrest",
+      "division_type": "municipality",
+      "release_file": "../civic_gps_extensions/fircrest_release_v0.1.json",
+      "authority": "Washington State Department of Transportation / Washington State Office of Financial Management",
+      "reference_url": "https://data.wsdot.wa.gov/arcgis/rest/services/Shared/PoliAdminBndryData/FeatureServer/1"
+    }
+  ]
+}

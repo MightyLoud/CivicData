@@ -1,0 +1,72 @@
+name: EV onboarding live batch
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "onboarding/ev/**"
+      - "tools/ev_jurisdiction_onboarding.py"
+      - "tools/ev_onboarding_batch.py"
+      - "tools/ev_live_onboarding_batch.py"
+      - "tools/ev_onboarding_pr_ready.py"
+      - "tools/ev_onboarding_merge_eligibility.py"
+      - "tools/ev_onboarding_merge_execute.py"
+      - "tools/ev_onboarding_post_merge_verify.py"
+      - "tests/ev_onboarding_pr_ready_test.py"
+      - "tests/ev_onboarding_merge_eligibility_test.py"
+      - "tests/ev_onboarding_merge_execute_test.py"
+      - "tests/ev_onboarding_post_merge_verify_test.py"
+      - "docs/empowered-vote-imp-013.md"
+      - "docs/empowered-vote-imp-014.md"
+      - "docs/empowered-vote-imp-015.md"
+      - "docs/empowered-vote-imp-016.md"
+      - "consumers/empowered_vote/**"
+      - "civic_gps_extensions/**"
+      - "data/packages/**"
+      - ".github/workflows/ev-onboarding-live-batch.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-batch:
+    name: All governed EV jurisdictions live gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+      - name: Reconstruct exact Civic GPS runtime
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+      - name: Compile generic onboarding batch runners
+        run: python -m py_compile tools/ev_jurisdiction_onboarding.py tools/ev_onboarding_batch.py tools/ev_live_onboarding_batch.py tools/ev_onboarding_pr_ready.py tools/ev_onboarding_merge_eligibility.py tools/ev_onboarding_merge_execute.py tools/ev_onboarding_post_merge_verify.py tests/ev_onboarding_pr_ready_test.py tests/ev_onboarding_merge_eligibility_test.py tests/ev_onboarding_merge_execute_test.py tests/ev_onboarding_post_merge_verify_test.py
+      - name: Verify all production onboarding specs against governed artifacts
+        run: python tools/ev_onboarding_batch.py --repo-root . --output artifacts/ev-imp-008/deterministic
+      - name: Run all production live address controls
+        run: python tools/ev_live_onboarding_batch.py --repo-root . --output artifacts/ev-imp-008/live
+      - name: Run CI-bound readiness unit tests
+        run: python tests/ev_onboarding_pr_ready_test.py
+      - name: Run final merge eligibility unit tests
+        run: python tests/ev_onboarding_merge_eligibility_test.py
+      - name: Run explicit merge execution request tests
+        run: python tests/ev_onboarding_merge_execute_test.py
+      - name: Run post-merge closure verifier tests
+        run: python tests/ev_onboarding_post_merge_verify_test.py
+      - name: Upload EV onboarding acceptance matrices
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-onboarding-${{ github.run_id }}
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 30

@@ -96,13 +96,26 @@ def test_deterministic_build_and_checksum_verification():
         assert "checksum:jurisdiction.json" in jp.verify_package(first_path)
 
 
+def test_deterministic_json():
+    assert jp.canonical_json(fixture()) == jp.canonical_json(fixture())
+
+
+def test_build_has_manifest_and_checksums():
+    with tempfile.TemporaryDirectory() as d:
+        jp.build(fixture(), pathlib.Path(d))
+        assert (pathlib.Path(d) / "manifest.json").exists()
+        assert (pathlib.Path(d) / "SHA256SUMS.txt").exists()
+
+
 def run():
     test_valid_fixture()
     test_fail_closed_parity()
     test_actual_foreign_keys_are_checked()
     test_source_assertion_foreign_key_is_checked()
     test_deterministic_build_and_checksum_verification()
-    print(json.dumps({"status": "PASS", "schema_version": "0.1"}, sort_keys=True))
+    test_deterministic_json()
+    test_build_has_manifest_and_checksums()
+    print(json.dumps({"status": "PASS", "schema_version": "0.1", "backward_compatibility": True}, sort_keys=True))
 
 
 if __name__ == "__main__":

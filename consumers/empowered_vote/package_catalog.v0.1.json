@@ -1,0 +1,48 @@
+{
+  "catalog_version": "0.1",
+  "entries": [
+    {
+      "entry_id": "wa-tacoma-municipal-essentials-v0.2",
+      "profile": "municipal_essentials",
+      "civic_gps_jurisdiction_id": "jur-us-wa-tacoma",
+      "package_jurisdiction_id": "jurisdiction:us/wa/tacoma",
+      "package_schema_version": "0.2",
+      "artifact": {
+        "encoding": "base64-parts",
+        "parts_glob": "data/packages/wa/tacoma/Tacoma_Jurisdiction_Package_v0.2_2026-08-23.zip.b64.part*",
+        "archive_sha256": "2c6219303eff3f49b4202f72048910ba970cd65353032b6bfda2975791701d53",
+        "package_subdir": "Tacoma_Jurisdiction_Package_v0.2_2026-08-23/package"
+      },
+      "district_binding": {
+        "adapter_id": "DIST-WA-TACOMA-COUNCIL",
+        "division_template": "division:us/wa/tacoma/council_district_{district_key}"
+      }
+    },
+    {
+      "entry_id": "co-akron-municipal-representation-v0.1",
+      "profile": "municipal_representation",
+      "civic_gps_jurisdiction_id": "jur-us-co-akron",
+      "package_jurisdiction_id": "jurisdiction-co-akron",
+      "package_schema_version": "0.1",
+      "artifact": {
+        "encoding": "base64-parts",
+        "parts_glob": "data/packages/co/akron/Akron_Jurisdiction_Package_v0.1_2026-08-23.zip.b64.part*",
+        "archive_sha256": "7976f9037d3eb8cc377dc0d349d743de8f62201cc671b4e5f2718ac5fce9bf87",
+        "package_subdir": "Akron_Jurisdiction_Package_v0.1_2026-08-23/package"
+      }
+    },
+    {
+      "entry_id": "wa-fircrest-municipal-essentials-v0.2",
+      "profile": "municipal_essentials",
+      "civic_gps_jurisdiction_id": "jur-us-wa-fircrest",
+      "package_jurisdiction_id": "jurisdiction-wa-fircrest",
+      "package_schema_version": "0.2",
+      "artifact": {
+        "encoding": "base64-parts",
+        "parts_glob": "data/packages/wa/fircrest/Fircrest_Jurisdiction_Package_v0.2_2026-08-23.zip.b64.part*",
+        "archive_sha256": "5abb205fc316c6167a75c40b42875cf5a84681bd63b1e63af973103c0e4879ab",
+        "package_subdir": "Fircrest_Jurisdiction_Package_v0.2_2026-08-23/package"
+      }
+    }
+  ]
+}

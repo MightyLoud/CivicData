@@ -196,20 +196,28 @@ def validate(pkg):
         election_ids = ids_by_table.get("elections", set())
         contest_ids = ids_by_table.get("contests", set())
         for election in records.get("elections", []):
-            if not election.get("election_date"):
+            if not election.get("election_id") or not election.get("election_date"):
                 errors.append("election_required_fields")
-            for source_id in election.get("source_ids", []):
+            election_source_ids = election.get("source_ids", [])
+            if not election_source_ids:
+                errors.append("election_source_fk")
+            for source_id in election_source_ids:
                 _add_missing_fk(errors, "election_source_fk", source_id, source_ids)
         for contest in records.get("contests", []):
             _add_missing_fk(errors, "contest_election_fk", contest.get("election_id"), election_ids)
             _add_missing_fk(errors, "contest_office_fk", contest.get("office_id"), office_ids)
-            for source_id in contest.get("source_ids", []):
+            contest_source_ids = contest.get("source_ids", [])
+            if not contest_source_ids:
+                errors.append("contest_source_fk")
+            for source_id in contest_source_ids:
                 _add_missing_fk(errors, "contest_source_fk", source_id, source_ids)
         for candidacy in records.get("candidacies", []):
             _add_missing_fk(errors, "candidacy_contest_fk", candidacy.get("contest_id"), contest_ids)
             _add_missing_fk(errors, "candidacy_source_fk", candidacy.get("source_id"), source_ids)
             kind = candidacy.get("candidate_kind")
             if kind == "PERSON":
+                if not candidacy.get("person_id"):
+                    errors.append("candidacy_person_fk")
                 _add_missing_fk(errors, "candidacy_person_fk", candidacy.get("person_id"), person_ids)
             elif kind == "WRITE_IN_BUCKET":
                 if candidacy.get("person_id") not in (None, ""):
