@@ -1,0 +1,3 @@
+contest_id,contest_label,contest_status,expected_seats,candidate_count,office_id,office_name,election_id,election_date
+con-wb020-0cafd1167cc71d95513ae634681f9bc362af9f189604c1fa9cf8ddabb15b0057,Alderman — At-Large | 2026-05-02 General,unknown,,3,off-wb020-cb53a2d65140e744d9b9124b6d1eedae7f997b4c127f9de3f3b54396b6afcb1e,Alderman,elec-wb020-2618d02a2ebd03bf85ed63312d5c4f03ace16a65dc3a0b329aebeb4bce7f6543,2026-05-02
+con-wb020-afb326b519722453f2effc669b31979659a76bd82a04860cb8ac5d653fd6463c,Mayor | 2026-05-02 General,unknown,1,2,off-wb020-111c50fe160efb45f69a66a02e9ad4c04d7979b9dba42d62a2239dc3aa6d8d45,Mayor,elec-wb020-2618d02a2ebd03bf85ed63312d5c4f03ace16a65dc3a0b329aebeb4bce7f6543,2026-05-02

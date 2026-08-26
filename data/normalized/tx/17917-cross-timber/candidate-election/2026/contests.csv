@@ -1,0 +1,2 @@
+contest_id,contest_label,contest_status,expected_seats,candidate_count,office_id,office_name,election_id,election_date
+con-wb020-e858f0bab998593075fc436a956812b77dca6f1a878cbec0af2aff53e78ce5ff,City Council - At-Large | 2026-05-02 General,canceled,3,1,off-wb020-3571ee1affd2a4e8c4a0c77e9fe54292298d0770774551013a40c88e7f4b7066,City Council,elec-wb020-4078e8e97979afa656b906eaf1a0e77fcb5781bf04ac283f00bd455b29cb2ea8,2026-05-02

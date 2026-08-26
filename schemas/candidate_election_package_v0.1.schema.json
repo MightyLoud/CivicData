@@ -1,0 +1,444 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civicdata.tech/schemas/candidate_election_package_v0.1.schema.json",
+  "title": "CivicData Candidate Election Package v0.1",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "package_type",
+    "package_id",
+    "release_id",
+    "generated_at",
+    "publication_status",
+    "source_authority",
+    "jurisdiction",
+    "records",
+    "provenance",
+    "reconciliation",
+    "qa",
+    "warnings"
+  ],
+  "properties": {
+    "contract_version": {"const": "candidate-election-0.1"},
+    "package_type": {"const": "candidate_election"},
+    "package_id": {"type": "string", "pattern": "^tx-[0-9]{5}-candidate-election-2026$"},
+    "release_id": {"const": "tx-candidate-election-2026-001"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "publication_status": {"const": "STAGED_NOT_PUBLISHED"},
+    "source_authority": {
+      "type": "object",
+      "required": ["workbook_id", "spreadsheet_id", "workbook_title", "freshness_date"],
+      "properties": {
+        "workbook_id": {"const": "WB-020"},
+        "spreadsheet_id": {"const": "1xG1J2fliSTOHoohhDGbsCM4OYUJq0ArEFFLlNYWA6D8"},
+        "workbook_title": {"const": "TX_ELECTIONS_Data_C6"},
+        "freshness_date": {"type": "string", "format": "date"}
+      },
+      "additionalProperties": false
+    },
+    "jurisdiction": {
+      "type": "object",
+      "required": [
+        "jurisdiction_id",
+        "jurisdiction_kind",
+        "jurisdiction_type",
+        "official_name",
+        "source_jurisdiction_key",
+        "state_code",
+        "identity_status"
+      ],
+      "properties": {
+        "jurisdiction_id": {"type": "string", "minLength": 1},
+        "jurisdiction_kind": {"type": "string", "minLength": 1},
+        "jurisdiction_type": {"type": "string", "minLength": 1},
+        "official_name": {"type": "string", "minLength": 1},
+        "source_jurisdiction_key": {"type": "string", "pattern": "^[0-9]{5}$"},
+        "state_code": {"const": "TX"},
+        "identity_status": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "records": {
+      "type": "object",
+      "required": [
+        "divisions",
+        "jurisdiction_divisions",
+        "elections",
+        "offices",
+        "office_divisions",
+        "contests",
+        "people",
+        "candidacies",
+        "contact_points",
+        "external_identifiers"
+      ],
+      "properties": {
+        "divisions": {"type": "array", "items": {"$ref": "#/$defs/division"}},
+        "jurisdiction_divisions": {"type": "array", "items": {"$ref": "#/$defs/jurisdiction_division"}},
+        "elections": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/election"}},
+        "offices": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/office"}},
+        "office_divisions": {"type": "array", "items": {"$ref": "#/$defs/office_division"}},
+        "contests": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/contest"}},
+        "people": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/person"}},
+        "candidacies": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/candidacy"}},
+        "contact_points": {"type": "array", "items": {"$ref": "#/$defs/contact_point"}},
+        "external_identifiers": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "source_record_refs",
+        "source_evidence",
+        "context_source_record_refs",
+        "context_evidence",
+        "evidence_links"
+      ],
+      "properties": {
+        "source_record_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/source_record_ref"}
+        },
+        "source_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/source_evidence"}
+        },
+        "context_source_record_refs": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/source_record_ref"}
+        },
+        "context_evidence": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/source_evidence"}
+        },
+        "evidence_links": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/evidence_link"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "reconciliation": {
+      "type": "object",
+      "required": [
+        "source_scope_total",
+        "normalized_total",
+        "qa_ready_total",
+        "canonical_candidacy_total",
+        "record_type_counts",
+        "public_source_record_ref_count",
+        "excluded_source_records"
+      ],
+      "properties": {
+        "source_scope_total": {"type": "integer", "minimum": 1},
+        "normalized_total": {"type": "integer", "minimum": 1},
+        "qa_ready_total": {"type": "integer", "minimum": 1},
+        "canonical_candidacy_total": {"type": "integer", "minimum": 1},
+        "record_type_counts": {
+          "type": "object",
+          "required": ["Candidate", "Structure", "Gap", "Retired"],
+          "properties": {
+            "Candidate": {"type": "integer", "minimum": 0},
+            "Structure": {"type": "integer", "minimum": 0},
+            "Gap": {"type": "integer", "minimum": 0},
+            "Retired": {"type": "integer", "minimum": 0}
+          },
+          "additionalProperties": false
+        },
+        "public_source_record_ref_count": {"type": "integer", "minimum": 1},
+        "excluded_source_records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["source_record_id", "source_native_id", "record_type", "reason"],
+            "properties": {
+              "source_record_id": {"type": "string", "minLength": 1},
+              "source_native_id": {"type": "string", "minLength": 1},
+              "record_type": {"enum": ["Gap", "Retired"]},
+              "reason": {"const": "NON_PUBLIC_AUDIT_RECORD"}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "qa": {
+      "type": "object",
+      "required": [
+        "workflow_status",
+        "complete_eligible",
+        "parity_ok",
+        "parity_status",
+        "ready_for_done",
+        "false_complete",
+        "release_disposition",
+        "qa_fail_count",
+        "blocking_gap_count",
+        "provenance_complete",
+        "sensitivity_filter_pass",
+        "deterministic"
+      ],
+      "properties": {
+        "workflow_status": {"const": "9.00 – Complete"},
+        "complete_eligible": {"const": true},
+        "parity_ok": {"const": true},
+        "parity_status": {"const": "3.00 – Pass"},
+        "ready_for_done": {"const": true},
+        "false_complete": {"const": false},
+        "release_disposition": {"const": "COMPLETE_ROSTER"},
+        "qa_fail_count": {"const": 0},
+        "blocking_gap_count": {"const": 0},
+        "provenance_complete": {"const": true},
+        "sensitivity_filter_pass": {"const": true},
+        "deterministic": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["warning_id", "severity", "blocking", "message"],
+        "properties": {
+          "warning_id": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["INFO", "WARNING"]},
+          "blocking": {"const": false},
+          "message": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "division": {
+      "type": "object",
+      "required": ["division_id", "division_kind", "division_name", "state_code"],
+      "properties": {
+        "division_id": {"type": "string", "minLength": 1},
+        "division_kind": {"type": "string", "minLength": 1},
+        "division_name": {"type": "string", "minLength": 1},
+        "division_state_name": {"type": "string"},
+        "state_code": {"const": "TX"},
+        "source_county_names": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "jurisdiction_division": {
+      "type": "object",
+      "required": ["jurisdiction_division_id", "jurisdiction_id", "division_id", "relationship_type"],
+      "properties": {
+        "jurisdiction_division_id": {"type": "string", "minLength": 1},
+        "jurisdiction_id": {"type": "string", "minLength": 1},
+        "division_id": {"type": "string", "minLength": 1},
+        "relationship_type": {"type": "string", "minLength": 1},
+        "valid_from": {"type": ["string", "null"]},
+        "valid_to": {"type": ["string", "null"]},
+        "source_evidence_id": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "election": {
+      "type": "object",
+      "required": [
+        "election_id",
+        "administering_jurisdiction_id",
+        "election_date",
+        "election_type",
+        "election_status",
+        "source_record_id"
+      ],
+      "properties": {
+        "election_id": {"type": "string", "minLength": 1},
+        "administering_jurisdiction_id": {"type": "string", "minLength": 1},
+        "election_date": {"type": "string", "format": "date"},
+        "election_type": {"type": "string", "minLength": 1},
+        "election_status": {"type": "string", "minLength": 1},
+        "source_record_id": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "office": {
+      "type": "object",
+      "required": ["office_id", "jurisdiction_id", "office_name", "office_status", "identity_status"],
+      "properties": {
+        "office_id": {"type": "string", "minLength": 1},
+        "jurisdiction_id": {"type": "string", "minLength": 1},
+        "office_name": {"type": "string", "minLength": 1},
+        "seat_number": {"type": "string"},
+        "office_district_type": {"type": "string"},
+        "office_district_name": {"type": "string"},
+        "office_status": {"type": "string", "minLength": 1},
+        "identity_status": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "office_division": {
+      "type": "object",
+      "required": ["office_division_id", "office_id", "division_id", "relationship_type"],
+      "properties": {
+        "office_division_id": {"type": "string", "minLength": 1},
+        "office_id": {"type": "string", "minLength": 1},
+        "division_id": {"type": "string", "minLength": 1},
+        "relationship_type": {"type": "string", "minLength": 1},
+        "valid_from": {"type": ["string", "null"]},
+        "valid_to": {"type": ["string", "null"]},
+        "source_evidence_id": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "contest": {
+      "type": "object",
+      "required": ["contest_id", "election_id", "office_id", "contest_label", "contest_status"],
+      "properties": {
+        "contest_id": {"type": "string", "minLength": 1},
+        "election_id": {"type": "string", "minLength": 1},
+        "office_id": {"type": "string", "minLength": 1},
+        "contest_label": {"type": "string", "minLength": 1},
+        "expected_seats": {"type": "string"},
+        "contest_status": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "person": {
+      "type": "object",
+      "required": [
+        "person_id",
+        "person_full_name",
+        "identity_resolution_status",
+        "provisional_source_record_id"
+      ],
+      "properties": {
+        "person_id": {"type": "string", "minLength": 1},
+        "person_full_name": {"type": "string", "minLength": 1},
+        "person_given_name": {"type": "string"},
+        "person_middle_name": {"type": "string"},
+        "person_family_name": {"type": "string"},
+        "person_suffix": {"type": "string"},
+        "occupation_text": {"type": "string"},
+        "biography": {"type": "string"},
+        "identity_resolution_status": {"type": "string", "minLength": 1},
+        "provisional_source_record_id": {"type": "string", "minLength": 1},
+        "superseded_by_person_id": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "candidacy": {
+      "type": "object",
+      "required": [
+        "candidacy_id",
+        "person_id",
+        "contest_id",
+        "primary_source_record_id",
+        "candidacy_status"
+      ],
+      "properties": {
+        "candidacy_id": {"type": "string", "minLength": 1},
+        "person_id": {"type": "string", "minLength": 1},
+        "contest_id": {"type": "string", "minLength": 1},
+        "primary_source_record_id": {"type": "string", "minLength": 1},
+        "candidacy_status": {"type": "string", "minLength": 1},
+        "incumbent_status": {"type": "string"},
+        "candidacy_status_date": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "contact_point": {
+      "type": "object",
+      "required": [
+        "contact_point_id",
+        "contact_type",
+        "contact_value_normalized",
+        "sensitivity",
+        "publication_ok",
+        "source_evidence_id",
+        "contact_status"
+      ],
+      "properties": {
+        "contact_point_id": {"type": "string", "minLength": 1},
+        "person_id": {"type": "string", "minLength": 1},
+        "candidacy_id": {"type": "string", "minLength": 1},
+        "contact_type": {"type": "string", "minLength": 1},
+        "contact_value_normalized": {"type": "string", "minLength": 1},
+        "sensitivity": {"const": "PUBLIC"},
+        "publication_ok": {"const": "TRUE"},
+        "source_evidence_id": {"type": "string", "minLength": 1},
+        "contact_status": {"const": "ACTIVE"}
+      },
+      "additionalProperties": false
+    },
+    "source_record_ref": {
+      "type": "object",
+      "required": [
+        "source_record_id",
+        "source_native_id",
+        "workbook_id",
+        "record_type",
+        "raw_row_sha256",
+        "row_disposition"
+      ],
+      "properties": {
+        "source_record_id": {"type": "string", "minLength": 1},
+        "source_native_id": {"type": "string", "minLength": 1},
+        "workbook_id": {"const": "WB-020"},
+        "record_type": {"type": "string", "minLength": 1},
+        "raw_row_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "row_disposition": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "source_evidence": {
+      "type": "object",
+      "required": [
+        "source_evidence_id",
+        "source_record_id",
+        "source_url",
+        "source_url_normalized",
+        "source_type",
+        "authority_level",
+        "confidence",
+        "evidence_status"
+      ],
+      "properties": {
+        "source_evidence_id": {"type": "string", "minLength": 1},
+        "source_record_id": {"type": "string", "minLength": 1},
+        "source_field": {"type": "string"},
+        "source_url": {"type": "string", "format": "uri"},
+        "source_url_normalized": {"type": "string", "format": "uri"},
+        "source_type": {"type": "string", "minLength": 1},
+        "authority_level": {"type": "string", "minLength": 1},
+        "observed_at": {"type": ["string", "null"]},
+        "retrieved_at": {"type": ["string", "null"]},
+        "confidence": {"type": "string", "minLength": 1},
+        "evidence_status": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "evidence_link": {
+      "type": "object",
+      "required": [
+        "evidence_link_id",
+        "source_evidence_id",
+        "target_entity",
+        "target_id",
+        "assertion_kind",
+        "assertion_name",
+        "asserted_value_hash"
+      ],
+      "properties": {
+        "evidence_link_id": {"type": "string", "minLength": 1},
+        "source_evidence_id": {"type": "string", "minLength": 1},
+        "target_entity": {"type": "string", "minLength": 1},
+        "target_id": {"type": "string", "minLength": 1},
+        "assertion_kind": {"type": "string", "minLength": 1},
+        "assertion_name": {"type": "string", "minLength": 1},
+        "asserted_value_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    }
+  }
+}
