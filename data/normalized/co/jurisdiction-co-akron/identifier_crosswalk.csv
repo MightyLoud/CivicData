@@ -1,0 +1,3 @@
+crosswalk_id,entity_id,entity_type,external_id,external_url,id_type,jurisdiction_id,notes,source_id,status,system,verified_at
+xwalk-co-akron-geoid,jurisdiction-co-akron,Jurisdiction,0800925,https://tigerweb.geo.census.gov/tigerwebmain/Files/acs25/tigerweb_acs25_incplace_co.html,GEOID,jurisdiction-co-akron,Seven-digit state-plus-place GEOID.,src-co-akron-census-incplace-2025,VERIFIED,US_CENSUS,2026-08-19
+xwalk-co-akron-placefp,jurisdiction-co-akron,Jurisdiction,00925,https://tigerweb.geo.census.gov/tigerwebmain/Files/acs25/tigerweb_acs25_incplace_co.html,PLACEFP,jurisdiction-co-akron,Five-character Census place code with leading zero preserved.,src-co-akron-census-incplace-2025,VERIFIED,US_CENSUS,2026-08-19

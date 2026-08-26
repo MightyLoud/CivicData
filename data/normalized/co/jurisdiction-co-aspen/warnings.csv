@@ -1,0 +1,2 @@
+batch_id,blocking,description,entity_id,entity_type,gap_id,gap_type,jurisdiction_id,owner,severity,source_id,status
+CO-NORM-001,False,The Charter and current roster publish four at-large Council positions without permanent numbered seat identities. The normalized office keys use current election-cycle and holder anchors and must be refreshed when incumbency changes.,body-co-aspen-city-council,Office,gap-co-aspen-at-large-seat-identity,AT_LARGE_SEAT_IDENTITY,jurisdiction-co-aspen,Creyton,WARNING,src-co-aspen-city-council,OPEN

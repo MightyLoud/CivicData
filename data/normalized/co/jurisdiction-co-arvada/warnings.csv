@@ -1,0 +1,2 @@
+batch_id,blocking,description,entity_id,entity_type,gap_id,gap_type,jurisdiction_id,owner,severity,source_id,status
+CO-NORM-001,False,"Districts 1–4 and their representation keys are normalized from the official map, but a separate machine-readable backing-service URL and district-level point-in-polygon control output were not archived in this execution unit.",division-co-arvada-citywide,Division,gap-co-arvada-district-pip-archive,DISTRICT_ADDRESS_PIP_ARCHIVE,jurisdiction-co-arvada,Creyton,WARNING,src-co-arvada-council-district-map,OPEN

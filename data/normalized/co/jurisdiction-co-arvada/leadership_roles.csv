@@ -1,0 +1,2 @@
+body_id,confidence,jurisdiction_id,leadership_id,notes,office_id,person_id,role_title,role_type,row_updated_at,scope_version,source_ids,status,valid_from,valid_to
+body-co-arvada-city-council,HIGH,jurisdiction-co-arvada,lead-co-arvada-mayor-pro-tem-randy-moorman,Official profile identifies Randy Moorman as Mayor Pro Tem and says he was appointed in 2025; exact appointment date was not published.,office-co-arvada-council-district-1,person-co-arvada-randy-moorman,Mayor Pro Tem,MAYOR_PRO_TEM,2026-08-19,V0.1,src-co-arvada-profile-randy-moorman;src-co-arvada-city-council,CURRENT,,
