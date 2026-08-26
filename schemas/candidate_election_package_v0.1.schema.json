@@ -82,7 +82,7 @@
         "people": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/person"}},
         "candidacies": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/candidacy"}},
         "contact_points": {"type": "array", "items": {"$ref": "#/$defs/contact_point"}},
-        "external_identifiers": {"type": "array", "items": {"type": "object"}}
+        "external_identifiers": {"const": []}
       },
       "additionalProperties": false
     },
@@ -431,9 +431,23 @@
       "properties": {
         "evidence_link_id": {"type": "string", "minLength": 1},
         "source_evidence_id": {"type": "string", "minLength": 1},
-        "target_entity": {"type": "string", "minLength": 1},
+        "target_entity": {
+          "enum": [
+            "Jurisdiction",
+            "Division",
+            "Jurisdiction_Division",
+            "Election",
+            "Office",
+            "Office_Division",
+            "Contest",
+            "Person",
+            "Candidacy",
+            "ContactPoint",
+            "ExternalIdentifier"
+          ]
+        },
         "target_id": {"type": "string", "minLength": 1},
-        "assertion_kind": {"type": "string", "minLength": 1},
+        "assertion_kind": {"enum": ["FIELD", "IDENTITY", "RELATIONSHIP"]},
         "assertion_name": {"type": "string", "minLength": 1},
         "asserted_value_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
       },

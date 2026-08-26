@@ -38,6 +38,20 @@ EXPECTED_PLACE_FPS = (
     "46824",
     "47316",
 )
+SUPPORTED_ASSERTION_KINDS = {"FIELD", "IDENTITY", "RELATIONSHIP"}
+SUPPORTED_TARGET_ENTITIES = {
+    "Jurisdiction",
+    "Division",
+    "Jurisdiction_Division",
+    "Election",
+    "Office",
+    "Office_Division",
+    "Contest",
+    "Person",
+    "Candidacy",
+    "ContactPoint",
+    "ExternalIdentifier",
+}
 
 RECORD_TABLES = (
     "divisions",
@@ -190,9 +204,18 @@ def _schema_type_matches(value: Any, schema_type: str) -> bool:
 def _schema_format_matches(value: str, format_name: str) -> bool:
     try:
         if format_name == "date":
+            if re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value) is None:
+                return False
             dt.date.fromisoformat(value)
             return True
         if format_name == "date-time":
+            if re.fullmatch(
+                r"[0-9]{4}-[0-9]{2}-[0-9]{2}T"
+                r"[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?"
+                r"(?:Z|[+-][0-9]{2}:[0-9]{2})",
+                value,
+            ) is None:
+                return False
             parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
             return parsed.tzinfo is not None
         if format_name == "uri":
@@ -378,6 +401,8 @@ def validate_package(package: dict[str, Any]) -> list[str]:
     external_ids = _id_set(
         _rows(package, "external_identifiers"), "external_identifier_id"
     )
+    if _rows(package, "external_identifiers"):
+        errors.add("external_identifiers_reserved")
 
     public_source_rows = _provenance_rows(package, "source_record_refs")
     context_source_rows = _provenance_rows(package, "context_source_record_refs")
@@ -475,27 +500,33 @@ def validate_package(package: dict[str, Any]) -> list[str]:
         if row.get("source_evidence_id") not in all_evidence_ids:
             errors.add("contact_evidence_fk")
 
-    target_ids = (
-        {str(jurisdiction_id)}
-        | divisions
-        | jurisdiction_divisions
-        | elections
-        | offices
-        | office_divisions
-        | contests
-        | people
-        | candidacies
-        | contacts
-        | external_ids
-    )
+    target_ids_by_entity = {
+        "Jurisdiction": {str(jurisdiction_id)} if jurisdiction_id else set(),
+        "Division": divisions,
+        "Jurisdiction_Division": jurisdiction_divisions,
+        "Election": elections,
+        "Office": offices,
+        "Office_Division": office_divisions,
+        "Contest": contests,
+        "Person": people,
+        "Candidacy": candidacies,
+        "ContactPoint": contacts,
+        "ExternalIdentifier": external_ids,
+    }
     evidence_links = _provenance_rows(package, "evidence_links")
     if _duplicate_values(evidence_links, "evidence_link_id"):
         errors.add("duplicate_evidence_link_id")
     for link in evidence_links:
         if link.get("source_evidence_id") not in all_evidence_ids:
             errors.add("evidence_link_source_fk")
-        if link.get("target_id") not in target_ids:
-            errors.add("evidence_link_target_fk")
+        assertion_kind = link.get("assertion_kind")
+        if assertion_kind not in SUPPORTED_ASSERTION_KINDS:
+            errors.add("evidence_link_assertion_kind")
+        target_entity = link.get("target_entity")
+        if target_entity not in SUPPORTED_TARGET_ENTITIES:
+            errors.add("evidence_link_target_entity")
+        elif link.get("target_id") not in target_ids_by_entity[target_entity]:
+            errors.add("evidence_link_target_entity_fk")
 
     reconciliation = package.get("reconciliation", {})
     if not isinstance(reconciliation, dict):
@@ -828,13 +859,24 @@ def build_package(package: dict[str, Any], out: Path) -> dict[str, Any]:
 def verify_built_package(out: Path) -> list[str]:
     errors: set[str] = set()
     expected = set(OUTPUT_FILES) | {"manifest.json", "SHA256SUMS.txt"}
-    actual = {path.name for path in out.iterdir() if path.is_file()}
+    if not out.is_dir() or out.is_symlink():
+        return ["output_directory_invalid"]
+    try:
+        entries = list(out.iterdir())
+    except OSError:
+        return ["output_directory_invalid"]
+    actual = {path.name for path in entries}
     if actual != expected:
         errors.add("output_file_set")
+    if any(path.is_symlink() or not path.is_file() for path in entries):
+        errors.add("output_entry_type")
     canonical_path = out / "canonical.json"
     manifest_path = out / "manifest.json"
     sums_path = out / "SHA256SUMS.txt"
-    if not canonical_path.exists() or not manifest_path.exists() or not sums_path.exists():
+    if any(
+        path.is_symlink() or not path.is_file()
+        for path in (canonical_path, manifest_path, sums_path)
+    ):
         return sorted(errors | {"missing_core_output"})
     try:
         package = json.loads(canonical_path.read_text(encoding="utf-8"))
@@ -851,7 +893,10 @@ def verify_built_package(out: Path) -> list[str]:
         return sorted(errors | {"manifest_invalid"})
     if manifest.get("package_id") != package.get("package_id"):
         errors.add("manifest_package_id")
-    if all((out / name).is_file() for name in OUTPUT_FILES):
+    if all(
+        not (out / name).is_symlink() and (out / name).is_file()
+        for name in OUTPUT_FILES
+    ):
         try:
             expected_manifest = _manifest(package, out)
         except (KeyError, OSError, TypeError, ValueError):
@@ -867,16 +912,28 @@ def verify_built_package(out: Path) -> list[str]:
         if not isinstance(file_row, dict):
             errors.add("manifest_files")
             continue
-        path = out / file_row.get("path", "")
-        if not path.is_file():
+        name = file_row.get("path")
+        if not isinstance(name, str) or name not in OUTPUT_FILES:
+            errors.add("manifest_path")
+            continue
+        path = out / name
+        if path.is_symlink() or not path.is_file():
             errors.add("manifest_missing_file")
             continue
-        if path.stat().st_size != file_row.get("bytes"):
-            errors.add("manifest_bytes")
-        if sha256_file(path) != file_row.get("sha256"):
-            errors.add("manifest_sha256")
+        try:
+            if path.stat().st_size != file_row.get("bytes"):
+                errors.add("manifest_bytes")
+            if sha256_file(path) != file_row.get("sha256"):
+                errors.add("manifest_sha256")
+        except OSError:
+            errors.add("manifest_file_unreadable")
     declared_sums: dict[str, str] = {}
-    for line in sums_path.read_text(encoding="utf-8").splitlines():
+    try:
+        checksum_lines = sums_path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeError):
+        return sorted(errors | {"checksum_invalid"})
+    checksum_targets = expected - {"SHA256SUMS.txt"}
+    for line in checksum_lines:
         if "  " not in line:
             errors.add("checksum_format")
             continue
@@ -884,13 +941,25 @@ def verify_built_package(out: Path) -> list[str]:
         if not re.fullmatch(r"[0-9a-f]{64}", digest) or not name:
             errors.add("checksum_format")
             continue
+        if name in declared_sums:
+            errors.add("checksum_duplicate")
+            continue
+        if name not in checksum_targets:
+            errors.add("checksum_path")
+            continue
         declared_sums[name] = digest
-    checksum_targets = actual - {"SHA256SUMS.txt"}
     if set(declared_sums) != checksum_targets:
         errors.add("checksum_file_set")
     for name, digest in declared_sums.items():
-        if sha256_file(out / name) != digest:
-            errors.add("checksum_mismatch")
+        path = out / name
+        if path.is_symlink() or not path.is_file():
+            errors.add("checksum_missing_file")
+            continue
+        try:
+            if sha256_file(path) != digest:
+                errors.add("checksum_mismatch")
+        except OSError:
+            errors.add("checksum_unreadable")
     return sorted(errors)
 
 
@@ -1008,13 +1077,15 @@ def build_release(bundle: dict[str, Any], repo_root: Path) -> dict[str, Any]:
 
 def _release_output_files(repo_root: Path) -> dict[Path, Path]:
     tx_root = repo_root / "data" / "normalized" / "tx"
-    files = {
-        path.relative_to(repo_root): path
-        for path in tx_root.glob("*/candidate-election/2026/*")
-        if path.is_file()
-    }
+    files: dict[Path, Path] = {}
+    for package_root in tx_root.rglob("candidate-election/2026"):
+        if package_root.is_symlink() or not package_root.is_dir():
+            continue
+        for path in package_root.rglob("*"):
+            if path.is_file() or path.is_symlink():
+                files[path.relative_to(repo_root)] = path
     release_path = tx_root / f"{RELEASE_ID}.manifest.json"
-    if release_path.is_file():
+    if release_path.is_file() or release_path.is_symlink():
         files[release_path.relative_to(repo_root)] = release_path
     return files
 
@@ -1023,7 +1094,7 @@ def verify_release(repo_root: Path) -> list[str]:
     errors: set[str] = set()
     tx_root = repo_root / "data" / "normalized" / "tx"
     release_path = tx_root / f"{RELEASE_ID}.manifest.json"
-    if not release_path.exists():
+    if release_path.is_symlink() or not release_path.is_file():
         return ["release_manifest_missing"]
     try:
         release = json.loads(release_path.read_text(encoding="utf-8"))
@@ -1056,6 +1127,9 @@ def verify_release(repo_root: Path) -> list[str]:
     packages: list[dict[str, Any]] = []
     place_fps: list[str] = []
     for canonical_path in canonical_paths:
+        if canonical_path.is_symlink() or not canonical_path.is_file():
+            errors.add("release_canonical_entry_type")
+            continue
         try:
             package = json.loads(canonical_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
@@ -1105,10 +1179,11 @@ def verify_release(repo_root: Path) -> list[str]:
                 if set(expected_files) != set(actual_files):
                     errors.add("release_output_file_set")
                 for relative_path in set(expected_files) & set(actual_files):
-                    if (
-                        expected_files[relative_path].read_bytes()
-                        != actual_files[relative_path].read_bytes()
-                    ):
+                    actual_path = actual_files[relative_path]
+                    if actual_path.is_symlink() or not actual_path.is_file():
+                        errors.add(f"release_output_entry_type:{relative_path}")
+                        continue
+                    if expected_files[relative_path].read_bytes() != actual_path.read_bytes():
                         errors.add(f"release_output_mismatch:{relative_path}")
         except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError):
             errors.add("release_rebuild_failed")

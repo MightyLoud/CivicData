@@ -125,6 +125,37 @@ def test_schema_is_enforced_and_assertion_hash_is_field_scoped():
     changed["provenance"]["evidence_links"][0]["asserted_value_hash"] = "0" * 64
     assert cep.validate_package(changed) == []
 
+    changed = copy.deepcopy(base)
+    changed["provenance"]["evidence_links"][0]["assertion_kind"] = "FIELDD"
+    errors = cep.validate_package(changed)
+    assert (
+        "schema:$.provenance.evidence_links[0].assertion_kind:enum" in errors
+    )
+    assert "evidence_link_assertion_kind" in errors
+
+    changed = copy.deepcopy(base)
+    changed["provenance"]["evidence_links"][0]["target_entity"] = "Person"
+    assert "evidence_link_target_entity_fk" in cep.validate_package(changed)
+
+    changed = copy.deepcopy(base)
+    changed["records"]["external_identifiers"] = [
+        {"arbitrary_public_payload": "not governed"}
+    ]
+    errors = cep.validate_package(changed)
+    assert "schema:$.records.external_identifiers:const" in errors
+    assert "external_identifiers_reserved" in errors
+
+    changed = copy.deepcopy(base)
+    changed["generated_at"] = "2026-08-25 00:00:00-06:00"
+    assert "schema:$.generated_at:format" in cep.validate_package(changed)
+
+    changed = copy.deepcopy(base)
+    changed["source_authority"]["freshness_date"] = "2026-W35-2"
+    assert (
+        "schema:$.source_authority.freshness_date:format"
+        in cep.validate_package(changed)
+    )
+
 
 def test_exact_package_set_and_reconciliation():
     rows = packages()
@@ -266,6 +297,67 @@ def test_release_fails_closed_on_incomplete_or_tampered_aggregate():
         assert any(error.startswith("release_output_mismatch:") for error in errors)
 
 
+def test_filesystem_and_checksum_attacks_fail_closed():
+    bundle = {
+        "contract_version": cep.CONTRACT_VERSION,
+        "release_id": cep.RELEASE_ID,
+        "packages": packages(),
+    }
+
+    with tempfile.TemporaryDirectory() as output:
+        output_root = pathlib.Path(output)
+        manifest = cep.build_release(bundle, output_root)
+        package_dir = output_root / manifest["packages"][0]["path"]
+        unexpected = package_dir / "extra" / "unexpected.txt"
+        unexpected.parent.mkdir()
+        unexpected.write_text("unexpected\n", encoding="utf-8")
+        package_errors = cep.verify_built_package(package_dir)
+        assert "output_file_set" in package_errors
+        assert "output_entry_type" in package_errors
+        assert "release_output_file_set" in cep.verify_release(output_root)
+
+    with tempfile.TemporaryDirectory() as output:
+        output_root = pathlib.Path(output)
+        manifest = cep.build_release(bundle, output_root)
+        package_dir = output_root / manifest["packages"][0]["path"]
+        sums_path = package_dir / "SHA256SUMS.txt"
+        lines = sums_path.read_text(encoding="utf-8").splitlines()
+        sums_path.write_text(
+            "\n".join(lines + [lines[0]]) + "\n", encoding="utf-8"
+        )
+        assert "checksum_duplicate" in cep.verify_built_package(package_dir)
+        assert any(
+            error.startswith("release_output_mismatch:")
+            for error in cep.verify_release(output_root)
+        )
+
+    with tempfile.TemporaryDirectory() as output:
+        output_root = pathlib.Path(output)
+        manifest = cep.build_release(bundle, output_root)
+        package_dir = output_root / manifest["packages"][0]["path"]
+        sums_path = package_dir / "SHA256SUMS.txt"
+        sums_path.write_text(
+            sums_path.read_text(encoding="utf-8")
+            + f"{'0' * 64}  /definitely/not/here\n",
+            encoding="utf-8",
+        )
+        assert "checksum_path" in cep.verify_built_package(package_dir)
+
+    with tempfile.TemporaryDirectory() as output:
+        output_root = pathlib.Path(output)
+        manifest = cep.build_release(bundle, output_root)
+        package_dir = output_root / manifest["packages"][0]["path"]
+        manifest_path = package_dir / "manifest.json"
+        package_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        package_manifest["files"][0]["path"] = "/etc/passwd"
+        manifest_path.write_text(
+            cep.canonical_json(package_manifest), encoding="utf-8"
+        )
+        errors = cep.verify_built_package(package_dir)
+        assert "manifest_content" in errors
+        assert "manifest_path" in errors
+
+
 def test_fail_closed_controls():
     base = packages()[0]
 
@@ -314,6 +406,7 @@ def run():
     test_built_outputs_verify()
     test_deterministic_release_rerun_is_byte_identical()
     test_release_fails_closed_on_incomplete_or_tampered_aggregate()
+    test_filesystem_and_checksum_attacks_fail_closed()
     test_fail_closed_controls()
     print(
         json.dumps(
