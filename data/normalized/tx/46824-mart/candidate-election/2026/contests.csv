@@ -1,0 +1,2 @@
+contest_id,contest_label,contest_status,expected_seats,candidate_count,office_id,office_name,election_id,election_date
+con-wb020-5bd069104875a963c6b2bdf66738c64bba137567fb57c0ab3a29aab968ff65a7,City Council - At-Large | 2026-05-02 General,unknown,3,9,off-wb020-9011d7164077b4c6985b0d7588029d78631d067c5674f6e974e911c9ac102f8c,City Council,elec-wb020-6d8080dbbc555d492f92c3dcd21225a943763e4afc2018501bac47a73ae5fbd1,2026-05-02

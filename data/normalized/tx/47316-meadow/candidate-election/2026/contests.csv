@@ -1,0 +1,3 @@
+contest_id,contest_label,contest_status,expected_seats,candidate_count,office_id,office_name,election_id,election_date
+con-wb020-16124280a62bf3c3b0ebfc25a536c04036b9c65ba22123e2ea750f820fb70685,Mayor | 2026-05-02 General,unknown,1,2,off-wb020-29a7bd9c5b845012ee59b31dfbce54ffa17787be29daf38ab49c7957bfd8c9ce,Mayor,elec-wb020-b620905a2746c4e9284edd35f6a024044488ba00ead2f19b938f833175d21b2d,2026-05-02
+con-wb020-41ddab4462f2ecaf3f7c004d32df6ebf47dd2ea59832f83b373f2c854c3a930b,City Council — At-Large | 2026-05-02 General,unknown,2,2,off-wb020-fe6717a8df5acd92b8f6f30319f20bdb06478d183cf33c1f17333ba0482b08d7,City Council,elec-wb020-b620905a2746c4e9284edd35f6a024044488ba00ead2f19b938f833175d21b2d,2026-05-02
