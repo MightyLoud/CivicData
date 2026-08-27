@@ -492,20 +492,33 @@ def _safe_package_name(name):
     return not candidate.is_absolute() and len(candidate.parts) == 1 and candidate.parts[0] not in {".", ".."}
 
 
+def _path_has_symlink_component(path):
+    path = Path(path)
+    lexical = path if path.is_absolute() else Path.cwd() / path
+    current = Path(lexical.anchor)
+    for part in lexical.parts[1:]:
+        current /= part
+        if current.is_symlink():
+            return True
+    return False
+
+
 def _prepare_clean_output(out):
     out = Path(out)
-    resolved = out.absolute()
+    if not out.name or ".." in out.parts or _path_has_symlink_component(out):
+        raise ValueError("unsafe_output_path")
+    resolved = out.resolve(strict=False)
     repository_root = Path(__file__).resolve().parents[1]
     if (
-        not out.name
-        or resolved == Path("/")
+        resolved == Path("/")
         or resolved == repository_root
         or resolved in repository_root.parents
-        or out.is_symlink()
     ):
         raise ValueError("unsafe_output_path")
-    out.mkdir(parents=True, exist_ok=True)
-    for child in out.iterdir():
+    resolved.mkdir(parents=True, exist_ok=True)
+    if _path_has_symlink_component(out) or out.resolve(strict=False) != resolved:
+        raise ValueError("unsafe_output_path")
+    for child in resolved.iterdir():
         if child.is_symlink():
             raise ValueError("output_symlink")
         if child.is_dir():

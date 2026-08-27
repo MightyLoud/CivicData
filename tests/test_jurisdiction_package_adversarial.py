@@ -325,6 +325,58 @@ def test_build_cleans_stale_output():
         assert jp.verify_package(out) == []
 
 
+def test_build_rejects_traversal_and_symlinked_ancestors_without_mutation():
+    with tempfile.TemporaryDirectory() as directory:
+        victim = pathlib.Path(directory) / "victim"
+        scratch = victim / "scratch"
+        scratch.mkdir(parents=True)
+        sentinel = victim / "keep.txt"
+        sentinel.write_text("keep", encoding="utf-8")
+        try:
+            jp._prepare_clean_output(scratch / "..")
+        except ValueError as error:
+            assert str(error) == "unsafe_output_path"
+        else:
+            raise AssertionError("lexical traversal must fail before output cleanup")
+        assert sentinel.read_text(encoding="utf-8") == "keep"
+        assert scratch.is_dir()
+
+    with tempfile.TemporaryDirectory() as directory:
+        root = pathlib.Path(directory)
+        target = root / "target"
+        target.mkdir()
+        sentinel = target / "keep.txt"
+        sentinel.write_text("keep", encoding="utf-8")
+        output = root / "output"
+        os.symlink(target, output, target_is_directory=True)
+        try:
+            jp._prepare_clean_output(output)
+        except ValueError as error:
+            assert str(error) == "unsafe_output_path"
+        else:
+            raise AssertionError("a symlinked output target must fail before cleanup")
+        assert sentinel.read_text(encoding="utf-8") == "keep"
+
+    with tempfile.TemporaryDirectory() as directory:
+        root = pathlib.Path(directory)
+        target = root / "target"
+        victim = target / "victim"
+        victim.mkdir(parents=True)
+        sentinel = victim / "keep.txt"
+        sentinel.write_text("keep", encoding="utf-8")
+        alias = root / "alias"
+        os.symlink(target, alias, target_is_directory=True)
+        output = alias / "victim"
+        assert not output.is_symlink()
+        try:
+            jp._prepare_clean_output(output)
+        except ValueError as error:
+            assert str(error) == "unsafe_output_path"
+        else:
+            raise AssertionError("a symlinked output ancestor must fail before cleanup")
+        assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
 def run():
     assert jp.validate(fixture_v01()) == []
     assert jp.validate(fixture_v02()) == []
@@ -333,6 +385,7 @@ def run():
     test_address_and_blocking_controls()
     test_exact_inventory_manifest_checksum_and_path_controls()
     test_build_cleans_stale_output()
+    test_build_rejects_traversal_and_symlinked_ancestors_without_mutation()
     print(json.dumps({
         "status": "PASS",
         "decision_id": "D-387",
