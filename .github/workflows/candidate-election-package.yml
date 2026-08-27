@@ -1,0 +1,37 @@
+name: Candidate Election Package contract
+
+on:
+  pull_request:
+    paths:
+      - "data/normalized/tx/*/candidate-election/2026/**"
+      - "data/normalized/tx/tx-candidate-election-2026-001.manifest.json"
+      - "schemas/candidate_election_package_v0.1.schema.json"
+      - "tools/candidate_election_package.py"
+      - "tests/test_candidate_election_package.py"
+      - "examples/candidate_election_package_consumer.py"
+      - "docs/workflows/candidate-election-package-v0.1.md"
+      - ".github/workflows/candidate-election-package.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate-election-package:
+    name: Candidate Election Package gate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile builder, tests, and consumer example
+        run: >-
+          python -m py_compile
+          tools/candidate_election_package.py
+          tests/test_candidate_election_package.py
+          examples/candidate_election_package_consumer.py
+      - name: Run contract and negative-control tests
+        run: python tests/test_candidate_election_package.py
+      - name: Verify the exact staged release
+        run: python tools/candidate_election_package.py verify-release .
