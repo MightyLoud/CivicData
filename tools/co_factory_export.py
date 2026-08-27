@@ -85,11 +85,16 @@ def build_package(snapshot, jurisdiction_id):
         "assertion_id",
     )
     gaps = _rows_for(_table(snapshot, "11_KnownGap"), jurisdiction_id)
+    malformed_blocking = [row.get("gap_id") for row in gaps if type(row.get("blocking")) is not bool]
+    if malformed_blocking:
+        raise ValueError(
+            f"{jurisdiction_id}: blocking must be boolean: " + ", ".join(sorted(str(x) for x in malformed_blocking))
+        )
     warnings = _sort(
-        [row for row in gaps if row.get("blocking") is not True and _is_open(row)],
+        [row for row in gaps if row["blocking"] is False and _is_open(row)],
         "gap_id",
     )
-    blocking_gaps = [row for row in gaps if row.get("blocking") is True and _is_open(row)]
+    blocking_gaps = [row for row in gaps if row["blocking"] is True and _is_open(row)]
     address_tests = _sort(
         _rows_for(_table(snapshot, "12_AddressTest"), jurisdiction_id),
         "test_id",
@@ -192,4 +197,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

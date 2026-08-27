@@ -20,7 +20,9 @@ def fixture():
             "geoid": "0800000",
         },
         "records": {
-            "divisions": [],
+            "divisions": [
+                {"division_id": "division-test", "jurisdiction_id": "jurisdiction-test"}
+            ],
             "bodies": [],
             "offices": [],
             "people": [],
@@ -29,14 +31,38 @@ def fixture():
             "identifier_crosswalk": [],
         },
         "provenance": {
-            "source_evidence": [{"source_id": "src-1", "jurisdiction_id": "jurisdiction-test"}],
+            "source_evidence": [{
+                "source_id": "src-1",
+                "jurisdiction_id": "jurisdiction-test",
+                "supports_entity_id": "jurisdiction-test",
+                "supports_entity_type": "Jurisdiction",
+            }],
             "source_assertions": [],
         },
         "qa": {
             "parity_ok": True,
             "qa_fail_count": 0,
             "blocking_gap_count": 0,
-            "address_tests": [{"result": True}, {"result": True}],
+            "address_tests": [
+                {
+                    "test_id": "address-1",
+                    "address_input": "1 Main St",
+                    "jurisdiction_id": "jurisdiction-test",
+                    "boundary_source_id": "src-1",
+                    "actual_division_id": "division-test",
+                    "expected_division_id": "division-test",
+                    "result": True,
+                },
+                {
+                    "test_id": "address-2",
+                    "address_input": "2 Main St",
+                    "jurisdiction_id": "jurisdiction-test",
+                    "boundary_source_id": "src-1",
+                    "actual_division_id": "division-test",
+                    "expected_division_id": "division-test",
+                    "result": True,
+                },
+            ],
             "checks": [],
         },
         "warnings": [],

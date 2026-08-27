@@ -1,9 +1,11 @@
 {
   "decision_id": "D-329",
-  "status": "READY_FOR_PR_REVIEW",
+  "remediation_decision_id": "D-387",
+  "status": "READY_FOR_INDEPENDENT_REREVIEW",
   "repository": "MightyLoud/CivicData",
   "branch": "d328-generic-jurisdiction-package",
   "input_branch_head": "9a7ac6bea56b32d70faf6827118d735132ac6079",
+  "remediation_input_head": "e1b817e2f1f3f317c2785e98cece24ec2fbe4f18",
   "branch_divergence_before_d329": {
     "ahead_of_main": 11,
     "behind_main": 17,
@@ -13,7 +15,7 @@
     "spreadsheet_id": "1KTWOvTkEKGzFQxIBOA5tbP4keEoWwdPPt95LG-I8XCw",
     "source_modified_time": "2026-08-26T02:08:54.518Z",
     "snapshot_path": "data/source/co/d329-co-factory-snapshot.json",
-    "snapshot_sha256": "a54b7d694e937f6ae22cc895d01c1aa14f1420eb296a4459b6bd6edfd17f7937",
+    "snapshot_sha256": "0262c148e485bd92d5796e4c2fcf78dd14c3e8e74c0ac1ef1f107b9302c1314c",
     "snapshot_rows": 438
   },
   "packages": [
@@ -31,7 +33,7 @@
       "qa_checks": 15,
       "address_tests": 2,
       "warnings": 1,
-      "sha256s_file_digest": "11ab9385259ca402a1c32f861df1cfd649a84716f3ffb756d0dcfb1a9fdb28dc"
+      "sha256s_file_digest": "d607849c4c69dcd130eeabd0373d1400c619e0867ffd0f3549f7b54705e2a037"
     },
     {
       "jurisdiction_id": "jurisdiction-co-alma",
@@ -39,7 +41,7 @@
       "qa_checks": 15,
       "address_tests": 2,
       "warnings": 1,
-      "sha256s_file_digest": "dff0172bb1de9df8ccdcad3888967f944e6e73772d1d208ec7323531805540c1"
+      "sha256s_file_digest": "711d0e1e3ea2154cf4f79fd5890e20f6598a29177c9df10373a57d58635ccef3"
     },
     {
       "jurisdiction_id": "jurisdiction-co-arvada",
@@ -47,7 +49,7 @@
       "qa_checks": 15,
       "address_tests": 2,
       "warnings": 1,
-      "sha256s_file_digest": "bf59c4f237f64c261d903992f4e77d32e719cf17e32d2ab921ef44285f22af53"
+      "sha256s_file_digest": "9bb6dfdfc34f319cc581a5721f30735441e26a2af9c7aa3da1f260d7425891ac"
     },
     {
       "jurisdiction_id": "jurisdiction-co-aspen",
@@ -55,7 +57,7 @@
       "qa_checks": 15,
       "address_tests": 2,
       "warnings": 1,
-      "sha256s_file_digest": "78174c8374d665978b3c39d25c133feaf7f5bef710d158c6dcc7d04372b0dc90"
+      "sha256s_file_digest": "5015aa52a1e822b731e20f2f67ebd9ee117739a9f6d736165a73a05812f202bd"
     }
   ],
   "totals": {
@@ -84,7 +86,16 @@
     "sha256": true,
     "deterministic_rerun_byte_equal": true,
     "v0_1_tests": true,
-    "v0_2_backward_compatibility": true
+    "v0_2_backward_compatibility": true,
+    "json_schema_fail_closed": true,
+    "recursive_inventory_exact": true,
+    "path_and_symlink_safety": true,
+    "entity_family_integrity": true,
+    "entity_family_mismatches": 0,
+    "strict_blocking_boolean": true,
+    "package_archive_integrity": true,
+    "adversarial_regressions": true,
+    "downstream_consumer_onboarding_tests": 16
   },
   "scope_guards": {
     "excluded_jurisdictions_absent": true,
