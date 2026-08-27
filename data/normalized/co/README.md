@@ -1,9 +1,9 @@
-# Colorado D-328 package targets
+# Colorado D-329 deterministic packages
 
-Authorized package targets: Akron, Alamosa, Alma, Arvada, Aspen.
+Generated package targets: Akron, Alamosa, Alma, Arvada, and Aspen.
 
-Source of truth remains the governed `CO Jurisdiction Factory v0.1` workbook. Package generation must copy the complete jurisdiction-scoped rows from Jurisdiction, Division, Body, Office, Person, RoleTerm, LeadershipRole, IdentifierCrosswalk, SourceEvidence, SourceAssertion, AddressTest, QA, and nonblocking KnownGap surfaces. It must not reconstruct or infer facts from summaries.
+The source of truth remains the governed `CO Jurisdiction Factory v0.1` workbook. D-329 copied the complete jurisdiction-scoped source rows into a governed snapshot and generated the five packages mechanically. Open nonblocking KnownGap rows are preserved in each package's `warnings`; unsupported values remain null/blank.
 
 The three blocked jurisdictions Aguilar, Antonito, and Arriba are excluded.
 
-No package in this directory is publishable until the generated snapshot passes the generic validator, checksum verification, deterministic rerun comparison, and a separate merge/release gate.
+Each package passes the generic validator, exact count reconciliation, PK/FK and source/assertion integrity checks, QA/parity/tracker checks, address controls, manifest byte checks, SHA-256 verification, and a byte-identical deterministic rerun. The packages remain branch-only and are not published or merged without a separate gate.
