@@ -1,0 +1,46 @@
+{
+  "schema_version": "texas-post-activation-hosted-deployment/0.2",
+  "service_id": "civicdata-tx-legislative-two-office-v0.2",
+  "profile_id": "tx_legislative_two_office_v0.1",
+  "repository_activation": "ACTIVATED_BOUNDED",
+  "container": {
+    "context": ".",
+    "dockerfile": "services/texas_bounded_api/Dockerfile",
+    "port_source": "PORT",
+    "run_as_non_root": true
+  },
+  "deployment_requirements": {
+    "environment": {
+      "CIVICDATA_SERVICE_ENVIRONMENT": "production"
+    },
+    "git_head_source": "RAILWAY_GIT_COMMIT_SHA_OR_EXPLICIT_CIVICDATA_SERVICE_HEAD_SHA",
+    "tls_required": true,
+    "external_https_egress_required": true,
+    "healthcheck_path": "/readyz"
+  },
+  "activated_defaults": {
+    "catalog_entry_sha256": "1b8fd732e70b90b6ad331f71c7fe0403c061c680ad309135c28b2054a6dfb189",
+    "legislative_group_sha256": "826ba0f04bda435c28cc4025fa253564ace9597402cecf5b2996d717565afa2a",
+    "activation_receipt_deterministic_sha256": "8574a0987e1ebebe4ec3679e9ca936df9aae7453f8ded70642aca54ebf197166"
+  },
+  "validation": {
+    "command": "python tools/texas_post_activation_hosted_validation.py --base-url <HTTPS_URL> --expected-head-sha <DEPLOYED_SHA> --audit-output artifacts/texas-post-activation/audit.json --release-evidence-output artifacts/texas-post-activation/release-evidence.json",
+    "required_checks": [
+      "activation-receipt",
+      "activated-default-catalog",
+      "activated-default-registry",
+      "geometry-governance-preflight",
+      "package-profile-reconstruction",
+      "positive-both-bindings",
+      "outside-slice-negative",
+      "no-partial-projection",
+      "public-identity-gate",
+      "hosted-runtime-route"
+    ]
+  },
+  "release_boundary": {
+    "release_authorized": false,
+    "publication_workflow_authorized": false,
+    "canonical_writes": 0
+  }
+}

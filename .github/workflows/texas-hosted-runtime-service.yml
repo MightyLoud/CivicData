@@ -9,8 +9,10 @@ on:
       - 'services/texas_bounded_api/**'
       - 'requirements-hosted-runtime.txt'
       - 'railway.toml'
-      - 'tools/texas_hosted_runtime_validation.py'
-      - 'tests/test_texas_hosted_runtime_service.py'
+      - 'tools/texas_post_activation_hosted_validation.py'
+      - 'tools/texas_release_readiness.py'
+      - 'tests/test_texas_post_activation_runtime.py'
+      - 'tests/test_texas_release_readiness.py'
       - 'tests/test_texas_hosted_runtime_validation.py'
       - 'tests/test_texas_activation_execution.py'
       - 'tests/texas_hosted_container_smoke.py'
@@ -19,18 +21,21 @@ on:
       - 'consumers/empowered_vote/**'
       - 'tools/jurisdiction_package.py'
       - 'civic_gps_runtime_parts/**'
-      - 'docs/workflows/texas-hosted-runtime-v0.1.md'
+      - 'docs/workflows/texas-post-activation-hosted-runtime-v0.2.md'
+      - 'docs/workflows/texas-release-readiness-v0.1.md'
       - '.github/workflows/texas-hosted-runtime-service.yml'
   push:
     branches:
       - main
-      - 'agent/day12-tx-integration'
+      - 'agent/day12-tx-post-activation-runtime-v0.2'
     paths:
       - 'services/texas_bounded_api/**'
       - 'requirements-hosted-runtime.txt'
       - 'railway.toml'
-      - 'tools/texas_hosted_runtime_validation.py'
-      - 'tests/test_texas_hosted_runtime_service.py'
+      - 'tools/texas_post_activation_hosted_validation.py'
+      - 'tools/texas_release_readiness.py'
+      - 'tests/test_texas_post_activation_runtime.py'
+      - 'tests/test_texas_release_readiness.py'
       - 'tests/test_texas_hosted_runtime_validation.py'
       - 'tests/test_texas_activation_execution.py'
       - 'tests/texas_hosted_container_smoke.py'
@@ -39,14 +44,15 @@ on:
       - 'consumers/empowered_vote/**'
       - 'tools/jurisdiction_package.py'
       - 'civic_gps_runtime_parts/**'
-      - 'docs/workflows/texas-hosted-runtime-v0.1.md'
+      - 'docs/workflows/texas-post-activation-hosted-runtime-v0.2.md'
+      - 'docs/workflows/texas-release-readiness-v0.1.md'
       - '.github/workflows/texas-hosted-runtime-service.yml'
 
 permissions:
   contents: read
 
 concurrency:
-  group: texas-hosted-runtime-${{ github.event.pull_request.number || github.ref }}
+  group: texas-hosted-runtime-v02-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -57,8 +63,8 @@ jobs:
     env:
       PYTHONDONTWRITEBYTECODE: '1'
       CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba'
-      IMAGE_NAME: civicdata-tx-hosted-candidate
-      CONTAINER_NAME: civicdata-tx-hosted-smoke
+      IMAGE_NAME: civicdata-tx-hosted-activated-v02
+      CONTAINER_NAME: civicdata-tx-hosted-activated-smoke
       CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       TEST_SERVICE_PORT: '18081'
     steps:
@@ -73,32 +79,6 @@ jobs:
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
           echo "candidate_sha=$CANDIDATE_SHA"
 
-      - name: Detect repository activation state
-        id: activation
-        shell: bash
-        run: |
-          python - <<'PY'
-          import json, os
-          from pathlib import Path
-          catalog = json.loads(Path('consumers/empowered_vote/package_catalog.v0.1.json').read_text())
-          registry = json.loads(Path('civic_gps_extensions/registry_bundles.v0.1.json').read_text())
-          entry = any(
-              row.get('profile') == 'state_legislative_representation'
-              and (row.get('production_profile') or {}).get('profile_id') == 'tx_legislative_two_office_v0.1'
-              for row in catalog.get('entries', []) if isinstance(row, dict)
-          )
-          group = any(
-              row.get('group_id') == 'GEO-TX-LEGISLATIVE-TWO-DISTRICTS'
-              for row in registry.get('legislative_boundary_overlays', []) if isinstance(row, dict)
-          )
-          if entry != group:
-              raise SystemExit('partial Texas activation detected')
-          mode = 'activated' if entry else 'candidate'
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
-              fh.write('mode=' + mode + '\n')
-          print('mode=' + mode)
-          PY
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -110,40 +90,41 @@ jobs:
         run: python -m pip install -r requirements-hosted-runtime.txt
 
       - name: Reconstruct exact Civic GPS runtime
-        if: steps.activation.outputs.mode == 'candidate'
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
           echo "$CIVIC_GPS_EXPECTED_RUNTIME_SHA256  civic_gps_runtime.zip" | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
-      - name: Verify activated repository state
-        if: steps.activation.outputs.mode == 'activated'
-        run: python tests/test_texas_activation_execution.py
-
-      - name: Compile hosted service and validators
-        if: steps.activation.outputs.mode == 'candidate'
+      - name: Compile post-activation runtime and release-readiness controls
         run: |
           python -m py_compile \
-            services/texas_bounded_api/runtime.py \
+            services/texas_bounded_api/runtime_v0_2.py \
             services/texas_bounded_api/main.py \
-            tools/texas_hosted_runtime_validation.py \
-            tests/test_texas_hosted_runtime_service.py \
+            tools/texas_post_activation_hosted_validation.py \
+            tools/texas_release_readiness.py \
+            tests/test_texas_post_activation_runtime.py \
+            tests/test_texas_release_readiness.py \
+            tests/test_texas_activation_execution.py \
             tests/test_texas_hosted_runtime_validation.py \
             tests/texas_hosted_container_smoke.py
 
-      - name: Run offline hosted-service contract controls
-        if: steps.activation.outputs.mode == 'candidate'
-        run: |
-          python tests/test_texas_hosted_runtime_service.py
-          python tests/test_texas_hosted_runtime_validation.py
+      - name: Verify exact activated catalog + registry state
+        run: python tests/test_texas_activation_execution.py
 
-      - name: Build exact hosted candidate image
-        if: steps.activation.outputs.mode == 'candidate'
+      - name: Run post-activation runtime contract controls
+        run: python tests/test_texas_post_activation_runtime.py
+
+      - name: Run release-readiness contract controls
+        run: python tests/test_texas_release_readiness.py
+
+      - name: Run public-host validator shape controls
+        run: python tests/test_texas_hosted_runtime_validation.py
+
+      - name: Build exact activated hosted candidate image
         run: docker build -f services/texas_bounded_api/Dockerfile -t "$IMAGE_NAME:$CANDIDATE_SHA" .
 
       - name: Start candidate container with Railway semantics
-        if: steps.activation.outputs.mode == 'candidate'
         run: |
           docker run -d --rm \
             --name "$CONTAINER_NAME" \
@@ -154,7 +135,6 @@ jobs:
             "$IMAGE_NAME:$CANDIDATE_SHA"
 
       - name: Wait for liveness
-        if: steps.activation.outputs.mode == 'candidate'
         shell: bash
         run: |
           for attempt in $(seq 1 30); do
@@ -167,58 +147,51 @@ jobs:
           docker logs "$CONTAINER_NAME"
           exit 1
 
-      - name: Run live container HTTP controls
-        if: steps.activation.outputs.mode == 'candidate'
+      - name: Run live activated container HTTP controls
         run: |
           python tests/texas_hosted_container_smoke.py \
             --base-url http://127.0.0.1:18080 \
             --expected-head-sha "$CANDIDATE_SHA" \
             --expected-environment container-ci
 
-      - name: Record deployable-container evidence
-        if: steps.activation.outputs.mode == 'candidate'
+      - name: Record post-activation deployable-container evidence
         shell: bash
         run: |
-          mkdir -p artifacts/texas-hosted-runtime
+          mkdir -p artifacts/texas-hosted-runtime-v02
           IMAGE_ID=$(docker image inspect "$IMAGE_NAME:$CANDIDATE_SHA" --format '{{.Id}}')
-          python - "$CANDIDATE_SHA" "$IMAGE_ID" > artifacts/texas-hosted-runtime/container-evidence.json <<'PY'
+          python - "$CANDIDATE_SHA" "$IMAGE_ID" > artifacts/texas-hosted-runtime-v02/container-evidence.json <<'PY'
           import json, sys
           print(json.dumps({
-              "schema_version": "texas-hosted-container-evidence/0.1",
+              "schema_version": "texas-post-activation-container-evidence/0.1",
               "status": "DEPLOYABLE_CONTAINER_PASS",
               "head_sha": sys.argv[1],
               "image_id": sys.argv[2],
               "profile_id": "tx_legislative_two_office_v0.1",
               "provider_semantics": "RAILWAY_PORT_AND_GIT_SHA",
               "http_container_smoke": "PASS",
-              "hosted_runtime_route": "NOT_VALIDATED",
-              "activation_authorized": False,
-              "repository_activation": "NOT_ACTIVATED",
+              "repository_activation": "ACTIVATED_BOUNDED",
+              "catalog_entry_sha256": "1b8fd732e70b90b6ad331f71c7fe0403c061c680ad309135c28b2054a6dfb189",
+              "legislative_group_sha256": "826ba0f04bda435c28cc4025fa253564ace9597402cecf5b2996d717565afa2a",
+              "activation_receipt_deterministic_sha256": "8574a0987e1ebebe4ec3679e9ca936df9aae7453f8ded70642aca54ebf197166",
+              "release_authorized": False,
+              "publication_workflow_authorized": False,
               "canonical_writes": 0,
           }, sort_keys=True, separators=(",", ":")))
           PY
-          cat artifacts/texas-hosted-runtime/container-evidence.json
+          cat artifacts/texas-hosted-runtime-v02/container-evidence.json
 
-      - name: Upload deployable-container evidence
-        if: steps.activation.outputs.mode == 'candidate'
+      - name: Upload post-activation container evidence
         uses: actions/upload-artifact@v4
         with:
-          name: texas-hosted-runtime-container-${{ env.CANDIDATE_SHA }}
-          path: artifacts/texas-hosted-runtime/container-evidence.json
+          name: texas-post-activation-hosted-runtime-container-${{ env.CANDIDATE_SHA }}
+          path: artifacts/texas-hosted-runtime-v02/container-evidence.json
           if-no-files-found: error
           retention-days: 30
 
-      - name: Confirm frozen hosted proof after activation
-        if: steps.activation.outputs.mode == 'activated'
-        run: |
-          echo 'repository_activation=ACTIVATED_BOUNDED'
-          echo 'validated_hosted_proof_head=05e6ca3962c0eb3105e96ef4335423350ea9865b'
-          echo 'railway_redeploy=NOT_AUTHORIZED'
-
       - name: Show container logs
-        if: always() && steps.activation.outputs.mode == 'candidate'
+        if: always()
         run: docker logs "$CONTAINER_NAME" || true
 
       - name: Stop candidate container
-        if: always() && steps.activation.outputs.mode == 'candidate'
+        if: always()
         run: docker rm -f "$CONTAINER_NAME" || true
