@@ -17,6 +17,12 @@ from urllib.parse import urlencode
 
 from civic_gps_extensions.legislative import apply_legislative_groups, validate_legislative_groups
 from civic_gps_extensions.scoped_geocode import scoped_engine_class
+from civic_gps_extensions.texas_geometry_governance import (
+    GeometryGovernanceFailure,
+    PINS as TEXAS_GEOMETRY_PINS,
+    POLICY_ID as TEXAS_GEOMETRY_POLICY_ID,
+    verify_texas_geometry_governance,
+)
 
 EXTENSION_VERSION = "0.1"
 DEFAULT_EXTENSION = Path(__file__).with_name("registry_bundles.v0.1.json")
@@ -77,6 +83,39 @@ def load_registry_with_extensions(
         merged["bundles"].append(copy.deepcopy(bundle))
         existing.add(adapter_id)
     return merged, registry_path
+
+
+def _verify_production_legislative_governance(groups, *, session=None, timeout_seconds=30.0):
+    """Fail before geocoding if a production-bounded geometry policy is unsupported or stale."""
+    verified_policies = set()
+    for group in groups:
+        if group.get("scope") != "PRODUCTION_BOUNDED":
+            continue
+        governance = group.get("geometry_governance") or {}
+        policy_id = governance.get("policy_id")
+        if policy_id != TEXAS_GEOMETRY_POLICY_ID:
+            raise ValueError("unsupported production legislative geometry governance policy")
+        expected = {
+            "DIST-TX-HOUSE-H2316": (TEXAS_GEOMETRY_PINS["house"]["service_url"], "PLANH2316"),
+            "DIST-TX-SENATE-S2168": (TEXAS_GEOMETRY_PINS["senate"]["service_url"], "PLANS2168"),
+        }
+        observed = {
+            str(adapter.get("adapter_id")): (
+                str(adapter.get("service_url")),
+                str((adapter.get("source") or {}).get("plan_id")),
+            )
+            for adapter in group.get("district_adapters", [])
+            if isinstance(adapter, dict)
+        }
+        if group.get("state_geoid") != "48" or observed != expected:
+            raise ValueError("TEXAS_GEOMETRY_GOVERNANCE_BINDING_DRIFT")
+        if policy_id in verified_policies:
+            continue
+        try:
+            verify_texas_geometry_governance(session=session, timeout_seconds=timeout_seconds)
+        except GeometryGovernanceFailure as exc:
+            raise ValueError("GEOMETRY_VERSION_DRIFT: " + str(exc)) from exc
+        verified_policies.add(policy_id)
 
 
 def _rehash(result: dict[str, Any]) -> None:
@@ -219,6 +258,7 @@ def load_resolver_with_extensions(
     reserved_adapters.extend(o["overlay_id"] for o in overlays)
     reserved_jurisdictions.extend(o["jurisdiction_id"] for o in overlays)
     validate_legislative_groups(groups, reserved_adapters, reserved_jurisdictions)
+    _verify_production_legislative_governance(groups, session=session, timeout_seconds=timeout_seconds)
     engine_class = scoped_engine_class(module.CivicGPSOverlayEngine, module.CivicGPSResolverError)
     engine = engine_class(registry, registry_root=registry_path.parent, timeout_seconds=timeout_seconds, session=session)
     return CivicGPSBoundaryOverlayResolver(engine, overlays, groups) if overlays or groups else engine
