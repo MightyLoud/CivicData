@@ -1,0 +1,162 @@
+name: Texas hosted runtime service
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'services/texas_bounded_api/**'
+      - 'requirements-hosted-runtime.txt'
+      - 'tools/texas_hosted_runtime_validation.py'
+      - 'tests/test_texas_hosted_runtime_service.py'
+      - 'tests/test_texas_hosted_runtime_validation.py'
+      - 'tests/texas_hosted_container_smoke.py'
+      - 'data/packages/tx/legislative/**'
+      - 'civic_gps_extensions/**'
+      - 'consumers/empowered_vote/**'
+      - 'tools/jurisdiction_package.py'
+      - 'civic_gps_runtime_parts/**'
+      - 'docs/workflows/texas-hosted-runtime-v0.1.md'
+      - '.github/workflows/texas-hosted-runtime-service.yml'
+  push:
+    branches:
+      - main
+      - 'agent/day12-tx-integration'
+    paths:
+      - 'services/texas_bounded_api/**'
+      - 'requirements-hosted-runtime.txt'
+      - 'tools/texas_hosted_runtime_validation.py'
+      - 'tests/test_texas_hosted_runtime_service.py'
+      - 'tests/test_texas_hosted_runtime_validation.py'
+      - 'tests/texas_hosted_container_smoke.py'
+      - 'data/packages/tx/legislative/**'
+      - 'civic_gps_extensions/**'
+      - 'consumers/empowered_vote/**'
+      - 'tools/jurisdiction_package.py'
+      - 'civic_gps_runtime_parts/**'
+      - 'docs/workflows/texas-hosted-runtime-v0.1.md'
+      - '.github/workflows/texas-hosted-runtime-service.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: texas-hosted-runtime-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hosted-service:
+    name: Texas hosted runtime service gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba'
+      IMAGE_NAME: civicdata-tx-hosted-candidate
+      CONTAINER_NAME: civicdata-tx-hosted-smoke
+    steps:
+      - name: Check out exact candidate head
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-hosted-runtime.txt
+
+      - name: Install hosted runtime dependencies
+        run: python -m pip install -r requirements-hosted-runtime.txt
+
+      - name: Reconstruct exact Civic GPS runtime
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo "$CIVIC_GPS_EXPECTED_RUNTIME_SHA256  civic_gps_runtime.zip" | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+
+      - name: Compile hosted service and validators
+        run: |
+          python -m py_compile \
+            services/texas_bounded_api/runtime.py \
+            services/texas_bounded_api/main.py \
+            tools/texas_hosted_runtime_validation.py \
+            tests/test_texas_hosted_runtime_service.py \
+            tests/test_texas_hosted_runtime_validation.py \
+            tests/texas_hosted_container_smoke.py
+
+      - name: Run offline hosted-service contract controls
+        run: |
+          python tests/test_texas_hosted_runtime_service.py
+          python tests/test_texas_hosted_runtime_validation.py
+
+      - name: Build exact hosted candidate image
+        run: docker build -f services/texas_bounded_api/Dockerfile -t "$IMAGE_NAME:$GITHUB_SHA" .
+
+      - name: Start candidate container
+        run: |
+          docker run -d --rm \
+            --name "$CONTAINER_NAME" \
+            -e CIVICDATA_SERVICE_HEAD_SHA="$GITHUB_SHA" \
+            -e CIVICDATA_SERVICE_ENVIRONMENT=container-ci \
+            -p 18080:8080 \
+            "$IMAGE_NAME:$GITHUB_SHA"
+
+      - name: Wait for liveness
+        shell: bash
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:18080/healthz > /tmp/health.json; then
+              cat /tmp/health.json
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs "$CONTAINER_NAME"
+          exit 1
+
+      - name: Run live container HTTP controls
+        run: |
+          python tests/texas_hosted_container_smoke.py \
+            --base-url http://127.0.0.1:18080 \
+            --expected-head-sha "$GITHUB_SHA" \
+            --expected-environment container-ci
+
+      - name: Record deployable-container evidence
+        shell: bash
+        run: |
+          mkdir -p artifacts/texas-hosted-runtime
+          IMAGE_ID=$(docker image inspect "$IMAGE_NAME:$GITHUB_SHA" --format '{{.Id}}')
+          python - "$GITHUB_SHA" "$IMAGE_ID" > artifacts/texas-hosted-runtime/container-evidence.json <<'PY'
+          import json, sys
+          print(json.dumps({
+              "schema_version": "texas-hosted-container-evidence/0.1",
+              "status": "DEPLOYABLE_CONTAINER_PASS",
+              "head_sha": sys.argv[1],
+              "image_id": sys.argv[2],
+              "profile_id": "tx_legislative_two_office_v0.1",
+              "http_container_smoke": "PASS",
+              "hosted_runtime_route": "NOT_VALIDATED",
+              "activation_authorized": False,
+              "repository_activation": "NOT_ACTIVATED",
+              "canonical_writes": 0,
+          }, sort_keys=True, separators=(",", ":")))
+          PY
+          cat artifacts/texas-hosted-runtime/container-evidence.json
+
+      - name: Upload deployable-container evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: texas-hosted-runtime-container-${{ github.sha }}
+          path: artifacts/texas-hosted-runtime/container-evidence.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Show container logs
+        if: always()
+        run: docker logs "$CONTAINER_NAME" || true
+
+      - name: Stop candidate container
+        if: always()
+        run: docker rm -f "$CONTAINER_NAME" || true
