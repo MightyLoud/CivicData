@@ -3,6 +3,12 @@ from __future__ import annotations
 
 from civic_gps_extensions.loader import load_resolver_with_extensions
 from civic_gps_extensions.legislative import validate_legislative_groups
+from civic_gps_extensions.texas_geometry_governance import (
+    GeometryGovernanceFailure,
+    PINS as GEOMETRY_PINS,
+    POLICY_ID as GEOMETRY_POLICY_ID,
+    verify_texas_geometry_governance,
+)
 from consumers.empowered_vote import representation
 from tools.jurisdiction_package import validate_identity_graph
 
@@ -10,16 +16,16 @@ SOURCES = {
     "house": {
         "adapter_id": "DIST-TX-HOUSE-H2316", "district": "49", "division_kind": "SLDL",
         "division_type": "state_house_district", "plan_id": "PLANH2316",
-        "service_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0",
-        "authority_url": "https://data.capitol.texas.gov/dataset/planh2316",
-        "vintage_status": "TLC_PLAN_GEOMETRY_EQUIVALENCE_NOT_PINNED",
+        "service_url": GEOMETRY_PINS["house"]["service_url"],
+        "authority_url": GEOMETRY_PINS["house"]["authority_url"],
+        "vintage_status": "GOVERNED_ACCEPTANCE_REQUIRED__TLC_PLANH2316",
     },
     "senate": {
         "adapter_id": "DIST-TX-SENATE-S2168", "district": "14", "division_kind": "SLDU",
         "division_type": "state_senate_district", "plan_id": "PLANS2168",
-        "service_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0",
-        "authority_url": "https://data.capitol.texas.gov/dataset/plans2168",
-        "vintage_status": "SERVICE_DESCRIPTION_88TH_LAYER_NAME_89TH_REQUIRES_GEOMETRY_PIN",
+        "service_url": GEOMETRY_PINS["senate"]["service_url"],
+        "authority_url": GEOMETRY_PINS["senate"]["authority_url"],
+        "vintage_status": "GOVERNED_ACCEPTANCE_REQUIRED__88TH_DESCRIPTION_89TH_LAYER_CAVEAT_RETAINED",
     },
 }
 
@@ -73,10 +79,32 @@ def resolve_texas_internal_preview(package, address, *, repo_root, house_divisio
     """Explicit opt-in; never registers a package or changes production QA."""
     groups, bindings = build_texas_internal_configuration(
         package, house_division_id=house_division_id, senate_division_id=senate_division_id)
+
+    if session is None:
+        try:
+            geometry_governance = verify_texas_geometry_governance(timeout_seconds=timeout_seconds)
+        except GeometryGovernanceFailure as exc:
+            return {
+                "status": "FAIL-CLOSED", "scope": "INTERNAL_REVIEW",
+                "complete_jurisdiction": False, "publication_eligible": False, "canonical_writes": 0,
+                "geometry_governance": {
+                    "status": "FAIL", "policy_id": GEOMETRY_POLICY_ID,
+                    "error_code": "GEOMETRY_VERSION_DRIFT", "summary": str(exc),
+                },
+                "geography": None,
+                "representation": {"status": "FAIL-CLOSED", "error": "GEOMETRY_VERSION_DRIFT"},
+            }
+    else:
+        geometry_governance = {
+            "status": "CONTROLLED_TEST_SESSION_NOT_LIVE_VERIFIED",
+            "policy_id": GEOMETRY_POLICY_ID,
+        }
+
     resolver = load_resolver_with_extensions(
         repo_root, legislative_overlays=groups, session=session, timeout_seconds=timeout_seconds)
     gps = resolver.resolve(address, observed_on=None)
     preview = representation.preview_representation_for_bindings(package, address, gps, bindings=bindings)
     return {"status": preview["status"], "scope": "INTERNAL_REVIEW",
             "complete_jurisdiction": False, "publication_eligible": False, "canonical_writes": 0,
+            "geometry_governance": geometry_governance,
             "geography": gps, "representation": preview}
