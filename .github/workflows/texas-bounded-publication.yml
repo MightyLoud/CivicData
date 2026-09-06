@@ -12,8 +12,10 @@ on:
       - 'tools/texas_release_authorization.py'
       - 'tools/texas_bounded_publication.py'
       - 'tests/test_texas_release_authorization.py'
+      - 'tests/test_texas_release_authorization_receipt_consistency.py'
       - 'tests/test_texas_bounded_publication.py'
       - 'tests/test_texas_publication_workflow.py'
+      - 'docs/workflows/texas-release-authorization-v0.1.md'
       - 'docs/workflows/texas-bounded-publication-v0.1.md'
       - 'docs/workflows/texas-bounded-release-notes-v0.1.md'
       - '.github/workflows/texas-bounded-publication.yml'
@@ -28,8 +30,10 @@ on:
       - 'tools/texas_release_authorization.py'
       - 'tools/texas_bounded_publication.py'
       - 'tests/test_texas_release_authorization.py'
+      - 'tests/test_texas_release_authorization_receipt_consistency.py'
       - 'tests/test_texas_bounded_publication.py'
       - 'tests/test_texas_publication_workflow.py'
+      - 'docs/workflows/texas-release-authorization-v0.1.md'
       - 'docs/workflows/texas-bounded-publication-v0.1.md'
       - 'docs/workflows/texas-bounded-release-notes-v0.1.md'
       - '.github/workflows/texas-bounded-publication.yml'
@@ -75,6 +79,7 @@ jobs:
             tools/texas_release_authorization.py \
             tools/texas_bounded_publication.py \
             tests/test_texas_release_authorization.py \
+            tests/test_texas_release_authorization_receipt_consistency.py \
             tests/test_texas_bounded_publication.py \
             tests/test_texas_publication_workflow.py
 
@@ -84,6 +89,7 @@ jobs:
       - name: Run authorization and fail-closed publication tests
         run: |
           python tests/test_texas_release_authorization.py
+          python tests/test_texas_release_authorization_receipt_consistency.py
           python tests/test_texas_bounded_publication.py
           python tests/test_texas_publication_workflow.py
 
