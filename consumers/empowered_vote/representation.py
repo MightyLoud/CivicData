@@ -157,6 +157,13 @@ def build_representation_from_civic_gps_result(
         return _fail(address, "PACKAGE_REPRESENTATION_UNSUPPORTED")
     if identity_policy not in (None, "INTERNAL_REVIEW"):
         return _fail(address, "IDENTITY_POLICY_UNSUPPORTED")
+    if identity_policy is None:
+        identity_errors = package_source.validate_public_identity_disposition(package)
+        if identity_errors:
+            provisional = [error for error in identity_errors if error.startswith("provisional_person:")]
+            if provisional:
+                return _fail(address, "PERSON_IDENTITY_PROVISIONAL", provisional[0].split(":", 1)[1])
+            return _fail(address, "PACKAGE_PUBLIC_IDENTITY_UNRESOLVED", ",".join(identity_errors))
     graph_errors = package_source.validate_identity_graph(package.get("records"))
     if graph_errors:
         return _fail(address, "PACKAGE_IDENTITY_GRAPH_INVALID", ",".join(graph_errors))
