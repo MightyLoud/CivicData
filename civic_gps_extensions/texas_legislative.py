@@ -80,4 +80,3 @@ def resolve_texas_internal_preview(package, address, *, repo_root, house_divisio
     return {"status": preview["status"], "scope": "INTERNAL_REVIEW",
             "complete_jurisdiction": False, "publication_eligible": False, "canonical_writes": 0,
             "geography": gps, "representation": preview}
-
