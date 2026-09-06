@@ -1,0 +1,57 @@
+name: Texas geometry governance
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'civic_gps_extensions/texas_geometry_governance.py'
+      - 'civic_gps_extensions/texas_legislative.py'
+      - 'tests/civic_gps_texas_geometry_governance_test.py'
+      - 'docs/workflows/texas-legislative-geometry-governance-v0.1.md'
+      - '.github/workflows/texas-geometry-governance.yml'
+  push:
+    branches:
+      - main
+      - 'agent/day12-tx-integration'
+    paths:
+      - 'civic_gps_extensions/texas_geometry_governance.py'
+      - 'civic_gps_extensions/texas_legislative.py'
+      - 'tests/civic_gps_texas_geometry_governance_test.py'
+      - 'docs/workflows/texas-legislative-geometry-governance-v0.1.md'
+      - '.github/workflows/texas-geometry-governance.yml'
+  schedule:
+    - cron: '47 15 * * 3'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: texas-geometry-governance-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  geometry-governance:
+    name: Texas geometry version gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Run offline geometry-version drift controls
+        run: python tests/civic_gps_texas_geometry_governance_test.py
+
+      - name: Verify accepted live Texas geometry version markers
+        run: python -m civic_gps_extensions.texas_geometry_governance
