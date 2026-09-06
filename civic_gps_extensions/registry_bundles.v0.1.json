@@ -7,7 +7,9 @@
       "priority": 80,
       "scope_match": {
         "geography": "place",
-        "fields": ["GEOID"],
+        "fields": [
+          "GEOID"
+        ],
         "equals": "0800925"
       },
       "division_rules": [
@@ -17,7 +19,9 @@
           "type": "municipality",
           "when": {
             "geography": "place",
-            "fields": ["GEOID"],
+            "fields": [
+              "GEOID"
+            ],
             "equals": "0800925"
           }
         }
@@ -27,12 +31,16 @@
           "jurisdiction_id": "jur-us-co-akron",
           "activation": {
             "geography": "place",
-            "fields": ["GEOID"],
+            "fields": [
+              "GEOID"
+            ],
             "equals": "0800925"
           }
         }
       ],
-      "release_files": ["../civic_gps_extensions/akron_release_v0.1.json"],
+      "release_files": [
+        "../civic_gps_extensions/akron_release_v0.1.json"
+      ],
       "district_adapters": [],
       "applicable_office_rules": [],
       "action_registry_files": [],
@@ -54,6 +62,59 @@
       "release_file": "../civic_gps_extensions/fircrest_release_v0.1.json",
       "authority": "Washington State Department of Transportation / Washington State Office of Financial Management",
       "reference_url": "https://data.wsdot.wa.gov/arcgis/rest/services/Shared/PoliAdminBndryData/FeatureServer/1"
+    }
+  ],
+  "legislative_boundary_overlays": [
+    {
+      "group_id": "GEO-TX-LEGISLATIVE-TWO-DISTRICTS",
+      "state_geoid": "48",
+      "jurisdiction": {
+        "jurisdiction_id": "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145",
+        "name": "Texas"
+      },
+      "district_adapters": [
+        {
+          "adapter_id": "DIST-TX-HOUSE-H2316",
+          "service_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0",
+          "district_field": "DIST_NBR",
+          "division_type": "state_house_district",
+          "districts": {
+            "49": {
+              "division_id": "div-wb020-8d372cd6f15770de5f452ceb224ec52929c30beddac3bdf9013864d538cbb449",
+              "name": "Texas House District 49"
+            }
+          },
+          "boundary_probe_distance_meters": 1,
+          "source": {
+            "plan_id": "PLANH2316",
+            "authority_url": "https://data.capitol.texas.gov/dataset/planh2316",
+            "vintage_status": "GOVERNED_ACCEPTANCE_REQUIRED__TLC_PLANH2316"
+          }
+        },
+        {
+          "adapter_id": "DIST-TX-SENATE-S2168",
+          "service_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0",
+          "district_field": "DIST_NBR",
+          "division_type": "state_senate_district",
+          "districts": {
+            "14": {
+              "division_id": "div-wb020-ed0238818cdb70336de04839d183a5a92c3af3ecb3f7bcd0cc330ba1e25d5f8b",
+              "name": "Texas Senate District 14"
+            }
+          },
+          "boundary_probe_distance_meters": 1,
+          "source": {
+            "plan_id": "PLANS2168",
+            "authority_url": "https://data.capitol.texas.gov/dataset/plans2168",
+            "vintage_status": "GOVERNED_ACCEPTANCE_REQUIRED__88TH_DESCRIPTION_89TH_LAYER_CAVEAT_RETAINED"
+          }
+        }
+      ],
+      "scope": "PRODUCTION_BOUNDED",
+      "publication_eligible": false,
+      "geometry_governance": {
+        "policy_id": "texas-legislative-geometry-governance/0.1"
+      }
     }
   ]
 }

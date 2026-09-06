@@ -19,6 +19,77 @@ BASE_TABLES = (
 )
 ELECTION_TABLES = ("elections", "contests", "candidacies")
 SUPPORTED_VERSIONS = {"0.1", "0.2"}
+PRIMARY_KEYS = {
+    "divisions": ("division_id", "id"),
+    "bodies": ("body_id", "id"),
+    "offices": ("office_id", "id"),
+    "people": ("person_id", "id"),
+    "role_terms": ("role_term_id", "term_id", "id"),
+    "leadership_roles": ("leadership_role_id", "leadership_id", "id"),
+    "identifier_crosswalk": ("crosswalk_id", "Crosswalk_ID", "id"),
+}
+
+
+def validate_identity_graph(records):
+    """Validate explicit primary keys and RoleTerm joins without inferring IDs."""
+    errors, seen, ids_by_table = [], set(), {}
+    if not isinstance(records, dict):
+        return ["records_invalid"]
+    for table, keys in PRIMARY_KEYS.items():
+        ids_by_table[table] = set()
+        rows = records.get(table)
+        if not isinstance(rows, list):
+            errors.append("missing_table:" + table)
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                errors.append("invalid_record:" + table)
+                continue
+            values = [row[key] for key in keys if row.get(key) not in (None, "")]
+            if not values or any(not isinstance(value, str) for value in values):
+                errors.append("primary_id:" + table)
+                continue
+            if len(set(values)) != 1:
+                errors.append("primary_id_alias_conflict:" + table)
+                continue
+            value = values[0]
+            if value in seen:
+                errors.append("duplicate_id:" + value)
+            seen.add(value)
+            ids_by_table[table].add(value)
+    terms = records.get("role_terms")
+    for term in terms if isinstance(terms, list) else []:
+        if not isinstance(term, dict):
+            continue
+        person, office = term.get("person_id"), term.get("office_id")
+        if not isinstance(person, str) or not person or not isinstance(office, str) or not office:
+            errors.append("role_term_fk")
+            continue
+        if person not in ids_by_table["people"]:
+            errors.append("role_term_person_fk")
+        if office not in ids_by_table["offices"]:
+            errors.append("role_term_office_fk")
+    return sorted(set(errors))
+
+
+def validate_role_term_sources(records, provenance):
+    """Resolve declared evidence links; SourceRecord IDs are not evidence IDs."""
+    if not isinstance(provenance, dict) or not isinstance(provenance.get("source_evidence"), list):
+        return ["provenance"]
+    sources = {row.get("source_id") for row in provenance["source_evidence"]
+               if isinstance(row, dict) and isinstance(row.get("source_id"), str)}
+    for term in records.get("role_terms", []):
+        references = term.get("source_ids", [])
+        # Existing v0.1 factory packages retain semicolon-separated Sheets text.
+        # Interpret that declared encoding for validation without rewriting it.
+        if isinstance(references, str):
+            references = [value.strip() for value in references.split(";") if value.strip()]
+        if not isinstance(references, list):
+            return ["role_term_source_fk"]
+        references = references + ([term["source_id"]] if term.get("source_id") else [])
+        if any(not isinstance(src, str) or src not in sources for src in references):
+            return ["role_term_source_fk"]
+    return []
 
 
 def tables_for(pkg):
@@ -33,6 +104,49 @@ def _id_set(rows, key):
     return {row.get(key) for row in rows if row.get(key)}
 
 
+def validate_production_scope(pkg):
+    """Honor explicit partial coverage; absence keeps legacy contracts compatible."""
+    errors = []
+    for block in ("jurisdiction", "qa"):
+        row = pkg.get(block)
+        if isinstance(row, dict) and "complete_jurisdiction" in row and row["complete_jurisdiction"] is not True:
+            errors.append("partial_jurisdiction_scope:" + block)
+    return errors
+
+
+def validate_public_identity_disposition(pkg):
+    """Reject explicitly provisional Person identities at public/production boundaries.
+
+    This is intentionally not part of generic package validation: internal review
+    packages may retain provisional Persons and their evidence. Legacy packages
+    that never declared identity status remain compatible.
+    """
+    errors = []
+    records = pkg.get("records") if isinstance(pkg, dict) else None
+    people = records.get("people") if isinstance(records, dict) else None
+    for index, person in enumerate(people if isinstance(people, list) else []):
+        if not isinstance(person, dict):
+            continue
+        statuses = [
+            person[key] for key in ("person_status", "identity_resolution_status", "status", "current_status")
+            if person.get(key) not in (None, "")
+        ]
+        if any(str(value).strip().upper() == "PROVISIONAL" for value in statuses):
+            person_id = person.get("person_id") or person.get("id") or f"row-{index}"
+            errors.append("provisional_person:" + str(person_id))
+
+    warnings = pkg.get("warnings") if isinstance(pkg, dict) else None
+    for index, warning in enumerate(warnings if isinstance(warnings, list) else []):
+        if not isinstance(warning, dict):
+            continue
+        warning_id = str(warning.get("warning_id") or "")
+        is_person_warning = bool(warning.get("person_id")) or warning_id.startswith("PROVISIONAL-PERSON:")
+        if str(warning.get("status") or "").strip().upper() == "PROVISIONAL" and is_person_warning:
+            person_id = warning.get("person_id") or warning_id.removeprefix("PROVISIONAL-PERSON:") or f"row-{index}"
+            errors.append("provisional_warning:" + str(person_id))
+    return sorted(set(errors))
+
+
 def validate(pkg):
     errors = []
     version = pkg.get("schema_version")
@@ -41,11 +155,19 @@ def validate(pkg):
         return errors
 
     records = pkg.get("records", {})
+    errors.extend(validate_identity_graph(records))
+    if not isinstance(records, dict):
+        return sorted(set(errors))
     for table in tables_for(pkg):
         if not isinstance(records.get(table), list):
             errors.append("missing_table:" + table)
+        elif any(not isinstance(row, dict) for row in records[table]):
+            errors.append("invalid_record:" + table)
+    if errors:
+        return sorted(set(errors))
 
     qa = pkg.get("qa", {})
+    errors.extend(validate_production_scope(pkg))
     if qa.get("parity_ok") is not True:
         errors.append("parity_ok")
     if qa.get("qa_fail_count") != 0:
@@ -66,36 +188,10 @@ def validate(pkg):
     if None in sources:
         errors.append("source_id")
 
-    ids = set()
-    for table in BASE_TABLES:
-        for row in records.get(table, []):
-            key = next(
-                (
-                    k
-                    for k in row
-                    if k.endswith("_id")
-                    and k
-                    not in {
-                        "jurisdiction_id",
-                        "body_id",
-                        "person_id",
-                        "office_id",
-                        "represented_division_id",
-                    }
-                ),
-                None,
-            )
-            if key and row[key] in ids:
-                errors.append("duplicate_id:" + str(row[key]))
-            if key:
-                ids.add(row[key])
-
     office_ids = _id_set(records.get("offices", []), "office_id") | _id_set(records.get("offices", []), "id")
     person_ids = _id_set(records.get("people", []), "person_id") | _id_set(records.get("people", []), "id")
 
-    for rt in records.get("role_terms", []):
-        if not rt.get("person_id") or not rt.get("office_id"):
-            errors.append("role_term_fk")
+    errors.extend(validate_role_term_sources(records, pkg.get("provenance")))
 
     if version == "0.2":
         if qa.get("election_scope_complete") is not True:

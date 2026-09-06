@@ -26,6 +26,45 @@ def _catalog_failure(address: str, code: str, detail: str | None = None) -> dict
     return out
 
 
+def _bounded_profile_representation(package: dict[str, Any], address: str,
+                                    civic_gps_result: dict[str, Any], entry: dict[str, Any]) -> dict[str, Any]:
+    """Compose both governed bindings publicly or return no partial projection."""
+    bindings = package_catalog.bindings_from_entry(entry)
+    projections: list[dict[str, Any]] = []
+    seen_offices: set[str] = set()
+    for binding in sorted(bindings, key=lambda row: str(row.get("binding_id"))):
+        model = representation.build_representation_from_civic_gps_result(
+            package, address, civic_gps_result, binding=binding
+        )
+        if model.get("status") != "PASS":
+            return _catalog_failure(
+                address,
+                str(model.get("error") or "PRODUCTION_PROFILE_REPRESENTATION_FAILED"),
+                str(binding.get("binding_id")),
+            )
+        office_ids = {str(row["office_id"]) for row in model.get("applicable_offices", [])}
+        if seen_offices & office_ids:
+            return _catalog_failure(address, "REPRESENTATION_BINDING_OVERLAP", str(binding.get("binding_id")))
+        seen_offices.update(office_ids)
+        projections.append({"binding_id": binding["binding_id"], "representation": model})
+
+    if len(projections) != 2:
+        return _catalog_failure(address, "PRODUCTION_PROFILE_TWO_BINDINGS_REQUIRED")
+    result: dict[str, Any] = {
+        "status": "PASS",
+        "consumer_gate": "EV-IMP-005",
+        "scope": "BOUND_BINDINGS_ONLY",
+        "production_profile_id": entry["production_profile"]["profile_id"],
+        "package_catalog_entry_id": entry["entry_id"],
+        "projections": projections,
+        "complete_jurisdiction": False,
+        "publication_eligible": True,
+        "canonical_writes": 0,
+    }
+    result["deterministic_sha256"] = package_source.sha256_bytes(package_source.canonical_json_bytes(result))
+    return result
+
+
 def build_representation_from_catalog(
     address: str,
     civic_gps_result: dict[str, Any],
@@ -42,6 +81,9 @@ def build_representation_from_catalog(
         return _catalog_failure(address, exc.code, exc.detail)
     except package_source.PackageContractError as exc:
         return _catalog_failure(address, exc.code, exc.detail)
+
+    if entry.get("production_profile"):
+        return _bounded_profile_representation(package, address, civic_gps_result, entry)
 
     model = representation.build_representation_from_civic_gps_result(
         package,

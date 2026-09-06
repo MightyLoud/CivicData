@@ -13,7 +13,8 @@
         "jurisdiction_id": {"type": "string", "minLength": 1},
         "name": {"type": "string", "minLength": 1},
         "state_abbr": {"type": "string", "pattern": "^[A-Z]{2}$"},
-        "geoid": {"type": "string", "pattern": "^[0-9]+$"}
+        "geoid": {"type": "string", "pattern": "^[0-9]+$"},
+        "complete_jurisdiction": {"const": true}
       },
       "additionalProperties": true
     },
@@ -45,6 +46,7 @@
       "required": ["parity_ok", "qa_fail_count", "blocking_gap_count", "address_tests", "checks"],
       "properties": {
         "parity_ok": {"const": true},
+        "complete_jurisdiction": {"const": true},
         "qa_fail_count": {"const": 0},
         "blocking_gap_count": {"const": 0},
         "address_tests": {"type": "array", "minItems": 2, "items": {"type": "object"}},

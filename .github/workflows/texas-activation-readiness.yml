@@ -1,0 +1,95 @@
+name: Texas activation readiness
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'civic_gps_extensions/legislative.py'
+      - 'civic_gps_extensions/loader.py'
+      - 'civic_gps_extensions/texas_geometry_governance.py'
+      - 'civic_gps_extensions/texas_legislative.py'
+      - 'civic_gps_extensions/registry_bundles.v0.1.json'
+      - 'consumers/empowered_vote/production_profile.py'
+      - 'consumers/empowered_vote/package_catalog.py'
+      - 'consumers/empowered_vote/package_catalog.v0.1.json'
+      - 'consumers/empowered_vote/representation_catalog.py'
+      - 'data/packages/tx/legislative/activation-v0.1.json'
+      - 'tools/texas_activation_readiness.py'
+      - 'tests/test_texas_activation_readiness.py'
+      - 'tests/test_texas_activation_execution.py'
+      - 'tests/civic_gps_texas_activation_runtime_test.py'
+      - 'tests/test_tx_production_profile.py'
+      - 'tests/test_public_identity_disposition.py'
+      - 'docs/workflows/texas-activation-readiness-v0.1.md'
+      - '.github/workflows/texas-activation-readiness.yml'
+  push:
+    branches:
+      - main
+      - 'agent/day12-tx-integration'
+    paths:
+      - 'civic_gps_extensions/legislative.py'
+      - 'civic_gps_extensions/loader.py'
+      - 'civic_gps_extensions/texas_geometry_governance.py'
+      - 'civic_gps_extensions/texas_legislative.py'
+      - 'civic_gps_extensions/registry_bundles.v0.1.json'
+      - 'consumers/empowered_vote/production_profile.py'
+      - 'consumers/empowered_vote/package_catalog.py'
+      - 'consumers/empowered_vote/package_catalog.v0.1.json'
+      - 'consumers/empowered_vote/representation_catalog.py'
+      - 'data/packages/tx/legislative/activation-v0.1.json'
+      - 'tools/texas_activation_readiness.py'
+      - 'tests/test_texas_activation_readiness.py'
+      - 'tests/test_texas_activation_execution.py'
+      - 'tests/civic_gps_texas_activation_runtime_test.py'
+      - 'tests/test_tx_production_profile.py'
+      - 'tests/test_public_identity_disposition.py'
+      - 'docs/workflows/texas-activation-readiness-v0.1.md'
+      - '.github/workflows/texas-activation-readiness.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: texas-activation-readiness-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  readiness:
+    name: Texas activation readiness gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-civic-gps.txt
+
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+
+      - name: Compile readiness, activation, and runtime controls
+        run: python -m py_compile tools/texas_activation_readiness.py civic_gps_extensions/legislative.py civic_gps_extensions/loader.py civic_gps_extensions/texas_legislative.py tests/test_texas_activation_readiness.py tests/test_texas_activation_execution.py tests/civic_gps_texas_activation_runtime_test.py
+
+      - name: Run synthetic pre-activation readiness contract
+        run: python tests/test_texas_activation_readiness.py
+
+      - name: Verify exact activated catalog + registry state
+        run: python tests/test_texas_activation_execution.py
+
+      - name: Run production-bounded runtime preflight controls
+        run: python tests/civic_gps_texas_activation_runtime_test.py
+
+      - name: Recheck bounded profile and public identity gates
+        run: |
+          python tests/test_tx_production_profile.py
+          python tests/test_public_identity_disposition.py
+
+      - name: Verify accepted live Texas geometry markers
+        run: python -m civic_gps_extensions.texas_geometry_governance

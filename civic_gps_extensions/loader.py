@@ -15,6 +15,15 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
 
+from civic_gps_extensions.legislative import apply_legislative_groups, validate_legislative_groups
+from civic_gps_extensions.scoped_geocode import scoped_engine_class
+from civic_gps_extensions.texas_geometry_governance import (
+    GeometryGovernanceFailure,
+    PINS as TEXAS_GEOMETRY_PINS,
+    POLICY_ID as TEXAS_GEOMETRY_POLICY_ID,
+    verify_texas_geometry_governance,
+)
+
 EXTENSION_VERSION = "0.1"
 DEFAULT_EXTENSION = Path(__file__).with_name("registry_bundles.v0.1.json")
 
@@ -41,6 +50,7 @@ def _load_extension(path: Path) -> dict[str, Any]:
         if oid in seen:
             raise ValueError(f"duplicate municipal boundary overlay: {oid}")
         seen.add(oid)
+    validate_legislative_groups(extension.get("legislative_boundary_overlays", []))
     return extension
 
 
@@ -75,6 +85,39 @@ def load_registry_with_extensions(
     return merged, registry_path
 
 
+def _verify_production_legislative_governance(groups, *, session=None, timeout_seconds=30.0):
+    """Fail before geocoding if a production-bounded geometry policy is unsupported or stale."""
+    verified_policies = set()
+    for group in groups:
+        if group.get("scope") != "PRODUCTION_BOUNDED":
+            continue
+        governance = group.get("geometry_governance") or {}
+        policy_id = governance.get("policy_id")
+        if policy_id != TEXAS_GEOMETRY_POLICY_ID:
+            raise ValueError("unsupported production legislative geometry governance policy")
+        expected = {
+            "DIST-TX-HOUSE-H2316": (TEXAS_GEOMETRY_PINS["house"]["service_url"], "PLANH2316"),
+            "DIST-TX-SENATE-S2168": (TEXAS_GEOMETRY_PINS["senate"]["service_url"], "PLANS2168"),
+        }
+        observed = {
+            str(adapter.get("adapter_id")): (
+                str(adapter.get("service_url")),
+                str((adapter.get("source") or {}).get("plan_id")),
+            )
+            for adapter in group.get("district_adapters", [])
+            if isinstance(adapter, dict)
+        }
+        if group.get("state_geoid") != "48" or observed != expected:
+            raise ValueError("TEXAS_GEOMETRY_GOVERNANCE_BINDING_DRIFT")
+        if policy_id in verified_policies:
+            continue
+        try:
+            verify_texas_geometry_governance(session=session, timeout_seconds=timeout_seconds)
+        except GeometryGovernanceFailure as exc:
+            raise ValueError("GEOMETRY_VERSION_DRIFT: " + str(exc)) from exc
+        verified_policies.add(policy_id)
+
+
 def _rehash(result: dict[str, Any]) -> None:
     stable = copy.deepcopy(result)
     stable.get("meta", {}).pop("serialized_at", None)
@@ -85,20 +128,31 @@ def _rehash(result: dict[str, Any]) -> None:
 
 
 class CivicGPSBoundaryOverlayResolver:
-    """Compose authoritative municipality polygons after the exact core resolver.
+    """Compose optional municipality and legislative geography after the core.
 
     The core engine remains responsible for address geocoding and its normal
-    geography stack. An overlay is considered only when its configured parent
-    jurisdiction already resolved, then an official polygon service confirms
-    point-in-polygon. The overlay contributes jurisdiction/division geography
-    only; it cannot contribute civic facts.
+    geography stack. Municipality overlays require a resolved parent jurisdiction;
+    legislative groups require an unambiguous state match. Official polygon
+    queries contribute jurisdiction/division geography only, never civic facts.
+    All components share one validated geocode within each resolve call.
     """
 
-    def __init__(self, engine: Any, overlays: list[dict[str, Any]]):
+    def __init__(self, engine: Any, overlays: list[dict[str, Any]], legislative_overlays=None):
         self.engine = engine
         self.overlays = copy.deepcopy(overlays)
+        self.legislative_overlays = copy.deepcopy(legislative_overlays or [])
 
     def resolve(self, address: str, *, observed_on: str | None = None) -> dict[str, Any]:
+        address = address.strip()
+        with self.engine.geocode_scope():
+            result = self._resolve_municipal(address, observed_on=observed_on)
+            if "error" not in result and self.legislative_overlays:
+                geocode = self.engine._geocode(address)
+                result = apply_legislative_groups(self.engine, result, geocode, self.legislative_overlays)
+                _rehash(result)
+            return result
+
+    def _resolve_municipal(self, address: str, *, observed_on: str | None = None) -> dict[str, Any]:
         result = self.engine.resolve(address, observed_on=observed_on)
         if "error" in result or not self.overlays:
             return result
@@ -177,6 +231,8 @@ def load_resolver_with_extensions(
     *,
     timeout_seconds: float = 30.0,
     extension_path: str | Path | None = None,
+    legislative_overlays: list[dict[str, Any]] | None = None,
+    session: Any = None,
 ):
     root = Path(repo_root)
     engine_path = root / "civic_gps" / "engine.py"
@@ -191,6 +247,18 @@ def load_resolver_with_extensions(
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
-    engine = module.CivicGPSOverlayEngine(registry, registry_root=registry_path.parent, timeout_seconds=timeout_seconds)
+    groups = copy.deepcopy(extension.get("legislative_boundary_overlays", []))
+    if legislative_overlays is not None:
+        if not isinstance(legislative_overlays, list):
+            raise ValueError("legislative_overlays must be a list")
+        groups.extend(copy.deepcopy(legislative_overlays))
+    reserved_adapters = [a["adapter_id"] for b in registry["bundles"] for a in b.get("district_adapters", [])]
+    reserved_jurisdictions = [j["jurisdiction_id"] for b in registry["bundles"] for j in b.get("jurisdictions", [])]
     overlays = extension.get("municipal_boundary_overlays", [])
-    return CivicGPSBoundaryOverlayResolver(engine, overlays) if overlays else engine
+    reserved_adapters.extend(o["overlay_id"] for o in overlays)
+    reserved_jurisdictions.extend(o["jurisdiction_id"] for o in overlays)
+    validate_legislative_groups(groups, reserved_adapters, reserved_jurisdictions)
+    _verify_production_legislative_governance(groups, session=session, timeout_seconds=timeout_seconds)
+    engine_class = scoped_engine_class(module.CivicGPSOverlayEngine, module.CivicGPSResolverError)
+    engine = engine_class(registry, registry_root=registry_path.parent, timeout_seconds=timeout_seconds, session=session)
+    return CivicGPSBoundaryOverlayResolver(engine, overlays, groups) if overlays or groups else engine
