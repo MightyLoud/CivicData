@@ -10,12 +10,13 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import re
 import tempfile
 import zipfile
 from pathlib import Path
 from typing import Any
 
-from consumers.empowered_vote import live_civic_gps, package_source
+from consumers.empowered_vote import live_civic_gps, package_source, production_profile
 
 CATALOG_VERSION = "0.1"
 DEFAULT_CATALOG = Path(__file__).with_name("package_catalog.v0.1.json")
@@ -26,6 +27,24 @@ class PackageCatalogError(ValueError):
         self.code = code
         self.detail = detail
         super().__init__(code if not detail else f"{code}: {detail}")
+
+
+def bindings_from_entry(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    bindings = entry.get("district_bindings")
+    if not isinstance(bindings, list):
+        return []
+    out = []
+    for row in bindings:
+        if not isinstance(row, dict):
+            continue
+        out.append({
+            "binding_id": row.get("binding_id"),
+            "package_jurisdiction_id": entry.get("package_jurisdiction_id"),
+            "civic_gps_jurisdiction_id": entry.get("civic_gps_jurisdiction_id"),
+            "district_adapter_id": row.get("adapter_id"),
+            "district_division_map": row.get("district_division_map"),
+        })
+    return out
 
 
 def load_catalog(path: str | Path = DEFAULT_CATALOG) -> dict[str, Any]:
@@ -61,12 +80,36 @@ def load_catalog(path: str | Path = DEFAULT_CATALOG) -> dict[str, Any]:
         for key in ("parts_glob", "archive_sha256", "package_subdir"):
             if not artifact.get(key):
                 raise PackageCatalogError("PACKAGE_CATALOG_ARTIFACT_FIELD_MISSING", f"{entry_id}:{key}")
+
         binding = row.get("district_binding")
+        multi_bindings = row.get("district_bindings")
+        if binding is not None and multi_bindings is not None:
+            raise PackageCatalogError("PACKAGE_CATALOG_BINDING_FORMS_CONFLICT", entry_id)
         if binding is not None:
             if not isinstance(binding, dict) or not binding.get("adapter_id") or not binding.get("division_template"):
                 raise PackageCatalogError("PACKAGE_CATALOG_DISTRICT_BINDING_INVALID", entry_id)
             if "{district_key}" not in str(binding["division_template"]):
                 raise PackageCatalogError("PACKAGE_CATALOG_DIVISION_TEMPLATE_INVALID", entry_id)
+
+        profile_contract = row.get("production_profile")
+        if profile_contract is not None:
+            if not isinstance(profile_contract, dict) or set(profile_contract) != {"profile_id", "acceptance_receipt"}:
+                raise PackageCatalogError("PACKAGE_CATALOG_PRODUCTION_PROFILE_INVALID", entry_id)
+            if profile_contract.get("profile_id") != production_profile.PROFILE_ID:
+                raise PackageCatalogError("PACKAGE_CATALOG_PRODUCTION_PROFILE_UNSUPPORTED", entry_id)
+            if row.get("profile") != "state_legislative_representation":
+                raise PackageCatalogError("PACKAGE_CATALOG_PRODUCTION_ROUTE_INVALID", entry_id)
+            receipt = profile_contract.get("acceptance_receipt")
+            if not isinstance(receipt, dict) or set(receipt) != {"path", "sha256"}
+                    or not isinstance(receipt.get("path"), str)
+                    or re.fullmatch(r"[a-f0-9]{64}", str(receipt.get("sha256") or "")) is None:
+                raise PackageCatalogError("PACKAGE_CATALOG_ACCEPTANCE_RECEIPT_INVALID", entry_id)
+            try:
+                production_profile._normalized_bindings(bindings_from_entry(row))
+            except production_profile.ProductionProfileError as exc:
+                raise PackageCatalogError(exc.code, exc.detail) from exc
+        elif multi_bindings is not None:
+            raise PackageCatalogError("PACKAGE_CATALOG_MULTI_BINDING_PROFILE_REQUIRED", entry_id)
     return catalog
 
 
@@ -84,6 +127,26 @@ def select_entry(catalog: dict[str, Any], civic_gps_result: dict[str, Any], *, p
     if len(matches) != 1:
         raise PackageCatalogError("PACKAGE_SELECTION_AMBIGUOUS", ",".join(sorted(str(x.get("entry_id")) for x in matches)))
     return matches[0]
+
+
+def _acceptance_receipt(entry: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+    contract = entry["production_profile"]["acceptance_receipt"]
+    relative = Path(contract["path"])
+    if relative.is_absolute() or ".." in relative.parts:
+        raise PackageCatalogError("PACKAGE_CATALOG_ACCEPTANCE_PATH_INVALID", str(entry["entry_id"]))
+    path = repo_root / relative
+    if not path.is_file():
+        raise PackageCatalogError("PACKAGE_CATALOG_ACCEPTANCE_RECEIPT_MISSING", str(entry["entry_id"]))
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != contract["sha256"]:
+        raise PackageCatalogError("PACKAGE_CATALOG_ACCEPTANCE_RECEIPT_SHA256_MISMATCH", digest)
+    try:
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise PackageCatalogError("PACKAGE_CATALOG_ACCEPTANCE_RECEIPT_PARSE_FAILED", str(exc)) from exc
+    if not isinstance(receipt, dict):
+        raise PackageCatalogError("PACKAGE_CATALOG_ACCEPTANCE_RECEIPT_PARSE_FAILED", "expected JSON object")
+    return receipt
 
 
 def reconstruct_package(entry: dict[str, Any], repo_root: str | Path) -> dict[str, Any]:
@@ -110,7 +173,19 @@ def reconstruct_package(entry: dict[str, Any], repo_root: str | Path) -> dict[st
         except zipfile.BadZipFile as exc:
             raise PackageCatalogError("PACKAGE_ARTIFACT_ZIP_INVALID") from exc
         package_dir = Path(tmp) / "expanded" / str(artifact["package_subdir"])
-        package = package_source.load_jurisdiction_package(package_dir)
+        if entry.get("production_profile"):
+            receipt = _acceptance_receipt(entry, root)
+            try:
+                package = production_profile.load_profile_package(
+                    package_dir,
+                    profile_id=entry["production_profile"]["profile_id"],
+                    acceptance_receipt=receipt,
+                    bindings=bindings_from_entry(entry),
+                )
+            except production_profile.ProductionProfileError as exc:
+                raise PackageCatalogError(exc.code, exc.detail) from exc
+        else:
+            package = package_source.load_jurisdiction_package(package_dir)
     if package["jurisdiction"]["jurisdiction_id"] != entry["package_jurisdiction_id"]:
         raise PackageCatalogError("PACKAGE_CATALOG_JURISDICTION_DRIFT")
     if str(package["schema_version"]) != str(entry["package_schema_version"]):
@@ -141,6 +216,8 @@ def build_essentials_from_catalog(
     try:
         catalog = load_catalog(catalog_path)
         entry = select_entry(catalog, civic_gps_result, profile=profile)
+        if entry.get("production_profile"):
+            raise PackageCatalogError("PACKAGE_PRODUCTION_PROFILE_NOT_FULL_ESSENTIALS", str(entry["entry_id"]))
         package = reconstruct_package(entry, repo_root)
     except PackageCatalogError as exc:
         return {
