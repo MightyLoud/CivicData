@@ -100,9 +100,12 @@ def load_catalog(path: str | Path = DEFAULT_CATALOG) -> dict[str, Any]:
             if row.get("profile") != "state_legislative_representation":
                 raise PackageCatalogError("PACKAGE_CATALOG_PRODUCTION_ROUTE_INVALID", entry_id)
             receipt = profile_contract.get("acceptance_receipt")
-            if not isinstance(receipt, dict) or set(receipt) != {"path", "sha256"}
-                    or not isinstance(receipt.get("path"), str)
-                    or re.fullmatch(r"[a-f0-9]{64}", str(receipt.get("sha256") or "")) is None:
+            if (
+                not isinstance(receipt, dict)
+                or set(receipt) != {"path", "sha256"}
+                or not isinstance(receipt.get("path"), str)
+                or re.fullmatch(r"[a-f0-9]{64}", str(receipt.get("sha256") or "")) is None
+            ):
                 raise PackageCatalogError("PACKAGE_CATALOG_ACCEPTANCE_RECEIPT_INVALID", entry_id)
             try:
                 production_profile._normalized_bindings(bindings_from_entry(row))
