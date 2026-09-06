@@ -1,5 +1,7 @@
-"""Bounded Texas House 49 / Senate 14 routing for explicit internal review."""
+"""Bounded Texas House 49 / Senate 14 routing and governed production configuration."""
 from __future__ import annotations
+
+import copy
 
 from civic_gps_extensions.loader import load_resolver_with_extensions
 from civic_gps_extensions.legislative import validate_legislative_groups
@@ -72,6 +74,17 @@ def build_texas_internal_configuration(package, *, house_division_id, senate_div
     }]
     validate_legislative_groups(groups)
     return groups, bindings
+
+
+def build_texas_production_configuration(package, *, house_division_id, senate_division_id):
+    """Build the exact non-activated production-bounded geography declaration."""
+    groups, bindings = build_texas_internal_configuration(
+        package, house_division_id=house_division_id, senate_division_id=senate_division_id)
+    group = copy.deepcopy(groups[0])
+    group["scope"] = "PRODUCTION_BOUNDED"
+    group["geometry_governance"] = {"policy_id": GEOMETRY_POLICY_ID}
+    validate_legislative_groups([group])
+    return [group], bindings
 
 
 def resolve_texas_internal_preview(package, address, *, repo_root, house_division_id,
