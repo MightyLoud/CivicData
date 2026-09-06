@@ -36,7 +36,9 @@ IDs are interpreted for validation while their original representation is retain
 
 The default representation function returns `PERSON_IDENTITY_PROVISIONAL` when
 an applicable current holder has a provisional Person. It does not upgrade the
-identity because the RoleTerm is current.
+identity because the RoleTerm is current. The original Texas
+`identity_resolution_status` and `person_full_name` fields are accepted alongside
+the existing consumer aliases. Any declared provisional status takes precedence.
 
 The explicit `identity_policy="INTERNAL_REVIEW"` option permits previewing that
 same holder with `person_status=PROVISIONAL`, a visible per-Person warning, and
@@ -78,6 +80,14 @@ writes. No Texas binding or package is added to the production catalog.
 
 ## Verification and remaining work
 
+An opt-in geography adapter now supplies the separate House/Senate assignments
+from one request-scoped geocode. See
+[legislative geography routing](civic-gps-legislative-geography.md) for invocation,
+atomic failure behavior, source-vintage limits, and remaining live controls.
+`python tests/civic_gps_legislative_overlay_test.py` exercises this routing against
+the pinned core with synthetic upstream responses. Extension changes now activate
+the real Civic GPS release-gate path, including these new controls.
+
 Run `python tests/test_role_term_integration.py`. Its fixtures are synthetic;
 district keys 49/14 exercise separate chambers without asserting real geography
 or identities. The controls cover aliases, exact dates, unknowns, orphan links,
@@ -90,12 +100,14 @@ automatically certify every new artifact found under those paths.
 
 Day 12 requires additional evidence before closeout:
 
-1. Materialize the exact two promoted chains with their existing canonical
-   divisions/offices and claim-level occupancy **and** start-date provenance.
-   Preserve the historical frozen proof package and its original hash.
-2. Ground actual House/Senate adapter IDs and canonical division crosswalks;
-   decide how a partial two-office slice satisfies the package coverage contract
-   without asserting complete Texas coverage or inventing QA/parity flags.
+1. Carry the separately staged two promoted chains, existing canonical
+   divisions/offices, and claim-level occupancy **and** start-date provenance
+   through the intended integration runtime. Preserve the historical frozen
+   proof package and its original hash.
+2. Verify the caller-supplied canonical crosswalks with live geography and pin
+   the source geometry to the stated plans. Decide how the partial two-office
+   slice satisfies the package coverage contract without asserting complete
+   Texas coverage or inventing QA/parity flags.
 3. Execute official live address, outside-district, and boundary controls using
    the intended runtime. Synthetic geography tests are not live proof.
 4. Verify deterministic package hashes, target parity, the intended CI steps on

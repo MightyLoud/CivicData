@@ -52,7 +52,7 @@ def _id(row: dict[str, Any], *keys: str) -> str | None:
 
 
 def _person_name(row: dict[str, Any]) -> str | None:
-    return row.get("name") or row.get("canonical_name") or row.get("Canonical_Name")
+    return row.get("name") or row.get("canonical_name") or row.get("Canonical_Name") or row.get("person_full_name")
 
 
 def _office_name(row: dict[str, Any]) -> str | None:
@@ -92,11 +92,11 @@ def project_role_term(term: dict[str, Any]) -> dict[str, Any]:
 
 def _person_status(person: dict[str, Any]) -> str | None:
     # TX_PERSON's identity status must never be replaced by RoleTerm currentness.
-    statuses = [person[key] for key in ("person_status", "status", "current_status")
+    statuses = [person[key] for key in ("person_status", "status", "current_status", "identity_resolution_status")
                 if person.get(key) not in (None, "")]
     if any(str(value).upper() == "PROVISIONAL" for value in statuses):
         return "PROVISIONAL"
-    return person.get("person_status")
+    return person.get("person_status") or person.get("identity_resolution_status")
 
 
 def _division_for_binding(
