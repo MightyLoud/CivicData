@@ -10,11 +10,20 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 import re
 from typing import Any
 
+from tools.jurisdiction_package import (
+    BASE_TABLES,
+    validate_identity_graph,
+    validate_public_identity_disposition,
+    validate_role_term_sources,
+)
+
 PROFILE_ID = "tx_legislative_two_office_v0.1"
 RECEIPT_SCHEMA = "texas-bounded-acceptance/0.1"
+REQUIRED_FILES = ("jurisdiction.json", "qa_report.json", "manifest.json", "SHA256SUMS.txt")
 
 
 class ProductionProfileError(ValueError):
@@ -35,6 +44,43 @@ def _canonical(value: Any) -> bytes:
 
 def _sha(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
+
+
+def _sha_file(path: Path) -> str:
+    return _sha(path.read_bytes())
+
+
+def _directory_digest(path: Path) -> str:
+    h = hashlib.sha256()
+    for item in sorted(p for p in path.iterdir() if p.is_file()):
+        h.update(item.name.encode("utf-8")); h.update(b"\0")
+        h.update(item.read_bytes()); h.update(b"\0")
+    return h.hexdigest()
+
+
+def _load_json(path: Path, code: str) -> dict[str, Any]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ProductionProfileError(code, str(exc)) from exc
+    _require(isinstance(value, dict), code, "expected JSON object")
+    return value
+
+
+def _parse_sums(text: str) -> dict[str, str]:
+    sums: dict[str, str] = {}
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        parts = line.split(None, 1)
+        _require(len(parts) == 2, "PRODUCTION_PROFILE_CHECKSUM_FILE_INVALID", line)
+        digest, name = parts
+        name = name.lstrip("*").strip()
+        _require(re.fullmatch(r"[a-fA-F0-9]{64}", digest) is not None,
+                 "PRODUCTION_PROFILE_CHECKSUM_FILE_INVALID", line)
+        sums[name] = digest.lower()
+    return sums
 
 
 def _person_status(person: dict[str, Any]) -> str | None:
@@ -87,7 +133,23 @@ def validate_source_package(package: dict[str, Any], *, profile_id: str,
     records = package.get("records")
     _require(isinstance(jurisdiction, dict) and jurisdiction.get("state_abbr") == "TX" and jurisdiction.get("geoid") == "48",
              "PRODUCTION_PROFILE_TEXAS_PACKAGE_REQUIRED")
+    for key in ("jurisdiction_id", "name", "state_abbr", "geoid"):
+        _require(jurisdiction.get(key), "PRODUCTION_PROFILE_JURISDICTION_FIELD_MISSING", key)
     _require(isinstance(qa, dict) and isinstance(records, dict), "PRODUCTION_PROFILE_PACKAGE_SHAPE_INVALID")
+    for table in BASE_TABLES:
+        _require(isinstance(records.get(table), list), "PRODUCTION_PROFILE_RECORD_TABLE_MISSING", table)
+        _require(all(isinstance(row, dict) for row in records[table]), "PRODUCTION_PROFILE_RECORD_INVALID", table)
+    graph_errors = validate_identity_graph(records)
+    _require(not graph_errors, "PRODUCTION_PROFILE_IDENTITY_GRAPH_INVALID", ",".join(graph_errors))
+
+    provenance = package.get("provenance")
+    _require(isinstance(provenance, dict) and isinstance(provenance.get("source_evidence"), list)
+             and bool(provenance["source_evidence"]) and isinstance(provenance.get("source_assertions"), list),
+             "PRODUCTION_PROFILE_PROVENANCE_INVALID")
+    source_errors = validate_role_term_sources(records, provenance)
+    _require(not source_errors, "PRODUCTION_PROFILE_ROLE_TERM_EVIDENCE_INVALID", ",".join(source_errors))
+    _require(isinstance(package.get("warnings"), list), "PRODUCTION_PROFILE_WARNINGS_INVALID")
+
     for block in (jurisdiction, qa):
         _require(block.get("complete_jurisdiction") is False and block.get("publication_eligible") is False,
                  "PRODUCTION_PROFILE_EXPLICIT_PARTIAL_SCOPE_REQUIRED")
@@ -100,11 +162,9 @@ def validate_source_package(package: dict[str, Any], *, profile_id: str,
     _require(isinstance(qa.get("address_tests"), list), "PRODUCTION_PROFILE_SOURCE_ADDRESS_TESTS_INVALID")
 
     for table in ("divisions", "offices", "people", "role_terms"):
-        _require(isinstance(records.get(table), list) and len(records[table]) == 2,
-                 "PRODUCTION_PROFILE_EXACT_TWO_CHAINS_REQUIRED", table)
+        _require(len(records[table]) == 2, "PRODUCTION_PROFILE_EXACT_TWO_CHAINS_REQUIRED", table)
     for table in ("bodies", "leadership_roles", "identifier_crosswalk"):
-        _require(isinstance(records.get(table), list) and not records[table],
-                 "PRODUCTION_PROFILE_ADDITIONAL_SCOPE_UNSUPPORTED", table)
+        _require(not records[table], "PRODUCTION_PROFILE_ADDITIONAL_SCOPE_UNSUPPORTED", table)
     _require(not any(records.get(table) for table in ("elections", "contests", "candidacies")),
              "PRODUCTION_PROFILE_ELECTION_SCOPE_UNSUPPORTED")
 
@@ -154,11 +214,54 @@ def validate_source_package(package: dict[str, Any], *, profile_id: str,
     disposition = receipt.get("gate_disposition")
     _require(isinstance(disposition, dict)
              and disposition.get("BOUNDED_COVERAGE_CONTRACT") == "RESOLVED_INTERNAL_ONLY"
-             and disposition.get("GEOMETRY_VERSION_GOVERNANCE") == "RESOLVED_INTERNAL_ONLY"
-             and disposition.get("PUBLIC_PERSON_IDENTITY") == "RESOLVED_PUBLICATION_POLICY"
-             and disposition.get("PRODUCTION_PARTIAL_PACKAGE_PROFILE") == "SUPPORTED_NOT_ACTIVATED"
              and disposition.get("REPOSITORY_ACTIVATION") == "NOT_ACTIVATED",
-             "PRODUCTION_PROFILE_GOVERNANCE_NOT_READY")
+             "PRODUCTION_PROFILE_RECEIPT_BASE_GOVERNANCE_INVALID")
     _require(receipt.get("complete_jurisdiction") is False and receipt.get("publication_eligible") is False
              and receipt.get("production_release_eligible") is False and receipt.get("canonical_writes") == 0,
              "PRODUCTION_PROFILE_RECEIPT_RELEASE_SCOPE_DRIFT")
+
+    identity_errors = validate_public_identity_disposition(package)
+    _require(not identity_errors, "PRODUCTION_PROFILE_PUBLIC_IDENTITY_UNRESOLVED", ",".join(identity_errors))
+
+
+def load_profile_package(package_dir: str | Path, *, profile_id: str,
+                         acceptance_receipt: dict[str, Any], bindings: list[dict[str, Any]]) -> dict[str, Any]:
+    """Load a profile-scoped package without weakening the ordinary package loader."""
+    root = Path(package_dir)
+    _require(root.is_dir(), "PRODUCTION_PROFILE_PACKAGE_DIRECTORY_NOT_FOUND", str(root))
+    for name in REQUIRED_FILES:
+        _require((root / name).is_file(), "PRODUCTION_PROFILE_REQUIRED_FILE_MISSING", name)
+
+    before = _directory_digest(root)
+    sums = _parse_sums((root / "SHA256SUMS.txt").read_text(encoding="utf-8"))
+    for name in ("jurisdiction.json", "qa_report.json", "manifest.json"):
+        expected = sums.get(name)
+        _require(bool(expected), "PRODUCTION_PROFILE_CHECKSUM_MISSING", name)
+        _require(_sha_file(root / name) == expected, "PRODUCTION_PROFILE_CHECKSUM_MISMATCH", name)
+
+    package_path = root / "jurisdiction.json"
+    package = _load_json(package_path, "PRODUCTION_PROFILE_JURISDICTION_JSON_INVALID")
+    qa_report = _load_json(root / "qa_report.json", "PRODUCTION_PROFILE_QA_REPORT_INVALID")
+    manifest = _load_json(root / "manifest.json", "PRODUCTION_PROFILE_MANIFEST_INVALID")
+    validate_source_package(package, profile_id=profile_id, acceptance_receipt=acceptance_receipt,
+                            package_sha256=_sha_file(package_path), bindings=bindings)
+
+    _require(qa_report == package.get("qa"), "PRODUCTION_PROFILE_QA_SIDECAR_DRIFT")
+    _require(str(manifest.get("schema_version")) == str(package.get("schema_version")),
+             "PRODUCTION_PROFILE_MANIFEST_SCHEMA_DRIFT")
+    _require(manifest.get("jurisdiction_id") == package["jurisdiction"]["jurisdiction_id"],
+             "PRODUCTION_PROFILE_MANIFEST_JURISDICTION_DRIFT")
+    files = manifest.get("files")
+    _require(isinstance(files, list), "PRODUCTION_PROFILE_MANIFEST_FILES_INVALID")
+    for entry in files:
+        _require(isinstance(entry, dict) and isinstance(entry.get("path"), str) and entry["path"],
+                 "PRODUCTION_PROFILE_MANIFEST_ENTRY_INVALID")
+        relative = Path(entry["path"])
+        _require(not relative.is_absolute() and ".." not in relative.parts,
+                 "PRODUCTION_PROFILE_MANIFEST_PATH_INVALID", entry["path"])
+        file_path = root / relative
+        _require(file_path.is_file(), "PRODUCTION_PROFILE_MANIFEST_FILE_MISSING", entry["path"])
+        _require(file_path.stat().st_size == entry.get("bytes"),
+                 "PRODUCTION_PROFILE_MANIFEST_BYTE_DRIFT", entry["path"])
+    _require(before == _directory_digest(root), "PRODUCTION_PROFILE_READ_MUTATED_SOURCE")
+    return package
