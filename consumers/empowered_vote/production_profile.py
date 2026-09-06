@@ -86,10 +86,11 @@ def _parse_sums(text: str) -> dict[str, str]:
 def _person_status(person: dict[str, Any]) -> str | None:
     values = [person[key] for key in ("person_status", "identity_resolution_status", "status", "current_status")
               if person.get(key) not in (None, "")]
-    if any(str(value).strip().upper() == "PROVISIONAL" for value in values):
+    normalized = [str(value).strip().upper() for value in values]
+    if "PROVISIONAL" in normalized:
         return "PROVISIONAL"
     value = person.get("person_status") or person.get("identity_resolution_status")
-    return str(value) if value not in (None, "") else None
+    return str(value).strip().upper() if value not in (None, "") else None
 
 
 def _normalized_bindings(bindings: Any) -> list[dict[str, Any]]:
@@ -222,6 +223,13 @@ def validate_source_package(package: dict[str, Any], *, profile_id: str,
 
     identity_errors = validate_public_identity_disposition(package)
     _require(not identity_errors, "PRODUCTION_PROFILE_PUBLIC_IDENTITY_UNRESOLVED", ",".join(identity_errors))
+    authoritative_errors = [
+        f"{str(person.get('person_id') or person.get('id') or 'unknown')}:{_person_status(person) or 'MISSING'}"
+        for person in records["people"]
+        if _person_status(person) != "AUTHORITATIVE"
+    ]
+    _require(not authoritative_errors, "PRODUCTION_PROFILE_AUTHORITATIVE_IDENTITY_REQUIRED",
+             ",".join(authoritative_errors))
 
 
 def load_profile_package(package_dir: str | Path, *, profile_id: str,
