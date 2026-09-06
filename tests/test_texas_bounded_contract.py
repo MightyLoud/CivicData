@@ -41,6 +41,16 @@ def bounded_package():
     return p
 
 
+def public_identity_compatible_package():
+    """Keep this suite's legacy-scope probe independent of provisional-identity policy."""
+    p = fixture()
+    for person in p["records"]["people"]:
+        for key in ("person_status", "identity_resolution_status", "status", "current_status"):
+            person.pop(key, None)
+    p["warnings"] = []
+    return p
+
+
 def archive_files(package):
     groups, bindings = build_texas_internal_configuration(package, house_division_id="test-house-49", senate_division_id="test-senate-14")
     gps = {"payload": {"jurisdictions": [groups[0]["jurisdiction"]],
@@ -166,9 +176,9 @@ class BoundedContractTests(unittest.TestCase):
                 with self.subTest(block=block, value=value):
                     self.assertIn("partial_jurisdiction_scope:" + block, builder.validate(p))
 
-    def test_legacy_package_and_explicit_true_remain_compatible(self):
+    def test_legacy_package_and_explicit_true_remain_scope_compatible(self):
         for explicit in (False, True):
-            p = fixture()
+            p = public_identity_compatible_package()
             if explicit:
                 for block in ("jurisdiction", "qa"): p[block]["complete_jurisdiction"] = True
             self.assertEqual(builder.validate(p), [])
