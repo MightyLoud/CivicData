@@ -1,0 +1,195 @@
+name: Texas bounded publication
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'data/packages/tx/legislative/post-activation-hosted-evidence-v0.1.json'
+      - 'data/packages/tx/legislative/release-readiness-v0.1.json'
+      - 'data/packages/tx/legislative/release-authorization-v0.1.json'
+      - 'data/packages/tx/legislative/publication-execution-authorization-v0.1.json'
+      - 'tools/texas_release_authorization.py'
+      - 'tools/texas_bounded_publication.py'
+      - 'tests/test_texas_release_authorization.py'
+      - 'tests/test_texas_release_authorization_receipt_consistency.py'
+      - 'tests/test_texas_bounded_publication.py'
+      - 'tests/test_texas_publication_workflow.py'
+      - 'tests/test_texas_release_execution_boundary.py'
+      - 'docs/workflows/texas-release-authorization-v0.1.md'
+      - 'docs/workflows/texas-bounded-publication-v0.1.md'
+      - 'docs/workflows/texas-bounded-release-notes-v0.1.md'
+      - 'docs/workflows/texas-release-execution-boundary-v0.1.md'
+      - '.github/workflows/texas-bounded-publication.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'data/packages/tx/legislative/post-activation-hosted-evidence-v0.1.json'
+      - 'data/packages/tx/legislative/release-readiness-v0.1.json'
+      - 'data/packages/tx/legislative/release-authorization-v0.1.json'
+      - 'data/packages/tx/legislative/publication-execution-authorization-v0.1.json'
+      - 'tools/texas_release_authorization.py'
+      - 'tools/texas_bounded_publication.py'
+      - 'tests/test_texas_release_authorization.py'
+      - 'tests/test_texas_release_authorization_receipt_consistency.py'
+      - 'tests/test_texas_bounded_publication.py'
+      - 'tests/test_texas_publication_workflow.py'
+      - 'tests/test_texas_release_execution_boundary.py'
+      - 'docs/workflows/texas-release-authorization-v0.1.md'
+      - 'docs/workflows/texas-bounded-publication-v0.1.md'
+      - 'docs/workflows/texas-bounded-release-notes-v0.1.md'
+      - 'docs/workflows/texas-release-execution-boundary-v0.1.md'
+      - '.github/workflows/texas-bounded-publication.yml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Validate authorization or execute the separately authorized publication.'
+        required: true
+        default: validate
+        type: choice
+        options:
+          - validate
+          - publish
+      confirm_publish:
+        description: 'For publish mode only: exact confirmation token required.'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: texas-bounded-publication-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Texas bounded publication authorization gate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile authorization and publication controls
+        run: |
+          python -m py_compile \
+            tools/texas_release_authorization.py \
+            tools/texas_bounded_publication.py \
+            tests/test_texas_release_authorization.py \
+            tests/test_texas_release_authorization_receipt_consistency.py \
+            tests/test_texas_bounded_publication.py \
+            tests/test_texas_publication_workflow.py \
+            tests/test_texas_release_execution_boundary.py
+
+      - name: Verify governed release authorization
+        run: python tools/texas_release_authorization.py
+
+      - name: Run authorization and fail-closed publication tests
+        run: |
+          python tests/test_texas_release_authorization.py
+          python tests/test_texas_release_authorization_receipt_consistency.py
+          python tests/test_texas_bounded_publication.py
+          python tests/test_texas_publication_workflow.py
+          python tests/test_texas_release_execution_boundary.py
+
+      - name: Confirm this gate performs no publication
+        run: |
+          echo 'release_authorized=true'
+          echo 'publication_workflow_authorized=true'
+          echo 'publication_execution_authorized=false'
+          echo 'github_release_creation_authorized=false'
+          echo 'railway_redeploy_authorized=false'
+          echo 'canonical_writes=0'
+
+  publish:
+    name: Execute separately authorized bounded publication
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      CONFIRM_PUBLISH: ${{ inputs.confirm_publish }}
+      EXECUTION_AUTH: data/packages/tx/legislative/publication-execution-authorization-v0.1.json
+    steps:
+      - name: Check out exact dispatch revision
+        uses: actions/checkout@v4
+
+      - name: Require main and exact human confirmation token
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$CONFIRM_PUBLISH" = 'PUBLISH_TX_HOUSE49_SENATE14'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Require separate publication execution authorization and build manifest
+        run: |
+          python tools/texas_bounded_publication.py \
+            --execution-authorization "$EXECUTION_AUTH" \
+            --head-sha "$GITHUB_SHA" \
+            --output /tmp/texas-bounded-runtime-release-manifest-v0.1.json
+
+      - name: Read governed release identity
+        id: release
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          manifest = json.loads(Path('/tmp/texas-bounded-runtime-release-manifest-v0.1.json').read_text())
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+              fh.write('tag=' + manifest['tag'] + '\n')
+              fh.write('title=' + manifest['title'] + '\n')
+          PY
+
+      - name: Fail closed if governed release tag already exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "release already exists: $TAG" >&2
+            exit 1
+          fi
+
+      - name: Create manifest-only bounded runtime release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          TITLE: ${{ steps.release.outputs.title }}
+        run: |
+          gh release create "$TAG" \
+            /tmp/texas-bounded-runtime-release-manifest-v0.1.json#texas-bounded-runtime-release-manifest-v0.1.json \
+            --target "$GITHUB_SHA" \
+            --title "$TITLE" \
+            --notes-file docs/workflows/texas-bounded-release-notes-v0.1.md
+
+      - name: Verify published release target and single governed asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" --json tagName,targetCommitish,assets > /tmp/release.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          row = json.loads(Path('/tmp/release.json').read_text())
+          assert row['tagName'] == '${{ steps.release.outputs.tag }}'
+          assert row['targetCommitish'] == '${{ github.sha }}'
+          names = [asset['name'] for asset in row['assets']]
+          assert names == ['texas-bounded-runtime-release-manifest-v0.1.json'], names
+          PY
