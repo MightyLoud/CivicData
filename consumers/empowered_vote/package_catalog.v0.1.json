@@ -43,6 +43,42 @@
         "archive_sha256": "5abb205fc316c6167a75c40b42875cf5a84681bd63b1e63af973103c0e4879ab",
         "package_subdir": "Fircrest_Jurisdiction_Package_v0.2_2026-08-23/package"
       }
+    },
+    {
+      "entry_id": "tx-legislative-two-office-v0.1-hosted-candidate",
+      "profile": "state_legislative_representation",
+      "civic_gps_jurisdiction_id": "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145",
+      "package_jurisdiction_id": "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145",
+      "package_schema_version": "0.1",
+      "artifact": {
+        "encoding": "base64-parts",
+        "parts_glob": "data/packages/tx/legislative/Tx_Legislative_Two_Office_v0.1.zip.b64.part*",
+        "archive_sha256": "7b6abf28e0535041797b180488cb98ebf223b844b3081e7386ccbd63c85762b1",
+        "package_subdir": "Tx_Legislative_Two_Office_v0.1/package"
+      },
+      "district_bindings": [
+        {
+          "adapter_id": "DIST-TX-HOUSE-H2316",
+          "binding_id": "tx-house",
+          "district_division_map": {
+            "49": "div-wb020-8d372cd6f15770de5f452ceb224ec52929c30beddac3bdf9013864d538cbb449"
+          }
+        },
+        {
+          "adapter_id": "DIST-TX-SENATE-S2168",
+          "binding_id": "tx-senate",
+          "district_division_map": {
+            "14": "div-wb020-ed0238818cdb70336de04839d183a5a92c3af3ecb3f7bcd0cc330ba1e25d5f8b"
+          }
+        }
+      ],
+      "production_profile": {
+        "profile_id": "tx_legislative_two_office_v0.1",
+        "acceptance_receipt": {
+          "path": "data/packages/tx/legislative/acceptance-v0.1.json",
+          "sha256": "3b204dc1d7c4c9442bf61fe422f3de907dfed0bd567ae15ffa6e853ab5399f96"
+        }
+      }
     }
   ]
 }
