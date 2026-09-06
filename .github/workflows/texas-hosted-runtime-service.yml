@@ -12,6 +12,7 @@ on:
       - 'tools/texas_hosted_runtime_validation.py'
       - 'tests/test_texas_hosted_runtime_service.py'
       - 'tests/test_texas_hosted_runtime_validation.py'
+      - 'tests/test_texas_railway_contract.py'
       - 'tests/texas_hosted_container_smoke.py'
       - 'data/packages/tx/legislative/**'
       - 'civic_gps_extensions/**'
@@ -19,6 +20,7 @@ on:
       - 'tools/jurisdiction_package.py'
       - 'civic_gps_runtime_parts/**'
       - 'docs/workflows/texas-hosted-runtime-v0.1.md'
+      - 'docs/workflows/texas-railway-deployment-v0.1.md'
       - '.github/workflows/texas-hosted-runtime-service.yml'
   push:
     branches:
@@ -31,6 +33,7 @@ on:
       - 'tools/texas_hosted_runtime_validation.py'
       - 'tests/test_texas_hosted_runtime_service.py'
       - 'tests/test_texas_hosted_runtime_validation.py'
+      - 'tests/test_texas_railway_contract.py'
       - 'tests/texas_hosted_container_smoke.py'
       - 'data/packages/tx/legislative/**'
       - 'civic_gps_extensions/**'
@@ -38,6 +41,7 @@ on:
       - 'tools/jurisdiction_package.py'
       - 'civic_gps_runtime_parts/**'
       - 'docs/workflows/texas-hosted-runtime-v0.1.md'
+      - 'docs/workflows/texas-railway-deployment-v0.1.md'
       - '.github/workflows/texas-hosted-runtime-service.yml'
 
 permissions:
@@ -96,12 +100,14 @@ jobs:
             tools/texas_hosted_runtime_validation.py \
             tests/test_texas_hosted_runtime_service.py \
             tests/test_texas_hosted_runtime_validation.py \
+            tests/test_texas_railway_contract.py \
             tests/texas_hosted_container_smoke.py
 
       - name: Run offline hosted-service contract controls
         run: |
           python tests/test_texas_hosted_runtime_service.py
           python tests/test_texas_hosted_runtime_validation.py
+          python tests/test_texas_railway_contract.py
 
       - name: Build exact hosted candidate image
         run: docker build -f services/texas_bounded_api/Dockerfile -t "$IMAGE_NAME:$CANDIDATE_SHA" .
