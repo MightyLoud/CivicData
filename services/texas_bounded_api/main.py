@@ -1,4 +1,4 @@
-"""HTTP surface for the bounded Texas House 49 / Senate 14 hosted candidate."""
+"""HTTP surface for the activated bounded Texas House 49 / Senate 14 runtime."""
 from __future__ import annotations
 
 import os
@@ -10,7 +10,7 @@ from typing import Any
 from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
 
-from services.texas_bounded_api.runtime import HostedRuntimeError, TexasBoundedRuntime
+from services.texas_bounded_api.runtime_v0_2 import HostedRuntimeError, TexasBoundedRuntimeV02
 
 ROOT = Path(__file__).resolve().parents[2]
 HEAD_SHA = (
@@ -21,19 +21,19 @@ HEAD_SHA = (
 ENVIRONMENT = os.environ.get("CIVICDATA_SERVICE_ENVIRONMENT", "candidate").strip().lower()
 
 app = FastAPI(
-    title="CivicData bounded Texas legislative API",
-    version="0.1",
+    title="CivicData activated bounded Texas legislative API",
+    version="0.2",
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
 )
 
-_runtime: TexasBoundedRuntime | None = None
+_runtime: TexasBoundedRuntimeV02 | None = None
 _runtime_error: str | None = None
 _lock = threading.Lock()
 
 
-def _runtime_instance() -> TexasBoundedRuntime:
+def _runtime_instance() -> TexasBoundedRuntimeV02:
     global _runtime, _runtime_error
     if _runtime is not None:
         return _runtime
@@ -41,7 +41,7 @@ def _runtime_instance() -> TexasBoundedRuntime:
         if _runtime is not None:
             return _runtime
         try:
-            _runtime = TexasBoundedRuntime.build(
+            _runtime = TexasBoundedRuntimeV02.build(
                 ROOT,
                 head_sha=HEAD_SHA,
                 environment=ENVIRONMENT,
@@ -56,12 +56,15 @@ def _runtime_instance() -> TexasBoundedRuntime:
 
 def _static_service() -> dict[str, Any]:
     return {
-        "service_id": "civicdata-tx-legislative-two-office-v0.1",
+        "service_id": "civicdata-tx-legislative-two-office-v0.2",
+        "schema_version": "texas-hosted-runtime-service/0.2",
         "environment": ENVIRONMENT,
         "head_sha": HEAD_SHA,
         "profile_id": "tx_legislative_two_office_v0.1",
-        "repository_activation": "NOT_ACTIVATED",
-        "activation_authorized": False,
+        "repository_activation": "ACTIVATED_BOUNDED",
+        "activation_authorized": True,
+        "release_authorized": False,
+        "publication_workflow_authorized": False,
         "canonical_writes": 0,
     }
 
