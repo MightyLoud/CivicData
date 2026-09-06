@@ -89,21 +89,26 @@ A successful dry run emits `texas-activation-readiness/0.1` with:
 
 ## Current Day 12 posture
 
-The source Person identities are now resolved in the governed Texas workbook:
+The source Person identities are resolved in the governed Texas workbook:
 
 - Gina Hinojosa — `AUTHORITATIVE`;
 - Sarah Eckhardt — `AUTHORITATIVE`.
 
-See `texas-person-identity-resolution-v0.1.md` for the source-backed identity disposition. The original canonical Person IDs and provisional SourceRecord lineage remain preserved.
+The successor bounded package and fresh hash-bound acceptance receipt have now been issued and committed. See `texas-successor-package-v0.1.md`.
 
-The historical bounded package is **not** an activation candidate because it predates that identity change. A successor two-office package and fresh bounded acceptance receipt must be regenerated from the current governed workbook state. Exact-head production deployment evidence must then be executed against that successor package/receipt pair.
+Current successor pins:
 
-Therefore the current remaining sequence is:
+- `jurisdiction.json` SHA-256: `a43aa6517ea5a6822319298ee6cbacc83be6f3a8731568863243439a5f802530`;
+- deterministic package ZIP SHA-256: `7b6abf28e0535041797b180488cb98ebf223b844b3081e7386ccbd63c85762b1`;
+- fresh receipt deterministic SHA-256: `f58251a3a127841ec1773a342336d01145aca47d61957ea4bfd1e81121266483`.
 
-1. regenerate successor bounded package;
-2. issue fresh hash-bound acceptance receipt;
-3. execute exact-head production deployment validation;
-4. separately review explicit catalog/registry activation and merge/release.
+The committed package reconstruction/profile gate passes. Historical live acceptance evidence is retained only for geography controls; old provisional representation output is not treated as successor civic-fact proof.
+
+Therefore the remaining sequence is now:
+
+1. execute exact-head production deployment validation against this successor package/receipt pair;
+2. build and validate the exact proposed catalog/registry activation diff;
+3. separately authorize activation and merge/release.
 
 The default production catalog and default Civic GPS registry extension remain unchanged with respect to Texas.
 
@@ -113,8 +118,9 @@ The default production catalog and default Civic GPS registry extension remain u
 python tests/test_texas_activation_readiness.py
 python tests/civic_gps_texas_activation_runtime_test.py
 python tests/test_tx_production_profile.py
+python tests/test_tx_successor_package.py
 python tests/test_public_identity_disposition.py
 python -m civic_gps_extensions.texas_geometry_governance
 ```
 
-The dedicated `Texas activation readiness` workflow runs these controls without changing the default catalog or registry.
+The dedicated `Texas activation readiness` workflow and Jurisdiction Package gate run these controls without changing the default catalog or registry.
