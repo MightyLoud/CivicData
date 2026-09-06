@@ -14,6 +14,7 @@ class TexasPublicationWorkflowTests(unittest.TestCase):
         self.assertIn("github.event_name == 'push'", text)
         self.assertIn("github.ref == 'refs/heads/main'", text)
         self.assertIn("[execute-tx-publication]", text)
+        self.assertNotIn("github.event_name == 'pull_request' &&", text)
         self.assertIn("publication-execution-authorization-v0.1.json", text)
         self.assertIn("--execution-head-sha \"$GITHUB_SHA\"", text)
 
