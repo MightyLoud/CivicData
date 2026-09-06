@@ -8,12 +8,12 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 PATH = ROOT / "data/packages/tx/legislative/publication-execution-authorization-v0.1.json"
-EXPECTED_SHA = "be30edcbbeecb01cfc63b32442ff0567e59d7f839c1ee119f877d613b898c7da"
+EXPECTED_SHA = "4f2b11aa0a51bf3df3eb869b349679906910f0e44440f602fad4eea26a9ce694"
 AUTHORIZED_MAIN = "defefa6d31987187839fa90434b201a287518e34"
 
 
 def canonical(value):
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
 
 
 class TexasReleaseExecutionBoundaryTests(unittest.TestCase):
