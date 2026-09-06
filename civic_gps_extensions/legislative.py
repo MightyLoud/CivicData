@@ -20,13 +20,24 @@ def validate_legislative_groups(groups, reserved_adapter_ids=(), reserved_jurisd
     if not isinstance(groups, list):
         raise ValueError("legislative_boundary_overlays must be a list")
     group_ids, adapter_ids, jurisdiction_ids, division_ids = set(), set(reserved_adapter_ids), set(reserved_jurisdiction_ids), set()
+    base_group_fields = {
+        "group_id", "state_geoid", "jurisdiction", "district_adapters", "scope", "publication_eligible"
+    }
     for group in groups:
-        if not isinstance(group, dict) or set(group) != {
-            "group_id", "state_geoid", "jurisdiction", "district_adapters", "scope", "publication_eligible"
-        }:
+        if not isinstance(group, dict):
             raise ValueError("invalid legislative group fields")
-        if group["scope"] != "INTERNAL_REVIEW" or group["publication_eligible"] is not False:
-            raise ValueError("legislative groups are internal review only")
+        scope = group.get("scope")
+        if scope == "INTERNAL_REVIEW":
+            if set(group) != base_group_fields or group.get("publication_eligible") is not False:
+                raise ValueError("invalid internal legislative group fields")
+        elif scope == "PRODUCTION_BOUNDED":
+            if set(group) != base_group_fields | {"geometry_governance"} or group.get("publication_eligible") is not False:
+                raise ValueError("invalid production-bounded legislative group fields")
+            governance = group.get("geometry_governance")
+            if not isinstance(governance, dict) or set(governance) != {"policy_id"} or not _text(governance.get("policy_id")):
+                raise ValueError("production-bounded legislative geometry governance is required")
+        else:
+            raise ValueError("unsupported legislative group scope")
         gid = group["group_id"]
         if not _text(gid) or gid in group_ids:
             raise ValueError("duplicate or invalid legislative group ID")
@@ -116,7 +127,7 @@ def _query_adapter(engine, adapter, geocode):
 def _failure(payload, group, failure):
     payload.setdefault("coverage", []).append({
         "layer": group["group_id"], "status": failure.status,
-        "scope": "INTERNAL_REVIEW", "reason": str(failure),
+        "scope": group["scope"], "reason": str(failure),
     })
     payload.setdefault("known_gaps", []).append({
         "gap_id": "GAP-" + group["group_id"] + "-" + failure.code,
@@ -155,7 +166,7 @@ def apply_legislative_groups(engine, result, geocode, groups):
                     "district_division_id": district["division_id"], "district_name": district["name"],
                     "jurisdiction_id": jid, "layer": adapter["division_type"], "status": "GEOGRAPHY_ONLY",
                     "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",
-                    "scope": "INTERNAL_REVIEW", "source_plan_id": adapter["source"]["plan_id"],
+                    "scope": group["scope"], "source_plan_id": adapter["source"]["plan_id"],
                     "source_vintage_status": adapter["source"]["vintage_status"],
                 })
                 for index, url in enumerate(query_urls):
@@ -186,14 +197,15 @@ def apply_legislative_groups(engine, result, geocode, groups):
         payload.setdefault("district_assignments", []).extend(pending_assignments)
         payload.setdefault("evidence", []).extend(pending_evidence)
         payload.setdefault("coverage", []).append({
-            "layer": group["group_id"], "status": "GEOGRAPHY_ONLY", "scope": "INTERNAL_REVIEW",
-            "complete_jurisdiction": False, "publication_eligible": False,
+            "layer": group["group_id"], "status": "GEOGRAPHY_ONLY", "scope": group["scope"],
+            "complete_jurisdiction": False, "publication_eligible": group["publication_eligible"],
             "reason": "All configured legislative districts resolved; civic facts remain package-governed.",
         })
-        payload.setdefault("known_gaps", []).append({
-            "gap_id": "GAP-" + group["group_id"] + "-RELEASE", "status": "NOT_YET_RELEASED",
-            "summary": "Internal geography candidate; geometry vintage and live integration gates remain separate.",
-        })
+        if group["scope"] == "INTERNAL_REVIEW":
+            payload.setdefault("known_gaps", []).append({
+                "gap_id": "GAP-" + group["group_id"] + "-RELEASE", "status": "NOT_YET_RELEASED",
+                "summary": "Internal geography candidate; geometry vintage and live integration gates remain separate.",
+            })
         for row in payload["coverage"]:
             if row.get("layer") == "adapter_scope" and row.get("status") == "OUT_OF_SCOPE":
                 row["reason"] = "No core BASE/OVERLAY adapter resolved; separately configured geography extensions may still apply."
