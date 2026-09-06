@@ -7,7 +7,7 @@ ROOT = pathlib.Path(__file__).parents[1]
 sys.path.insert(0, str(ROOT))
 
 from tools import co_factory_export as exporter
-from tools import jurisdiction_package as jp
+from tools import jurisdiction_package_strict as jp
 
 SNAPSHOT = ROOT / "data" / "source" / "co" / "d329-co-factory-snapshot.json"
 
