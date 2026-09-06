@@ -114,6 +114,39 @@ def validate_production_scope(pkg):
     return errors
 
 
+def validate_public_identity_disposition(pkg):
+    """Reject explicitly provisional Person identities at public/production boundaries.
+
+    This is intentionally not part of generic package validation: internal review
+    packages may retain provisional Persons and their evidence. Legacy packages
+    that never declared identity status remain compatible.
+    """
+    errors = []
+    records = pkg.get("records") if isinstance(pkg, dict) else None
+    people = records.get("people") if isinstance(records, dict) else None
+    for index, person in enumerate(people if isinstance(people, list) else []):
+        if not isinstance(person, dict):
+            continue
+        statuses = [
+            person[key] for key in ("person_status", "identity_resolution_status", "status", "current_status")
+            if person.get(key) not in (None, "")
+        ]
+        if any(str(value).strip().upper() == "PROVISIONAL" for value in statuses):
+            person_id = person.get("person_id") or person.get("id") or f"row-{index}"
+            errors.append("provisional_person:" + str(person_id))
+
+    warnings = pkg.get("warnings") if isinstance(pkg, dict) else None
+    for index, warning in enumerate(warnings if isinstance(warnings, list) else []):
+        if not isinstance(warning, dict):
+            continue
+        warning_id = str(warning.get("warning_id") or "")
+        is_person_warning = bool(warning.get("person_id")) or warning_id.startswith("PROVISIONAL-PERSON:")
+        if str(warning.get("status") or "").strip().upper() == "PROVISIONAL" and is_person_warning:
+            person_id = warning.get("person_id") or warning_id.removeprefix("PROVISIONAL-PERSON:") or f"row-{index}"
+            errors.append("provisional_warning:" + str(person_id))
+    return sorted(set(errors))
+
+
 def validate(pkg):
     errors = []
     version = pkg.get("schema_version")
