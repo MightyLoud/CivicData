@@ -7,12 +7,16 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import sys
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from tools.jurisdiction_package import canonical_json
 from tools.texas_release_authorization import AUTH_SHA, verify as verify_release_authorization
 
-ROOT = Path(__file__).resolve().parents[1]
 EXECUTION_SCHEMA = "texas-bounded-publication-execution/0.1"
 MANIFEST_SCHEMA = "texas-bounded-runtime-release-manifest/0.1"
 
