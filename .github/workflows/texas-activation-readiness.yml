@@ -10,11 +10,15 @@ on:
       - 'civic_gps_extensions/loader.py'
       - 'civic_gps_extensions/texas_geometry_governance.py'
       - 'civic_gps_extensions/texas_legislative.py'
+      - 'civic_gps_extensions/registry_bundles.v0.1.json'
       - 'consumers/empowered_vote/production_profile.py'
       - 'consumers/empowered_vote/package_catalog.py'
+      - 'consumers/empowered_vote/package_catalog.v0.1.json'
       - 'consumers/empowered_vote/representation_catalog.py'
+      - 'data/packages/tx/legislative/activation-v0.1.json'
       - 'tools/texas_activation_readiness.py'
       - 'tests/test_texas_activation_readiness.py'
+      - 'tests/test_texas_activation_execution.py'
       - 'tests/civic_gps_texas_activation_runtime_test.py'
       - 'tests/test_tx_production_profile.py'
       - 'tests/test_public_identity_disposition.py'
@@ -29,11 +33,15 @@ on:
       - 'civic_gps_extensions/loader.py'
       - 'civic_gps_extensions/texas_geometry_governance.py'
       - 'civic_gps_extensions/texas_legislative.py'
+      - 'civic_gps_extensions/registry_bundles.v0.1.json'
       - 'consumers/empowered_vote/production_profile.py'
       - 'consumers/empowered_vote/package_catalog.py'
+      - 'consumers/empowered_vote/package_catalog.v0.1.json'
       - 'consumers/empowered_vote/representation_catalog.py'
+      - 'data/packages/tx/legislative/activation-v0.1.json'
       - 'tools/texas_activation_readiness.py'
       - 'tests/test_texas_activation_readiness.py'
+      - 'tests/test_texas_activation_execution.py'
       - 'tests/civic_gps_texas_activation_runtime_test.py'
       - 'tests/test_tx_production_profile.py'
       - 'tests/test_public_identity_disposition.py'
@@ -66,11 +74,14 @@ jobs:
       - name: Install Civic GPS runtime dependency
         run: python -m pip install -r requirements-civic-gps.txt
 
-      - name: Compile readiness and runtime controls
-        run: python -m py_compile tools/texas_activation_readiness.py civic_gps_extensions/legislative.py civic_gps_extensions/loader.py civic_gps_extensions/texas_legislative.py tests/test_texas_activation_readiness.py tests/civic_gps_texas_activation_runtime_test.py
+      - name: Compile readiness, activation, and runtime controls
+        run: python -m py_compile tools/texas_activation_readiness.py civic_gps_extensions/legislative.py civic_gps_extensions/loader.py civic_gps_extensions/texas_legislative.py tests/test_texas_activation_readiness.py tests/test_texas_activation_execution.py tests/civic_gps_texas_activation_runtime_test.py
 
-      - name: Run deterministic activation-readiness contract
+      - name: Run synthetic pre-activation readiness contract
         run: python tests/test_texas_activation_readiness.py
+
+      - name: Verify exact activated catalog + registry state
+        run: python tests/test_texas_activation_execution.py
 
       - name: Run production-bounded runtime preflight controls
         run: python tests/civic_gps_texas_activation_runtime_test.py
