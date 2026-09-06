@@ -27,6 +27,8 @@ from tools.texas_activation_readiness import (
 
 HEAD = "a" * 40
 ARTIFACT_SHA = "b" * 64
+TX_GROUP_ID = "GEO-TX-LEGISLATIVE-TWO-DISTRICTS"
+TX_ADAPTERS = {"DIST-TX-HOUSE-H2316", "DIST-TX-SENATE-S2168"}
 
 
 def package_sha(package):
@@ -75,9 +77,26 @@ def production_group(package):
     return groups[0]
 
 
-def defaults():
-    catalog = package_catalog.load_catalog()
+def inactive_defaults():
+    """Return a synthetic pre-activation default view independent of live repo state."""
+    catalog = copy.deepcopy(package_catalog.load_catalog())
+    catalog["entries"] = [
+        row for row in catalog["entries"]
+        if not (
+            row.get("profile") == "state_legislative_representation"
+            or (row.get("production_profile") or {}).get("profile_id") == production_profile.PROFILE_ID
+        )
+    ]
     extension = json.loads((ROOT / "civic_gps_extensions" / "registry_bundles.v0.1.json").read_text(encoding="utf-8"))
+    extension = copy.deepcopy(extension)
+    extension["legislative_boundary_overlays"] = [
+        group for group in extension.get("legislative_boundary_overlays", [])
+        if group.get("group_id") != TX_GROUP_ID and not {
+            str(row.get("adapter_id"))
+            for row in group.get("district_adapters", [])
+            if isinstance(row, dict)
+        } & TX_ADAPTERS
+    ]
     return catalog, extension
 
 
@@ -85,7 +104,7 @@ class TexasActivationReadinessTests(unittest.TestCase):
     def test_resolved_proposal_is_ready_but_not_authorized_or_activated(self):
         package = resolved_package()
         acceptance = receipt(package=package)
-        catalog, extension = defaults()
+        catalog, extension = inactive_defaults()
         result = build_readiness_receipt(
             package=package,
             acceptance_receipt=acceptance,
@@ -107,7 +126,7 @@ class TexasActivationReadinessTests(unittest.TestCase):
     def test_provisional_people_remain_a_readiness_blocker(self):
         package = bounded_package()
         acceptance = receipt(package=package)
-        catalog, extension = defaults()
+        catalog, extension = inactive_defaults()
         with self.assertRaises(ActivationReadinessError) as error:
             build_readiness_receipt(
                 package=package, acceptance_receipt=acceptance, package_sha256=package_sha(package),
@@ -119,7 +138,7 @@ class TexasActivationReadinessTests(unittest.TestCase):
     def test_deployment_must_cover_exact_head_and_all_required_checks(self):
         package = resolved_package()
         acceptance = receipt(package=package)
-        catalog, extension = defaults()
+        catalog, extension = inactive_defaults()
         for evidence, expected in (
             (deployment(head="c" * 40), "ACTIVATION_DEPLOYMENT_HEAD_DRIFT"),
             (deployment(missing="hosted-runtime-route"), "ACTIVATION_DEPLOYMENT_CHECK_COVERAGE_INVALID"),
@@ -137,7 +156,7 @@ class TexasActivationReadinessTests(unittest.TestCase):
         acceptance = receipt(package=package)
         group = production_group(package)
         group["district_adapters"][0]["source"]["plan_id"] = "OTHER"
-        catalog, extension = defaults()
+        catalog, extension = inactive_defaults()
         with self.assertRaises(ActivationReadinessError) as error:
             build_readiness_receipt(
                 package=package, acceptance_receipt=acceptance, package_sha256=package_sha(package),
@@ -149,7 +168,7 @@ class TexasActivationReadinessTests(unittest.TestCase):
     def test_readiness_refuses_to_certify_an_already_active_default_route(self):
         package = resolved_package()
         acceptance = receipt(package=package)
-        catalog, extension = defaults()
+        catalog, extension = inactive_defaults()
         catalog = copy.deepcopy(catalog)
         catalog["entries"].append(copy.deepcopy(proposed_entry(package, acceptance)))
         with self.assertRaises(ActivationReadinessError) as error:
