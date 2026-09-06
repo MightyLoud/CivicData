@@ -1,0 +1,2 @@
+body_id,body_type,branch,jurisdiction_id,name,notes,official_url,parent_body_id,row_updated_at,scope_version,source_ids,status,valid_from,valid_to
+body-co-arvada-city-council,COUNCIL,LEGISLATIVE,jurisdiction-co-arvada,Arvada City Council,"Seven-member directly elected governing body: Mayor, two At-Large Councilmembers, and one Councilmember for each of Districts 1–4.",https://www.arvadaco.gov/157/City-Council,,2026-08-19,V0.1,src-co-arvada-charter;src-co-arvada-city-council,ACTIVE,,

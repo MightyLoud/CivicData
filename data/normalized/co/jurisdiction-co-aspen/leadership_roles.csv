@@ -1,0 +1,2 @@
+body_id,confidence,jurisdiction_id,leadership_id,notes,office_id,person_id,role_title,role_type,row_updated_at,scope_version,source_ids,status,valid_from,valid_to
+body-co-aspen-city-council,HIGH,jurisdiction-co-aspen,lead-co-aspen-mayor-pro-tem-john-doyle,The official roster identifies John Doyle as Mayor Pro Tem. Exact leadership start and end dates were not published.,office-co-aspen-council-at-large-2025-john-doyle,person-co-aspen-john-doyle,Mayor Pro Tem,MAYOR_PRO_TEM,2026-08-19,V0.1,src-co-aspen-city-council,CURRENT,,

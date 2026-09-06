@@ -1,0 +1,108 @@
+{
+  "decision_id": "D-329",
+  "remediation_decision_id": "D-387",
+  "status": "READY_FOR_INDEPENDENT_REREVIEW",
+  "repository": "MightyLoud/CivicData",
+  "branch": "d328-generic-jurisdiction-package",
+  "input_branch_head": "9a7ac6bea56b32d70faf6827118d735132ac6079",
+  "remediation_input_head": "e1b817e2f1f3f317c2785e98cece24ec2fbe4f18",
+  "branch_divergence_before_d329": {
+    "ahead_of_main": 11,
+    "behind_main": 17,
+    "main_sync_performed": false
+  },
+  "source": {
+    "spreadsheet_id": "1KTWOvTkEKGzFQxIBOA5tbP4keEoWwdPPt95LG-I8XCw",
+    "source_modified_time": "2026-08-26T02:08:54.518Z",
+    "snapshot_path": "data/source/co/d329-co-factory-snapshot.json",
+    "snapshot_sha256": "0262c148e485bd92d5796e4c2fcf78dd14c3e8e74c0ac1ef1f107b9302c1314c",
+    "snapshot_rows": 438
+  },
+  "packages": [
+    {
+      "jurisdiction_id": "jurisdiction-co-akron",
+      "name": "Akron",
+      "qa_checks": 15,
+      "address_tests": 2,
+      "warnings": 0,
+      "sha256s_file_digest": "09fb3fb3db45846546881d26cb57a1d6359ca759c314fd47b43d3d2eb171367e"
+    },
+    {
+      "jurisdiction_id": "jurisdiction-co-alamosa",
+      "name": "Alamosa",
+      "qa_checks": 15,
+      "address_tests": 2,
+      "warnings": 1,
+      "sha256s_file_digest": "d607849c4c69dcd130eeabd0373d1400c619e0867ffd0f3549f7b54705e2a037"
+    },
+    {
+      "jurisdiction_id": "jurisdiction-co-alma",
+      "name": "Alma",
+      "qa_checks": 15,
+      "address_tests": 2,
+      "warnings": 1,
+      "sha256s_file_digest": "711d0e1e3ea2154cf4f79fd5890e20f6598a29177c9df10373a57d58635ccef3"
+    },
+    {
+      "jurisdiction_id": "jurisdiction-co-arvada",
+      "name": "Arvada",
+      "qa_checks": 15,
+      "address_tests": 2,
+      "warnings": 1,
+      "sha256s_file_digest": "9bb6dfdfc34f319cc581a5721f30735441e26a2af9c7aa3da1f260d7425891ac"
+    },
+    {
+      "jurisdiction_id": "jurisdiction-co-aspen",
+      "name": "Aspen",
+      "qa_checks": 15,
+      "address_tests": 2,
+      "warnings": 1,
+      "sha256s_file_digest": "5015aa52a1e822b731e20f2f67ebd9ee117739a9f6d736165a73a05812f202bd"
+    }
+  ],
+  "totals": {
+    "packages": 5,
+    "generated_files": 80,
+    "normalized_records": 123,
+    "source_evidence": 63,
+    "source_assertions": 151,
+    "qa_checks": 75,
+    "address_tests": 10,
+    "open_nonblocking_warnings": 4,
+    "qa_failures": 0,
+    "blocking_gaps": 0
+  },
+  "checks": {
+    "generic_validator": true,
+    "package_contract": true,
+    "exact_count_reconciliation": true,
+    "primary_key_uniqueness": true,
+    "foreign_key_integrity": true,
+    "source_assertion_integrity": true,
+    "parity": true,
+    "tracker_complete": true,
+    "address_controls": true,
+    "manifest_bytes": true,
+    "sha256": true,
+    "deterministic_rerun_byte_equal": true,
+    "v0_1_tests": true,
+    "v0_2_backward_compatibility": true,
+    "json_schema_fail_closed": true,
+    "recursive_inventory_exact": true,
+    "path_and_symlink_safety": true,
+    "entity_family_integrity": true,
+    "entity_family_mismatches": 0,
+    "strict_blocking_boolean": true,
+    "package_archive_integrity": true,
+    "adversarial_regressions": true,
+    "downstream_consumer_onboarding_tests": 16
+  },
+  "scope_guards": {
+    "excluded_jurisdictions_absent": true,
+    "source_workbook_mutated": false,
+    "pull_request_created": false,
+    "merged_to_main": false,
+    "github_release_created": false,
+    "published_externally": false
+  }
+}

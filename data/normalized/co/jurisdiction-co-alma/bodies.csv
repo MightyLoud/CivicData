@@ -1,0 +1,2 @@
+body_id,body_type,branch,jurisdiction_id,name,notes,official_url,parent_body_id,row_updated_at,scope_version,source_ids,status,valid_from,valid_to
+body-co-alma-board-of-trustees,BOARD_OF_TRUSTEES,LEGISLATIVE,jurisdiction-co-alma,Alma Board of Trustees,Post-2026 elected governing body consisting of one Mayor and four Trustees. Utilities Board membership is not normalized from the stale seven-member code rule.,https://townofalma.com/board-of-trustees/,,2026-08-19,V0.1,src-co-alma-board-trustees;src-co-alma-elections,ACTIVE,,
