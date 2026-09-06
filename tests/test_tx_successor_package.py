@@ -1,4 +1,4 @@
-"""Committed successor Texas package/receipt controls; no activation or live address requests."""
+"""Committed successor Texas package/receipt controls; activation does not rewrite the source package."""
 from __future__ import annotations
 
 import base64
@@ -15,14 +15,20 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from consumers.empowered_vote import package_catalog, production_profile, representation
+from tools.jurisdiction_package import canonical_json
 from tools.texas_successor_contract import build_successor_contract
 
 DATA = ROOT / "data" / "packages" / "tx" / "legislative"
 ARCHIVE_BASENAME = "Tx_Legislative_Two_Office_v0.1.zip.b64.part"
+ACTIVE_ENTRY_SHA = "1b8fd732e70b90b6ad331f71c7fe0403c061c680ad309135c28b2054a6dfb189"
 
 
 def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def sha_json(value) -> str:
+    return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
 
 
 class TexasSuccessorPackageTests(unittest.TestCase):
@@ -110,11 +116,19 @@ class TexasSuccessorPackageTests(unittest.TestCase):
         self.assertFalse(self.receipt["publication_eligible"])
         self.assertEqual(self.receipt["canonical_writes"], 0)
 
-    def test_default_catalog_still_does_not_activate_texas_profile(self):
+    def test_default_catalog_activates_only_the_exact_certified_successor_profile(self):
         entries = package_catalog.load_catalog()["entries"]
-        self.assertFalse(any(row.get("profile") == "state_legislative_representation"
-                             or (row.get("production_profile") or {}).get("profile_id") == production_profile.PROFILE_ID
-                             for row in entries))
+        matches = [
+            row for row in entries
+            if row.get("profile") == "state_legislative_representation"
+            and (row.get("production_profile") or {}).get("profile_id") == production_profile.PROFILE_ID
+        ]
+        self.assertEqual(len(matches), 1)
+        entry = matches[0]
+        self.assertEqual(entry["entry_id"], "tx-legislative-two-office-v0.1-hosted-candidate")
+        self.assertEqual(sha_json(entry), ACTIVE_ENTRY_SHA)
+        reconstructed = package_catalog.reconstruct_package(entry, ROOT)
+        self.assertEqual(reconstructed, self.package)
 
 
 if __name__ == "__main__":
