@@ -1,84 +1,53 @@
 # Texas bounded Railway deployment v0.1
 
-Status: `PROVIDER_SELECTED_RAILWAY__CONNECTION_REQUIRED`
+Status: `DEPLOYED_AND_VALIDATED__FROZEN_PREACTIVATION_PROOF`
 
-This contract selects Railway as the first external HTTPS production target for the bounded Texas House 49 / Senate 14 hosted runtime. It does not activate the default Texas catalog/registry route, merge PR #48, or declare `hosted-runtime-route` PASS before an independently reachable production deployment is validated.
+Railway is the governed external HTTPS production target used to validate the bounded Texas House District 49 / Senate District 14 hosted runtime. Provider connection, project creation, service creation, public HTTPS exposure, exact-head deployment, and hosted validation are complete.
 
-## Selected provider
+## Railway resources
 
-Provider: Railway.
+Project: `CivicData Texas Hosted Runtime`
+
+Project ID: `0c9a13e7-cbac-4b2c-98e6-5e1167dd03e3`
+
+Production environment ID: `d26e584b-b24b-4b03-ad26-e38d30e379c4`
+
+API service ID: `a5af748d-d2f8-4e25-8d9b-fc2eea9f4c96`
+
+Public domain:
+
+`https://texas-bounded-api-production.up.railway.app`
 
 Source repository: `MightyLoud/CivicData`.
 
-Source branch for the Day 12 deployment candidate: `agent/day12-tx-integration`.
+Source branch: `agent/day12-tx-integration`.
 
-Config-as-code: `/railway.toml`.
+Validated deployed commit:
 
-Dockerfile: `/services/texas_bounded_api/Dockerfile`.
+`05e6ca3962c0eb3105e96ef4335423350ea9865b`
 
-Railway is selected because the service already has a Docker/OCI contract, requires outbound HTTPS access, and needs an independently reachable HTTPS domain plus deployment health gating. No database, volume, background worker, or additional stateful service is required for this bounded API.
+Successful Railway deployment ID:
 
-## Railway configuration
+`cbdbf58e-3a07-42e5-9ccf-387021a033b9`
 
-`railway.toml` declares:
+## Deployment contract
 
-- Dockerfile builder;
-- exact custom Dockerfile path;
-- `/readyz` as the deployment healthcheck;
-- 180-second healthcheck timeout;
-- restart on failure with a bounded retry count.
+The production service uses:
 
-The service listens on Railway's injected `PORT` variable. The HTTP service identity uses `CIVICDATA_SERVICE_HEAD_SHA` when explicitly provided and otherwise falls back to Railway's Git deployment variable `RAILWAY_GIT_COMMIT_SHA`.
+- Dockerfile `services/texas_bounded_api/Dockerfile`;
+- Railway-injected `PORT`;
+- Railway Git commit provenance;
+- `CIVICDATA_SERVICE_ENVIRONMENT=production`;
+- `/readyz` as the deployment health gate;
+- a single initial replica;
+- no database or persistent volume;
+- outbound HTTPS access to governed Civic GPS/geometry sources.
 
-## Required production variable
+The container runs as a non-root user.
 
-The Railway service must set:
+## Hosted production validation
 
-`CIVICDATA_SERVICE_ENVIRONMENT=production`
-
-No manual `CIVICDATA_SERVICE_HEAD_SHA` is required for a GitHub-triggered Railway deployment because the service reads the provider-supplied Git commit SHA. If an explicit head variable is supplied, it remains authoritative and must equal the deployed commit.
-
-## Required deployment shape
-
-The first production service must be a single web service with:
-
-- public HTTPS domain generated or attached by Railway;
-- one replica initially;
-- no persistent volume;
-- no database;
-- outbound HTTPS access to the Civic GPS geocoder and governed Texas geometry sources;
-- healthcheck `GET /readyz`;
-- application process running as the non-root image user;
-- exact repository/branch deployment provenance retained by Railway.
-
-## Readiness behavior
-
-A Railway deployment is not accepted merely because the container starts.
-
-`/readyz` must return `200` only after:
-
-- successor package reconstruction succeeds;
-- both Person identities remain `AUTHORITATIVE`;
-- package/receipt/runtime pins match;
-- the default Texas catalog route remains inactive;
-- the default Texas legislative registry overlay remains inactive;
-- live Texas geometry governance preflight succeeds.
-
-If any check fails, Railway's deployment healthcheck must fail and traffic must not move to that deployment.
-
-## Hosted validation
-
-After Railway provides the external HTTPS URL, run the existing governed validator:
-
-```sh
-python tools/texas_hosted_runtime_validation.py \
-  --base-url https://<railway-public-domain> \
-  --expected-head-sha <exact Railway Git commit SHA> \
-  --audit-output artifacts/texas-hosted/railway-audit.json \
-  --activation-evidence-output artifacts/texas-hosted/railway-activation-evidence.json
-```
-
-The validator must prove all seven deployment checks:
+The public Railway route passed all seven required checks:
 
 1. `geometry-governance-preflight`;
 2. `package-profile-reconstruction`;
@@ -88,22 +57,34 @@ The validator must prove all seven deployment checks:
 6. `public-identity-gate`;
 7. `hosted-runtime-route`.
 
-Only an independently reachable HTTPS Railway deployment with `environment=production`, exact head identity, exact package/receipt/runtime pins, and all seven checks PASS can supply production deployment evidence to the activation-readiness contract.
+Hosted-validation SHA-256:
 
-## Current boundary
+`890073c847d9477c1a3c75d4228b5758d76a338954200d597577bc8a73396e37`
 
-The repository-side Railway deployment contract is implemented. Provider-side creation is not yet executed because the Railway ChatGPT integration is not installed/connected in the current session.
+Activation-readiness receipt SHA-256:
+
+`be8e3435dc07fd8918e80212e60758b08e45ee97bf981fad821d4f2f7d8019d8`
+
+The Texas Capitol positive control returned exactly two projections / two AUTHORITATIVE holders. The Round Rock negative control remained fail-closed with zero projections.
+
+## Post-activation boundary
+
+Repository catalog + registry activation was subsequently authorized and executed on the Day 12 branch. The Railway service remains intentionally pinned to the validated pre-activation commit because that service's `/readyz` contract included proof that the default repository route was not yet active.
+
+A post-activation Railway redeploy is **not** implied by repository activation and has not been authorized.
 
 Current disposition:
 
-`RAILWAY_PROVIDER = SELECTED`
+`RAILWAY_PROVIDER = CONNECTED`
 
-`RAILWAY_CONFIG_AS_CODE = IMPLEMENTED`
+`PUBLIC_HTTPS_URL = LIVE`
 
-`RAILWAY_PROVIDER_CONNECTION = REQUIRED`
+`HOSTED_RUNTIME_ROUTE = PASS`
 
-`PUBLIC_HTTPS_URL = NOT_YET_CREATED`
+`REPOSITORY_ACTIVATION = ACTIVATED_BOUNDED`
 
-`HOSTED_RUNTIME_ROUTE = NOT_VALIDATED`
+`RAILWAY_REDEPLOY = NOT_AUTHORIZED`
 
-`REPOSITORY_ACTIVATION = NOT_ACTIVATED`
+`MERGE = NOT_AUTHORIZED`
+
+`RELEASE = NOT_AUTHORIZED`
