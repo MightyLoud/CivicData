@@ -1,6 +1,6 @@
 # Texas Person identity resolution v0.1
 
-Status: `SOURCE_IDENTITY_RESOLVED_NOT_REPACKAGED`
+Status: `SOURCE_IDENTITY_RESOLVED_SUCCESSOR_PACKAGED`
 
 Reviewed and executed: September 6, 2026.
 
@@ -73,7 +73,7 @@ In `TX_ELECTIONS_Data_C6`:
 - `provisional_source_record_id` remains unchanged for both Persons;
 - explanatory cell notes record the independent official evidence and the limited scope of the identity change.
 
-The historical `TX_ROLE_TERM_DATE_AUDIT` text saying the Person remained provisional is preserved as execution history. A superseding cell note now states that the current Person status is `AUTHORITATIVE`.
+The historical `TX_ROLE_TERM_DATE_AUDIT` text saying the Person remained provisional is preserved as execution history. A superseding cell note states that the current Person status is `AUTHORITATIVE`.
 
 ## Explicit non-changes
 
@@ -87,23 +87,30 @@ The identity-resolution execution did not change:
 - the blank actual end dates;
 - either Office ID;
 - either retained SourceRecord ID;
-- source QA blockers;
 - `complete_jurisdiction=false` for the bounded slice;
 - the default production package catalog;
 - the default Civic GPS registry extension;
 - repository activation state.
 
-## Successor artifact requirement
+## Successor artifact
 
-The previous bounded package/acceptance artifact contained provisional Person status and is therefore historical. Identity resolution changes package content.
+The pre-resolution bounded package/acceptance artifact remains historical because it contains the Person state that was actually present when it was built and tested. Its hashes are not rewritten.
 
-Before production deployment validation or activation, the two-office package must be regenerated from the current governed workbook state and a fresh `texas-bounded-acceptance/0.1` receipt must be issued for the new package hash. The production profile requires both Persons to carry explicit `AUTHORITATIVE` status; missing identity status fails closed.
+A fresh successor package and fresh `texas-bounded-acceptance/0.1` receipt were issued from the authoritative workbook state. See `texas-successor-package-v0.1.md`.
 
-Until that successor package and receipt exist:
+Current successor pins:
+
+- `jurisdiction.json` SHA-256: `a43aa6517ea5a6822319298ee6cbacc83be6f3a8731568863243439a5f802530`;
+- deterministic package ZIP SHA-256: `7b6abf28e0535041797b180488cb98ebf223b844b3081e7386ccbd63c85762b1`;
+- fresh receipt deterministic SHA-256: `f58251a3a127841ec1773a342336d01145aca47d61957ea4bfd1e81121266483`.
+
+The production profile now requires both Persons to carry explicit `AUTHORITATIVE` status; missing identity status fails closed.
+
+Current posture:
 
 `PERSON_IDENTITY_SOURCE = RESOLVED`
 
-`SUCCESSOR_PACKAGE = REQUIRED`
+`SUCCESSOR_PACKAGE = ISSUED_NOT_ACTIVATED`
 
 `PRODUCTION_DEPLOYMENT = NOT_VALIDATED`
 
