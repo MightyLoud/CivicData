@@ -39,15 +39,22 @@ A catalog entry using this profile must declare:
 - Senate binding `tx-senate` using adapter `DIST-TX-SENATE-S2168` and key `14`;
 - explicit district-to-canonical-division maps. Labels or templates do not mint IDs for this profile.
 
-The hash-bound receipt must be a deterministic `texas-bounded-acceptance/0.1` receipt for the exact package bytes. Its declared office, Person, RoleTerm, binding, source-QA, and package-hash scope must agree with the package and catalog entry.
+The hash-bound receipt must be a deterministic `texas-bounded-acceptance/0.1` receipt for the exact package bytes. Its declared office, Person, RoleTerm, binding, source-QA, identity-status, and package-hash scope must agree with the package and catalog entry.
 
 The receipt's historical gate-disposition fields do not overwrite later governance. They establish the accepted bounded evidence base. Current publication identity and runtime geometry governance are enforced independently by current code.
 
 ## Identity rule
 
-The profile loader applies the public-identity publication contract. An explicit provisional Person or provisional-Person warning fails closed. The acceptance receipt's `person_identity_status` must also match the current package.
+The profile loader applies the public-identity publication contract **and** requires an explicit `AUTHORITATIVE` identity status for every Person in this bounded profile.
 
-Therefore, resolving an identity changes the package and requires a newly hash-bound bounded acceptance receipt. Removing only the provisional marker or warning without changing the governed identity evidence is not a valid release procedure.
+- `PROVISIONAL` fails closed under the general publication policy.
+- A missing identity status also fails closed as `PRODUCTION_PROFILE_AUTHORITATIVE_IDENTITY_REQUIRED`.
+- `MERGED`, `BLOCKED`, or any other non-`AUTHORITATIVE` value does not satisfy the production profile.
+- The acceptance receipt's `person_identity_status` must exactly match the current package.
+
+For the current Day 12 source state, Gina Hinojosa and Sarah Eckhardt were resolved to `AUTHORITATIVE` in the governed Texas workbook on September 6, 2026 after independent official member-page and Texas Legislative Reference Library corroboration. Their original `provisional_source_record_id` lineage remains preserved. See `texas-person-identity-resolution-v0.1.md`.
+
+Resolving identity changes the package content and therefore requires a newly built package and newly hash-bound bounded acceptance receipt. Removing a provisional marker or warning without an explicit authoritative disposition is not a valid release procedure.
 
 ## Atomic public projection
 
@@ -65,9 +72,9 @@ This change intentionally adds **no** `state_legislative_representation` entry t
 
 Activation requires a later governed change containing, at minimum:
 
-1. the exact production package artifact;
-2. a current bounded acceptance receipt bound to that package;
-3. public-identity disposition passing on the package;
+1. the exact successor production package artifact reflecting the authoritative Person statuses;
+2. a current bounded acceptance receipt bound to that exact package;
+3. explicit `AUTHORITATIVE` identity status for both Persons;
 4. exact House and Senate catalog bindings;
 5. production deployment validation against the hosted/runtime path;
 6. explicit catalog/registry activation approval.
@@ -84,4 +91,4 @@ python tests/test_role_term_integration.py
 python tests/empowered_vote_package_catalog_test.py
 ```
 
-The profile suite proves that the ordinary package loader remains strict, the alternate loader preserves source blockers and source address-control state, provisional identities remain blocking, acceptance-receipt drift fails closed, both legislative bindings are atomic, Full Essentials cannot use the profile, and the default catalog remains unactivated.
+The profile suite proves that the ordinary package loader remains strict, the alternate loader preserves source blockers and source address-control state, provisional identities remain blocking, missing identity status cannot masquerade as resolution, explicit authoritative identity is required, acceptance-receipt drift fails closed, both legislative bindings are atomic, Full Essentials cannot use the profile, and the default catalog remains unactivated.
