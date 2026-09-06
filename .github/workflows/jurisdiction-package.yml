@@ -10,7 +10,9 @@ on:
       - "tests/test_public_identity_disposition.py"
       - "tests/test_texas_bounded_contract.py"
       - "tests/test_tx_production_profile.py"
+      - "tests/test_texas_activation_readiness.py"
       - "tools/texas_bounded_contract.py"
+      - "tools/texas_activation_readiness.py"
       - "consumers/empowered_vote/package_source.py"
       - "consumers/empowered_vote/representation.py"
       - "consumers/empowered_vote/production_profile.py"
@@ -21,6 +23,7 @@ on:
       - "docs/workflows/jurisdiction-package-v0.*.md"
       - "docs/workflows/public-identity-publication-v0.1.md"
       - "docs/workflows/texas-production-profile-v0.1.md"
+      - "docs/workflows/texas-activation-readiness-v0.1.md"
       - ".github/workflows/jurisdiction-package.yml"
   workflow_dispatch:
 
@@ -51,7 +54,7 @@ jobs:
           python-version: "3.12"
       - name: Compile builder and tests
         if: steps.package.outputs.present == 'true'
-        run: python -m py_compile tools/jurisdiction_package.py consumers/empowered_vote/production_profile.py consumers/empowered_vote/package_catalog.py consumers/empowered_vote/representation_catalog.py tests/test_jurisdiction_package.py tests/test_jurisdiction_package_v0_2.py tests/test_public_identity_disposition.py tests/test_tx_production_profile.py
+        run: python -m py_compile tools/jurisdiction_package.py tools/texas_activation_readiness.py consumers/empowered_vote/production_profile.py consumers/empowered_vote/package_catalog.py consumers/empowered_vote/representation_catalog.py tests/test_jurisdiction_package.py tests/test_jurisdiction_package_v0_2.py tests/test_public_identity_disposition.py tests/test_tx_production_profile.py tests/test_texas_activation_readiness.py
       - name: Run v0.1 compatibility tests
         if: steps.package.outputs.present == 'true'
         run: python tests/test_jurisdiction_package.py
@@ -70,3 +73,6 @@ jobs:
       - name: Run bounded Texas production profile controls
         if: steps.package.outputs.present == 'true'
         run: python tests/test_tx_production_profile.py
+      - name: Run Texas activation readiness contract controls
+        if: steps.package.outputs.present == 'true'
+        run: python tests/test_texas_activation_readiness.py
