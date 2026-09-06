@@ -104,6 +104,16 @@ def _id_set(rows, key):
     return {row.get(key) for row in rows if row.get(key)}
 
 
+def validate_production_scope(pkg):
+    """Honor explicit partial coverage; absence keeps legacy contracts compatible."""
+    errors = []
+    for block in ("jurisdiction", "qa"):
+        row = pkg.get(block)
+        if isinstance(row, dict) and "complete_jurisdiction" in row and row["complete_jurisdiction"] is not True:
+            errors.append("partial_jurisdiction_scope:" + block)
+    return errors
+
+
 def validate(pkg):
     errors = []
     version = pkg.get("schema_version")
@@ -124,6 +134,7 @@ def validate(pkg):
         return sorted(set(errors))
 
     qa = pkg.get("qa", {})
+    errors.extend(validate_production_scope(pkg))
     if qa.get("parity_ok") is not True:
         errors.append("parity_ok")
     if qa.get("qa_fail_count") != 0:

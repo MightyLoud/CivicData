@@ -34,6 +34,7 @@ _contract = importlib.util.module_from_spec(_contract_spec)
 _contract_spec.loader.exec_module(_contract)
 validate_identity_graph = _contract.validate_identity_graph
 validate_role_term_sources = _contract.validate_role_term_sources
+validate_production_scope = _contract.validate_production_scope
 
 
 class PackageContractError(ValueError):
@@ -145,6 +146,9 @@ def _validate_package_shape(package: dict[str, Any]) -> None:
         raise PackageContractError("PACKAGE_ADDRESS_CONTROL_INVALID")
     if any(test.get("result") is not True for test in address_tests):
         raise PackageContractError("PACKAGE_ADDRESS_CONTROL_FAILED")
+    scope_errors = validate_production_scope(package)
+    if scope_errors:
+        raise PackageContractError("PACKAGE_PARTIAL_SCOPE_UNSUPPORTED", ",".join(scope_errors))
     if version == "0.2":
         if qa.get("election_scope_complete") is not True:
             raise PackageContractError("PACKAGE_ELECTION_SCOPE_INCOMPLETE")

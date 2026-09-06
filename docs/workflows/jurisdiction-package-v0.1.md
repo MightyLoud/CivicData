@@ -21,6 +21,13 @@ A package is invalid when schema version is unsupported, parity is not true, QA 
 
 Warnings remain visible. Unsupported facts remain null/blank; the builder must not infer them.
 
+An explicitly partial `complete_jurisdiction` declaration in `jurisdiction` or
+`qa` is not accepted by the production profile, even with otherwise passing QA.
+When present, that declaration must be boolean `true`. Legacy packages without
+the field retain their existing requirements. The separately documented
+[Texas bounded acceptance contract](texas-bounded-acceptance-v0.1.md) supports an
+internal two-office acceptance receipt without changing this package contract.
+
 ## Integration boundary
 
 This contract does not itself authorize merge to `main`, GitHub Release creation, publication, external distribution, or mutation of source civic facts.

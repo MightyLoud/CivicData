@@ -80,6 +80,12 @@ writes. No Texas binding or package is added to the production catalog.
 
 ## Verification and remaining work
 
+The [Texas bounded acceptance contract](texas-bounded-acceptance-v0.1.md) resolves
+the two-office scope as internal acceptance only. Its hash-bound receipt
+preserves the historical stage and external live evidence; production package
+validation rejects an explicit partial-coverage declaration. Public eligibility,
+geometry-version governance, and activation remain separate.
+
 An opt-in geography adapter now supplies the separate House/Senate assignments
 from one request-scoped geocode. See
 [legislative geography routing](civic-gps-legislative-geography.md) for invocation,
@@ -105,9 +111,9 @@ Day 12 requires additional evidence before closeout:
    through the intended integration runtime. Preserve the historical frozen
    proof package and its original hash.
 2. Verify the caller-supplied canonical crosswalks with live geography and pin
-   the source geometry to the stated plans. Decide how the partial two-office
-   slice satisfies the package coverage contract without asserting complete
-   Texas coverage or inventing QA/parity flags.
+   the source geometry to the stated plans. Carry the bounded internal receipt
+   separately from source QA; the existing production package profile does not
+   support this partial slice.
 3. Execute official live address, outside-district, and boundary controls using
    the intended runtime. Synthetic geography tests are not live proof.
 4. Verify deterministic package hashes, target parity, the intended CI steps on

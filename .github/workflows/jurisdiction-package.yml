@@ -7,6 +7,8 @@ on:
       - "tools/jurisdiction_package.py"
       - "tests/test_jurisdiction_package*.py"
       - "tests/test_role_term_integration.py"
+      - "tests/test_texas_bounded_contract.py"
+      - "tools/texas_bounded_contract.py"
       - "consumers/empowered_vote/package_source.py"
       - "consumers/empowered_vote/representation.py"
       - "data/packages/**"
@@ -52,3 +54,6 @@ jobs:
       - name: Run RoleTerm identity and bounded representation controls
         if: steps.package.outputs.present == 'true'
         run: python tests/test_role_term_integration.py
+      - name: Run bounded acceptance and production scope controls
+        if: steps.package.outputs.present == 'true'
+        run: python tests/test_texas_bounded_contract.py
