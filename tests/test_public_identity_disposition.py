@@ -63,6 +63,10 @@ class PublicIdentityDispositionTests(unittest.TestCase):
             builder.validate_public_identity_disposition(package),
             ["provisional_warning:test-person-house"],
         )
+        direct = representation.build_representation_from_civic_gps_result(
+            package, "SYNTHETIC INPUT", gps(), binding=bindings()[0]
+        )
+        self.assertEqual(direct["error"], "PACKAGE_PUBLIC_IDENTITY_UNRESOLVED")
 
     def test_legacy_statusless_package_remains_compatible(self):
         package = resolved_fixture()
