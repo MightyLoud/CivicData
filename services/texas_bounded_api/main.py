@@ -13,7 +13,11 @@ from fastapi.responses import JSONResponse
 from services.texas_bounded_api.runtime import HostedRuntimeError, TexasBoundedRuntime
 
 ROOT = Path(__file__).resolve().parents[2]
-HEAD_SHA = os.environ.get("CIVICDATA_SERVICE_HEAD_SHA", "").strip().lower()
+HEAD_SHA = (
+    os.environ.get("CIVICDATA_SERVICE_HEAD_SHA")
+    or os.environ.get("RAILWAY_GIT_COMMIT_SHA")
+    or ""
+).strip().lower()
 ENVIRONMENT = os.environ.get("CIVICDATA_SERVICE_ENVIRONMENT", "candidate").strip().lower()
 
 app = FastAPI(
