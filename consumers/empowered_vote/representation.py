@@ -8,6 +8,8 @@ It never infers election facts and never writes to CivicData canonical data.
 from __future__ import annotations
 
 import importlib.util
+import copy
+from datetime import date
 import sys
 from pathlib import Path
 from typing import Any
@@ -63,6 +65,40 @@ def _is_current(term: dict[str, Any]) -> bool:
     }
 
 
+def project_role_term(term: dict[str, Any]) -> dict[str, Any]:
+    """Project known aliases without changing the canonical record or its IDs."""
+    projected = copy.deepcopy(term)
+    for destination, aliases in (
+        ("status", ("status", "currentness_status", "role_term_status")),
+        ("start_date", ("term_start", "start_date", "term_start_date")),
+        ("end_date", ("term_end", "end_date", "term_end_date")),
+    ):
+        values = [term[key] if term[key] != "" else None for key in aliases if key in term]
+        if any(value != values[0] for value in values[1:]):
+            raise package_source.PackageContractError("ROLE_TERM_FIELD_CONFLICT", destination)
+        if values:
+            projected[destination] = values[0]
+    for key in ("term_start_date", "term_end_date"):
+        value = term.get(key)
+        if value in (None, ""):
+            continue
+        try:
+            if not isinstance(value, str) or date.fromisoformat(value).isoformat() != value:
+                raise ValueError("not an exact ISO date")
+        except ValueError as exc:
+            raise package_source.PackageContractError("ROLE_TERM_DATE_INVALID", key) from exc
+    return projected
+
+
+def _person_status(person: dict[str, Any]) -> str | None:
+    # TX_PERSON's identity status must never be replaced by RoleTerm currentness.
+    statuses = [person[key] for key in ("person_status", "status", "current_status")
+                if person.get(key) not in (None, "")]
+    if any(str(value).upper() == "PROVISIONAL" for value in statuses):
+        return "PROVISIONAL"
+    return person.get("person_status")
+
+
 def _division_for_binding(
     package: dict[str, Any], normalized: dict[str, Any], binding: dict[str, Any], address: str
 ) -> tuple[str | None, dict[str, Any] | None]:
@@ -71,10 +107,24 @@ def _division_for_binding(
         district_key = normalized["district_assignments"].get(adapter_id)
         if district_key is None:
             return None, _fail(address, "CIVIC_GPS_REQUIRED_DISTRICT_MISSING", adapter_id)
+        mapping = binding.get("district_division_map")
         template = binding.get("division_template")
-        if not template:
-            return None, _fail(address, "CIVIC_GPS_DIVISION_TEMPLATE_MISSING", adapter_id)
-        division_id = str(template).format(district_key=district_key)
+        if mapping is not None:
+            if template or not isinstance(mapping, dict) or any(
+                not isinstance(key, str) or not isinstance(value, str) or not value
+                for key, value in mapping.items()
+            ):
+                return None, _fail(address, "CIVIC_GPS_DISTRICT_BINDING_INVALID", adapter_id)
+            division_id = mapping.get(district_key)
+            if division_id is None:
+                return None, _fail(address, "CIVIC_GPS_DISTRICT_NOT_IN_BINDING", adapter_id)
+        else:
+            if not isinstance(template, str) or not template:
+                return None, _fail(address, "CIVIC_GPS_DIVISION_TEMPLATE_MISSING", adapter_id)
+            try:
+                division_id = template.format(district_key=district_key)
+            except (KeyError, ValueError, IndexError, AttributeError):
+                return None, _fail(address, "CIVIC_GPS_DISTRICT_BINDING_INVALID", adapter_id)
     else:
         division_id = package.get("jurisdiction", {}).get("division_id")
         if not division_id:
@@ -99,11 +149,20 @@ def build_representation_from_civic_gps_result(
     civic_gps_result: Any,
     *,
     binding: dict[str, Any],
+    identity_policy: str | None = None,
 ) -> dict[str, Any]:
     """Project current representation using Civic GPS only for geography."""
     caps = package_source.package_capabilities(package)
     if not caps.get("representation"):
         return _fail(address, "PACKAGE_REPRESENTATION_UNSUPPORTED")
+    if identity_policy not in (None, "INTERNAL_REVIEW"):
+        return _fail(address, "IDENTITY_POLICY_UNSUPPORTED")
+    graph_errors = package_source.validate_identity_graph(package.get("records"))
+    if graph_errors:
+        return _fail(address, "PACKAGE_IDENTITY_GRAPH_INVALID", ",".join(graph_errors))
+    evidence_errors = package_source.validate_role_term_sources(package["records"], package.get("provenance"))
+    if evidence_errors:
+        return _fail(address, "PACKAGE_ROLE_TERM_EVIDENCE_INVALID", ",".join(evidence_errors))
     if package.get("jurisdiction", {}).get("jurisdiction_id") != binding.get("package_jurisdiction_id"):
         return _fail(address, "CIVIC_GPS_PACKAGE_BINDING_UNSUPPORTED")
 
@@ -127,7 +186,13 @@ def build_representation_from_civic_gps_result(
         if isinstance(row, dict) and _id(row, "person_id", "id")
     }
     leadership = records.get("leadership_roles", [])
-    current_terms = [row for row in records.get("role_terms", []) if isinstance(row, dict) and _is_current(row)]
+    try:
+        projected_terms = [project_role_term(row) for row in records["role_terms"]]
+    except package_source.PackageContractError as exc:
+        return _fail(address, exc.code, exc.detail)
+    current_terms = [row for row in projected_terms if _is_current(row)]
+    warnings = copy.deepcopy(package.get("warnings", []))
+    provisional_people: set[str] = set()
 
     offices: list[dict[str, Any]] = []
     for office in records.get("offices", []):
@@ -145,6 +210,11 @@ def build_representation_from_civic_gps_result(
                 continue
             person_id = _id(term, "person_id")
             person = people.get(person_id, {}) if person_id else {}
+            person_status = _person_status(person)
+            if person_status == "PROVISIONAL":
+                if identity_policy != "INTERNAL_REVIEW":
+                    return _fail(address, "PERSON_IDENTITY_PROVISIONAL", person_id)
+                provisional_people.add(person_id)
             roles = []
             for lead in leadership:
                 if not isinstance(lead, dict):
@@ -173,6 +243,11 @@ def build_representation_from_civic_gps_result(
                 "source_id": term.get("source_id"),
                 "source_ids": term.get("source_ids"),
             })
+            for key in ("source_record_id", "observed_at"):
+                if key in term:
+                    holders[-1][key] = term[key]
+            if person_status is not None:
+                holders[-1]["person_status"] = person_status
         holders.sort(key=lambda row: (str(row.get("name") or ""), str(row.get("person_id") or "")))
         seat_capacity = office.get("seats") or office.get("seat_count") or 1
         try:
@@ -197,6 +272,13 @@ def build_representation_from_civic_gps_result(
     if not offices or holder_count == 0:
         return _fail(address, "PACKAGE_REPRESENTATION_EMPTY")
 
+    for person_id in sorted(provisional_people):
+        warning_id = "PROVISIONAL-PERSON:" + person_id
+        if not any(row.get("warning_id") == warning_id for row in warnings if isinstance(row, dict)):
+            warnings.append({"warning_id": warning_id, "person_id": person_id,
+                             "status": "PROVISIONAL", "scope": "INTERNAL_REVIEW",
+                             "summary": "Current service is recorded; Person identity remains provisional."})
+
     model: dict[str, Any] = {
         "status": "PASS",
         "consumer_gate": "EV-IMP-005",
@@ -214,8 +296,44 @@ def build_representation_from_civic_gps_result(
         "current_holder_count": holder_count,
         "source_evidence": package.get("provenance", {}).get("source_evidence", []),
         "source_assertions": package.get("provenance", {}).get("source_assertions", []),
-        "warnings": package.get("warnings", []),
+        "warnings": warnings,
         "canonical_writes": 0,
     }
+    if identity_policy == "INTERNAL_REVIEW":
+        model["identity_policy"] = identity_policy
+        model["publication_eligible"] = False
     model["deterministic_sha256"] = package_source.sha256_bytes(package_source.canonical_json_bytes(model))
     return model
+
+
+def preview_representation_for_bindings(
+    package: dict[str, Any], address: str, civic_gps_result: Any, *, bindings: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Compose an internal, bounded preview such as separate House/Senate joins.
+
+    Bindings must be supplied by the caller. This creates no catalog entries,
+    assumes no district IDs, and fails the whole preview if any binding fails.
+    """
+    if not isinstance(bindings, list) or not bindings:
+        return _fail(address, "REPRESENTATION_BINDINGS_MISSING")
+    names = [row.get("binding_id") if isinstance(row, dict) else None for row in bindings]
+    if any(not isinstance(name, str) or not name for name in names) or len(set(names)) != len(names):
+        return _fail(address, "REPRESENTATION_BINDING_ID_INVALID")
+    projections, seen_offices = [], set()
+    for binding in sorted(bindings, key=lambda row: row["binding_id"]):
+        if not binding.get("district_adapter_id") or not (binding.get("division_template") or binding.get("district_division_map")):
+            return _fail(address, "REPRESENTATION_DISTRICT_BINDING_REQUIRED", binding["binding_id"])
+        model = build_representation_from_civic_gps_result(
+            package, address, civic_gps_result, binding=binding, identity_policy="INTERNAL_REVIEW"
+        )
+        if model.get("status") != "PASS":
+            return _fail(address, str(model.get("error")), binding["binding_id"])
+        office_ids = {row["office_id"] for row in model["applicable_offices"]}
+        if seen_offices & office_ids:
+            return _fail(address, "REPRESENTATION_BINDING_OVERLAP", binding["binding_id"])
+        seen_offices.update(office_ids)
+        projections.append({"binding_id": binding["binding_id"], "representation": model})
+    result = {"status": "PASS", "scope": "BOUND_BINDINGS_ONLY", "projections": projections,
+              "complete_jurisdiction": False, "publication_eligible": False, "canonical_writes": 0}
+    result["deterministic_sha256"] = package_source.sha256_bytes(package_source.canonical_json_bytes(result))
+    return result

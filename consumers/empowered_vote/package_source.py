@@ -10,6 +10,7 @@ explicitly declare election scope complete and unexplained loss zero.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import re
 from pathlib import Path
@@ -22,6 +23,17 @@ REQUIRED_RECORD_TABLES = (
 )
 FULL_ESSENTIALS_RECORD_TABLES = ("elections", "contests", "candidacies")
 REQUIRED_FILES = ("jurisdiction.json", "qa_report.json", "manifest.json", "SHA256SUMS.txt")
+
+# Share the builder's identity rules at the consumer boundary, including when
+# this module is loaded directly by file path rather than installed as a package.
+_contract_path = Path(__file__).resolve().parents[2] / "tools" / "jurisdiction_package.py"
+_contract_spec = importlib.util.spec_from_file_location("ev_jurisdiction_contract", _contract_path)
+if _contract_spec is None or _contract_spec.loader is None:
+    raise ImportError("unable to load jurisdiction identity contract")
+_contract = importlib.util.module_from_spec(_contract_spec)
+_contract_spec.loader.exec_module(_contract)
+validate_identity_graph = _contract.validate_identity_graph
+validate_role_term_sources = _contract.validate_role_term_sources
 
 
 class PackageContractError(ValueError):
@@ -102,6 +114,9 @@ def _validate_package_shape(package: dict[str, Any]) -> None:
     missing_tables = [name for name in required if not isinstance(records.get(name), list)]
     if missing_tables:
         raise PackageContractError("PACKAGE_RECORD_TABLE_MISSING", ",".join(missing_tables))
+    graph_errors = validate_identity_graph(records)
+    if graph_errors:
+        raise PackageContractError("PACKAGE_IDENTITY_GRAPH_INVALID", ",".join(graph_errors))
 
     provenance = package.get("provenance")
     if not isinstance(provenance, dict) or not isinstance(provenance.get("source_evidence"), list):
@@ -110,6 +125,9 @@ def _validate_package_shape(package: dict[str, Any]) -> None:
         raise PackageContractError("PACKAGE_PROVENANCE_EMPTY")
     if not isinstance(provenance.get("source_assertions"), list):
         raise PackageContractError("PACKAGE_SOURCE_ASSERTIONS_MISSING")
+    evidence_errors = validate_role_term_sources(records, provenance)
+    if evidence_errors:
+        raise PackageContractError("PACKAGE_ROLE_TERM_EVIDENCE_INVALID", ",".join(evidence_errors))
 
     qa = package.get("qa")
     if not isinstance(qa, dict):

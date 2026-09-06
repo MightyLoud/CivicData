@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "consumers/empowered_vote/**"
+      - "tools/jurisdiction_package.py"
+      - "tests/test_role_term_integration.py"
       - "tools/ev_jurisdiction_onboarding.py"
       - "tools/ev_onboarding_batch.py"
       - "tools/ev_live_onboarding_batch.py"
@@ -85,6 +87,8 @@ jobs:
         run: python tests/empowered_vote_package_catalog_test.py
       - name: Run second real jurisdiction representation tests
         run: python tests/empowered_vote_second_jurisdiction_test.py
+      - name: Run RoleTerm identity and bounded representation controls
+        run: python tests/test_role_term_integration.py
       - name: Run repeatable onboarding pipeline tests
         run: python tests/ev_jurisdiction_onboarding_test.py
       - name: Replay Akron onboarding spec against governed artifacts
