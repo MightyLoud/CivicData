@@ -6,11 +6,15 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import sys
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from tools.jurisdiction_package import canonical_json
 
-ROOT = Path(__file__).resolve().parents[1]
 DATA = Path("data/packages/tx/legislative")
 HOSTED_SHA = "ed079fdfade76c06271f4b6be57fc669db7586b2ad66dc56ec13e3694f2abfb6"
 READINESS_SHA = "abeacad639da187818748c5af70e9df05fab27bf52101d270b7cd9c133f0c031"
