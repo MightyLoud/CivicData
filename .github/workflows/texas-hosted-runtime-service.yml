@@ -55,9 +55,18 @@ jobs:
       CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba'
       IMAGE_NAME: civicdata-tx-hosted-candidate
       CONTAINER_NAME: civicdata-tx-hosted-smoke
+      CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - name: Check out exact candidate head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+
+      - name: Verify exact candidate checkout
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          echo "candidate_sha=$CANDIDATE_SHA"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -92,16 +101,16 @@ jobs:
           python tests/test_texas_hosted_runtime_validation.py
 
       - name: Build exact hosted candidate image
-        run: docker build -f services/texas_bounded_api/Dockerfile -t "$IMAGE_NAME:$GITHUB_SHA" .
+        run: docker build -f services/texas_bounded_api/Dockerfile -t "$IMAGE_NAME:$CANDIDATE_SHA" .
 
       - name: Start candidate container
         run: |
           docker run -d --rm \
             --name "$CONTAINER_NAME" \
-            -e CIVICDATA_SERVICE_HEAD_SHA="$GITHUB_SHA" \
+            -e CIVICDATA_SERVICE_HEAD_SHA="$CANDIDATE_SHA" \
             -e CIVICDATA_SERVICE_ENVIRONMENT=container-ci \
             -p 18080:8080 \
-            "$IMAGE_NAME:$GITHUB_SHA"
+            "$IMAGE_NAME:$CANDIDATE_SHA"
 
       - name: Wait for liveness
         shell: bash
@@ -120,15 +129,15 @@ jobs:
         run: |
           python tests/texas_hosted_container_smoke.py \
             --base-url http://127.0.0.1:18080 \
-            --expected-head-sha "$GITHUB_SHA" \
+            --expected-head-sha "$CANDIDATE_SHA" \
             --expected-environment container-ci
 
       - name: Record deployable-container evidence
         shell: bash
         run: |
           mkdir -p artifacts/texas-hosted-runtime
-          IMAGE_ID=$(docker image inspect "$IMAGE_NAME:$GITHUB_SHA" --format '{{.Id}}')
-          python - "$GITHUB_SHA" "$IMAGE_ID" > artifacts/texas-hosted-runtime/container-evidence.json <<'PY'
+          IMAGE_ID=$(docker image inspect "$IMAGE_NAME:$CANDIDATE_SHA" --format '{{.Id}}')
+          python - "$CANDIDATE_SHA" "$IMAGE_ID" > artifacts/texas-hosted-runtime/container-evidence.json <<'PY'
           import json, sys
           print(json.dumps({
               "schema_version": "texas-hosted-container-evidence/0.1",
@@ -148,7 +157,7 @@ jobs:
       - name: Upload deployable-container evidence
         uses: actions/upload-artifact@v4
         with:
-          name: texas-hosted-runtime-container-${{ github.sha }}
+          name: texas-hosted-runtime-container-${{ env.CANDIDATE_SHA }}
           path: artifacts/texas-hosted-runtime/container-evidence.json
           if-no-files-found: error
           retention-days: 30
