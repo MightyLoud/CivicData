@@ -8,6 +8,7 @@ on:
     paths:
       - 'services/texas_bounded_api/**'
       - 'requirements-hosted-runtime.txt'
+      - 'railway.toml'
       - 'tools/texas_hosted_runtime_validation.py'
       - 'tests/test_texas_hosted_runtime_service.py'
       - 'tests/test_texas_hosted_runtime_validation.py'
@@ -26,6 +27,7 @@ on:
     paths:
       - 'services/texas_bounded_api/**'
       - 'requirements-hosted-runtime.txt'
+      - 'railway.toml'
       - 'tools/texas_hosted_runtime_validation.py'
       - 'tests/test_texas_hosted_runtime_service.py'
       - 'tests/test_texas_hosted_runtime_validation.py'
@@ -56,6 +58,7 @@ jobs:
       IMAGE_NAME: civicdata-tx-hosted-candidate
       CONTAINER_NAME: civicdata-tx-hosted-smoke
       CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      TEST_SERVICE_PORT: '18081'
     steps:
       - name: Check out exact candidate head
         uses: actions/checkout@v4
@@ -103,13 +106,14 @@ jobs:
       - name: Build exact hosted candidate image
         run: docker build -f services/texas_bounded_api/Dockerfile -t "$IMAGE_NAME:$CANDIDATE_SHA" .
 
-      - name: Start candidate container
+      - name: Start candidate container with Railway semantics
         run: |
           docker run -d --rm \
             --name "$CONTAINER_NAME" \
-            -e CIVICDATA_SERVICE_HEAD_SHA="$CANDIDATE_SHA" \
+            -e RAILWAY_GIT_COMMIT_SHA="$CANDIDATE_SHA" \
             -e CIVICDATA_SERVICE_ENVIRONMENT=container-ci \
-            -p 18080:8080 \
+            -e PORT="$TEST_SERVICE_PORT" \
+            -p 18080:"$TEST_SERVICE_PORT" \
             "$IMAGE_NAME:$CANDIDATE_SHA"
 
       - name: Wait for liveness
@@ -145,6 +149,7 @@ jobs:
               "head_sha": sys.argv[1],
               "image_id": sys.argv[2],
               "profile_id": "tx_legislative_two_office_v0.1",
+              "provider_semantics": "RAILWAY_PORT_AND_GIT_SHA",
               "http_container_smoke": "PASS",
               "hosted_runtime_route": "NOT_VALIDATED",
               "activation_authorized": False,
