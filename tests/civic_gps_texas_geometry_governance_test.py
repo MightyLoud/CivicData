@@ -2,7 +2,12 @@
 from __future__ import annotations
 
 import copy
+from pathlib import Path
+import sys
 import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 from civic_gps_extensions.texas_geometry_governance import (
     ACCEPTANCE,
