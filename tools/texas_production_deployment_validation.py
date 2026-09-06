@@ -113,15 +113,10 @@ def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, An
     meta = _read_json(data / META_NAME)
     receipt = _read_json(data / RECEIPT_NAME)
 
-    # Read the successor package through the real production-profile catalog path.
-    # The temporary catalog is proposal-only and never overwrites the default file.
     raw_entry_stub = {"catalog_version": "0.1", "entries": []}
     statuses: dict[str, str] = {}
     details: dict[str, Any] = {}
 
-    # The receipt supplies the already-governed jurisdiction identity needed to
-    # build a non-default proposal entry. Artifact reconstruction then proves the
-    # package itself rather than trusting this placeholder object.
     jid = receipt["scope"]["jurisdiction_id"]
     proposal = _entry({"jurisdiction": {"jurisdiction_id": jid}}, receipt, meta)
     raw_entry_stub["entries"] = [proposal]
@@ -160,8 +155,6 @@ def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, An
         if bindings != receipt["scope"]["bindings"]:
             raise DeploymentValidationError("production binding drift from successor receipt")
 
-        # Loading the resolver performs live geometry marker governance before any
-        # address geocode. This is the exact production-bounded runtime contract.
         try:
             resolver = load_resolver_with_extensions(repo_root, legislative_overlays=groups, timeout_seconds=30.0)
         except Exception as exc:
@@ -170,8 +163,6 @@ def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, An
         _check(statuses, details, "geometry-governance-preflight", "PASS",
                policy_id=groups[0]["geometry_governance"]["policy_id"])
 
-        # Exact positive live route through production-bounded geography + proposed
-        # governed catalog/profile. This is a candidate execution, not a deployment.
         try:
             positive_gps = resolver.resolve(TEXAS_CAPITOL, observed_on=observed_on)
             positive = representation_catalog.build_representation_from_catalog(
@@ -233,8 +224,6 @@ def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, An
             return _report(head_sha, observed_on, statuses, details, meta, receipt)
         _check(statuses, details, "no-partial-projection", "PASS", projections_returned=0)
 
-    # No deployable HTTP service, deployment workflow, or configured production
-    # target exists in this repository. Do not relabel the Actions runner as hosted.
     _check(statuses, details, "hosted-runtime-route", "BLOCKED",
            blocker="NO_HOSTED_PRODUCTION_RUNTIME_TARGET_CONFIGURED",
            note="Live candidate execution passed in CI, but CI is not a hosted production route.")
@@ -277,6 +266,30 @@ def _report(head_sha: str, observed_on: str, statuses: dict[str, str], details: 
     return report
 
 
+def _diagnostic_report(head_sha: str, observed_on: str, exc: Exception) -> dict[str, Any]:
+    report: dict[str, Any] = {
+        "schema_version": "texas-production-deployment-validation/0.1",
+        "environment": "EXACT_HEAD_CI_CANDIDATE_NOT_HOSTED_PRODUCTION",
+        "head_sha": head_sha,
+        "observed_on": observed_on,
+        "status": "FAIL",
+        "profile_id": PROFILE,
+        "checks": [{"check_id": cid, "status": "NOT_RUN"} for cid in CHECK_IDS],
+        "details": {
+            "harness_exception": {
+                "type": type(exc).__name__,
+                "message": str(exc),
+            }
+        },
+        "inputs": {},
+        "activation_authorized": False,
+        "repository_activation": "NOT_ACTIVATED",
+        "canonical_writes": 0,
+    }
+    report["deterministic_sha256"] = _sha_json(report)
+    return report
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", type=Path, default=Path("."))
@@ -284,12 +297,13 @@ def main() -> None:
     parser.add_argument("--observed-on", default=date.today().isoformat())
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    report = execute(args.repo_root.resolve(), head_sha=args.head_sha, observed_on=args.observed_on)
     args.output.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        report = execute(args.repo_root.resolve(), head_sha=args.head_sha, observed_on=args.observed_on)
+    except Exception as exc:
+        report = _diagnostic_report(args.head_sha, args.observed_on, exc)
     args.output.write_text(canonical_json(report), encoding="utf-8")
     print(canonical_json(report), end="")
-    # Expected fail-closed blocker is a successful validation run. Any other failure
-    # makes CI red.
     if report["status"] == "FAIL":
         raise SystemExit(2)
 
