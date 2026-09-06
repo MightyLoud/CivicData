@@ -11,7 +11,7 @@ Governed inputs under `data/packages/tx/legislative/` remain:
 - post-activation hosted evidence: `ed079fdfade76c06271f4b6be57fc669db7586b2ad66dc56ec13e3694f2abfb6`;
 - merged runtime release readiness: `abeacad639da187818748c5af70e9df05fab27bf52101d270b7cd9c133f0c031`;
 - release authorization: `7bf9a8ecf9c101e9faee4389f925f469fd1d37934cc1d3dc9bfd6a890989d6de`;
-- publication execution authorization: `be30edcbbeecb01cfc63b32442ff0567e59d7f839c1ee119f877d613b898c7da`.
+- publication execution authorization: `4f2b11aa0a51bf3df3eb869b349679906910f0e44440f602fad4eea26a9ce694`.
 
 Release authorization became active on `main` at:
 
