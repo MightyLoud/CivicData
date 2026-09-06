@@ -80,9 +80,16 @@ def make_repo(root, p, acceptance):
 
 
 class TxProductionProfileTests(unittest.TestCase):
-    def test_default_catalog_not_activated(self):
+    def test_default_catalog_contains_exact_bounded_texas_profile(self):
         rows = package_catalog.load_catalog()["entries"]
-        self.assertFalse(any(r.get("production_profile") or r.get("profile")=="state_legislative_representation" for r in rows))
+        matches = [
+            r for r in rows
+            if r.get("profile") == "state_legislative_representation"
+            and (r.get("production_profile") or {}).get("profile_id") == production_profile.PROFILE_ID
+        ]
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["entry_id"], "tx-legislative-two-office-v0.1-hosted-candidate")
+        self.assertEqual({row["binding_id"] for row in matches[0]["district_bindings"]}, {"tx-house", "tx-senate"})
 
     def test_profile_loader_preserves_strict_default_contract(self):
         p = resolved_package(); acceptance = receipt(package=p)
