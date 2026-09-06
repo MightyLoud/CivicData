@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare the bounded Texas runtime publication manifest only after explicit execution authorization."""
+"""Prepare the bounded Texas runtime publication manifest after explicit execution authorization."""
 from __future__ import annotations
 
 import argparse
@@ -17,7 +17,7 @@ if str(ROOT) not in sys.path:
 from tools.jurisdiction_package import canonical_json
 from tools.texas_release_authorization import AUTH_SHA, verify as verify_release_authorization
 
-EXECUTION_SCHEMA = "texas-bounded-publication-execution/0.1"
+EXECUTION_SCHEMA = "texas-bounded-publication-execution/0.2"
 MANIFEST_SCHEMA = "texas-bounded-runtime-release-manifest/0.1"
 
 
@@ -47,26 +47,36 @@ def verify_digest(value: dict[str, Any]) -> str:
 
 
 def prepare_manifest(*, repo_root: Path, execution_authorization_path: Path,
-                     head_sha: str) -> dict[str, Any]:
-    require(re.fullmatch(r"[a-f0-9]{40}", head_sha) is not None, "PUBLICATION_HEAD_SHA_INVALID")
+                     execution_head_sha: str) -> dict[str, Any]:
+    require(re.fullmatch(r"[a-f0-9]{40}", execution_head_sha) is not None,
+            "PUBLICATION_EXECUTION_HEAD_SHA_INVALID")
     verify_release_authorization(repo_root)
     release_auth = json.loads((repo_root / "data/packages/tx/legislative/release-authorization-v0.1.json").read_text(encoding="utf-8"))
     execution = read_json(execution_authorization_path)
-    execution_sha = verify_digest(execution)
+    execution_auth_sha = verify_digest(execution)
 
     required = {
         "schema_version", "status", "profile_id", "release_authorization_sha256",
-        "publication_main_sha", "proposed_tag", "execution_authorized",
-        "github_release_creation_authorized", "railway_redeploy_authorized",
-        "canonical_writes", "deterministic_sha256",
+        "authorization_main_sha", "publication_target_sha", "proposed_tag",
+        "execution_authorized", "github_release_creation_authorized",
+        "railway_redeploy_authorized", "canonical_writes", "deterministic_sha256",
     }
     require(set(execution) == required, "PUBLICATION_EXECUTION_AUTHORIZATION_FIELDS_INVALID")
     require(execution.get("schema_version") == EXECUTION_SCHEMA, "PUBLICATION_EXECUTION_SCHEMA_INVALID")
     require(execution.get("status") == "PUBLICATION_EXECUTION_AUTHORIZED", "PUBLICATION_EXECUTION_NOT_AUTHORIZED")
     require(execution.get("profile_id") == release_auth.get("profile_id"), "PUBLICATION_PROFILE_DRIFT")
     require(execution.get("release_authorization_sha256") == AUTH_SHA, "PUBLICATION_RELEASE_AUTHORIZATION_DRIFT")
-    require(execution.get("publication_main_sha") == head_sha, "PUBLICATION_MAIN_SHA_DRIFT")
-    require(execution.get("proposed_tag") == release_auth["publication_contract"]["proposed_tag"], "PUBLICATION_TAG_DRIFT")
+
+    authorization_main_sha = str(execution.get("authorization_main_sha") or "")
+    publication_target_sha = str(execution.get("publication_target_sha") or "")
+    require(re.fullmatch(r"[a-f0-9]{40}", authorization_main_sha) is not None,
+            "PUBLICATION_AUTHORIZATION_MAIN_SHA_INVALID")
+    require(re.fullmatch(r"[a-f0-9]{40}", publication_target_sha) is not None,
+            "PUBLICATION_TARGET_SHA_INVALID")
+    require(publication_target_sha == authorization_main_sha,
+            "PUBLICATION_TARGET_MUST_EQUAL_AUTHORIZED_MAIN")
+    require(execution.get("proposed_tag") == release_auth["publication_contract"]["proposed_tag"],
+            "PUBLICATION_TAG_DRIFT")
     require(execution.get("execution_authorized") is True, "PUBLICATION_EXECUTION_NOT_AUTHORIZED")
     require(execution.get("github_release_creation_authorized") is True, "GITHUB_RELEASE_CREATION_NOT_AUTHORIZED")
     require(execution.get("railway_redeploy_authorized") is False, "PUBLICATION_MUST_NOT_REDEPLOY_RAILWAY")
@@ -78,14 +88,16 @@ def prepare_manifest(*, repo_root: Path, execution_authorization_path: Path,
         "schema_version": MANIFEST_SCHEMA,
         "status": "PUBLICATION_MANIFEST_READY",
         "profile_id": release_auth["profile_id"],
-        "target_sha": head_sha,
+        "execution_head_sha": execution_head_sha,
+        "target_sha": publication_target_sha,
         "tag": publication["proposed_tag"],
         "title": publication["proposed_title"],
         "public_runtime_endpoint": publication["public_runtime_endpoint"],
         "scope": release_auth["scope"],
         "authorization": {
             "release_authorization_sha256": AUTH_SHA,
-            "publication_execution_authorization_sha256": execution_sha,
+            "publication_execution_authorization_sha256": execution_auth_sha,
+            "authorization_main_sha": authorization_main_sha,
         },
         "inputs": {
             "package_sha256": basis["package_sha256"],
@@ -111,13 +123,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", type=Path, default=ROOT)
     parser.add_argument("--execution-authorization", type=Path, required=True)
-    parser.add_argument("--head-sha", required=True)
+    parser.add_argument("--execution-head-sha", required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     manifest = prepare_manifest(
         repo_root=args.repo_root.resolve(),
         execution_authorization_path=args.execution_authorization,
-        head_sha=args.head_sha.strip().lower(),
+        execution_head_sha=args.execution_head_sha.strip().lower(),
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(canonical_json(manifest), encoding="utf-8")
