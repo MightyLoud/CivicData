@@ -1,12 +1,12 @@
 # Texas bounded legislative production deployment validation v0.1
 
-Status: `EXACT_HEAD_VALIDATION_IMPLEMENTED_HOSTED_ROUTE_REQUIRED`
+Status: `HOSTED_VALIDATION_COMPLETE__PROOF_FROZEN_AFTER_ACTIVATION`
 
-This gate executes the issued House 49 / Senate 14 successor package through the real production-bounded Civic GPS geography contract and the proposed governed production-profile route without activating the default catalog or registry.
+This gate established the production deployment evidence required for the bounded Texas House District 49 / Senate District 14 representation profile before repository activation.
 
-## Purpose
+## Required checks
 
-The deployment-readiness contract requires seven exact-head checks:
+The deployment-readiness contract requires:
 
 1. `geometry-governance-preflight`;
 2. `package-profile-reconstruction`;
@@ -16,71 +16,58 @@ The deployment-readiness contract requires seven exact-head checks:
 6. `public-identity-gate`;
 7. `hosted-runtime-route`.
 
-GitHub Actions can directly establish the first six against current code, current package bytes, current live geometry markers, and live address resolution. It cannot establish the seventh merely by executing a runner. An Actions runner is an ephemeral validation environment, not a hosted production route.
+The first six were initially exercised in GitHub Actions. The seventh required a genuinely external HTTPS deployment and could not be satisfied by an Actions runner or localhost process.
 
-## Exact-head candidate execution
+## Final hosted proof
 
-`tools/texas_production_deployment_validation.py` binds its report to the exact 40-character `GITHUB_SHA` and performs the following without changing defaults:
+Provider: Railway.
 
-- reconstructs the committed successor archive from its base64 parts;
-- verifies the archive and `jurisdiction.json` hashes;
-- verifies the committed `texas-bounded-acceptance/0.1` successor receipt;
-- loads the package through `tx_legislative_two_office_v0.1`;
-- requires both Persons to remain explicit `AUTHORITATIVE`;
-- builds the exact `PRODUCTION_BOUNDED` House/Senate geography group;
-- loads the resolver, which runs the live Texas geometry-version governance preflight before geocoding;
-- resolves the Texas Capitol at `1100 Congress Ave, Austin, TX 78701` and requires exactly two public bounded projections, two authoritative holders, `publication_eligible=true`, `complete_jurisdiction=false`, and zero canonical writes;
-- resolves Round Rock City Hall at `221 E Main St, Round Rock, TX 78664` and requires fail-closed outside-slice behavior with zero partial projections.
+Endpoint:
 
-The live addresses are controls for the bounded route. They do not change package coverage or establish statewide completeness.
+`https://texas-bounded-api-production.up.railway.app`
 
-## Hosted-route boundary
+Validated deployed head:
 
-The connected Civic repositories currently contain no deployable HTTP service entry point, hosting configuration, production deployment workflow, or independently identifiable hosted Civic GPS endpoint for this route.
+`05e6ca3962c0eb3105e96ef4335423350ea9865b`
 
-Therefore the validator must record:
+Hosted-validation deterministic SHA-256:
 
-`hosted-runtime-route = BLOCKED`
+`890073c847d9477c1a3c75d4228b5758d76a338954200d597577bc8a73396e37`
 
-with blocker:
+All seven required checks passed. The Texas Capitol returned exactly two bounded projections / two AUTHORITATIVE holders. Round Rock City Hall failed closed with zero projections.
 
-`NO_HOSTED_PRODUCTION_RUNTIME_TARGET_CONFIGURED`
-
-when the six executable checks pass but no real production route exists.
-
-The validator must not relabel GitHub Actions, a localhost server, a unit test, or a synthetic session as hosted production evidence.
-
-## Disposition semantics
-
-If any of the first six checks fails, the validation report is `FAIL` and CI fails.
-
-If the first six checks pass and the hosted route is unavailable, the report is:
-
-`BLOCKED_HOSTED_RUNTIME_ROUTE`
-
-The workflow itself may complete successfully because it correctly enforced the expected fail-closed boundary. That workflow success is not production deployment success.
-
-Only an independently deployed production route can support a future strict deployment evidence object with:
+The strict deployment evidence object reported:
 
 - `environment=production`;
-- exact candidate `head_sha`;
+- `head_sha=05e6ca3962c0eb3105e96ef4335423350ea9865b`;
 - `status=PASS`;
-- all seven required check IDs at `PASS`.
+- `profile_id=tx_legislative_two_office_v0.1`;
+- all seven check IDs at `PASS`.
 
-Only that strict object can satisfy `tools/texas_activation_readiness.py` and permit a `READY_TO_ACTIVATE` readiness receipt. Even then, activation remains a separate explicit decision.
+Deployment-evidence SHA-256:
 
-## Artifact
+`226d4649391d8c6c4e7609f541c6e4c5e547e2cdc22d497ca8adca15bf108fca`
 
-The `Texas production deployment validation` workflow uploads the exact-head JSON report as a GitHub Actions artifact. The report carries:
+That evidence produced readiness receipt SHA-256:
 
-- candidate head SHA;
-- observation date;
-- successor package and receipt pins;
-- status for all seven deployment checks;
-- per-check details;
-- `activation_authorized=false`;
-- `repository_activation=NOT_ACTIVATED`;
-- `canonical_writes=0`;
-- deterministic report SHA-256.
+`be8e3435dc07fd8918e80212e60758b08e45ee97bf981fad821d4f2f7d8019d8`
 
-No default catalog entry, registry overlay, merge, release, publication, or deployment is created by this workflow.
+## Post-activation transition
+
+Repository activation was subsequently authorized and executed. The deployment-validation workflow now detects the activated state and verifies `tests/test_texas_activation_execution.py` instead of trying to re-run the old pre-activation candidate gate against a head whose defaults are intentionally active.
+
+The already validated Railway deployment remains pinned to the pre-activation proof head. No Railway redeploy was authorized as part of catalog/registry activation.
+
+Current disposition:
+
+`PRODUCTION_DEPLOYMENT_VALIDATION = PASS_7_OF_7`
+
+`REPOSITORY_ACTIVATION = ACTIVATED_BOUNDED`
+
+`RAILWAY_REDEPLOY = NOT_AUTHORIZED`
+
+`MERGE = NOT_AUTHORIZED`
+
+`RELEASE = NOT_AUTHORIZED`
+
+`CANONICAL_WRITES = 0`
