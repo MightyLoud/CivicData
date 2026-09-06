@@ -9,12 +9,14 @@ on:
       - 'civic_gps_runtime_parts/**'
       - 'civic_gps_extensions/**'
       - 'consumers/empowered_vote/package_catalog.py'
+      - 'consumers/empowered_vote/package_catalog.v0.1.json'
       - 'consumers/empowered_vote/production_profile.py'
       - 'consumers/empowered_vote/representation.py'
       - 'consumers/empowered_vote/representation_catalog.py'
       - 'data/packages/tx/legislative/**'
       - 'tools/texas_production_deployment_validation.py'
       - 'tests/test_texas_production_deployment_validation.py'
+      - 'tests/test_texas_activation_execution.py'
       - 'tests/test_tx_successor_package.py'
       - 'docs/workflows/texas-production-deployment-validation-v0.1.md'
       - '.github/workflows/texas-production-deployment-validation.yml'
@@ -25,12 +27,14 @@ on:
       - 'civic_gps_runtime_parts/**'
       - 'civic_gps_extensions/**'
       - 'consumers/empowered_vote/package_catalog.py'
+      - 'consumers/empowered_vote/package_catalog.v0.1.json'
       - 'consumers/empowered_vote/production_profile.py'
       - 'consumers/empowered_vote/representation.py'
       - 'consumers/empowered_vote/representation_catalog.py'
       - 'data/packages/tx/legislative/**'
       - 'tools/texas_production_deployment_validation.py'
       - 'tests/test_texas_production_deployment_validation.py'
+      - 'tests/test_texas_activation_execution.py'
       - 'tests/test_tx_successor_package.py'
       - 'docs/workflows/texas-production-deployment-validation-v0.1.md'
       - '.github/workflows/texas-production-deployment-validation.yml'
@@ -55,6 +59,32 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Detect repository activation state
+        id: activation
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          catalog = json.loads(Path('consumers/empowered_vote/package_catalog.v0.1.json').read_text())
+          registry = json.loads(Path('civic_gps_extensions/registry_bundles.v0.1.json').read_text())
+          entry = any(
+              row.get('profile') == 'state_legislative_representation'
+              and (row.get('production_profile') or {}).get('profile_id') == 'tx_legislative_two_office_v0.1'
+              for row in catalog.get('entries', []) if isinstance(row, dict)
+          )
+          group = any(
+              row.get('group_id') == 'GEO-TX-LEGISLATIVE-TWO-DISTRICTS'
+              for row in registry.get('legislative_boundary_overlays', []) if isinstance(row, dict)
+          )
+          if entry != group:
+              raise SystemExit('partial Texas activation detected')
+          mode = 'activated' if entry else 'candidate'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+              fh.write('mode=' + mode + '\n')
+          print('mode=' + mode)
+          PY
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -65,7 +95,12 @@ jobs:
       - name: Install Civic GPS runtime dependency
         run: python -m pip install -r requirements-civic-gps.txt
 
+      - name: Verify activated repository state
+        if: steps.activation.outputs.mode == 'activated'
+        run: python tests/test_texas_activation_execution.py
+
       - name: Reconstruct exact Civic GPS runtime
+        if: steps.activation.outputs.mode == 'candidate'
         shell: bash
         run: |
           set -euo pipefail
@@ -75,15 +110,18 @@ jobs:
           unzip -q civic_gps_runtime.zip
 
       - name: Compile deployment validator
+        if: steps.activation.outputs.mode == 'candidate'
         run: python -m py_compile tools/texas_production_deployment_validation.py tests/test_texas_production_deployment_validation.py
 
       - name: Run offline fail-closed disposition controls
+        if: steps.activation.outputs.mode == 'candidate'
         run: python tests/test_texas_production_deployment_validation.py
 
       - name: Recheck committed successor package
         run: python tests/test_tx_successor_package.py
 
       - name: Execute exact-head live candidate validation
+        if: steps.activation.outputs.mode == 'candidate'
         shell: bash
         run: |
           set -euo pipefail
@@ -95,7 +133,7 @@ jobs:
             --output artifacts/texas-production-deployment/deployment-validation-v0.1.json
 
       - name: Show governed disposition
-        if: always()
+        if: always() && steps.activation.outputs.mode == 'candidate'
         shell: bash
         run: |
           if [[ -f artifacts/texas-production-deployment/deployment-validation-v0.1.json ]]; then
@@ -114,8 +152,17 @@ jobs:
           PY
           fi
 
+      - name: Preserve certified hosted proof after activation
+        if: steps.activation.outputs.mode == 'activated'
+        run: |
+          echo 'repository_activation=ACTIVATED_BOUNDED'
+          echo 'hosted_validation_head=05e6ca3962c0eb3105e96ef4335423350ea9865b'
+          echo 'hosted_validation_sha256=890073c847d9477c1a3c75d4228b5758d76a338954200d597577bc8a73396e37'
+          echo 'readiness_receipt_sha256=be8e3435dc07fd8918e80212e60758b08e45ee97bf981fad821d4f2f7d8019d8'
+          echo 'railway_redeploy=NOT_AUTHORIZED'
+
       - name: Upload exact-head deployment evidence
-        if: always()
+        if: always() && steps.activation.outputs.mode == 'candidate'
         uses: actions/upload-artifact@v4
         with:
           name: texas-production-deployment-validation-${{ github.sha }}
