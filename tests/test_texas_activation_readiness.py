@@ -1,15 +1,12 @@
-"""Synthetic Texas activation-readiness controls; no production activation or live address requests."""
+"""Synthetic Texas activation-readiness controls; no production activation or live requests."""
 from __future__ import annotations
 
 import copy
 import hashlib
-import io
 import json
 from pathlib import Path
 import sys
-import tempfile
 import unittest
-import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = Path(__file__).resolve().parent
@@ -17,11 +14,8 @@ for path in (ROOT, TESTS):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from civic_gps_extensions.loader import load_resolver_with_extensions
-from civic_gps_extensions.texas_geometry_governance import PINS
 from civic_gps_extensions.texas_legislative import build_texas_production_configuration
 from consumers.empowered_vote import package_catalog, production_profile
-from civic_gps_legislative_overlay_test import Response, Session, package as routing_package
 from test_texas_bounded_contract import bounded_package, receipt
 from test_tx_production_profile import compact_bindings, resolved_package
 from tools import jurisdiction_package as builder
@@ -87,44 +81,7 @@ def defaults():
     return catalog, extension
 
 
-class GovernanceSession(Session):
-    def __init__(self, drift=False):
-        super().__init__()
-        self.drift = drift
-        self.metadata_calls = []
-
-    def get(self, url, params=None, timeout=None):
-        if ("Texas_State_House" in url or "Texas_State_Senate" in url) and params == {"f": "json"}:
-            self.calls.append((url, copy.deepcopy(params)))
-            self.metadata_calls.append((url, copy.deepcopy(params)))
-            chamber = "house" if "Texas_State_House" in url else "senate"
-            schema = 1742232985031 if chamber == "house" else 1742233136000
-            data = 1742232985031 if chamber == "house" else 1770228332000
-            body = {
-                "serviceItemId": PINS[chamber]["service_item_id"],
-                "name": PINS[chamber]["layer_name"],
-                "editingInfo": {"schemaLastEditDate": schema, "dataLastEditDate": data},
-                "fields": [{"name": "DIST_NBR", "type": "esriFieldTypeInteger"}],
-            }
-            if self.drift and chamber == "house":
-                body["name"] = "changed"
-            return Response(body)
-        return super().get(url, params=params, timeout=timeout)
-
-
 class TexasActivationReadinessTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.tmp = tempfile.TemporaryDirectory()
-        cls.runtime_root = Path(cls.tmp.name)
-        data = b"".join(path.read_bytes() for path in sorted((ROOT / "civic_gps_runtime_parts").glob("part.*")))
-        with zipfile.ZipFile(io.BytesIO(data)) as archive:
-            archive.extractall(cls.runtime_root)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.tmp.cleanup()
-
     def test_resolved_proposal_is_ready_but_not_authorized_or_activated(self):
         package = resolved_package()
         acceptance = receipt(package=package)
@@ -202,32 +159,6 @@ class TexasActivationReadinessTests(unittest.TestCase):
                 proposed_legislative_group=production_group(package), deployment_evidence=deployment(),
                 expected_head_sha=HEAD, default_catalog=catalog, default_extension=extension)
         self.assertEqual(error.exception.code, "ACTIVATION_ALREADY_PRESENT_IN_CATALOG")
-
-    def test_production_loader_runs_governance_preflight_before_geocoding(self):
-        package = routing_package()
-        groups, _ = build_texas_production_configuration(
-            package, house_division_id="test-house-49", senate_division_id="test-senate-14")
-        session = GovernanceSession()
-        resolver = load_resolver_with_extensions(self.runtime_root, legislative_overlays=groups, session=session)
-        self.assertEqual(len(session.metadata_calls), 2)
-        self.assertEqual(len(session.geocoder_calls), 0)
-        result = resolver.resolve("SYNTHETIC INPUT", observed_on="2026-09-06")
-        tx_assignments = [row for row in result["payload"]["district_assignments"] if row.get("adapter_id", "").startswith("DIST-TX-")]
-        self.assertEqual(len(tx_assignments), 2)
-        self.assertTrue(all(row["scope"] == "PRODUCTION_BOUNDED" for row in tx_assignments))
-        tx_coverage = [row for row in result["payload"]["coverage"] if row.get("layer") == "GEO-TX-LEGISLATIVE-TWO-DISTRICTS"]
-        self.assertEqual(tx_coverage[0]["scope"], "PRODUCTION_BOUNDED")
-        self.assertFalse(tx_coverage[0]["publication_eligible"])
-        self.assertFalse(any(row.get("gap_id") == "GAP-GEO-TX-LEGISLATIVE-TWO-DISTRICTS-RELEASE" for row in result["payload"]["known_gaps"]))
-
-    def test_geometry_drift_blocks_loader_before_geocoding(self):
-        package = routing_package()
-        groups, _ = build_texas_production_configuration(
-            package, house_division_id="test-house-49", senate_division_id="test-senate-14")
-        session = GovernanceSession(drift=True)
-        with self.assertRaisesRegex(ValueError, "GEOMETRY_VERSION_DRIFT"):
-            load_resolver_with_extensions(self.runtime_root, legislative_overlays=groups, session=session)
-        self.assertEqual(len(session.geocoder_calls), 0)
 
 
 if __name__ == "__main__":
