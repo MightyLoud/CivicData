@@ -3,7 +3,8 @@ FROM python:3.12.11-slim-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
-    CIVICDATA_SERVICE_ENVIRONMENT=candidate
+    CIVICDATA_SERVICE_ENVIRONMENT=candidate \
+    PORT=8080
 
 WORKDIR /app
 
@@ -29,6 +30,6 @@ USER civicdata
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=4).read()"
+  CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.environ.get('PORT', '8080') + '/healthz', timeout=4).read()"
 
-CMD ["uvicorn", "services.texas_bounded_api.main:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
+CMD ["sh", "-c", "exec uvicorn services.texas_bounded_api.main:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1"]
