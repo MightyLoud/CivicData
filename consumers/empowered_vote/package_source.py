@@ -35,6 +35,7 @@ _contract_spec.loader.exec_module(_contract)
 validate_identity_graph = _contract.validate_identity_graph
 validate_role_term_sources = _contract.validate_role_term_sources
 validate_production_scope = _contract.validate_production_scope
+validate_public_identity_disposition = _contract.validate_public_identity_disposition
 
 
 class PackageContractError(ValueError):
@@ -93,6 +94,12 @@ def _parse_sums(text: str) -> dict[str, str]:
             raise PackageContractError("PACKAGE_CHECKSUM_FILE_INVALID", line)
         sums[name] = digest.lower()
     return sums
+
+
+def require_public_identity_disposition(package: dict[str, Any]) -> None:
+    errors = validate_public_identity_disposition(package)
+    if errors:
+        raise PackageContractError("PACKAGE_PUBLIC_IDENTITY_UNRESOLVED", ",".join(errors))
 
 
 def _validate_package_shape(package: dict[str, Any]) -> None:
@@ -157,6 +164,7 @@ def _validate_package_shape(package: dict[str, Any]) -> None:
 
     if not isinstance(package.get("warnings"), list):
         raise PackageContractError("PACKAGE_WARNINGS_INVALID")
+    require_public_identity_disposition(package)
 
 
 def load_jurisdiction_package(package_dir: str | Path) -> dict[str, Any]:
@@ -219,6 +227,7 @@ def package_capabilities(package: dict[str, Any]) -> dict[str, bool]:
 
 
 def require_full_essentials(package: dict[str, Any]) -> None:
+    require_public_identity_disposition(package)
     if package_capabilities(package)["full_essentials"]:
         return
     if str(package.get("schema_version")) == "0.1":
@@ -227,6 +236,7 @@ def require_full_essentials(package: dict[str, Any]) -> None:
 
 
 def representation_projection(package: dict[str, Any]) -> dict[str, Any]:
+    require_public_identity_disposition(package)
     records = package["records"]
     projection: dict[str, Any] = {
         "status": "PASS", "consumer_gate": "EV-IMP-002",
