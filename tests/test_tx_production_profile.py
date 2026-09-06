@@ -17,8 +17,9 @@ from tools import jurisdiction_package as builder
 def resolved_package():
     p = bounded_package()
     for person in p["records"]["people"]:
-        for key in ("person_status", "identity_resolution_status", "status", "current_status"):
+        for key in ("identity_resolution_status", "status", "current_status"):
             person.pop(key, None)
+        person["person_status"] = "AUTHORITATIVE"
     p["warnings"] = []
     return p
 
@@ -92,6 +93,7 @@ class TxProductionProfileTests(unittest.TestCase):
             loaded = production_profile.load_profile_package(src,profile_id=production_profile.PROFILE_ID,
                         acceptance_receipt=acceptance,bindings=full_bindings(p))
             self.assertEqual(loaded["qa"]["blocking_gap_count"],5); self.assertEqual(loaded["qa"]["address_tests"],[])
+            self.assertEqual({person["person_status"] for person in loaded["records"]["people"]}, {"AUTHORITATIVE"})
 
     def test_provisional_identity_stays_blocking(self):
         p = bounded_package(); acceptance = receipt(package=p)
@@ -101,6 +103,18 @@ class TxProductionProfileTests(unittest.TestCase):
                 production_profile.load_profile_package(src,profile_id=production_profile.PROFILE_ID,
                     acceptance_receipt=acceptance,bindings=full_bindings(p))
             self.assertEqual(err.exception.code,"PRODUCTION_PROFILE_PUBLIC_IDENTITY_UNRESOLVED")
+
+    def test_missing_identity_status_is_not_implicitly_resolved(self):
+        p = resolved_package()
+        for person in p["records"]["people"]:
+            person.pop("person_status", None)
+        acceptance = receipt(package=p)
+        with tempfile.TemporaryDirectory() as tmp:
+            src, _ = make_repo(Path(tmp), p, acceptance)
+            with self.assertRaises(production_profile.ProductionProfileError) as err:
+                production_profile.load_profile_package(src,profile_id=production_profile.PROFILE_ID,
+                    acceptance_receipt=acceptance,bindings=full_bindings(p))
+            self.assertEqual(err.exception.code,"PRODUCTION_PROFILE_AUTHORITATIVE_IDENTITY_REQUIRED")
 
     def test_receipt_chain_drift_rejected(self):
         p = resolved_package(); acceptance = receipt(package=p); acceptance["scope"]["office_ids"][0] = "wrong"
