@@ -97,6 +97,15 @@ def _check(statuses: dict[str, str], details: dict[str, Any], check_id: str, sta
     details[check_id] = detail
 
 
+def _authoritative_holders(model: dict[str, Any]) -> list[dict[str, Any]]:
+    holders: list[dict[str, Any]] = []
+    for projection in model.get("projections", []):
+        representation = projection.get("representation") if isinstance(projection, dict) else None
+        for office in representation.get("applicable_offices", []) if isinstance(representation, dict) else []:
+            holders.extend(row for row in office.get("holders", []) if isinstance(row, dict))
+    return holders
+
+
 def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, Any]:
     if re.fullmatch(r"[a-f0-9]{40}", head_sha) is None:
         raise DeploymentValidationError("head SHA must be an exact 40-character lowercase SHA")
@@ -106,24 +115,18 @@ def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, An
 
     # Read the successor package through the real production-profile catalog path.
     # The temporary catalog is proposal-only and never overwrites the default file.
-    raw_entry_stub = {
-        "catalog_version": "0.1",
-        "entries": [],
-    }
+    raw_entry_stub = {"catalog_version": "0.1", "entries": []}
     statuses: dict[str, str] = {}
     details: dict[str, Any] = {}
 
-    # First reconstruct the package using a proposal entry whose artifact and receipt
-    # hashes are the committed successor pins.
-    # We need the jurisdiction ID for the proposal; recover it from the already
-    # hash-verified package by using the committed receipt scope.
+    # The receipt supplies the already-governed jurisdiction identity needed to
+    # build a non-default proposal entry. Artifact reconstruction then proves the
+    # package itself rather than trusting this placeholder object.
     jid = receipt["scope"]["jurisdiction_id"]
-    placeholder_package = {"jurisdiction": {"jurisdiction_id": jid}}
-    proposal = _entry(placeholder_package, receipt, meta)
+    proposal = _entry({"jurisdiction": {"jurisdiction_id": jid}}, receipt, meta)
     raw_entry_stub["entries"] = [proposal]
     with tempfile.TemporaryDirectory() as temp:
-        temp_root = Path(temp)
-        catalog_path = temp_root / "candidate-catalog.json"
+        catalog_path = Path(temp) / "candidate-catalog.json"
         catalog_path.write_text(canonical_json(raw_entry_stub), encoding="utf-8")
         try:
             catalog = package_catalog.load_catalog(catalog_path)
@@ -131,12 +134,12 @@ def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, An
             package = package_catalog.reconstruct_package(selected_entry, repo_root)
         except Exception as exc:
             _check(statuses, details, "package-profile-reconstruction", "FAIL", error=str(exc))
-            return _report(repo_root, head_sha, observed_on, statuses, details, meta, receipt)
+            return _report(head_sha, observed_on, statuses, details, meta, receipt)
 
         package_bytes = canonical_json(package).encode("utf-8")
         if _sha_bytes(package_bytes) != meta["jurisdiction_json_sha256"]:
             _check(statuses, details, "package-profile-reconstruction", "FAIL", error="jurisdiction hash drift")
-            return _report(repo_root, head_sha, observed_on, statuses, details, meta, receipt)
+            return _report(head_sha, observed_on, statuses, details, meta, receipt)
         _check(statuses, details, "package-profile-reconstruction", "PASS",
                jurisdiction_json_sha256=meta["jurisdiction_json_sha256"], archive_sha256=meta["archive_sha256"])
 
@@ -148,7 +151,7 @@ def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, An
         }
         if identity != receipt["person_identity_status"] or set(identity.values()) != {"AUTHORITATIVE"}:
             _check(statuses, details, "public-identity-gate", "FAIL", identity=identity)
-            return _report(repo_root, head_sha, observed_on, statuses, details, meta, receipt)
+            return _report(head_sha, observed_on, statuses, details, meta, receipt)
         _check(statuses, details, "public-identity-gate", "PASS", identity=identity)
 
         divisions = {row["division_kind"]: row["division_id"] for row in package["records"]["divisions"]}
@@ -163,7 +166,7 @@ def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, An
             resolver = load_resolver_with_extensions(repo_root, legislative_overlays=groups, timeout_seconds=30.0)
         except Exception as exc:
             _check(statuses, details, "geometry-governance-preflight", "FAIL", error=str(exc))
-            return _report(repo_root, head_sha, observed_on, statuses, details, meta, receipt)
+            return _report(head_sha, observed_on, statuses, details, meta, receipt)
         _check(statuses, details, "geometry-governance-preflight", "PASS",
                policy_id=groups[0]["geometry_governance"]["policy_id"])
 
@@ -180,15 +183,30 @@ def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, An
             )
         except Exception as exc:
             _check(statuses, details, "positive-both-bindings", "FAIL", error=str(exc))
-            return _report(repo_root, head_sha, observed_on, statuses, details, meta, receipt)
-        if positive.get("status") != "PASS" or len(positive.get("projections", [])) != 2:
+            return _report(head_sha, observed_on, statuses, details, meta, receipt)
+
+        holders = _authoritative_holders(positive)
+        positive_contract_ok = (
+            positive.get("status") == "PASS"
+            and len(positive.get("projections", [])) == 2
+            and positive.get("publication_eligible") is True
+            and positive.get("complete_jurisdiction") is False
+            and positive.get("canonical_writes") == 0
+            and len(holders) == 2
+            and {str(holder.get("person_status") or "").upper() for holder in holders} == {"AUTHORITATIVE"}
+            and {holder.get("term_start") for holder in holders} == {"2025-01-14"}
+            and {holder.get("term_end") for holder in holders} == {None}
+        )
+        if not positive_contract_ok:
             _check(statuses, details, "positive-both-bindings", "FAIL", result=positive)
-            return _report(repo_root, head_sha, observed_on, statuses, details, meta, receipt)
+            return _report(head_sha, observed_on, statuses, details, meta, receipt)
         _check(statuses, details, "positive-both-bindings", "PASS",
                address=TEXAS_CAPITOL,
                projection_count=2,
-               publication_eligible=positive.get("publication_eligible"),
-               complete_jurisdiction=positive.get("complete_jurisdiction"),
+               holder_count=2,
+               publication_eligible=True,
+               complete_jurisdiction=False,
+               canonical_writes=0,
                deterministic_sha256=positive.get("deterministic_sha256"))
 
         try:
@@ -203,16 +221,16 @@ def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, An
         except Exception as exc:
             _check(statuses, details, "outside-slice-negative", "FAIL", error=str(exc))
             _check(statuses, details, "no-partial-projection", "FAIL", error=str(exc))
-            return _report(repo_root, head_sha, observed_on, statuses, details, meta, receipt)
+            return _report(head_sha, observed_on, statuses, details, meta, receipt)
         if negative.get("status") != "FAIL-CLOSED":
             _check(statuses, details, "outside-slice-negative", "FAIL", result=negative)
             _check(statuses, details, "no-partial-projection", "FAIL", result=negative)
-            return _report(repo_root, head_sha, observed_on, statuses, details, meta, receipt)
+            return _report(head_sha, observed_on, statuses, details, meta, receipt)
         _check(statuses, details, "outside-slice-negative", "PASS",
                address=ROUND_ROCK_CITY_HALL, error=negative.get("error"))
         if "projections" in negative:
             _check(statuses, details, "no-partial-projection", "FAIL", result=negative)
-            return _report(repo_root, head_sha, observed_on, statuses, details, meta, receipt)
+            return _report(head_sha, observed_on, statuses, details, meta, receipt)
         _check(statuses, details, "no-partial-projection", "PASS", projections_returned=0)
 
     # No deployable HTTP service, deployment workflow, or configured production
@@ -220,11 +238,11 @@ def execute(repo_root: Path, *, head_sha: str, observed_on: str) -> dict[str, An
     _check(statuses, details, "hosted-runtime-route", "BLOCKED",
            blocker="NO_HOSTED_PRODUCTION_RUNTIME_TARGET_CONFIGURED",
            note="Live candidate execution passed in CI, but CI is not a hosted production route.")
-    return _report(repo_root, head_sha, observed_on, statuses, details, meta, receipt)
+    return _report(head_sha, observed_on, statuses, details, meta, receipt)
 
 
-def _report(repo_root: Path, head_sha: str, observed_on: str, statuses: dict[str, str],
-            details: dict[str, Any], meta: dict[str, Any], receipt: dict[str, Any]) -> dict[str, Any]:
+def _report(head_sha: str, observed_on: str, statuses: dict[str, str], details: dict[str, Any],
+            meta: dict[str, Any], receipt: dict[str, Any]) -> dict[str, Any]:
     for check_id in CHECK_IDS:
         if check_id not in statuses:
             statuses[check_id] = "NOT_RUN"
