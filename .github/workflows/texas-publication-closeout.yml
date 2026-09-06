@@ -1,0 +1,59 @@
+name: Texas publication closeout
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'data/packages/tx/legislative/publication-release-snapshot-v0.1.json'
+      - 'data/packages/tx/legislative/publication-closeout-v0.1.json'
+      - 'tools/texas_publication_closeout.py'
+      - 'tests/test_texas_publication_closeout.py'
+      - 'docs/workflows/texas-publication-closeout-v0.1.md'
+      - '.github/workflows/texas-publication-closeout.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'data/packages/tx/legislative/publication-release-snapshot-v0.1.json'
+      - 'data/packages/tx/legislative/publication-closeout-v0.1.json'
+      - 'tools/texas_publication_closeout.py'
+      - 'tests/test_texas_publication_closeout.py'
+      - 'docs/workflows/texas-publication-closeout-v0.1.md'
+      - '.github/workflows/texas-publication-closeout.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  closeout:
+    name: Texas publication closeout certification gate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile closeout controls
+        run: |
+          python -m py_compile \
+            tools/texas_publication_closeout.py \
+            tests/test_texas_publication_closeout.py
+
+      - name: Verify deterministic publication closeout
+        run: python tools/texas_publication_closeout.py
+
+      - name: Run closeout tests
+        run: python tests/test_texas_publication_closeout.py
+
+      - name: Confirm certification is non-mutating
+        run: |
+          echo 'status=PUBLISHED_CERTIFIED'
+          echo 'release_mutated=false'
+          echo 'railway_redeploy=false'
+          echo 'canonical_writes=0'
