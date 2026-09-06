@@ -7,6 +7,7 @@ on:
       - "tools/jurisdiction_package.py"
       - "tests/test_jurisdiction_package*.py"
       - "tests/test_role_term_integration.py"
+      - "tests/test_public_identity_disposition.py"
       - "tests/test_texas_bounded_contract.py"
       - "tools/texas_bounded_contract.py"
       - "consumers/empowered_vote/package_source.py"
@@ -14,6 +15,7 @@ on:
       - "data/packages/**"
       - "data/normalized/**"
       - "docs/workflows/jurisdiction-package-v0.*.md"
+      - "docs/workflows/public-identity-publication-v0.1.md"
       - ".github/workflows/jurisdiction-package.yml"
   workflow_dispatch:
 
@@ -44,7 +46,7 @@ jobs:
           python-version: "3.12"
       - name: Compile builder and tests
         if: steps.package.outputs.present == 'true'
-        run: python -m py_compile tools/jurisdiction_package.py tests/test_jurisdiction_package.py tests/test_jurisdiction_package_v0_2.py
+        run: python -m py_compile tools/jurisdiction_package.py tests/test_jurisdiction_package.py tests/test_jurisdiction_package_v0_2.py tests/test_public_identity_disposition.py
       - name: Run v0.1 compatibility tests
         if: steps.package.outputs.present == 'true'
         run: python tests/test_jurisdiction_package.py
@@ -54,6 +56,9 @@ jobs:
       - name: Run RoleTerm identity and bounded representation controls
         if: steps.package.outputs.present == 'true'
         run: python tests/test_role_term_integration.py
+      - name: Run public identity publication controls
+        if: steps.package.outputs.present == 'true'
+        run: python tests/test_public_identity_disposition.py
       - name: Run bounded acceptance and production scope controls
         if: steps.package.outputs.present == 'true'
         run: python tests/test_texas_bounded_contract.py
