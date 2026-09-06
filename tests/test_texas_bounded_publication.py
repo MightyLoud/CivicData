@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 from pathlib import Path
 import sys
 import tempfile
@@ -22,12 +21,10 @@ TAG = "tx-legislative-two-office-v0.1"
 
 class TexasBoundedPublicationTests(unittest.TestCase):
     def test_missing_execution_authorization_fails_closed(self):
-        with self.assertRaisesRegex(PublicationError, "PUBLICATION_EXECUTION_AUTHORIZATION_MISSING"):
-            prepare_manifest(
-                repo_root=ROOT,
-                execution_authorization_path=ROOT / "data/packages/tx/legislative/publication-execution-authorization-v0.1.json",
-                head_sha=HEAD,
-            )
+        with tempfile.TemporaryDirectory() as tmp:
+            missing = Path(tmp) / "missing-execution-authorization.json"
+            with self.assertRaisesRegex(PublicationError, "PUBLICATION_EXECUTION_AUTHORIZATION_MISSING"):
+                prepare_manifest(repo_root=ROOT, execution_authorization_path=missing, head_sha=HEAD)
 
     def test_future_exact_execution_receipt_can_prepare_manifest_without_widening_scope(self):
         execution = {
