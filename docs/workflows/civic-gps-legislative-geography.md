@@ -15,7 +15,7 @@ root is on Python's import path:
 from civic_gps_extensions.texas_legislative import resolve_texas_internal_preview
 
 # package, address, and both exact canonical division IDs come from the caller.
-# This invocation performs live geocoder and boundary requests.
+# The default live path verifies governed geometry-version markers before geocoding.
 preview = resolve_texas_internal_preview(
     package,
     address,
@@ -71,44 +71,59 @@ not pass the staged package through the production package loader or change its
 blocking gaps/address-control results. Provisional Persons remain provisional
 with visible warnings; the default representation consumer still rejects them.
 
-## Source and vintage limits
+## Source and version governance
 
 | Chamber | Adapter | District field/key | Plan authority |
 | --- | --- | --- | --- |
 | House | `DIST-TX-HOUSE-H2316` | `DIST_NBR` / `49` | [TLC PLANH2316](https://data.capitol.texas.gov/dataset/planh2316) |
 | Senate | `DIST-TX-SENATE-S2168` | `DIST_NBR` / `14` | [TLC PLANS2168](https://data.capitol.texas.gov/dataset/plans2168) |
 
-The helper pins the inspected TxDOT ArcGIS layer URLs in `SOURCES`. Adapter
-names identify the intended plans; they do not certify that live service geometry
-is byte-for-byte equivalent to the TLC plan downloads. House geometry equivalence
-is unpinned. The Senate service description refers to the 88th Legislature while
-the layer name refers to the 89th. Both caveats are explicit in assignment
-`source_vintage_status`, and every successful group retains a
-`NOT_YET_RELEASED` gap. GIS representative-name attributes are ignored.
+Geometry-version governance for this bounded helper is defined by
+[`texas-legislative-geometry-governance-v0.1.md`](texas-legislative-geometry-governance-v0.1.md).
+The September 6, 2026 acceptance bound the captured House 49 and Senate 14 service
+polygons to the official TLC plan snapshots and retained the acceptance archive
+hash and candidate commit. The helper now pins the TLC resource/revision identities
+and the mutable ArcGIS service item, layer name, schema/data edit markers, and
+`DIST_NBR` type.
 
-The one-meter probe depends on the ArcGIS service honoring distance queries.
-Synthetic tests prove request/response handling, not live topology or service
-semantics. Before release, verify the geometry vintage and intended runtime with
-an in-slice address, an outside-district address, and actual boundary controls.
-The prior recorded D417 geocode is historical evidence; this patch and its
-offline tests do not repeat that address request.
+The default live `resolve_texas_internal_preview` path checks those live service
+markers before any address geocode. Missing metadata, service failure, or any
+marker drift returns `GEOMETRY_VERSION_DRIFT` and suppresses the entire Texas
+legislative preview. A changed marker requires a new TLC/service comparison and
+new acceptance; updating a timestamp alone is not an accepted remediation.
+
+The Senate service description still refers to the 88th Legislature while the
+accepted layer name refers to the 89th/2025-2027 layer. That discrepancy remains
+explicit and is not normalized away. The captured District 14 polygon was accepted
+only because its recorded geometry comparison agreed with the TLC `PLANS2168`
+snapshot under the acceptance method.
+
+An injected request-compatible `session` is a controlled-test path. It is labeled
+`CONTROLLED_TEST_SESSION_NOT_LIVE_VERIFIED` and does not satisfy live geometry
+governance or release evidence. Direct generic overlay use likewise does not
+create Texas production authority.
 
 ## Verification
 
 ```sh
 python tests/civic_gps_legislative_overlay_test.py
+python tests/civic_gps_texas_geometry_governance_test.py
 python tests/test_role_term_integration.py
+python -m civic_gps_extensions.texas_geometry_governance  # live metadata preflight
 ```
 
 The routing suite reconstructs and checks the pinned core ZIP, injects synthetic
 responses, and covers one-geocode composition, atomic failures, boundary probes,
 source errors, malformed results, provisional identities, source immutability,
 concurrent calls, stable hashes, county preservation, and municipal coexistence.
+The geometry-governance suite covers deterministic acceptance receipts and
+fail-closed service-item, layer-name, schema/data-edit, and district-field drift.
 Existing package and consumer regressions remain required for compatibility.
 
-Extension edits activate the existing Civic GPS release gate. Its legislative
-step is offline; its existing county/Tacoma live steps provide regression evidence
-only. Neither substitutes for the Texas controls above. Packed runtime parts,
-production registry/catalog entries, canonical data, and frozen proof hashes are
-unchanged by this patch. Day 12 closeout, merge, and production activation require
-their remaining acceptance decisions and evidence.
+Extension edits activate the existing Civic GPS release gate. The separate
+`Texas geometry governance` workflow runs the offline drift controls and the live
+metadata preflight on relevant changes and weekly. Neither test path authorizes
+publication, changes canonical data, or activates a production profile. Packed
+runtime parts, production registry/catalog entries, canonical data, and frozen
+proof hashes remain separately governed. Day 12 closeout, merge, and production
+activation require their remaining acceptance decisions and evidence.
