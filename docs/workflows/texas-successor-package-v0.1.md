@@ -1,10 +1,10 @@
 # Texas bounded legislative successor package v0.1
 
-Status: `SUCCESSOR_PACKAGE_AND_RECEIPT_ISSUED_NOT_ACTIVATED`
+Status: `SUCCESSOR_PACKAGE_ACTIVE_BOUNDED`
 
 Issued: September 6, 2026.
 
-This artifact supersedes the **package bytes** of the earlier provisional-identity Texas House 49 / Senate 14 candidate. It does not rewrite or invalidate the historical evidence archive, historical package hashes, or earlier acceptance records. The old artifacts remain historical evidence of the state that was actually tested at that time.
+This artifact superseded the package bytes of the earlier provisional-identity Texas House District 49 / Senate District 14 candidate. The package itself remains byte-preserved after repository activation; activation is recorded separately and does not rewrite historical package or acceptance metadata.
 
 ## Current bounded package
 
@@ -18,35 +18,14 @@ Coverage:
 - representation only;
 - omitted data means `NOT_INCLUDED_NOT_ABSENT`;
 - `complete_jurisdiction=false`;
-- Full Essentials and election scope unsupported.
+- Full Essentials unsupported;
+- election scope unsupported.
 
-The package contains exactly:
+The package contains exactly two canonical Divisions, two Offices, two AUTHORITATIVE Persons, and two CURRENT RoleTerms. Both RoleTerms start `2025-01-14`; actual end dates remain unknown/blank.
 
-- 2 canonical Divisions;
-- 2 canonical Offices;
-- 2 canonical Persons;
-- 2 canonical CURRENT RoleTerms;
-- 10 package provenance evidence records;
-- 8 claim assertions;
-- 5 explicit bounded-scope limitations;
-- 0 source-package address tests.
+## Bounded QA and limitations
 
-The canonical jurisdiction, Division, Office, Person, RoleTerm, and SourceRecord IDs are passed through from the governed Texas workbook. No labels mint IDs.
-
-## Identity and temporal state
-
-Both Persons are explicit `AUTHORITATIVE`:
-
-- Gina Hinojosa — House District 49;
-- Sarah Eckhardt — Senate District 14.
-
-Both RoleTerms remain `CURRENT` with current-service start `2025-01-14`. Actual end dates remain blank. Published future term endpoints in LRL are retained only in evidence summaries and are not written as actual ends.
-
-The original `provisional_source_record_id` remains on both Persons as lineage. Identity resolution does not erase the earlier source observation.
-
-## Bounded source QA
-
-`parity_ok=true` and `qa_fail_count=0` apply to the exact exported two-chain graph. Five limitations remain intentionally visible:
+`parity_ok=true` and `qa_fail_count=0` apply to the exact exported two-chain graph. Five bounded limitations remain visible:
 
 1. `BOUNDED_TWO_OFFICE_SCOPE`;
 2. `SOURCE_PACKAGE_ADDRESS_CONTROLS_EXTERNAL`;
@@ -54,64 +33,57 @@ The original `provisional_source_record_id` remains on both Persons as lineage. 
 4. `FULL_ESSENTIALS_UNSUPPORTED`;
 5. `ELECTION_SCOPE_UNSUPPORTED`.
 
-These are current bounded-package limitations. They are not relabeled historical source defects and they are not cleared to force the generic full-jurisdiction loader to pass.
+Activation does not clear or relabel these limitations.
 
-## Hashes
+## Package hashes
 
-- `jurisdiction.json`: `a43aa6517ea5a6822319298ee6cbacc83be6f3a8731568863243439a5f802530`
-- deterministic package ZIP: `7b6abf28e0535041797b180488cb98ebf223b844b3081e7386ccbd63c85762b1`
-- fresh acceptance receipt file: `3b204dc1d7c4c9442bf61fe422f3de907dfed0bd567ae15ffa6e853ab5399f96`
-- fresh receipt deterministic digest: `f58251a3a127841ec1773a342336d01145aca47d61957ea4bfd1e81121266483`
+- `jurisdiction.json`: `a43aa6517ea5a6822319298ee6cbacc83be6f3a8731568863243439a5f802530`;
+- deterministic package ZIP: `7b6abf28e0535041797b180488cb98ebf223b844b3081e7386ccbd63c85762b1`;
+- acceptance receipt file: `3b204dc1d7c4c9442bf61fe422f3de907dfed0bd567ae15ffa6e853ab5399f96`;
+- acceptance deterministic digest: `f58251a3a127841ec1773a342336d01145aca47d61957ea4bfd1e81121266483`.
 
-The source workbook snapshot is `TX_ELECTIONS_Data_C6`, file ID `1xG1J2fliSTOHoohhDGbsCM4OYUJq0ArEFFLlNYWA6D8`, observed at Drive modification time `2026-09-06T19:34:37.871Z` after the identity-resolution writes.
+Historical live evidence remains reusable only for geography under:
 
-## Fresh receipt semantics
+`GEOGRAPHY_ONLY__NO_OLD_REPRESENTATION_REPLAY`
 
-The receipt remains schema `texas-bounded-acceptance/0.1`, but it is a **fresh successor receipt** bound to the new `jurisdiction.json` hash.
+Old provisional representation output is not replayed as current civic fact evidence.
 
-Historical live evidence is carried forward only for what it still proves without changing civic facts:
+## Activation
 
-- live House/Senate geography routing;
-- positive/outside-slice address behavior;
-- boundary fail-closed behavior;
-- accepted geometry comparisons and runtime pins.
+The successor package subsequently passed independent hosted production validation and the activation-readiness gate.
 
-The historical live evidence archive is pinned as:
+Hosted validation SHA-256:
 
-`f8f7d11bccd35d23496cbb3cb0f4dd82f2604bf5b3ac3d3cc7799e4eccb21a39`
+`890073c847d9477c1a3c75d4228b5758d76a338954200d597577bc8a73396e37`
 
-with tested commit:
+Readiness receipt SHA-256:
 
-`a9994e75d9aac62ae1ae494b8984199e7477bd6a`
+`be8e3435dc07fd8918e80212e60758b08e45ee97bf981fad821d4f2f7d8019d8`
 
-The successor receipt explicitly declares:
+The user then separately authorized repository activation. The exact package is now referenced by the default bounded Texas catalog entry and the exact House/Senate geography group is present in the default registry.
 
-`geometry_evidence_reuse_scope = GEOGRAPHY_ONLY__NO_OLD_REPRESENTATION_REPLAY`
+Activation moment:
 
-The old captured representation output contained provisional Person state. It is **not** asserted equal to the successor authoritative package and is not silently rewritten.
+`2d56d3ee1247be470c066df4b4321fd8e4679698`
 
-Current representation/identity is instead revalidated deterministically from the successor package and current production-profile policy.
+Activation receipt:
 
-## Reproducibility
+`data/packages/tx/legislative/activation-v0.1.json`
 
-`tools/texas_successor_contract.py` rebuilds the receipt deterministically from:
+Activation receipt SHA-256:
 
-- exact successor `jurisdiction.json` bytes;
-- historical geography-evidence SHA;
-- historical tested commit;
-- pinned runtime SHA;
-- identity-resolution head;
-- governed source workbook ID and modification time;
-- exact canonical House and Senate Division IDs.
+`8574a0987e1ebebe4ec3679e9ca936df9aae7453f8ded70642aca54ebf197166`
 
-`tests/test_tx_successor_package.py` reconstructs the committed base64 package archive, verifies all hashes, rebuilds the receipt, loads the package through the bounded production profile, replays the two canonical representation chains against synthetic exact district assignments, and confirms the default catalog remains unactivated.
+`tests/test_tx_successor_package.py` verifies the committed package/receipt hashes and now also requires the default catalog to contain exactly the certified successor entry and reconstruct exactly these package bytes.
 
-## Activation boundary
+Current disposition:
 
-This issuance does **not** add a Texas catalog entry or Civic GPS registry overlay. It does not perform hosted production deployment validation, merge PR #48, publish a route, or authorize release.
+`SUCCESSOR_PACKAGE = ACTIVE_BOUNDED`
 
-Current next gate:
+`REPOSITORY_ACTIVATION = ACTIVATED_BOUNDED`
 
-`EXACT_HEAD_PRODUCTION_DEPLOYMENT_VALIDATION = REQUIRED`
+`MERGE = NOT_AUTHORIZED`
 
-`REPOSITORY_ACTIVATION = NOT_ACTIVATED`
+`RELEASE = NOT_AUTHORIZED`
+
+`CANONICAL_WRITES = 0`
