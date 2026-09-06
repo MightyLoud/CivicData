@@ -16,7 +16,7 @@ with schema:
 
 Deterministic SHA-256:
 
-`be30edcbbeecb01cfc63b32442ff0567e59d7f839c1ee119f877d613b898c7da`
+`4f2b11aa0a51bf3df3eb869b349679906910f0e44440f602fad4eea26a9ce694`
 
 ## Non-self-referential target binding
 
