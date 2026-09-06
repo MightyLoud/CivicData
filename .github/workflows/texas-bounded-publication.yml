@@ -15,9 +15,11 @@ on:
       - 'tests/test_texas_release_authorization_receipt_consistency.py'
       - 'tests/test_texas_bounded_publication.py'
       - 'tests/test_texas_publication_workflow.py'
+      - 'tests/test_texas_release_execution_boundary.py'
       - 'docs/workflows/texas-release-authorization-v0.1.md'
       - 'docs/workflows/texas-bounded-publication-v0.1.md'
       - 'docs/workflows/texas-bounded-release-notes-v0.1.md'
+      - 'docs/workflows/texas-release-execution-boundary-v0.1.md'
       - '.github/workflows/texas-bounded-publication.yml'
   push:
     branches:
@@ -33,9 +35,11 @@ on:
       - 'tests/test_texas_release_authorization_receipt_consistency.py'
       - 'tests/test_texas_bounded_publication.py'
       - 'tests/test_texas_publication_workflow.py'
+      - 'tests/test_texas_release_execution_boundary.py'
       - 'docs/workflows/texas-release-authorization-v0.1.md'
       - 'docs/workflows/texas-bounded-publication-v0.1.md'
       - 'docs/workflows/texas-bounded-release-notes-v0.1.md'
+      - 'docs/workflows/texas-release-execution-boundary-v0.1.md'
       - '.github/workflows/texas-bounded-publication.yml'
   workflow_dispatch:
     inputs:
@@ -81,7 +85,8 @@ jobs:
             tests/test_texas_release_authorization.py \
             tests/test_texas_release_authorization_receipt_consistency.py \
             tests/test_texas_bounded_publication.py \
-            tests/test_texas_publication_workflow.py
+            tests/test_texas_publication_workflow.py \
+            tests/test_texas_release_execution_boundary.py
 
       - name: Verify governed release authorization
         run: python tools/texas_release_authorization.py
@@ -92,6 +97,7 @@ jobs:
           python tests/test_texas_release_authorization_receipt_consistency.py
           python tests/test_texas_bounded_publication.py
           python tests/test_texas_publication_workflow.py
+          python tests/test_texas_release_execution_boundary.py
 
       - name: Confirm this gate performs no publication
         run: |
