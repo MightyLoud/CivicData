@@ -13,9 +13,14 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import sys
 import tempfile
 from datetime import date
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from civic_gps_extensions.loader import load_resolver_with_extensions
 from civic_gps_extensions.texas_legislative import build_texas_production_configuration
