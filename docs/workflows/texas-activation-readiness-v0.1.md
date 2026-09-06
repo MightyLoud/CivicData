@@ -22,7 +22,7 @@ Coverage is exactly:
 
 ## Production-bounded geography
 
-Legislative geography now supports two explicit scopes:
+Legislative geography supports two explicit scopes:
 
 - `INTERNAL_REVIEW` — the existing non-release preview contract;
 - `PRODUCTION_BOUNDED` — a geography-only production declaration that requires explicit geometry governance.
@@ -53,7 +53,7 @@ After binding validation, the loader runs the Texas geometry-version preflight b
 7. exact-head production deployment evidence;
 8. proof that the default package catalog and default Civic GPS extension are still not activated for the Texas route.
 
-The package is validated through the existing bounded production-profile contract. This means public identity disposition must already pass. A provisional Person or provisional-Person warning remains a hard blocker.
+The package is validated through the bounded production-profile contract. Every Person must carry explicit `AUTHORITATIVE` identity status. `PROVISIONAL`, a provisional-Person warning, a missing identity status, or any other non-authoritative identity state fails closed.
 
 ## Required deployment evidence
 
@@ -89,9 +89,23 @@ A successful dry run emits `texas-activation-readiness/0.1` with:
 
 ## Current Day 12 posture
 
-The repository now has a governed activation-readiness path, but the current staged Texas package is not ready for activation because the staged Person identities remain provisional and no exact-head production deployment evidence exists for a resolved package/receipt pair.
+The source Person identities are now resolved in the governed Texas workbook:
 
-The default production catalog and default Civic GPS registry extension remain unchanged with respect to Texas. Any future activation must be a separate reviewed change containing the exact governed package artifact, refreshed acceptance receipt, catalog entry, production legislative overlay, and production deployment evidence.
+- Gina Hinojosa — `AUTHORITATIVE`;
+- Sarah Eckhardt — `AUTHORITATIVE`.
+
+See `texas-person-identity-resolution-v0.1.md` for the source-backed identity disposition. The original canonical Person IDs and provisional SourceRecord lineage remain preserved.
+
+The historical bounded package is **not** an activation candidate because it predates that identity change. A successor two-office package and fresh bounded acceptance receipt must be regenerated from the current governed workbook state. Exact-head production deployment evidence must then be executed against that successor package/receipt pair.
+
+Therefore the current remaining sequence is:
+
+1. regenerate successor bounded package;
+2. issue fresh hash-bound acceptance receipt;
+3. execute exact-head production deployment validation;
+4. separately review explicit catalog/registry activation and merge/release.
+
+The default production catalog and default Civic GPS registry extension remain unchanged with respect to Texas.
 
 ## Verification
 
