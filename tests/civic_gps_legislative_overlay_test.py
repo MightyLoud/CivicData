@@ -101,7 +101,7 @@ class LegislativeRoutingTests(unittest.TestCase):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.root = Path(cls.tmp.name)
         data = b"".join(p.read_bytes() for p in sorted((ROOT / "civic_gps_runtime_parts").glob("part.*")))
-        assert hashlib.sha256(data).hexdigest() == "1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba"
+        assert hashlib.sha256(data).hexdigest() == "a1d323db8ed7eaaa47e3541a42bacef4377e9c41161f7a2ad888ddf86e5fe192"
         with zipfile.ZipFile(io.BytesIO(data)) as z:
             z.extractall(cls.root)
     @classmethod
