@@ -1,0 +1,39 @@
+name: Fix Lubbock runtime inventory once
+
+on:
+  push:
+    branches:
+      - agent/brazos-actions-remediation
+    paths:
+      - '.github/workflows/fix-lubbock-runtime-inventory-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/brazos-actions-remediation
+          fetch-depth: 0
+      - name: Update exact runtime inventory expectation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tests/civic_gps_lubbock_live_probe.py')
+          text = path.read_text(encoding='utf-8')
+          old = '''    if len(names) != 22 or len(names) != len(set(names)):\n        raise AssertionError(f"Expected 22 unique runtime entries, got {len(names)}")\n'''
+          new = '''    if len(names) != 23 or len(names) != len(set(names)):\n        raise AssertionError(f"Expected 23 unique runtime entries, got {len(names)}")\n    if "civic_gps/civic_gps_action_registry_brazos_v0.1.json" not in names:\n        raise AssertionError("Corrected 0.6.3 runtime is missing the governed Brazos action registry entry")\n'''
+          if text.count(old) != 1:
+              raise SystemExit('Lubbock exact runtime inventory assertion drifted')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/civic_gps_lubbock_live_probe.py
+          git commit -m 'Update Lubbock runtime inventory for Brazos action entry'
+          git push origin HEAD:agent/brazos-actions-remediation
