@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from urllib.parse import urljoin
 
@@ -73,7 +74,10 @@ def main() -> None:
     positive = get_json(args.base_url, "/v1/representation", params={"address": POSITIVE})
     require(positive.get("service") == service, "positive service metadata drift")
     result = positive.get("result", {})
-    require(result.get("status") == "PASS", "positive representation failed")
+    require(
+        result.get("status") == "PASS",
+        "positive representation failed: " + json.dumps(result, sort_keys=True, separators=(",", ":")),
+    )
     require(result.get("publication_eligible") is True, "positive bounded publication gate failed")
     require(result.get("complete_jurisdiction") is False, "positive incorrectly claims complete jurisdiction")
     require(result.get("canonical_writes") == 0, "positive performed canonical writes")
