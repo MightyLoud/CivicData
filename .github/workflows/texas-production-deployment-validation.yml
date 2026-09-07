@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: 'a1d323db8ed7eaaa47e3541a42bacef4377e9c41161f7a2ad888ddf86e5fe192'
+      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797'
     steps:
       - name: Check out exact candidate head
         uses: actions/checkout@v4
