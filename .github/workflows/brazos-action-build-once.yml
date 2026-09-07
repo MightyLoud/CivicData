@@ -36,13 +36,18 @@ jobs:
           PY
       - name: Build candidate
         run: python tools/build_brazos_candidate_once.py
-      - name: Commit candidate and remove temporary builder controls
+      - name: Push non-workflow candidate files
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p data/reference
+          cp .github/workflows/civic-gps-live-smoke.yml data/reference/civic-gps-live-smoke-v0.6.3.candidate.yml
+          git checkout HEAD -- .github/workflows/civic-gps-live-smoke.yml
+          git checkout HEAD -- .github/workflows/brazos-action-build-once.yml
+          git checkout HEAD -- .github/workflows/brazos-action-recovery.yml
           git status --short
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'Rebuild Brazos action routing on Civic GPS 0.6.3'
+          git commit -m 'Rebuild Brazos action routing candidate on Civic GPS 0.6.3'
           git push origin HEAD:agent/brazos-actions-remediation
