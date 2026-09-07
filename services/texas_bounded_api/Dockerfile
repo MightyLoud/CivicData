@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r /app/requirements-hosted-runtime.txt
 
 COPY civic_gps_runtime_parts /app/civic_gps_runtime_parts
 RUN cat /app/civic_gps_runtime_parts/part.* > /app/civic_gps_runtime.zip \
-    && echo '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba  /app/civic_gps_runtime.zip' | sha256sum --check --strict \
+    && echo 'a1d323db8ed7eaaa47e3541a42bacef4377e9c41161f7a2ad888ddf86e5fe192  /app/civic_gps_runtime.zip' | sha256sum --check --strict \
     && python -c "import zipfile; zipfile.ZipFile('/app/civic_gps_runtime.zip').extractall('/app')"
 
 COPY civic_gps_extensions /app/civic_gps_extensions
