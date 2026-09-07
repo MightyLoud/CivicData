@@ -12,7 +12,7 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`a1d323db8ed7eaaa47e3541a42bacef4377e9c41161f7a2ad888ddf86e5fe192`
+`32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797`
 
 Current contract set:
 
