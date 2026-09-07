@@ -1,0 +1,65 @@
+name: Brazos action recovery
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/brazos-action-recovery.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recover governed Brazos action payload from PR 18 runtime
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, subprocess, zipfile
+          from pathlib import Path
+
+          old = 'aa0df8386a4f3a30985d1623c623cbb547821b92'
+          old_zip = Path('/tmp/old-brazos.zip')
+          with old_zip.open('wb') as out:
+              for i in range(8):
+                  out.write(subprocess.check_output(['git','show',f'{old}:civic_gps_runtime_parts/part.{i:02d}']))
+          cur_zip = Path('/tmp/current.zip')
+          parts = sorted(Path('civic_gps_runtime_parts').glob('part.*'))
+          cur_zip.write_bytes(b''.join(p.read_bytes() for p in parts))
+
+          def inspect(path):
+              with zipfile.ZipFile(path) as z:
+                  reg = json.loads(z.read('civic_gps/registry.json'))
+                  bundle = next(b for b in reg['bundles'] if b.get('adapter_id') == 'ADAPTER-TX-BRAZOS')
+                  return z, reg, bundle
+
+          with zipfile.ZipFile(old_zip) as z:
+              action_name = 'civic_gps/civic_gps_action_registry_brazos_v0.1.json'
+              action = json.loads(z.read(action_name))
+              old_reg = json.loads(z.read('civic_gps/registry.json'))
+              old_bundle = next(b for b in old_reg['bundles'] if b.get('adapter_id') == 'ADAPTER-TX-BRAZOS')
+              print('===BRAZOS_ACTION_REGISTRY_BEGIN===')
+              print(json.dumps(action, sort_keys=True, indent=2))
+              print('===BRAZOS_ACTION_REGISTRY_END===')
+              print('===OLD_BRAZOS_BUNDLE_BEGIN===')
+              print(json.dumps(old_bundle, sort_keys=True, indent=2))
+              print('===OLD_BRAZOS_BUNDLE_END===')
+              print('OLD_REGISTRY_VERSION=' + str(old_reg.get('registry_artifact_version')))
+
+          with zipfile.ZipFile(cur_zip) as z:
+              cur_reg = json.loads(z.read('civic_gps/registry.json'))
+              cur_bundle = next(b for b in cur_reg['bundles'] if b.get('adapter_id') == 'ADAPTER-TX-BRAZOS')
+              print('===CURRENT_BRAZOS_BUNDLE_BEGIN===')
+              print(json.dumps(cur_bundle, sort_keys=True, indent=2))
+              print('===CURRENT_BRAZOS_BUNDLE_END===')
+              print('CURRENT_REGISTRY_VERSION=' + str(cur_reg.get('registry_artifact_version')))
+          PY
