@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
-          echo '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba  civic_gps_runtime.zip' | sha256sum --check --strict
+          echo '32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
       - name: Compile Fircrest extension and consumer
         run: python -m py_compile civic_gps_extensions/loader.py consumers/empowered_vote/full_essentials_catalog.py tests/civic_gps_fircrest_extension_live_probe.py

@@ -62,7 +62,7 @@ jobs:
     timeout-minutes: 15
     env:
       PYTHONDONTWRITEBYTECODE: '1'
-      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba'
+      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797'
       IMAGE_NAME: civicdata-tx-hosted-activated-v02
       CONTAINER_NAME: civicdata-tx-hosted-activated-smoke
       CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}

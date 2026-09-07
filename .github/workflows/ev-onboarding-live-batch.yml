@@ -48,7 +48,7 @@ jobs:
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
-          echo '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba  civic_gps_runtime.zip' | sha256sum --check --strict
+          echo '32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
       - name: Compile generic onboarding batch runners
         run: python -m py_compile tools/ev_jurisdiction_onboarding.py tools/ev_onboarding_batch.py tools/ev_live_onboarding_batch.py tools/ev_onboarding_pr_ready.py tools/ev_onboarding_merge_eligibility.py tools/ev_onboarding_merge_execute.py tools/ev_onboarding_post_merge_verify.py tools/ev_onboarding_throughput_batch.py tests/ev_onboarding_pr_ready_test.py tests/ev_onboarding_merge_eligibility_test.py tests/ev_onboarding_merge_execute_test.py tests/ev_onboarding_post_merge_verify_test.py tests/ev_onboarding_throughput_batch_test.py

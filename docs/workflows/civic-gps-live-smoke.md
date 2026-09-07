@@ -12,12 +12,12 @@ The runner reconstructs the exact packaged runtime from repository chunks and ve
 
 Current pinned runtime SHA-256:
 
-`1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba`
+`32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797`
 
 Current contract set:
 
 - Overlay Engine: `v0.6.2`
-- Adapter registry artifact: `v0.6.2`
+- Adapter registry artifact: `v0.6.3`
 - Adapter registry schema: `civic-gps-adapter-registry/0.2.0`
 - Consumer response schema: `civic-gps-response/0.3.0`
 - County onboarding frozen-spec schema: `civic-gps-county-onboarding/0.1.0`
@@ -108,7 +108,7 @@ Required packaged controls:
 - Outside negative — `700 Lavaca Street, Austin, TX 78701` must activate Travis normally while contributing 0 Brazos jurisdiction, assignments, offices, actions, or coverage.
 - Shared exact boundary — live official Brazos County geometry must expose both adjacent precincts through the configured one-meter topology probe, suppress Commissioner, JP, and Constable together, preserve the 6 countywide offices, and emit all three conflict layers. Points immediately on opposite sides must each resolve all three district families to one precinct and restore 9 offices.
 
-Brazos release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Brazos action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
+Brazos release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Brazos action routing v0.1 adds 23 verified routes: normal interiors return 14 Brazos action links (11 body/countywide + 3 matching precinct contacts), while an exact shared precinct boundary returns 11 and suppresses all three ambiguous precinct contacts. Additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.
 
 ### Smith County
 
