@@ -276,8 +276,10 @@ def main() -> int:
         registry = json.loads(archive.read("civic_gps/registry.json"))
         release = json.loads(archive.read("civic_gps/civic_gps_lubbock_county_v0.1.json"))
         engine_bytes = archive.read("civic_gps/engine.py")
-    if len(names) != 22 or len(names) != len(set(names)):
-        raise AssertionError(f"Expected 22 unique runtime entries, got {len(names)}")
+    if len(names) != 23 or len(names) != len(set(names)):
+        raise AssertionError(f"Expected 23 unique runtime entries, got {len(names)}")
+    if "civic_gps/civic_gps_action_registry_brazos_v0.1.json" not in names:
+        raise AssertionError("Corrected 0.6.3 runtime is missing the governed Brazos action registry entry")
     if registry.get("engine_version") != "0.6.2" or registry.get("registry_artifact_version") != EXPECTED_REGISTRY_VERSION:
         raise AssertionError(
             f"Lubbock release requires engine 0.6.2 / registry {EXPECTED_REGISTRY_VERSION}"
