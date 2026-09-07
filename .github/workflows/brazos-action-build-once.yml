@@ -1,0 +1,266 @@
+name: Build Brazos action candidate once
+
+on:
+  push:
+    branches:
+      - agent/brazos-actions-remediation
+    paths:
+      - '.github/workflows/brazos-action-build-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/brazos-actions-remediation
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build deterministic current-runtime Brazos action candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import copy
+          import hashlib
+          import json
+          import subprocess
+          import zipfile
+          from pathlib import Path
+
+          ROOT = Path('.').resolve()
+          OLD = 'aa0df8386a4f3a30985d1623c623cbb547821b92'
+          ACTION = 'civic_gps_action_registry_brazos_v0.1.json'
+          ACTION_PATH = f'civic_gps/{ACTION}'
+          CURRENT_VERSION = '0.6.2'
+          CANDIDATE_VERSION = '0.6.3'
+          OLD_RUNTIME_SHA = '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba'
+          PART_SIZE = 8000
+
+          def canonical_sha(value):
+              return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+
+          def old_runtime_bytes():
+              return b''.join(subprocess.check_output(['git','show',f'{OLD}:civic_gps_runtime_parts/part.{i:02d}']) for i in range(8))
+
+          current_parts = sorted((ROOT/'civic_gps_runtime_parts').glob('part.*'))
+          if not current_parts:
+              raise SystemExit('current runtime parts missing')
+          current_bytes = b''.join(p.read_bytes() for p in current_parts)
+          if hashlib.sha256(current_bytes).hexdigest() != OLD_RUNTIME_SHA:
+              raise SystemExit('current runtime SHA drift before build')
+
+          old_zip = ROOT/'/tmp/old-brazos.zip'
+          Path('/tmp/old-brazos.zip').write_bytes(old_runtime_bytes())
+          with zipfile.ZipFile('/tmp/old-brazos.zip') as z:
+              action_bytes = z.read(ACTION_PATH)
+              action_obj = json.loads(action_bytes)
+              old_registry = json.loads(z.read('civic_gps/registry.json'))
+              old_bundle = next(b for b in old_registry['bundles'] if b.get('adapter_id') == 'ADAPTER-TX-BRAZOS')
+          if action_obj.get('meta', {}).get('route_count') != 23:
+              raise SystemExit('historical Brazos action route count drift')
+          check = copy.deepcopy(action_obj)
+          recorded = check['meta'].pop('canonical_content_sha256', None)
+          if recorded != canonical_sha(check) or recorded != '3a278953be5461e508b85837a1494b8a4779aa9b11f2631d56b5371a2bb0fbdb':
+              raise SystemExit('historical Brazos action canonical hash drift')
+
+          with zipfile.ZipFile(Path('/tmp/current.zip'), 'w') as z:
+              pass
+          Path('/tmp/current.zip').write_bytes(current_bytes)
+          with zipfile.ZipFile('/tmp/current.zip') as zin:
+              infos = zin.infolist()
+              payload = {i.filename: zin.read(i.filename) for i in infos}
+              registry = json.loads(payload['civic_gps/registry.json'])
+          if registry.get('registry_artifact_version') != CURRENT_VERSION:
+              raise SystemExit(f"expected current registry {CURRENT_VERSION}, got {registry.get('registry_artifact_version')}")
+          if len(registry.get('bundles', [])) != 14:
+              raise SystemExit('current bundle count drift')
+          bundle = next(b for b in registry['bundles'] if b.get('adapter_id') == 'ADAPTER-TX-BRAZOS')
+          if bundle.get('action_registry_files'):
+              raise SystemExit('Brazos action routing already present unexpectedly')
+
+          # Merge only action-specific governed fields from PR #18 into the current bundle.
+          bundle['action_registry_files'] = [ACTION]
+          for row in bundle.get('coverage_rules', []):
+              if row.get('layer') == 'brazos_action_endpoints':
+                  row['status'] = 'RELEASE_BACKED'
+                  row['reason'] = 'Brazos County action routing v0.1 provides 23 verified official routes: five Commissioners Court routes, six countywide contacts, and twelve precinct contacts.'
+          gap_map = {row.get('gap_id'): row for row in bundle.get('known_gaps', [])}
+          gap_map['GAP-BRAZOS-GPS-001']['status'] = 'CLOSED'
+          gap_map['GAP-BRAZOS-GPS-001']['summary'] = 'Brazos County action routing v0.1 is release-backed with 23 verified routes; normal interiors return 14 and shared boundaries suppress the three ambiguous precinct routes.'
+          gap_map['GAP-BRAZOS-GPS-003']['status'] = 'CLOSED'
+          gap_map['GAP-BRAZOS-GPS-003']['summary'] = 'Brazos geography and office applicability were promoted through PR #15; action routing is governed by the maintained packaged release gate.'
+          registry['registry_artifact_version'] = CANDIDATE_VERSION
+          payload['civic_gps/registry.json'] = (json.dumps(registry, ensure_ascii=False, indent=2) + '\n').encode()
+          payload[ACTION_PATH] = action_bytes
+
+          # Preserve current archive entry order/metadata and append the new governed action file deterministically.
+          outzip = Path('/tmp/civic_gps_runtime_candidate.zip')
+          with zipfile.ZipFile(outzip, 'w') as zout:
+              for info in infos:
+                  clone = zipfile.ZipInfo(info.filename, date_time=info.date_time)
+                  clone.compress_type = info.compress_type
+                  clone.comment = info.comment
+                  clone.extra = info.extra
+                  clone.internal_attr = info.internal_attr
+                  clone.external_attr = info.external_attr
+                  clone.create_system = info.create_system
+                  clone.flag_bits = info.flag_bits
+                  zout.writestr(clone, payload[info.filename])
+              newinfo = zipfile.ZipInfo(ACTION_PATH, date_time=(2026, 8, 11, 0, 0, 0))
+              newinfo.compress_type = zipfile.ZIP_DEFLATED
+              newinfo.create_system = 3
+              newinfo.external_attr = 0o100644 << 16
+              zout.writestr(newinfo, action_bytes)
+          candidate_bytes = outzip.read_bytes()
+          candidate_sha = hashlib.sha256(candidate_bytes).hexdigest()
+
+          # Replace runtime parts with deterministic candidate bytes.
+          for p in current_parts:
+              p.unlink()
+          part_dir = ROOT/'civic_gps_runtime_parts'
+          for index, start in enumerate(range(0, len(candidate_bytes), PART_SIZE)):
+              (part_dir/f'part.{index:02d}').write_bytes(candidate_bytes[start:start+PART_SIZE])
+
+          # Recover and version the deterministic action-selection test from PR #18.
+          action_probe = subprocess.check_output(['git','show',f'{OLD}:tests/civic_gps_brazos_action_probe.py']).decode()
+          action_probe = action_probe.replace('registry v0.6.1', 'registry v0.6.3')
+          action_probe = action_probe.replace('"0.6.1")', '"0.6.3")')
+          (ROOT/'tests/civic_gps_brazos_action_probe.py').write_text(action_probe)
+
+          # Patch current Brazos live proof in place, preserving current topology/network logic.
+          p = ROOT/'tests/civic_gps_brazos_live_probe.py'
+          s = p.read_text()
+          s = s.replace('"""Packaged Brazos County regression for Civic GPS v0.6.2 / registry v0.5.9."""', '"""Packaged Brazos County regression for Civic GPS v0.6.2 / registry v0.6.3."""')
+          s = s.replace('RELEASE_PATH = GPS / "civic_gps_brazos_county_v0.1.json"\n', 'RELEASE_PATH = GPS / "civic_gps_brazos_county_v0.1.json"\nACTION_FILE = "civic_gps_action_registry_brazos_v0.1.json"\n')
+          s = s.replace('EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.5.9")', 'EXPECTED_REGISTRY_VERSION = os.environ.get("CIVIC_GPS_EXPECTED_REGISTRY_VERSION", "0.6.3")')
+          # Workflow env controls this in CI, but keep standalone default exact.
+          import re
+          s = re.sub(r'EXPECTED_RUNTIME_SHA256 = os\.environ\.get\(\n    "CIVIC_GPS_EXPECTED_RUNTIME_SHA256",\n    "[0-9a-f]{64}",\n\)', f'EXPECTED_RUNTIME_SHA256 = os.environ.get(\n    "CIVIC_GPS_EXPECTED_RUNTIME_SHA256",\n    "{candidate_sha}",\n)', s, count=1)
+          countywide_block = '''COUNTYWIDE_IDS = {
+    "office-us-tx-brazos-county-judge",
+    "office-us-tx-brazos-county-sheriff",
+    "office-us-tx-brazos-county-clerk",
+    "office-us-tx-brazos-county-district-clerk",
+    "office-us-tx-brazos-county-tax-assessor-collector",
+    "office-us-tx-brazos-county-treasurer",
+}
+'''
+          base_actions = '''BASE_ACTION_IDS = {
+    "ACT-BRAZOS-COMMISSIONERS-AGENDAS",
+    "ACT-BRAZOS-COMMISSIONERS-CALENDAR",
+    "ACT-BRAZOS-COMMISSIONERS-CONTACT",
+    "ACT-BRAZOS-COMMISSIONERS-PUBLIC-COMMENT",
+    "ACT-BRAZOS-COMMISSIONERS-WATCH",
+    "ACT-BRAZOS-CONTACT-COUNTY-CLERK",
+    "ACT-BRAZOS-CONTACT-COUNTY-JUDGE",
+    "ACT-BRAZOS-CONTACT-DISTRICT-CLERK",
+    "ACT-BRAZOS-CONTACT-SHERIFF",
+    "ACT-BRAZOS-CONTACT-TAX-ASSESSOR",
+    "ACT-BRAZOS-CONTACT-TREASURER",
+}
+'''
+          if 'BASE_ACTION_IDS' not in s:
+              s = s.replace(countywide_block, countywide_block + base_actions)
+          old_assert = '''def assert_no_actions(label: str, payload: dict) -> None:
+    actions = [
+        row
+        for row in payload.get("action_links") or []
+        if row.get("jurisdiction_id") == J
+    ]
+    if actions:
+        raise AssertionError(f"[{label}] Brazos actions must remain unreleased: {actions}")
+'''
+          new_assert = '''def assert_brazos_actions(label: str, payload: dict, district_key: str | None) -> None:
+    action_ids = {
+        row.get("action_id")
+        for row in payload.get("action_links") or []
+        if row.get("jurisdiction_id") == J
+    }
+    expected = set(BASE_ACTION_IDS)
+    if district_key is not None:
+        expected.update({
+            f"ACT-BRAZOS-CONTACT-COMMISSIONER-P{district_key}",
+            f"ACT-BRAZOS-CONTACT-JP-P{district_key}",
+            f"ACT-BRAZOS-CONTACT-CONSTABLE-P{district_key}",
+        })
+    if action_ids != expected:
+        raise AssertionError(f"[{label}] expected {len(expected)} Brazos actions {sorted(expected)}, got {len(action_ids)} {sorted(action_ids)}")
+    action_coverage = [row for row in payload.get("coverage") or [] if row.get("layer") == "brazos_action_endpoints"]
+    if len(action_coverage) != 1 or action_coverage[0].get("status") != "RELEASE_BACKED":
+        raise AssertionError(f"[{label}] Brazos action coverage is not release-backed: {action_coverage}")
+'''
+          if old_assert not in s:
+              raise SystemExit('current Brazos assert_no_actions block drifted')
+          s = s.replace(old_assert, new_assert)
+          s = s.replace('release = json.loads(runtime_archive.read(f"civic_gps/{RELEASE_PATH.name}"))\n', 'release = json.loads(runtime_archive.read(f"civic_gps/{RELEASE_PATH.name}"))\n    action_registry = json.loads(runtime_archive.read(f"civic_gps/{ACTION_FILE}"))\n')
+          s = s.replace('if bundle.get("action_registry_files"):\n    raise AssertionError("Brazos action routing must remain unreleased in CG-09")', 'if bundle.get("action_registry_files") != [ACTION_FILE]:\n    raise AssertionError(f"Unexpected Brazos action registry files: {bundle.get(\'action_registry_files\')}")\nif action_registry.get("meta", {}).get("route_count") != 23:\n    raise AssertionError("Packaged Brazos action registry must contain exactly 23 routes")')
+          # Replace the current single pending gap assertion with exact final statuses, regardless of its summary text.
+          s = re.sub(r'gap = next\(\n    \(row for row in bundle\.get\("known_gaps", \[\]\) if row\.get\("gap_id"\) == "GAP-BRAZOS-GPS-003"\),\n    None,\n\)\nif not gap or gap\.get\("status"\) != "PROTECTED_PROMOTION_PENDING":\n    raise AssertionError\(f"Brazos package gap state changed: \{gap\}"\)\n', '''gap_statuses = {row.get("gap_id"): row.get("status") for row in bundle.get("known_gaps", [])}
+if gap_statuses != {
+    "GAP-BRAZOS-GPS-001": "CLOSED",
+    "GAP-BRAZOS-GPS-002": "BOUNDED_V0_1_SCOPE",
+    "GAP-BRAZOS-GPS-003": "CLOSED",
+}:
+    raise AssertionError(f"Brazos package gap state changed: {gap_statuses}")
+''', s, count=1)
+          s = s.replace('assert_no_actions(case_id, payload)', 'assert_brazos_actions(case_id, payload, key)')
+          s = s.replace('"applicable_offices": 9,\n            "resolution_attempts": attempts,', '"applicable_offices": 9,\n            "action_links": 14,\n            "resolution_attempts": attempts,')
+          s = s.replace('assert_no_actions("boundary-exact", exact)', 'assert_brazos_actions("boundary-exact", exact, None)')
+          s = s.replace('assert_no_actions(f"boundary-{label}", payload)', 'assert_brazos_actions(f"boundary-{label}", payload, expected_key)')
+          s = s.replace('"applicable_offices": 9,\n            "status": "PASS",', '"applicable_offices": 9,\n            "action_links": 14,\n            "status": "PASS",')
+          s = s.replace('"exact_applicable_offices": 6,\n        "exact_conflict_layers":', '"exact_applicable_offices": 6,\n        "exact_action_links": 11,\n        "exact_conflict_layers":')
+          s = s.replace('"actions": "NOT_YET_RELEASED",', '"actions": {"status": "RELEASE_BACKED", "registry": ACTION_FILE, "verified_routes": 23, "normal_interior_links": 14, "shared_boundary_links": 11},')
+          p.write_text(s)
+
+          # Patch current protected live-smoke workflow.
+          p = ROOT/'.github/workflows/civic-gps-live-smoke.yml'
+          s = p.read_text()
+          s = s.replace("CIVIC_GPS_EXPECTED_REGISTRY_VERSION: '0.6.2'", "CIVIC_GPS_EXPECTED_REGISTRY_VERSION: '0.6.3'")
+          s = s.replace("CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba'", f"CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '{candidate_sha}'")
+          s = s.replace("echo '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba  civic_gps_runtime.zip'", f"echo '{candidate_sha}  civic_gps_runtime.zip'")
+          if "tests/civic_gps_brazos_action_probe.py" not in s:
+              s = s.replace("      - 'tests/civic_gps_brazos_live_probe.py'\n", "      - 'tests/civic_gps_brazos_live_probe.py'\n      - 'tests/civic_gps_brazos_action_probe.py'\n")
+              s = s.replace('tests/civic_gps_brazos_live_probe.py tests/civic_gps_smith_live_probe.py', 'tests/civic_gps_brazos_live_probe.py tests/civic_gps_brazos_action_probe.py tests/civic_gps_smith_live_probe.py')
+              s = s.replace('      - name: Run packaged Smith County archetype controls\n', '      - name: Run Brazos action selection contract\n        if: github.event_name != \'pull_request\' || steps.scope.outputs.run == \'true\'\n        run: python tests/civic_gps_brazos_action_probe.py\n\n      - name: Run packaged Smith County archetype controls\n')
+          p.write_text(s)
+
+          # Narrow docs updates.
+          p = ROOT/'docs/workflows/civic-gps-live-smoke.md'
+          s = p.read_text().replace('1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba', candidate_sha)
+          s = s.replace('- Adapter registry artifact: `v0.6.2`', '- Adapter registry artifact: `v0.6.3`')
+          s = s.replace('Brazos release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Brazos action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.', 'Brazos release scope is 18 offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. Brazos action routing v0.1 adds 23 verified routes: normal interiors return 14 Brazos action links (11 body/countywide + 3 matching precinct contacts), while an exact shared precinct boundary returns 11 and suppresses all three ambiguous precinct contacts. Additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`. Boundary conflicts remain `MULTIPLE_INTERSECTIONS => CONFLICT; NEVER TIE_BREAK`.')
+          p.write_text(s)
+
+          p = ROOT/'docs/workflows/civic-gps-county-archetype.md'
+          s = p.read_text()
+          s = s.replace('Brazos action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`.', 'Brazos action routing v0.1 is release-backed with 23 verified routes: normal interiors return 14 action links and an exact shared precinct boundary returns 11 after all three ambiguous precinct contacts are suppressed. Additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`.')
+          p.write_text(s)
+
+          # Remove temporary workflows before candidate commit.
+          for tmp in (ROOT/'.github/workflows/brazos-action-recovery.yml', ROOT/'.github/workflows/brazos-action-build-once.yml'):
+              if tmp.exists(): tmp.unlink()
+
+          (ROOT/'artifacts').mkdir(exist_ok=True)
+          (ROOT/'artifacts/brazos-candidate-metadata.json').write_text(json.dumps({
+              'registry_version': CANDIDATE_VERSION,
+              'bundle_count': len(registry['bundles']),
+              'runtime_sha256': candidate_sha,
+              'brazos_action_sha256': recorded,
+              'route_count': 23,
+          }, sort_keys=True, indent=2) + '\n')
+          print('CANDIDATE_RUNTIME_SHA256=' + candidate_sha)
+          PY
+
+          git status --short
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Rebuild Brazos action routing on Civic GPS 0.6.3'
+          git push origin HEAD:agent/brazos-actions-remediation
