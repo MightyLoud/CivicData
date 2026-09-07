@@ -21,6 +21,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Normalize current Brazos archetype wording for governed builder
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('docs/workflows/civic-gps-county-archetype.md')
+          s = p.read_text(encoding='utf-8')
+          anchor = "Brazos's v0.1 geography/office package contains 18 canonical offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. All three district families share the official P1–P4 geometry and use the generic one-meter topology probe. Action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`."
+          normalized = "Brazos's v0.1 geography/office package contains 18 canonical offices / 18 holders = 6 deliberately bounded countywide + 4 Commissioner + 4 JP + 4 Constable. All three district families share the official P1–P4 geometry and use the generic one-meter topology probe. Brazos action routing remains `NOT_YET_RELEASED`; additional countywide and judicial offices remain `BOUNDED_V0_1_SCOPE`."
+          if anchor not in s:
+              raise SystemExit('current Brazos archetype paragraph drifted')
+          p.write_text(s.replace(anchor, normalized), encoding='utf-8')
+          PY
       - name: Build candidate
         run: python tools/build_brazos_candidate_once.py
       - name: Commit candidate and remove temporary builder controls
