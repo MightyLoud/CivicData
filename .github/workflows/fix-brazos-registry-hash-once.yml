@@ -1,0 +1,35 @@
+name: Fix Brazos registry hash once
+
+on:
+  push:
+    branches:
+      - agent/brazos-actions-remediation
+    paths:
+      - '.github/workflows/fix-brazos-registry-hash-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/brazos-actions-remediation
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Correct registry embedded canonical hash and active non-workflow pins
+        run: python tools/fix_brazos_registry_hash_once.py
+      - name: Commit corrected non-workflow candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git status --short
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add civic_gps_runtime_parts tests/civic_gps_legislative_overlay_test.py services/texas_bounded_api/Dockerfile docs/workflows/civic-gps-live-smoke.md
+          git commit -m 'Correct Civic GPS 0.6.3 registry canonical hash'
+          git push origin HEAD:agent/brazos-actions-remediation
