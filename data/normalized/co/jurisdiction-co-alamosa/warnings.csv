@@ -1,0 +1,2 @@
+batch_id,blocking,description,entity_id,entity_type,gap_id,gap_type,jurisdiction_id,owner,severity,source_id,status
+CO-NORM-002,False,"Wards 1–4 and their official representation keys are normalized from the City/County ward map, but a separate machine-readable geometry service and district-level point-in-polygon control output were not archived in this execution unit.",division-co-alamosa-citywide,Division,gap-co-alamosa-ward-pip-archive,WARD_ADDRESS_PIP_ARCHIVE,jurisdiction-co-alamosa,Creyton,WARNING,src-co-alamosa-county-elections,OPEN
