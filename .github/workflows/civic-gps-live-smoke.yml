@@ -24,6 +24,7 @@ on:
       - 'tests/civic_gps_tarrant_live_probe.py'
       - 'tests/civic_gps_bastrop_live_probe.py'
       - 'tests/civic_gps_brazos_live_probe.py'
+      - 'tests/civic_gps_brazos_action_probe.py'
       - 'tests/civic_gps_smith_live_probe.py'
       - 'tests/civic_gps_grayson_live_probe.py'
       - 'tests/civic_gps_lubbock_live_probe.py'
@@ -58,9 +59,9 @@ jobs:
     timeout-minutes: 15
     env:
       PYTHONDONTWRITEBYTECODE: '1'
-      CIVIC_GPS_EXPECTED_REGISTRY_VERSION: '0.6.2'
+      CIVIC_GPS_EXPECTED_REGISTRY_VERSION: '0.6.3'
       CIVIC_GPS_EXPECTED_BUNDLE_COUNT: '14'
-      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba'
+      CIVIC_GPS_EXPECTED_RUNTIME_SHA256: 'a1d323db8ed7eaaa47e3541a42bacef4377e9c41161f7a2ad888ddf86e5fe192'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -102,12 +103,12 @@ jobs:
         shell: bash
         run: |
           cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
-          echo '1969e0e6760bdf4e479bd01fa6976f2ea25dd5fdc14e53d0f4b861cde97549ba  civic_gps_runtime.zip' | sha256sum --check --strict
+          echo 'a1d323db8ed7eaaa47e3541a42bacef4377e9c41161f7a2ad888ddf86e5fe192  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
 
       - name: Compile engine, onboarding tool, and smoke tests
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
-        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_topology_probe_test.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py tests/civic_gps_bastrop_live_probe.py tests/civic_gps_brazos_live_probe.py tests/civic_gps_smith_live_probe.py tests/civic_gps_grayson_live_probe.py tests/civic_gps_lubbock_live_probe.py consumers/empowered_vote/live_civic_gps.py tests/empowered_vote_live_civic_gps_network_test.py
+        run: python -m py_compile civic_gps/engine.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_topology_probe_test.py tests/civic_gps_live_smoke.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py tests/civic_gps_bastrop_live_probe.py tests/civic_gps_brazos_live_probe.py tests/civic_gps_brazos_action_probe.py tests/civic_gps_smith_live_probe.py tests/civic_gps_grayson_live_probe.py tests/civic_gps_lubbock_live_probe.py consumers/empowered_vote/live_civic_gps.py tests/empowered_vote_live_civic_gps_network_test.py
 
       - name: Run deterministic County Onboarding Pipeline fixtures
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
@@ -172,6 +173,10 @@ jobs:
       - name: Run packaged Brazos County archetype controls
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_brazos_live_probe.py
+
+      - name: Run Brazos action selection contract
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        run: python tests/civic_gps_brazos_action_probe.py
 
       - name: Run packaged Smith County archetype controls
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
