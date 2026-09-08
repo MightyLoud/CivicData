@@ -1,4 +1,4 @@
-name: EV-IMP-019 Hawaiʻi package probe
+name: EV-IMP-019 Hawaiʻi routing candidate builder
 
 on:
   push:
@@ -6,52 +6,204 @@ on:
       - agent/ev-imp-019-hi-4-routing-candidate
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  probe:
+  build:
+    if: ${{ !contains(github.event.head_commit.message, '[ev-imp-019-generated]') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Probe governed Hawaiʻi office geography
+      - name: Build bounded Hawaiʻi county routing candidate
         shell: bash
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          from tools.ev_onboarding_proposal import discover_package
 
-          ids = [
-              'jurisdiction-hi-hawaii-county',
-              'jurisdiction-hi-honolulu-county',
-              'jurisdiction-hi-kauai-county',
-              'jurisdiction-hi-maui-county',
-              'jurisdiction-hi-kalawao-county',
+          root = Path('.')
+          counties = [
+              {
+                  'slug': 'hawaii-county', 'file_slug': 'hi_hawaii_county',
+                  'name': 'Hawaii County', 'geoid': '15001',
+                  'adapter_id': 'BASE-HI-HAWAII-COUNTY',
+                  'jurisdiction_id': 'jur-us-hi-hawaii-county',
+                  'division_id': 'div-us-hi-hawaii-county',
+              },
+              {
+                  'slug': 'honolulu-county', 'file_slug': 'hi_honolulu_county',
+                  'name': 'Honolulu County', 'geoid': '15003',
+                  'adapter_id': 'BASE-HI-HONOLULU-COUNTY',
+                  'jurisdiction_id': 'jur-us-hi-honolulu-county',
+                  'division_id': 'div-us-hi-honolulu-county',
+              },
+              {
+                  'slug': 'kauai-county', 'file_slug': 'hi_kauai_county',
+                  'name': 'Kauai County', 'geoid': '15007',
+                  'adapter_id': 'BASE-HI-KAUAI-COUNTY',
+                  'jurisdiction_id': 'jur-us-hi-kauai-county',
+                  'division_id': 'div-us-hi-kauai-county',
+              },
+              {
+                  'slug': 'maui-county', 'file_slug': 'hi_maui_county',
+                  'name': 'Maui County', 'geoid': '15009',
+                  'adapter_id': 'BASE-HI-MAUI-COUNTY',
+                  'jurisdiction_id': 'jur-us-hi-maui-county',
+                  'division_id': 'div-us-hi-maui-county',
+              },
           ]
-          root = Path('.').resolve()
-          rows = []
-          for jid in ids:
-              package, _ = discover_package(root, jid)
-              offices = []
-              for row in package.get('records', {}).get('offices', []):
-                  offices.append({
-                      k: row.get(k) for k in (
-                          'office_id','name','office_name','classification_or_role','role',
-                          'represented_division_id','geography_id','division_id','seats','seat_count',
-                          'selection_method','election_scope'
-                      ) if k in row
-                  })
-              rows.append({
-                  'package_jurisdiction_id': jid,
-                  'jurisdiction_division_id': package.get('jurisdiction', {}).get('division_id'),
-                  'divisions': [
-                      {'division_id': d.get('division_id'), 'division_type': d.get('division_type'), 'name': d.get('name')}
-                      for d in package.get('records', {}).get('divisions', [])
-                  ],
-                  'offices': offices,
+
+          extension_path = root / 'civic_gps_extensions' / 'registry_bundles.v0.1.json'
+          extension = json.loads(extension_path.read_text(encoding='utf-8'))
+          bundles = [row for row in extension.get('bundles', []) if not str(row.get('adapter_id', '')).startswith('BASE-HI-')]
+          reason = 'County geography is governed; package-to-representation division binding remains separately gated.'
+          for county in counties:
+              release_rel = f"../civic_gps_extensions/{county['file_slug']}_release_v0.1.json"
+              bundles.append({
+                  'adapter_id': county['adapter_id'],
+                  'mode': 'BASE',
+                  'priority': 80,
+                  'scope_match': {'geography': 'county', 'fields': ['GEOID'], 'equals': county['geoid']},
+                  'division_rules': [{
+                      'division_id': county['division_id'],
+                      'name': county['name'],
+                      'type': 'county',
+                      'when': {'geography': 'county', 'fields': ['GEOID'], 'equals': county['geoid']},
+                  }],
+                  'jurisdictions': [{
+                      'jurisdiction_id': county['jurisdiction_id'],
+                      'activation': {'geography': 'county', 'fields': ['GEOID'], 'equals': county['geoid']},
+                  }],
+                  'release_files': [release_rel],
+                  'district_adapters': [],
+                  'applicable_office_rules': [],
+                  'action_registry_files': [],
+                  'known_gaps': [],
+                  'ev_onboarding_status': 'ROUTING_ONLY',
+                  'ev_onboarding_reason': reason,
               })
-          print('EV_IMP_019_OFFICE_PROBE=' + json.dumps(rows, sort_keys=True, separators=(',', ':')))
+              release = {
+                  'schema_version': 'civic-gps-routing-extension-release/0.1',
+                  'payload': {
+                      'jurisdictions': [{
+                          'jurisdiction_id': county['jurisdiction_id'],
+                          'name': county['name'],
+                          'state': 'HI',
+                      }],
+                      'offices': [],
+                      'officeholders': [],
+                  },
+                  'notes': 'Routing-only Census county GEOID activation. Civic facts remain governed by the Hawaiʻi jurisdiction package; EV representation binding is not released by this candidate.',
+              }
+              release_path = root / 'civic_gps_extensions' / f"{county['file_slug']}_release_v0.1.json"
+              release_path.write_text(json.dumps(release, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+
+          extension['bundles'] = sorted(bundles, key=lambda row: str(row.get('adapter_id') or ''))
+          extension_path.write_text(json.dumps(extension, ensure_ascii=False, sort_keys=True, indent=2) + '\n', encoding='utf-8')
+
+          proposal_path = root / 'tools' / 'ev_onboarding_proposal.py'
+          proposal = proposal_path.read_text(encoding='utf-8')
+          marker = '    strategy, route = matches[0]\n    if strategy == "CENSUS_GEOID":\n'
+          replacement = '''    strategy, route = matches[0]\n    if strategy == "CENSUS_GEOID" and str(route.get("ev_onboarding_status") or "").upper() == "ROUTING_ONLY":\n        civic_id, _ = _routing_from_bundle(route, geoid)\n        base.update({\n            "status": "REVIEW_REQUIRED",\n            "candidate_entry_id": entry_id,\n            "candidate_civic_gps_jurisdiction_id": civic_id,\n            "routing_candidate": {\n                "status": "GOVERNED_ROUTING_ONLY",\n                "strategy": strategy,\n                "reason": str(route.get("ev_onboarding_reason") or "Governed geography exists, but package representation binding is not yet released."),\n            },\n            "production_spec": None,\n        })\n        return base\n    if strategy == "CENSUS_GEOID":\n'''
+          if marker not in proposal:
+              raise SystemExit('proposal insertion marker missing')
+          proposal_path.write_text(proposal.replace(marker, replacement, 1), encoding='utf-8')
+
+          test_path = root / 'tests' / 'ev_onboarding_proposal_test.py'
+          test = test_path.read_text(encoding='utf-8')
+          marker = '    assert fircrest["canonical_writes"] == 0\n\n    with tempfile.TemporaryDirectory() as td:\n'
+          replacement = '''    assert fircrest["canonical_writes"] == 0\n\n    hi_routing_only = [\n        "jurisdiction-hi-hawaii-county",\n        "jurisdiction-hi-honolulu-county",\n        "jurisdiction-hi-kauai-county",\n        "jurisdiction-hi-maui-county",\n    ]\n    for package_id in hi_routing_only:\n        candidate = mod.propose(ROOT, package_id)\n        assert candidate["status"] == "REVIEW_REQUIRED", candidate\n        assert candidate["routing_candidate"]["status"] == "GOVERNED_ROUTING_ONLY", candidate\n        assert candidate["routing_candidate"]["strategy"] == "CENSUS_GEOID", candidate\n        assert candidate["production_spec"] is None\n        assert candidate["canonical_writes"] == 0\n\n    kalawao = mod.propose(ROOT, "jurisdiction-hi-kalawao-county")\n    assert kalawao["status"] == "REVIEW_REQUIRED", kalawao\n    assert kalawao["routing_candidate"]["status"] == "RESEARCH_REQUIRED", kalawao\n    assert kalawao["production_spec"] is None\n    assert kalawao["canonical_writes"] == 0\n\n    with tempfile.TemporaryDirectory() as td:\n'''
+          if marker not in test:
+              raise SystemExit('proposal test insertion marker missing')
+          test = test.replace(marker, replacement, 1)
+          test = test.replace('        "routing_authority_inferred": False,\n', '        "routing_authority_inferred": False,\n        "hi_routing_only_guard": "PASS",\n', 1)
+          test_path.write_text(test, encoding='utf-8')
+
+          live_test = r'''#!/usr/bin/env python3
+"""EV-IMP-019 live Census county-GEOID routing proof for four Hawaiʻi packages."""
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from civic_gps_extensions.loader import load_resolver_with_extensions
+
+CASES = [
+    ("Hawaii County", "25 Aupuni Street, Hilo, HI 96720", "jur-us-hi-hawaii-county", "div-us-hi-hawaii-county"),
+    ("Honolulu County", "530 South King Street, Honolulu, HI 96813", "jur-us-hi-honolulu-county", "div-us-hi-honolulu-county"),
+    ("Kauai County", "4444 Rice Street, Lihue, HI 96766", "jur-us-hi-kauai-county", "div-us-hi-kauai-county"),
+    ("Maui County", "200 South High Street, Wailuku, HI 96793", "jur-us-hi-maui-county", "div-us-hi-maui-county"),
+]
+HI_IDS = {row[2] for row in CASES}
+
+
+def run() -> None:
+    extension = json.loads((ROOT / "civic_gps_extensions" / "registry_bundles.v0.1.json").read_text(encoding="utf-8"))
+    hi_bundles = [row for row in extension.get("bundles", []) if str(row.get("adapter_id", "")).startswith("BASE-HI-")]
+    assert len(hi_bundles) == 4, [row.get("adapter_id") for row in hi_bundles]
+    assert all(row.get("ev_onboarding_status") == "ROUTING_ONLY" for row in hi_bundles)
+    assert all((row.get("scope_match") or {}).get("geography") == "county" for row in hi_bundles)
+    assert not any(row.get("adapter_id") == "BASE-HI-KALAWAO-COUNTY" for row in hi_bundles)
+    assert not (ROOT / "civic_gps_extensions" / "hi_kalawao_county_release_v0.1.json").exists()
+
+    resolver = load_resolver_with_extensions(ROOT, timeout_seconds=30.0)
+    results = []
+    for name, address, expected_jurisdiction, expected_division in CASES:
+        result = resolver.resolve(address, observed_on=None)
+        if "error" in result:
+            raise AssertionError(f"{name}: Civic GPS error: {result['error']}")
+        payload = result["payload"]
+        jurisdictions = {str(row.get("jurisdiction_id")) for row in payload.get("jurisdictions", [])}
+        divisions = {str(row.get("division_id")) for row in payload.get("matched_divisions", [])}
+        assert expected_jurisdiction in jurisdictions, (name, sorted(jurisdictions))
+        assert expected_division in divisions, (name, sorted(divisions))
+        assert not ((HI_IDS - {expected_jurisdiction}) & jurisdictions), (name, sorted(jurisdictions))
+        results.append({
+            "county": name,
+            "address": address,
+            "matched_address": payload.get("input", {}).get("matched_address"),
+            "jurisdiction": expected_jurisdiction,
+            "division": expected_division,
+        })
+
+    for _, _, jurisdiction_id, _ in CASES:
+        file_slug = jurisdiction_id.removeprefix("jur-us-hi-").replace("-county", "_county").replace("-", "_")
+        release = json.loads((ROOT / "civic_gps_extensions" / f"hi_{file_slug}_release_v0.1.json").read_text(encoding="utf-8"))
+        assert release["payload"]["offices"] == []
+        assert release["payload"]["officeholders"] == []
+
+    print(json.dumps({
+        "gate": "EV-IMP-019",
+        "status": "PASS",
+        "county_routes": 4,
+        "live_address_controls": len(results),
+        "kalawao_touched": False,
+        "routing_release_offices": 0,
+        "routing_release_officeholders": 0,
+        "canonical_writes": 0,
+        "results": results,
+    }, sort_keys=True))
+
+
+if __name__ == "__main__":
+    run()
+'''
+          (root / 'tests' / 'civic_gps_hi_county_routing_probe.py').write_text(live_test, encoding='utf-8')
           PY
+
+          python -m py_compile tools/ev_onboarding_proposal.py tests/ev_onboarding_proposal_test.py tests/civic_gps_hi_county_routing_probe.py
+          python tests/ev_onboarding_proposal_test.py
+
+          git config user.name 'CivicData EV-IMP-019 builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add civic_gps_extensions tools/ev_onboarding_proposal.py tests/ev_onboarding_proposal_test.py tests/civic_gps_hi_county_routing_probe.py
+          git diff --cached --check
+          git commit -m '[ev-imp-019-generated] Build Hawaiʻi four-county routing-only candidate'
+          git push origin HEAD:agent/ev-imp-019-hi-4-routing-candidate
