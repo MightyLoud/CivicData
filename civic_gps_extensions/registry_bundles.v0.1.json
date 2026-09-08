@@ -51,11 +51,23 @@
       "mode": "BASE",
       "priority": 80,
       "scope_match": {
-        "geography": "county",
-        "fields": [
-          "GEOID"
-        ],
-        "equals": "15001"
+        "all": [
+          {
+            "geography": "state",
+            "fields": [
+              "GEOID",
+              "STATE"
+            ],
+            "equals": "15"
+          },
+          {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15001"
+          }
+        ]
       },
       "division_rules": [
         {
@@ -98,11 +110,23 @@
       "mode": "BASE",
       "priority": 80,
       "scope_match": {
-        "geography": "county",
-        "fields": [
-          "GEOID"
-        ],
-        "equals": "15003"
+        "all": [
+          {
+            "geography": "state",
+            "fields": [
+              "GEOID",
+              "STATE"
+            ],
+            "equals": "15"
+          },
+          {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15003"
+          }
+        ]
       },
       "division_rules": [
         {
@@ -145,11 +169,23 @@
       "mode": "BASE",
       "priority": 80,
       "scope_match": {
-        "geography": "county",
-        "fields": [
-          "GEOID"
-        ],
-        "equals": "15007"
+        "all": [
+          {
+            "geography": "state",
+            "fields": [
+              "GEOID",
+              "STATE"
+            ],
+            "equals": "15"
+          },
+          {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15007"
+          }
+        ]
       },
       "division_rules": [
         {
@@ -192,11 +228,23 @@
       "mode": "BASE",
       "priority": 80,
       "scope_match": {
-        "geography": "county",
-        "fields": [
-          "GEOID"
-        ],
-        "equals": "15009"
+        "all": [
+          {
+            "geography": "state",
+            "fields": [
+              "GEOID",
+              "STATE"
+            ],
+            "equals": "15"
+          },
+          {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15009"
+          }
+        ]
       },
       "division_rules": [
         {
