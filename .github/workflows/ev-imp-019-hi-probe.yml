@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   build:
-    if: ${{ !contains(github.event.head_commit.message, '[ev-imp-019-generated]') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -20,6 +19,11 @@ jobs:
       - name: Build bounded Hawaiʻi county routing candidate
         shell: bash
         run: |
+          if git log -1 --pretty=%B | grep -Fq '[ev-imp-019-generated]'; then
+            echo 'Generated candidate commit detected; builder is idempotently skipping.'
+            exit 0
+          fi
+
           python - <<'PY'
           import json
           from pathlib import Path
@@ -27,28 +31,28 @@ jobs:
           root = Path('.')
           counties = [
               {
-                  'slug': 'hawaii-county', 'file_slug': 'hi_hawaii_county',
+                  'file_slug': 'hi_hawaii_county',
                   'name': 'Hawaii County', 'geoid': '15001',
                   'adapter_id': 'BASE-HI-HAWAII-COUNTY',
                   'jurisdiction_id': 'jur-us-hi-hawaii-county',
                   'division_id': 'div-us-hi-hawaii-county',
               },
               {
-                  'slug': 'honolulu-county', 'file_slug': 'hi_honolulu_county',
+                  'file_slug': 'hi_honolulu_county',
                   'name': 'Honolulu County', 'geoid': '15003',
                   'adapter_id': 'BASE-HI-HONOLULU-COUNTY',
                   'jurisdiction_id': 'jur-us-hi-honolulu-county',
                   'division_id': 'div-us-hi-honolulu-county',
               },
               {
-                  'slug': 'kauai-county', 'file_slug': 'hi_kauai_county',
+                  'file_slug': 'hi_kauai_county',
                   'name': 'Kauai County', 'geoid': '15007',
                   'adapter_id': 'BASE-HI-KAUAI-COUNTY',
                   'jurisdiction_id': 'jur-us-hi-kauai-county',
                   'division_id': 'div-us-hi-kauai-county',
               },
               {
-                  'slug': 'maui-county', 'file_slug': 'hi_maui_county',
+                  'file_slug': 'hi_maui_county',
                   'name': 'Maui County', 'geoid': '15009',
                   'adapter_id': 'BASE-HI-MAUI-COUNTY',
                   'jurisdiction_id': 'jur-us-hi-maui-county',
