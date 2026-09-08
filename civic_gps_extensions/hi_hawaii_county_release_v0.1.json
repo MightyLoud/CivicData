@@ -1,0 +1,15 @@
+{
+  "notes": "Routing-only Census county GEOID activation. Civic facts remain governed by the Hawaiʻi jurisdiction package; EV representation binding is not released by this candidate.",
+  "payload": {
+    "jurisdictions": [
+      {
+        "jurisdiction_id": "jur-us-hi-hawaii-county",
+        "name": "Hawaii County",
+        "state": "HI"
+      }
+    ],
+    "officeholders": [],
+    "offices": []
+  },
+  "schema_version": "civic-gps-routing-extension-release/0.1"
+}

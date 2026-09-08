@@ -1,0 +1,15 @@
+{
+  "notes": "Routing-only Census county GEOID activation. Civic facts remain governed by the Hawaiʻi jurisdiction package; Maui Council residency qualifications are not promoted as address-specific electorate divisions by this candidate.",
+  "payload": {
+    "jurisdictions": [
+      {
+        "jurisdiction_id": "jur-us-hi-maui-county",
+        "name": "Maui County",
+        "state": "HI"
+      }
+    ],
+    "officeholders": [],
+    "offices": []
+  },
+  "schema_version": "civic-gps-routing-extension-release/0.1"
+}

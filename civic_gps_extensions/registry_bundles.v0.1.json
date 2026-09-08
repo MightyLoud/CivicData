@@ -45,6 +45,242 @@
       "applicable_office_rules": [],
       "action_registry_files": [],
       "known_gaps": []
+    },
+    {
+      "adapter_id": "BASE-HI-HAWAII-COUNTY",
+      "mode": "BASE",
+      "priority": 80,
+      "scope_match": {
+        "all": [
+          {
+            "geography": "state",
+            "fields": [
+              "GEOID",
+              "STATE"
+            ],
+            "equals": "15"
+          },
+          {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15001"
+          }
+        ]
+      },
+      "division_rules": [
+        {
+          "division_id": "div-us-hi-hawaii-county",
+          "name": "Hawaii County",
+          "type": "county",
+          "when": {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15001"
+          }
+        }
+      ],
+      "jurisdictions": [
+        {
+          "jurisdiction_id": "jur-us-hi-hawaii-county",
+          "activation": {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15001"
+          }
+        }
+      ],
+      "release_files": [
+        "../civic_gps_extensions/hi_hawaii_county_release_v0.1.json"
+      ],
+      "district_adapters": [],
+      "applicable_office_rules": [],
+      "action_registry_files": [],
+      "known_gaps": [],
+      "ev_onboarding_status": "ROUTING_ONLY",
+      "ev_onboarding_reason": "County geography is governed; package-to-representation division binding remains separately gated."
+    },
+    {
+      "adapter_id": "BASE-HI-HONOLULU-COUNTY",
+      "mode": "BASE",
+      "priority": 80,
+      "scope_match": {
+        "all": [
+          {
+            "geography": "state",
+            "fields": [
+              "GEOID",
+              "STATE"
+            ],
+            "equals": "15"
+          },
+          {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15003"
+          }
+        ]
+      },
+      "division_rules": [
+        {
+          "division_id": "div-us-hi-honolulu-county",
+          "name": "Honolulu County",
+          "type": "county",
+          "when": {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15003"
+          }
+        }
+      ],
+      "jurisdictions": [
+        {
+          "jurisdiction_id": "jur-us-hi-honolulu-county",
+          "activation": {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15003"
+          }
+        }
+      ],
+      "release_files": [
+        "../civic_gps_extensions/hi_honolulu_county_release_v0.1.json"
+      ],
+      "district_adapters": [],
+      "applicable_office_rules": [],
+      "action_registry_files": [],
+      "known_gaps": [],
+      "ev_onboarding_status": "ROUTING_ONLY",
+      "ev_onboarding_reason": "County geography is governed; package-to-representation division binding remains separately gated."
+    },
+    {
+      "adapter_id": "BASE-HI-KAUAI-COUNTY",
+      "mode": "BASE",
+      "priority": 80,
+      "scope_match": {
+        "all": [
+          {
+            "geography": "state",
+            "fields": [
+              "GEOID",
+              "STATE"
+            ],
+            "equals": "15"
+          },
+          {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15007"
+          }
+        ]
+      },
+      "division_rules": [
+        {
+          "division_id": "div-us-hi-kauai-county",
+          "name": "Kauai County",
+          "type": "county",
+          "when": {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15007"
+          }
+        }
+      ],
+      "jurisdictions": [
+        {
+          "jurisdiction_id": "jur-us-hi-kauai-county",
+          "activation": {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15007"
+          }
+        }
+      ],
+      "release_files": [
+        "../civic_gps_extensions/hi_kauai_county_release_v0.1.json"
+      ],
+      "district_adapters": [],
+      "applicable_office_rules": [],
+      "action_registry_files": [],
+      "known_gaps": [],
+      "ev_onboarding_status": "ROUTING_ONLY",
+      "ev_onboarding_reason": "County geography is governed; package-to-representation division binding remains separately gated."
+    },
+    {
+      "adapter_id": "BASE-HI-MAUI-COUNTY",
+      "mode": "BASE",
+      "priority": 80,
+      "scope_match": {
+        "all": [
+          {
+            "geography": "state",
+            "fields": [
+              "GEOID",
+              "STATE"
+            ],
+            "equals": "15"
+          },
+          {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15009"
+          }
+        ]
+      },
+      "division_rules": [
+        {
+          "division_id": "div-us-hi-maui-county",
+          "name": "Maui County",
+          "type": "county",
+          "when": {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15009"
+          }
+        }
+      ],
+      "jurisdictions": [
+        {
+          "jurisdiction_id": "jur-us-hi-maui-county",
+          "activation": {
+            "geography": "county",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "15009"
+          }
+        }
+      ],
+      "release_files": [
+        "../civic_gps_extensions/hi_maui_county_release_v0.1.json"
+      ],
+      "district_adapters": [],
+      "applicable_office_rules": [],
+      "action_registry_files": [],
+      "known_gaps": [],
+      "ev_onboarding_status": "ROUTING_ONLY",
+      "ev_onboarding_reason": "County geography is governed; package-to-representation division binding remains separately gated."
     }
   ],
   "municipal_boundary_overlays": [
