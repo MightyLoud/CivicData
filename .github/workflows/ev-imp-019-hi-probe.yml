@@ -16,13 +16,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Probe governed Hawaiʻi packages
+      - name: Probe governed Hawaiʻi office geography
         shell: bash
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          from tools.ev_onboarding_proposal import discover_package, expected_counts, derive_live_addresses
+          from tools.ev_onboarding_proposal import discover_package
 
           ids = [
               'jurisdiction-hi-hawaii-county',
@@ -34,16 +34,24 @@ jobs:
           root = Path('.').resolve()
           rows = []
           for jid in ids:
-              package, artifact = discover_package(root, jid)
-              divisions = package.get('records', {}).get('divisions', [])
+              package, _ = discover_package(root, jid)
+              offices = []
+              for row in package.get('records', {}).get('offices', []):
+                  offices.append({
+                      k: row.get(k) for k in (
+                          'office_id','name','office_name','classification_or_role','role',
+                          'represented_division_id','geography_id','division_id','seats','seat_count',
+                          'selection_method','election_scope'
+                      ) if k in row
+                  })
               rows.append({
                   'package_jurisdiction_id': jid,
-                  'jurisdiction': package.get('jurisdiction'),
-                  'schema_version': package.get('schema_version'),
-                  'artifact': artifact,
-                  'expected': expected_counts(package),
-                  'live_addresses': derive_live_addresses(package),
-                  'divisions': divisions,
+                  'jurisdiction_division_id': package.get('jurisdiction', {}).get('division_id'),
+                  'divisions': [
+                      {'division_id': d.get('division_id'), 'division_type': d.get('division_type'), 'name': d.get('name')}
+                      for d in package.get('records', {}).get('divisions', [])
+                  ],
+                  'offices': offices,
               })
-          print('EV_IMP_019_PACKAGE_PROBE=' + json.dumps(rows, sort_keys=True, separators=(',', ':')))
+          print('EV_IMP_019_OFFICE_PROBE=' + json.dumps(rows, sort_keys=True, separators=(',', ':')))
           PY
