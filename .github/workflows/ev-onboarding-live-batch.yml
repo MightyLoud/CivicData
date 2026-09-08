@@ -19,6 +19,7 @@ on:
       - "tests/ev_onboarding_merge_execute_test.py"
       - "tests/ev_onboarding_post_merge_verify_test.py"
       - "tests/ev_onboarding_throughput_batch_test.py"
+      - "tests/ev_onboarding_hi_routing_guard_test.py"
       - "docs/empowered-vote-imp-013.md"
       - "docs/empowered-vote-imp-014.md"
       - "docs/empowered-vote-imp-015.md"
@@ -51,13 +52,15 @@ jobs:
           echo '32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797  civic_gps_runtime.zip' | sha256sum --check --strict
           unzip -q civic_gps_runtime.zip
       - name: Compile generic onboarding batch runners
-        run: python -m py_compile tools/ev_jurisdiction_onboarding.py tools/ev_onboarding_batch.py tools/ev_live_onboarding_batch.py tools/ev_onboarding_pr_ready.py tools/ev_onboarding_merge_eligibility.py tools/ev_onboarding_merge_execute.py tools/ev_onboarding_post_merge_verify.py tools/ev_onboarding_throughput_batch.py tests/ev_onboarding_pr_ready_test.py tests/ev_onboarding_merge_eligibility_test.py tests/ev_onboarding_merge_execute_test.py tests/ev_onboarding_post_merge_verify_test.py tests/ev_onboarding_throughput_batch_test.py
+        run: python -m py_compile tools/ev_jurisdiction_onboarding.py tools/ev_onboarding_batch.py tools/ev_live_onboarding_batch.py tools/ev_onboarding_pr_ready.py tools/ev_onboarding_merge_eligibility.py tools/ev_onboarding_merge_execute.py tools/ev_onboarding_post_merge_verify.py tools/ev_onboarding_throughput_batch.py tests/ev_onboarding_pr_ready_test.py tests/ev_onboarding_merge_eligibility_test.py tests/ev_onboarding_merge_execute_test.py tests/ev_onboarding_post_merge_verify_test.py tests/ev_onboarding_throughput_batch_test.py tests/ev_onboarding_hi_routing_guard_test.py
       - name: Verify all production onboarding specs against governed artifacts
         run: python tools/ev_onboarding_batch.py --repo-root . --output artifacts/ev-imp-008/deterministic
       - name: Run all production live address controls
         run: python tools/ev_live_onboarding_batch.py --repo-root . --output artifacts/ev-imp-008/live
       - name: Run throughput batch isolation tests
         run: python tests/ev_onboarding_throughput_batch_test.py
+      - name: Run EV-IMP-019 Hawaiʻi routing-only guard
+        run: python tests/ev_onboarding_hi_routing_guard_test.py
       - name: Classify actual staged governed package inventory
         run: python tools/ev_onboarding_throughput_batch.py --repo-root . --output artifacts/ev-imp-017
       - name: Run CI-bound readiness unit tests
