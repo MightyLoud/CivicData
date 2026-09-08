@@ -1,0 +1,49 @@
+name: EV-IMP-019 Hawaiʻi package probe
+
+on:
+  push:
+    branches:
+      - agent/ev-imp-019-hi-4-routing-candidate
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Probe governed Hawaiʻi packages
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.ev_onboarding_proposal import discover_package, expected_counts, derive_live_addresses
+
+          ids = [
+              'jurisdiction-hi-hawaii-county',
+              'jurisdiction-hi-honolulu-county',
+              'jurisdiction-hi-kauai-county',
+              'jurisdiction-hi-maui-county',
+              'jurisdiction-hi-kalawao-county',
+          ]
+          root = Path('.').resolve()
+          rows = []
+          for jid in ids:
+              package, artifact = discover_package(root, jid)
+              divisions = package.get('records', {}).get('divisions', [])
+              rows.append({
+                  'package_jurisdiction_id': jid,
+                  'jurisdiction': package.get('jurisdiction'),
+                  'schema_version': package.get('schema_version'),
+                  'artifact': artifact,
+                  'expected': expected_counts(package),
+                  'live_addresses': derive_live_addresses(package),
+                  'divisions': divisions,
+              })
+          print('EV_IMP_019_PACKAGE_PROBE=' + json.dumps(rows, sort_keys=True, separators=(',', ':')))
+          PY
