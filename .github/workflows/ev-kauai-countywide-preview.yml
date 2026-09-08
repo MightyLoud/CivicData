@@ -1,0 +1,55 @@
+name: Kauaʻi countywide preview
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "consumers/empowered_vote/**"
+      - "previews/ev/kauai_countywide.v0.1.json"
+      - "tools/ev_kauai_countywide_preview.py"
+      - "tools/ev_onboarding_proposal.py"
+      - "tools/jurisdiction_package.py"
+      - "tests/ev_kauai_countywide_preview_test.py"
+      - "docs/ev-kauai-countywide-preview-001.md"
+      - "data/packages/hi/**"
+      - "onboarding/ev/**"
+      - "civic_gps_extensions/**"
+      - "civic_gps_runtime_parts/**"
+      - "requirements-civic-gps.txt"
+      - ".github/workflows/ev-kauai-countywide-preview.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  countywide-preview:
+    name: Kauaʻi bounded representation and live controls
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+      - name: Reconstruct exact Civic GPS runtime
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+      - name: Verify bounded preview and retained production holds
+        run: python tests/ev_kauai_countywide_preview_test.py
+      - name: Run two live Kauaʻi streets and an outside-county negative control
+        run: python tools/ev_kauai_countywide_preview.py --repo-root . --output artifacts/ev-kauai-preview/live.json
+      - name: Upload preview evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-kauai-preview-${{ github.event.pull_request.head.sha }}
+          path: artifacts/ev-kauai-preview/
+          if-no-files-found: warn
+          retention-days: 30
