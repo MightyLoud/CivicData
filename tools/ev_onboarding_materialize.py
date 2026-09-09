@@ -9,6 +9,7 @@ Routing authority must already be governed by EV-IMP-009.
 from __future__ import annotations
 
 import argparse
+import copy
 import importlib.util
 import json
 import sys
@@ -68,10 +69,16 @@ def catalog_entry(spec: dict[str, Any]) -> dict[str, Any]:
     }
     if spec.get("district_binding"):
         entry["district_binding"] = spec["district_binding"]
+    for key in ("countywide_binding", "candidate_only", "production_eligible",
+                "publication_eligible", "complete_jurisdiction"):
+        if key in spec:
+            entry[key] = copy.deepcopy(spec[key])
     return entry
 
 
 def routing_record(spec: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    if "countywide_binding" in spec or spec.get("candidate_only") is True:
+        raise MaterializeError("countywide candidate must verify and reuse its existing route")
     routing = spec["routing"]
     strategy = str(routing.get("strategy", "CENSUS_GEOID")).upper()
     if strategy == "CENSUS_GEOID":

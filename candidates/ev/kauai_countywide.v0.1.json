@@ -1,0 +1,104 @@
+{
+  "spec_version": "0.1",
+  "entry_id": "candidate-hi-kauai-countywide-v0.1",
+  "profile": "municipal_representation",
+  "candidate_only": true,
+  "production_eligible": false,
+  "publication_eligible": false,
+  "complete_jurisdiction": false,
+  "package_jurisdiction_id": "jurisdiction-hi-kauai-county",
+  "civic_gps_jurisdiction_id": "jur-us-hi-kauai-county",
+  "package_schema_version": "0.1",
+  "artifact": {
+    "encoding": "base64-parts",
+    "parts_glob": "data/packages/hi/kauai-county/Kauai_County_Jurisdiction_Package_v0.1_2026-08-23.zip.b64.part*",
+    "archive_sha256": "fac5f85e589d237252f7067563f90f73c09f566237967201ef30c994d524081e",
+    "package_subdir": "Kauai_County_Jurisdiction_Package_v0.1_2026-08-23/package"
+  },
+  "countywide_binding": {
+    "binding_version": "0.1",
+    "binding_id": "candidate-hi-kauai-countywide-v0.1",
+    "mode": "COUNTYWIDE_CANDIDATE",
+    "geoid": "15007",
+    "scope": "KAUAI_COUNTYWIDE_MAYOR_AND_COUNCIL_ONLY",
+    "offices": [
+      {
+        "office_id": "office-hi-kauai-mayor",
+        "constituency": "COUNTYWIDE",
+        "seats": 1,
+        "expected_person_ids": [
+          "person-hi-kauai-derek-kawakami"
+        ]
+      },
+      {
+        "office_id": "office-hi-kauai-council-member-multiseat",
+        "constituency": "COUNTYWIDE_AT_LARGE",
+        "seats": 7,
+        "expected_person_ids": [
+          "person-hi-kauai-addison-bulosan",
+          "person-hi-kauai-arryl-kaneshiro",
+          "person-hi-kauai-bernard-carvalho",
+          "person-hi-kauai-felicia-cowden",
+          "person-hi-kauai-fern-holland",
+          "person-hi-kauai-kipukai-kualii",
+          "person-hi-kauai-mel-rapozo"
+        ]
+      }
+    ],
+    "expected_leadership_ids": [
+      "leadership-hi-kauai-chair-mel-rapozo",
+      "leadership-hi-kauai-vice-chair-kipukai-kualii"
+    ]
+  },
+  "routing": {
+    "strategy": "REUSE_GOVERNED_ROUTE",
+    "adapter_id": "BASE-HI-KAUAI-COUNTY",
+    "geoid": "15007",
+    "route_sha256": "777ff79864823ed3348bd74c0a9dfc028c8882730b51ca4a4f996a095d18fe6b",
+    "release_path": "civic_gps_extensions/hi_kauai_county_release_v0.1.json",
+    "release_sha256": "195a1ef070d9718135bc7e7929e0cf037f78953f2ab5874377cddd4530f2693d"
+  },
+  "source_review": {
+    "reviewed_on": "2026-09-09",
+    "package_observed_on": "2026-08-23",
+    "review_kind": "ROSTER_CROSSCHECK_ONLY",
+    "revalidate_before": "2026-12-01",
+    "scope": "KAUAI_COUNTYWIDE_MAYOR_AND_COUNCIL_ONLY",
+    "known_omitted_offices": [
+      "Prosecuting Attorney"
+    ],
+    "identity_policy": "PRESERVE_LEGACY_ACTIVE_REJECT_EXPLICIT_PROVISIONAL",
+    "tenure_policy": "PRESERVE_UNRESOLVED_INTERVALS",
+    "source_urls": [
+      "https://elections.hawaii.gov/cok-mayor/",
+      "https://elections.hawaii.gov/cok-councilmembers/",
+      "https://elections.hawaii.gov/cok-prosecuting-attorney/",
+      "https://elections.hawaii.gov/2026-proclamation/"
+    ]
+  },
+  "live_addresses": [
+    {
+      "address": "4444 Rice Street, Lihue, HI 96766",
+      "source_url": "https://www.kauai.gov/Government/Office-of-the-Mayor"
+    },
+    {
+      "address": "4396 Rice Street, Lihue, HI 96766",
+      "source_url": "https://www.kauai.gov/Home-M/County-Directory"
+    }
+  ],
+  "negative_address": {
+    "address": "25 Aupuni Street, Hilo, HI 96720",
+    "expected_civic_jurisdiction_id": "jur-us-hi-hawaii-county"
+  },
+  "expected": {
+    "office_rows": 2,
+    "current_holders": 8,
+    "leadership_rows": 2,
+    "source_evidence_rows": 4,
+    "source_assertion_rows": 8,
+    "qa_checks": 14,
+    "parity_ok": true,
+    "qa_fail_count": 0,
+    "blocking_gap_count": 0
+  }
+}

@@ -1,0 +1,77 @@
+name: Kauaʻi countywide adapter candidate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "consumers/empowered_vote/**"
+      - "candidates/ev/**"
+      - "previews/ev/kauai_countywide.v0.1.json"
+      - "tools/ev_*.py"
+      - "tools/jurisdiction_package*.py"
+      - "tests/ev_kauai*test.py"
+      - "docs/ev-kauai-prod-adapter-candidate-001.md"
+      - "data/packages/**"
+      - "onboarding/ev/**"
+      - "civic_gps_extensions/**"
+      - "civic_gps_runtime_parts/**"
+      - "requirements-civic-gps.txt"
+      - ".github/workflows/ev-kauai-adapter-candidate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  countywide-candidate:
+    name: Kauaʻi catalog candidate and retained production holds
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      CANDIDATE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Verify exact head and protected candidate boundary
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_HEAD_SHA"
+          git diff --exit-code "$CANDIDATE_BASE_SHA" HEAD -- consumers/empowered_vote/package_catalog.v0.1.json onboarding/ev data civic_gps_extensions civic_gps_runtime_parts civic_gps services railway.toml railway.json Dockerfile requirements-hosted-runtime.txt
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+      - name: Reconstruct exact Civic GPS runtime
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+      - name: Verify catalog candidate, source joins, and production staging rejection
+        run: python tests/ev_kauai_adapter_candidate_test.py
+      - name: Verify certified preview compatibility
+        run: python tests/ev_kauai_countywide_preview_test.py
+      - name: Verify existing catalog and onboarding regressions
+        shell: bash
+        run: |
+          python tests/empowered_vote_package_catalog_test.py
+          python tests/empowered_vote_second_jurisdiction_test.py
+          python tests/empowered_vote_third_jurisdiction_test.py
+          python tests/test_tx_production_profile.py
+          python tests/ev_onboarding_proposal_test.py
+          python tests/ev_onboarding_materialize_test.py
+          python tests/ev_jurisdiction_onboarding_test.py
+          python tests/ev_onboarding_hi_routing_guard_test.py
+      - name: Run catalog path for two live Kauaʻi streets and an outside-county negative
+        run: python tools/ev_kauai_adapter_candidate.py --repo-root . --output artifacts/ev-kauai-adapter-candidate/live.json
+      - name: Upload candidate acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-kauai-adapter-candidate-${{ github.event.pull_request.head.sha }}
+          path: artifacts/ev-kauai-adapter-candidate/
+          if-no-files-found: warn
+          retention-days: 30

@@ -9,6 +9,7 @@ municipal polygon overlay when the Census address response omits place.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import sys
 from pathlib import Path
@@ -51,6 +52,8 @@ def build_catalog_entry(spec: dict[str, Any]) -> dict[str, Any]:
         "package_schema_version": spec["package_schema_version"],
         "artifact": spec["artifact"],
         **({"district_binding": spec["district_binding"]} if spec.get("district_binding") else {}),
+        **{key: copy.deepcopy(spec[key]) for key in ("countywide_binding", "candidate_only",
+            "production_eligible", "publication_eligible", "complete_jurisdiction") if key in spec},
     }
 
 
@@ -130,6 +133,8 @@ def find_existing(repo_root: Path, entry: dict[str, Any], routing_obj: dict[str,
 
 def run(spec_path: Path, repo_root: Path, out: Path, verify_current: bool) -> dict[str, Any]:
     spec = load_json(spec_path)
+    if "countywide_binding" in spec or spec.get("candidate_only") is True:
+        raise OnboardingError("countywide candidate requires the isolated candidate runner")
     if str(spec.get("spec_version")) != SPEC_VERSION:
         raise OnboardingError("unsupported spec_version")
     for key in ("entry_id", "profile", "civic_gps_jurisdiction_id", "package_jurisdiction_id", "package_schema_version", "artifact", "routing"):

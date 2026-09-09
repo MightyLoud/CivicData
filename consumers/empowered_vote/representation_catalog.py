@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from consumers.empowered_vote import package_catalog, package_source, representation
+from consumers.empowered_vote import countywide_candidate, package_catalog, package_source, representation
 
 
 def _catalog_failure(address: str, code: str, detail: str | None = None) -> dict[str, Any]:
@@ -72,15 +72,19 @@ def build_representation_from_catalog(
     repo_root: str | Path,
     catalog_path: str | Path = package_catalog.DEFAULT_CATALOG,
     profile: str = "municipal_representation",
+    allow_candidate: bool = False,
 ) -> dict[str, Any]:
     try:
-        catalog = package_catalog.load_catalog(catalog_path)
+        catalog = package_catalog.load_catalog(catalog_path, allow_candidate=allow_candidate)
         entry = package_catalog.select_entry(catalog, civic_gps_result, profile=profile)
         package = package_catalog.reconstruct_package(entry, repo_root)
     except package_catalog.PackageCatalogError as exc:
         return _catalog_failure(address, exc.code, exc.detail)
     except package_source.PackageContractError as exc:
         return _catalog_failure(address, exc.code, exc.detail)
+
+    if "countywide_binding" in entry:
+        return countywide_candidate.build_representation(package, address, civic_gps_result, entry)
 
     if entry.get("production_profile"):
         return _bounded_profile_representation(package, address, civic_gps_result, entry)
@@ -105,6 +109,7 @@ def build_representation_from_live_address(
     resolver: Any | None = None,
     catalog_path: str | Path = package_catalog.DEFAULT_CATALOG,
     profile: str = "municipal_representation",
+    allow_candidate: bool = False,
 ) -> dict[str, Any]:
     if resolver is None:
         try:
@@ -122,4 +127,5 @@ def build_representation_from_live_address(
         repo_root=repo_root,
         catalog_path=catalog_path,
         profile=profile,
+        allow_candidate=allow_candidate,
     )
