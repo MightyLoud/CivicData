@@ -1,0 +1,71 @@
+{
+  "preview_version": "0.1",
+  "entry_id": "preview-hi-kauai-countywide-v0.1",
+  "binding_id": "preview-hi-kauai-countywide-v0.1",
+  "mode": "COUNTYWIDE_PREVIEW",
+  "preview_only": true,
+  "publication_eligible": false,
+  "complete_jurisdiction": false,
+  "package_jurisdiction_id": "jurisdiction-hi-kauai-county",
+  "civic_gps_jurisdiction_id": "jur-us-hi-kauai-county",
+  "package_schema_version": "0.1",
+  "geoid": "15007",
+  "artifact": {
+    "encoding": "base64-parts",
+    "parts_glob": "data/packages/hi/kauai-county/Kauai_County_Jurisdiction_Package_v0.1_2026-08-23.zip.b64.part*",
+    "archive_sha256": "fac5f85e589d237252f7067563f90f73c09f566237967201ef30c994d524081e",
+    "package_subdir": "Kauai_County_Jurisdiction_Package_v0.1_2026-08-23/package"
+  },
+  "offices": [
+    {
+      "office_id": "office-hi-kauai-mayor",
+      "constituency": "COUNTYWIDE",
+      "seats": 1,
+      "expected_person_ids": [
+        "person-hi-kauai-derek-kawakami"
+      ]
+    },
+    {
+      "office_id": "office-hi-kauai-council-member-multiseat",
+      "constituency": "COUNTYWIDE_AT_LARGE",
+      "seats": 7,
+      "expected_person_ids": [
+        "person-hi-kauai-addison-bulosan",
+        "person-hi-kauai-arryl-kaneshiro",
+        "person-hi-kauai-bernard-carvalho",
+        "person-hi-kauai-felicia-cowden",
+        "person-hi-kauai-fern-holland",
+        "person-hi-kauai-kipukai-kualii",
+        "person-hi-kauai-mel-rapozo"
+      ]
+    }
+  ],
+  "source_references": [
+    {
+      "url": "https://elections.hawaii.gov/2026-proclamation/",
+      "supports": "Seven Kauai Councilmembers elected at large; county Mayor election."
+    },
+    {
+      "url": "https://www.kauai.gov/Government/Council",
+      "supports": "Existing countywide Council structure; source retained by governed package."
+    }
+  ],
+  "live_addresses": [
+    {
+      "address": "4444 Rice Street, Lihue, HI 96766",
+      "source_url": "https://www.kauai.gov/Government/Office-of-the-Mayor"
+    },
+    {
+      "address": "4396 Rice Street, Lihue, HI 96766",
+      "source_url": "https://www.kauai.gov/Home-M/County-Directory"
+    }
+  ],
+  "negative_address": {
+    "address": "25 Aupuni Street, Hilo, HI 96720",
+    "expected_civic_jurisdiction_id": "jur-us-hi-hawaii-county"
+  },
+  "expected_leadership_ids": [
+    "leadership-hi-kauai-chair-mel-rapozo",
+    "leadership-hi-kauai-vice-chair-kipukai-kualii"
+  ]
+}
