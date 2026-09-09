@@ -15,7 +15,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from consumers.empowered_vote import countywide_candidate as adapter, package_catalog, representation_catalog
+from consumers.empowered_vote import countywide_candidate as adapter, countywide_production, package_catalog, representation_catalog
 from tools import ev_kauai_adapter_candidate as runner, ev_jurisdiction_onboarding as onboarding
 from tools import ev_onboarding_materialize as materialize
 from ev_kauai_countywide_preview_test import geography, FixtureResolver
@@ -76,7 +76,9 @@ class CountywideCandidateTest(unittest.TestCase):
     def test_default_catalog_and_candidate_without_opt_in_stay_closed(self):
         default = representation_catalog.build_representation_from_catalog(
             "synthetic", geography(), repo_root=ROOT)
-        self.closed(default, "PACKAGE_NOT_GOVERNED_FOR_RESOLVED_ADDRESS")
+        self.assertEqual(default["status"], "PASS")
+        self.assertEqual(default["package_catalog_entry_id"], countywide_production.ENTRY_ID)
+        self.assertFalse(default["publication_eligible"])
         self.closed(self.build(allow=False), "COUNTYWIDE_CANDIDATE_NOT_ENABLED")
         self.closed(self.build(allow=1), "COUNTYWIDE_CANDIDATE_NOT_ENABLED")
 
@@ -233,8 +235,8 @@ class CountywideCandidateTest(unittest.TestCase):
     def test_production_staging_and_route_regeneration_remain_blocked(self):
         with tempfile.TemporaryDirectory() as td:
             out = Path(td) / "staged"
-            with self.assertRaises(materialize.MaterializeError):
-                materialize.materialize(ROOT, adapter.preview.PACKAGE_ID, out)
+            replay = materialize.materialize(ROOT, adapter.preview.PACKAGE_ID, Path(td) / "production-noop")
+            self.assertEqual(replay["changes_required"], 0)
             with self.assertRaises(materialize.MaterializeError):
                 materialize.routing_record(self.spec)
             with self.assertRaises(onboarding.OnboardingError):
@@ -293,7 +295,7 @@ class CountywideCandidateTest(unittest.TestCase):
         self.assertIsNone(report["source_commit"])
         self.assertEqual(len(report["positive_controls"]), 2)
         self.assertEqual(len(report["routing_holds"]), 4)
-        self.assertTrue(all(row["status"] == "REVIEW_REQUIRED" for row in report["routing_holds"]))
+        self.assertEqual(sorted(row["status"] for row in report["routing_holds"]), ["READY"] + ["REVIEW_REQUIRED"] * 3)
         self.assertEqual(report["auto_promoted"], 0)
         self.assertEqual(report["canonical_writes"], 0)
         self.assertEqual(before, runner.preview_runner.snapshot(ROOT))

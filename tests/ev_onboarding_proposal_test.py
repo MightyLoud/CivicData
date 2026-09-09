@@ -50,7 +50,7 @@ def run() -> None:
         report = mod.verify_all_production(ROOT, Path(td))
         assert report["status"] == "PASS"
         assert report["gate"] == "EV-IMP-009"
-        assert report["production_specs_regenerated"] == 2
+        assert report["production_specs_regenerated"] == 3
         assert report["routing_authority_inferred"] is False
         assert report["canonical_writes"] == 0
         assert (Path(td) / "proposal-roundtrip.json").is_file()

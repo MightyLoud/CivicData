@@ -1,0 +1,96 @@
+name: Kauaʻi production activation candidate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "consumers/empowered_vote/**"
+      - "onboarding/ev/**"
+      - "acceptance/ev/**"
+      - "candidates/ev/**"
+      - "previews/ev/**"
+      - "tools/ev_*.py"
+      - "tools/jurisdiction_package*.py"
+      - "tests/ev_*test.py"
+      - "data/packages/**"
+      - "civic_gps_extensions/**"
+      - "civic_gps_runtime_parts/**"
+      - "requirements-civic-gps.txt"
+      - "docs/ev-kauai-prod-activation-candidate-001.md"
+      - ".github/workflows/ev-kauai-production-activation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  production-activation:
+    name: Kauaʻi default catalog acceptance and retained holds
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ACTIVATION_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      ACTIVATION_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact head and bounded activation diff
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$ACTIVATION_HEAD_SHA"
+          git diff --exit-code "$ACTIVATION_BASE_SHA" HEAD -- data civic_gps_extensions civic_gps_runtime_parts civic_gps services railway.toml railway.json Dockerfile requirements-hosted-runtime.txt
+          python - <<'PY'
+          import json, os, pathlib, subprocess
+          base = os.environ["ACTIVATION_BASE_SHA"]
+          path = "consumers/empowered_vote/package_catalog.v0.1.json"
+          old = json.loads(subprocess.check_output(["git", "show", base + ":" + path]))
+          new = json.loads(pathlib.Path(path).read_text())
+          entry_id = "hi-kauai-countywide-representation-v0.1"
+          assert sum(row["entry_id"] == entry_id for row in new["entries"]) == 1
+          old["entries"] = [row for row in old["entries"] if row["entry_id"] != entry_id]
+          new["entries"] = [row for row in new["entries"] if row["entry_id"] != entry_id]
+          assert old == new, "Other production catalog entries changed"
+          changed = subprocess.check_output(["git", "diff", "--name-only", base, "HEAD", "--",
+              "onboarding/ev", "acceptance/ev"]).decode().splitlines()
+          assert set(changed) <= {"onboarding/ev/kauai-county.v0.1.json",
+                                  "acceptance/ev/kauai_countywide.v0.1.json"}, changed
+          print("PASS: only explicit Kauai catalog/spec/receipt; other catalog entries and protected data unchanged")
+          PY
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+      - name: Reconstruct exact Civic GPS runtime
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+      - name: Verify activation integrity, expiry, and retained candidate isolation
+        run: |
+          python tests/ev_kauai_production_activation_test.py
+          python tests/ev_kauai_adapter_candidate_test.py
+          python tests/ev_kauai_countywide_preview_test.py
+      - name: Verify existing consumers and onboarding
+        run: |
+          python tests/empowered_vote_package_catalog_test.py
+          python tests/empowered_vote_second_jurisdiction_test.py
+          python tests/empowered_vote_third_jurisdiction_test.py
+          python tests/test_tx_production_profile.py
+          python tests/ev_onboarding_proposal_test.py
+          python tests/ev_onboarding_materialize_test.py
+          python tests/ev_jurisdiction_onboarding_test.py
+          python tests/ev_onboarding_batch_test.py
+          python tests/ev_onboarding_hi_routing_guard_test.py
+      - name: Verify default production catalog with live county controls
+        run: python tools/ev_kauai_production_activation.py --repo-root . --output artifacts/ev-kauai-production-activation/live.json
+      - name: Upload exact-head activation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-kauai-production-activation-${{ github.event.pull_request.head.sha }}
+          path: artifacts/ev-kauai-production-activation/
+          if-no-files-found: warn
+          retention-days: 30
