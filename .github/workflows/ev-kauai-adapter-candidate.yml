@@ -34,11 +34,11 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - name: Verify exact head and protected candidate boundary
+      - name: Verify exact head and immutable data/runtime boundary
         shell: bash
         run: |
           test "$(git rev-parse HEAD)" = "$CANDIDATE_HEAD_SHA"
-          git diff --exit-code "$CANDIDATE_BASE_SHA" HEAD -- consumers/empowered_vote/package_catalog.v0.1.json onboarding/ev data civic_gps_extensions civic_gps_runtime_parts civic_gps services railway.toml railway.json Dockerfile requirements-hosted-runtime.txt
+          git diff --exit-code "$CANDIDATE_BASE_SHA" HEAD -- data civic_gps_extensions civic_gps_runtime_parts civic_gps services railway.toml railway.json Dockerfile requirements-hosted-runtime.txt
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

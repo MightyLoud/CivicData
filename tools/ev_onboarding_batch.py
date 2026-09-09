@@ -52,7 +52,7 @@ def load_specs(paths: list[Path]) -> list[tuple[Path, dict[str, Any]]]:
 def routing_identity(spec: dict[str, Any]) -> str:
     strategy = single.routing_strategy(spec)
     routing = spec.get("routing", {})
-    if strategy == "CENSUS_GEOID":
+    if strategy in {"CENSUS_GEOID", "REUSE_GOVERNED_ROUTE"}:
         value = routing.get("adapter_id")
     elif strategy == "MUNICIPAL_BOUNDARY_OVERLAY":
         value = routing.get("overlay_id")

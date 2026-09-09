@@ -17,7 +17,7 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from consumers.empowered_vote import countywide_candidate, live_civic_gps, package_source, production_profile
+from consumers.empowered_vote import countywide_candidate, countywide_production, live_civic_gps, package_source, production_profile
 
 CATALOG_VERSION = "0.1"
 DEFAULT_CATALOG = Path(__file__).with_name("package_catalog.v0.1.json")
@@ -82,7 +82,14 @@ def load_catalog(path: str | Path = DEFAULT_CATALOG, *, allow_candidate: bool = 
             if not artifact.get(key):
                 raise PackageCatalogError("PACKAGE_CATALOG_ARTIFACT_FIELD_MISSING", f"{entry_id}:{key}")
 
-        if "countywide_binding" in row or row.get("candidate_only") is True:
+        if "countywide_profile" in row:
+            try:
+                countywide_production.validate_entry(row)
+            except countywide_production.CountywideProductionError as exc:
+                raise PackageCatalogError(exc.code, entry_id) from exc
+            except (KeyError, TypeError, ValueError, AttributeError) as exc:
+                raise PackageCatalogError("COUNTYWIDE_PRODUCTION_INPUT_INVALID", entry_id) from exc
+        elif "countywide_binding" in row or row.get("candidate_only") is True:
             if allow_candidate is not True:
                 raise PackageCatalogError("COUNTYWIDE_CANDIDATE_NOT_ENABLED", entry_id)
             try:
@@ -204,6 +211,13 @@ def reconstruct_package(entry: dict[str, Any], repo_root: str | Path) -> dict[st
         raise PackageCatalogError("PACKAGE_CATALOG_JURISDICTION_DRIFT")
     if str(package["schema_version"]) != str(entry["package_schema_version"]):
         raise PackageCatalogError("PACKAGE_CATALOG_SCHEMA_DRIFT")
+    if "countywide_profile" in entry:
+        try:
+            countywide_production.validate_package(entry, root, package)
+        except countywide_production.CountywideProductionError as exc:
+            raise PackageCatalogError(exc.code, str(entry["entry_id"])) from exc
+        except (KeyError, TypeError, ValueError, AttributeError) as exc:
+            raise PackageCatalogError("COUNTYWIDE_PRODUCTION_INPUT_INVALID", str(entry["entry_id"])) from exc
     return package
 
 
@@ -232,6 +246,8 @@ def build_essentials_from_catalog(
     try:
         catalog = load_catalog(catalog_path)
         entry = select_entry(catalog, civic_gps_result, profile=profile)
+        if entry.get("countywide_profile"):
+            raise PackageCatalogError("PACKAGE_COUNTYWIDE_PROFILE_NOT_FULL_ESSENTIALS", str(entry["entry_id"]))
         if entry.get("production_profile"):
             raise PackageCatalogError("PACKAGE_PRODUCTION_PROFILE_NOT_FULL_ESSENTIALS", str(entry["entry_id"]))
         package = reconstruct_package(entry, repo_root)

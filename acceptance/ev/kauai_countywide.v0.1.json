@@ -1,0 +1,91 @@
+{
+  "receipt_schema": "kauai-countywide-acceptance/0.1",
+  "status": "PASS",
+  "profile_id": "kauai_countywide_mayor_council_v0.1",
+  "scope": "KAUAI_COUNTYWIDE_MAYOR_AND_COUNCIL_ONLY",
+  "acceptance_basis": "GOVERNED_PACKAGE_AND_CURRENT_SOURCE_REVIEW",
+  "authorization_boundary": "EXACT_HEAD_PR_MERGE_APPROVAL_REQUIRED_FOR_MAIN_ACTIVATION",
+  "archive_sha256": "fac5f85e589d237252f7067563f90f73c09f566237967201ef30c994d524081e",
+  "package_sha256": "b9627bbf6cbe5a03e9ee449cb23738af73d7002f257c73b1f2c2a82f4c4c90bd",
+  "binding_sha256": "4c8dd2ba849bce54560daa8b522001cb98eddca5ae3421b85cef3e0f9b4fd375",
+  "publication_authorized": false,
+  "deployment_authorized": false,
+  "complete_jurisdiction": false,
+  "source_review": {
+    "reviewed_on": "2026-09-09",
+    "expires_on": "2026-12-01",
+    "package_observed_on": "2026-08-23",
+    "identity_policy": "PRESERVE_LEGACY_ACTIVE_REJECT_EXPLICIT_PROVISIONAL",
+    "tenure_policy": "PRESERVE_UNRESOLVED_INTERVALS",
+    "known_omitted_offices": [
+      "Prosecuting Attorney"
+    ],
+    "roster_matches_package": true,
+    "leadership_matches_package": true,
+    "sources": [
+      {
+        "url": "https://elections.hawaii.gov/cok-mayor/",
+        "supports": "Mayor incumbency",
+        "authority": "PRIMARY_OFFICIAL",
+        "reviewed_on": "2026-09-09"
+      },
+      {
+        "url": "https://elections.hawaii.gov/cok-councilmembers/",
+        "supports": "Seven Council incumbents",
+        "authority": "PRIMARY_OFFICIAL",
+        "reviewed_on": "2026-09-09"
+      },
+      {
+        "url": "https://www.kauai.gov/Government/Council/Councilmembers-2024-2026",
+        "supports": "Council roster, Chair and Vice Chair",
+        "authority": "PRIMARY_OFFICIAL",
+        "reviewed_on": "2026-09-09"
+      },
+      {
+        "url": "https://elections.hawaii.gov/cok-prosecuting-attorney/",
+        "supports": "Excluded elected Prosecuting Attorney",
+        "authority": "PRIMARY_OFFICIAL",
+        "reviewed_on": "2026-09-09"
+      },
+      {
+        "url": "https://elections.hawaii.gov/2026-proclamation/",
+        "supports": "Countywide seats and next term transition",
+        "authority": "PRIMARY_OFFICIAL",
+        "reviewed_on": "2026-09-09"
+      }
+    ]
+  },
+  "onboarding_expected": {
+    "office_rows": 2,
+    "current_holders": 8,
+    "address_controls": 2,
+    "qa_fail_count": 0,
+    "blocking_gap_count": 0,
+    "parity_ok": true
+  },
+  "positive_addresses": [
+    "4444 Rice Street, Lihue, HI 96766",
+    "4396 Rice Street, Lihue, HI 96766"
+  ],
+  "negative_control": {
+    "address": "25 Aupuni Street, Hilo, HI 96720",
+    "expected_civic_jurisdiction_id": "jur-us-hi-hawaii-county"
+  },
+  "routing": {
+    "strategy": "REUSE_GOVERNED_ROUTE",
+    "adapter_id": "BASE-HI-KAUAI-COUNTY",
+    "geoid": "15007",
+    "route_sha256": "777ff79864823ed3348bd74c0a9dfc028c8882730b51ca4a4f996a095d18fe6b",
+    "release_path": "civic_gps_extensions/hi_kauai_county_release_v0.1.json",
+    "release_sha256": "195a1ef070d9718135bc7e7929e0cf037f78953f2ab5874377cddd4530f2693d"
+  },
+  "prerequisite_adapter_evidence": {
+    "certified_head": "41bedb0a76bc068a63b0717ee14e9433e0a528bb",
+    "workflow_run_id": 34303518632,
+    "artifact_id": 10085786517,
+    "artifact_sha256": "90814b6e88e0205ac3a802cc7e6aaf5a668f185b23dea257f74f1b72b7070306",
+    "validation_mode": "LIVE_CIVIC_GPS",
+    "positive_controls": 2,
+    "negative_controls": 1
+  }
+}

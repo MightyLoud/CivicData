@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from consumers.empowered_vote import countywide_candidate as adapter, package_catalog, representation_catalog
+from consumers.empowered_vote import countywide_candidate as adapter, countywide_production, package_catalog, representation_catalog
 from tools import ev_jurisdiction_onboarding as onboarding, ev_onboarding_materialize as materialize
 from tools import ev_kauai_countywide_preview as preview_runner
 
@@ -132,8 +132,13 @@ def run_candidate(root: Path, resolver: Any, *, live: bool) -> dict[str, Any]:
             default = representation_catalog.build_representation_from_catalog(
                 control["address"], geographic, repo_root=root,
                 catalog_path=root / "consumers/empowered_vote/package_catalog.v0.1.json")
-            require(default.get("error") == "PACKAGE_NOT_GOVERNED_FOR_RESOLVED_ADDRESS",
-                    "default production catalog acquired Kauaʻi")
+            installed = countywide_production.installed_spec(root)
+            if installed:
+                require(default.get("status") == "PASS" and default.get("package_catalog_entry_id") == countywide_production.ENTRY_ID
+                        and default.get("publication_eligible") is False, "installed production contract drift")
+            else:
+                require(default.get("error") == "PACKAGE_NOT_GOVERNED_FOR_RESOLVED_ADDRESS",
+                        "unreviewed production catalog acquired Kauaʻi")
             denied = representation_catalog.build_representation_from_catalog(
                 control["address"], geographic, repo_root=root, catalog_path=staged_catalog)
             require(denied.get("error") == "COUNTYWIDE_CANDIDATE_NOT_ENABLED", "candidate opt-in bypassed")

@@ -35,7 +35,7 @@ def run() -> None:
 
         report = mod.verify_all_production(ROOT, Path(td) / "all")
         assert report["status"] == "PASS"
-        assert report["production_specs_verified"] == 2
+        assert report["production_specs_verified"] == 3
         assert report["all_idempotent"] is True
         assert report["repository_mutated"] is False
         assert report["canonical_writes"] == 0

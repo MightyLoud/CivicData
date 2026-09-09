@@ -48,9 +48,17 @@ def run() -> None:
         )
 
         result = proposal.propose(ROOT, package_id)
-        assert result["status"] == "REVIEW_REQUIRED", result
-        assert result["production_spec"] is None
-        assert result["routing_candidate"]["status"] == "RESEARCH_REQUIRED", result
+        if package_id == "jurisdiction-hi-kauai-county":
+            from consumers.empowered_vote import countywide_production
+            installed = countywide_production.installed_spec(ROOT)
+            assert installed is not None
+            assert result["status"] == "READY" and result["production_spec"] == installed
+            assert result["auto_promoted"] is False
+            assert result["routing_candidate"]["status"] == "EXPLICIT_PRODUCTION_INSTALLATION"
+        else:
+            assert result["status"] == "REVIEW_REQUIRED", result
+            assert result["production_spec"] is None
+            assert result["routing_candidate"]["status"] == "RESEARCH_REQUIRED", result
         assert result["canonical_writes"] == 0
 
     assert "BASE-HI-KALAWAO-COUNTY" not in bundles
@@ -66,6 +74,8 @@ def run() -> None:
                 "status": "PASS",
                 "routing_only_counties": 4,
                 "auto_promoted": 0,
+                "explicit_kauai_installations": 1,
+                "other_hi_production_holds": 3,
                 "kalawao_touched": False,
                 "canonical_writes": 0,
             },

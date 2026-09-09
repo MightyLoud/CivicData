@@ -23,7 +23,7 @@ HI_IDS = {f"jurisdiction-hi-{name}-county" for name in ("hawaii", "honolulu", "k
 def snapshot(root: Path) -> dict[str, str]:
     """Protect packages, production configuration, and the Civic GPS runtime."""
     paths = [root / "consumers/empowered_vote/package_catalog.v0.1.json"]
-    for folder in ("data/packages", "onboarding/ev", "civic_gps_extensions", "civic_gps_runtime_parts"):
+    for folder in ("data/packages", "onboarding/ev", "acceptance/ev", "civic_gps_extensions", "civic_gps_runtime_parts"):
         paths.extend(p for p in (root / folder).rglob("*")
                      if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc")
     return {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
@@ -40,16 +40,21 @@ def assert_holds(root: Path) -> list[dict[str, str]]:
     for row in routes:
         if row.get("ev_onboarding_status") != "ROUTING_ONLY" or not (row.get("scope_match") or {}).get("all"):
             raise ValueError("routing-only contract drift")
+    from consumers.empowered_vote import countywide_production
+    installed = countywide_production.installed_spec(root)
+    held_ids = HI_IDS - ({"jurisdiction-hi-kauai-county"} if installed else set())
     catalog = json.loads((root / "consumers/empowered_vote/package_catalog.v0.1.json").read_text())
-    if any(row.get("package_jurisdiction_id") in HI_IDS for row in catalog["entries"]):
-        raise ValueError("Hawaiʻi production catalog promotion detected")
+    if any(row.get("package_jurisdiction_id") in held_ids for row in catalog["entries"]):
+        raise ValueError("Unreviewed Hawaiʻi production catalog promotion detected")
     for path in (root / "onboarding/ev").glob("*.json"):
-        if json.loads(path.read_text()).get("package_jurisdiction_id") in HI_IDS:
-            raise ValueError("Hawaiʻi production onboarding spec detected")
+        jid = json.loads(path.read_text()).get("package_jurisdiction_id")
+        if jid in held_ids or (jid == "jurisdiction-hi-kauai-county" and path.relative_to(root) != countywide_production.SPEC_PATH):
+            raise ValueError("Unreviewed Hawaiʻi production onboarding spec detected")
     results = []
     for jid in sorted(HI_IDS):
         row = proposal.propose(root, jid)
-        if row["status"] != "REVIEW_REQUIRED" or row["production_spec"] is not None:
+        expected = "READY" if installed and jid == "jurisdiction-hi-kauai-county" else "REVIEW_REQUIRED"
+        if row["status"] != expected or (expected == "REVIEW_REQUIRED" and row["production_spec"] is not None):
             raise ValueError("Hawaiʻi proposal hold changed")
         results.append({"package_jurisdiction_id": jid, "status": row["status"]})
     return results

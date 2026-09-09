@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from consumers.empowered_vote import package_catalog, package_source
+from consumers.empowered_vote import countywide_production, package_catalog, package_source
 
 SPEC_VERSION = "0.1"
 
@@ -52,13 +52,18 @@ def build_catalog_entry(spec: dict[str, Any]) -> dict[str, Any]:
         "package_schema_version": spec["package_schema_version"],
         "artifact": spec["artifact"],
         **({"district_binding": spec["district_binding"]} if spec.get("district_binding") else {}),
-        **{key: copy.deepcopy(spec[key]) for key in ("countywide_binding", "candidate_only",
+        **{key: copy.deepcopy(spec[key]) for key in ("countywide_binding", "countywide_profile", "candidate_only",
             "production_eligible", "publication_eligible", "complete_jurisdiction") if key in spec},
     }
 
 
-def build_routing_bundle(spec: dict[str, Any]) -> dict[str, Any] | None:
+def build_routing_bundle(spec: dict[str, Any], repo_root: Path | None = None) -> dict[str, Any] | None:
     routing = spec["routing"]
+    if routing_strategy(spec) == "REUSE_GOVERNED_ROUTE":
+        if repo_root is None:
+            raise OnboardingError("existing route requires repository verification")
+        receipt = countywide_production.validate_spec(spec, repo_root)
+        return countywide_production.existing_route(repo_root, receipt)
     if routing_strategy(spec) != "CENSUS_GEOID":
         return None
     geoid = str(routing["geoid"])
@@ -124,7 +129,7 @@ def find_existing(repo_root: Path, entry: dict[str, Any], routing_obj: dict[str,
     catalog = load_json(repo_root / "consumers/empowered_vote/package_catalog.v0.1.json")
     existing_entry = next((x for x in catalog.get("entries", []) if x.get("entry_id") == entry["entry_id"]), None)
     registry = load_json(repo_root / "civic_gps_extensions/registry_bundles.v0.1.json")
-    if strategy == "CENSUS_GEOID":
+    if strategy in {"CENSUS_GEOID", "REUSE_GOVERNED_ROUTE"}:
         existing_routing = next((x for x in registry.get("bundles", []) if x.get("adapter_id") == routing_obj["adapter_id"]), None)
     else:
         existing_routing = next((x for x in registry.get("municipal_boundary_overlays", []) if x.get("overlay_id") == routing_obj["overlay_id"]), None)
@@ -133,7 +138,7 @@ def find_existing(repo_root: Path, entry: dict[str, Any], routing_obj: dict[str,
 
 def run(spec_path: Path, repo_root: Path, out: Path, verify_current: bool) -> dict[str, Any]:
     spec = load_json(spec_path)
-    if "countywide_binding" in spec or spec.get("candidate_only") is True:
+    if ("countywide_binding" in spec and "countywide_profile" not in spec) or spec.get("candidate_only") is True:
         raise OnboardingError("countywide candidate requires the isolated candidate runner")
     if str(spec.get("spec_version")) != SPEC_VERSION:
         raise OnboardingError("unsupported spec_version")
@@ -142,10 +147,10 @@ def run(spec_path: Path, repo_root: Path, out: Path, verify_current: bool) -> di
             raise OnboardingError(f"missing field: {key}")
 
     strategy = routing_strategy(spec)
-    if strategy not in {"CENSUS_GEOID", "MUNICIPAL_BOUNDARY_OVERLAY"}:
+    if strategy not in {"CENSUS_GEOID", "MUNICIPAL_BOUNDARY_OVERLAY", "REUSE_GOVERNED_ROUTE"}:
         raise OnboardingError("unsupported routing strategy")
     entry = build_catalog_entry(spec)
-    bundle = build_routing_bundle(spec)
+    bundle = build_routing_bundle(spec, repo_root)
     boundary_overlay = build_boundary_overlay(spec)
     routing_obj = bundle if bundle is not None else boundary_overlay
     assert routing_obj is not None

@@ -69,14 +69,20 @@ def catalog_entry(spec: dict[str, Any]) -> dict[str, Any]:
     }
     if spec.get("district_binding"):
         entry["district_binding"] = spec["district_binding"]
-    for key in ("countywide_binding", "candidate_only", "production_eligible",
+    for key in ("countywide_binding", "countywide_profile", "candidate_only", "production_eligible",
                 "publication_eligible", "complete_jurisdiction"):
         if key in spec:
             entry[key] = copy.deepcopy(spec[key])
     return entry
 
 
-def routing_record(spec: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+def routing_record(spec: dict[str, Any], repo_root: Path | None = None) -> tuple[str, dict[str, Any]]:
+    if "countywide_profile" in spec:
+        from consumers.empowered_vote import countywide_production
+        if repo_root is None:
+            raise MaterializeError("existing route requires repository verification")
+        receipt = countywide_production.validate_spec(spec, repo_root)
+        return "bundles", countywide_production.existing_route(repo_root, receipt)
     if "countywide_binding" in spec or spec.get("candidate_only") is True:
         raise MaterializeError("countywide candidate must verify and reuse its existing route")
     routing = spec["routing"]
@@ -172,7 +178,7 @@ def materialize(repo_root: Path, package_jurisdiction_id: str, out: Path) -> dic
 
     registry_rel = Path("civic_gps_extensions") / "registry_bundles.v0.1.json"
     registry = load_json(repo_root / registry_rel)
-    bucket, route = routing_record(spec)
+    bucket, route = routing_record(spec, repo_root)
     rows = registry.get(bucket, [])
     if not isinstance(rows, list):
         raise MaterializeError(f"registry {bucket} must be a list")

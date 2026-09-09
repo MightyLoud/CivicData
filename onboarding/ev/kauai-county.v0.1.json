@@ -1,0 +1,80 @@
+{
+  "spec_version": "0.1",
+  "entry_id": "hi-kauai-countywide-representation-v0.1",
+  "profile": "municipal_representation",
+  "civic_gps_jurisdiction_id": "jur-us-hi-kauai-county",
+  "package_jurisdiction_id": "jurisdiction-hi-kauai-county",
+  "package_schema_version": "0.1",
+  "artifact": {
+    "encoding": "base64-parts",
+    "parts_glob": "data/packages/hi/kauai-county/Kauai_County_Jurisdiction_Package_v0.1_2026-08-23.zip.b64.part*",
+    "archive_sha256": "fac5f85e589d237252f7067563f90f73c09f566237967201ef30c994d524081e",
+    "package_subdir": "Kauai_County_Jurisdiction_Package_v0.1_2026-08-23/package"
+  },
+  "countywide_binding": {
+    "binding_version": "0.1",
+    "binding_id": "hi-kauai-countywide-representation-v0.1",
+    "mode": "COUNTYWIDE_REPRESENTATION",
+    "geoid": "15007",
+    "scope": "KAUAI_COUNTYWIDE_MAYOR_AND_COUNCIL_ONLY",
+    "offices": [
+      {
+        "office_id": "office-hi-kauai-mayor",
+        "constituency": "COUNTYWIDE",
+        "seats": 1,
+        "expected_person_ids": [
+          "person-hi-kauai-derek-kawakami"
+        ]
+      },
+      {
+        "office_id": "office-hi-kauai-council-member-multiseat",
+        "constituency": "COUNTYWIDE_AT_LARGE",
+        "seats": 7,
+        "expected_person_ids": [
+          "person-hi-kauai-addison-bulosan",
+          "person-hi-kauai-arryl-kaneshiro",
+          "person-hi-kauai-bernard-carvalho",
+          "person-hi-kauai-felicia-cowden",
+          "person-hi-kauai-fern-holland",
+          "person-hi-kauai-kipukai-kualii",
+          "person-hi-kauai-mel-rapozo"
+        ]
+      }
+    ],
+    "expected_leadership_ids": [
+      "leadership-hi-kauai-chair-mel-rapozo",
+      "leadership-hi-kauai-vice-chair-kipukai-kualii"
+    ]
+  },
+  "candidate_only": false,
+  "production_eligible": true,
+  "publication_eligible": false,
+  "complete_jurisdiction": false,
+  "countywide_profile": {
+    "profile_id": "kauai_countywide_mayor_council_v0.1",
+    "acceptance_receipt": {
+      "path": "acceptance/ev/kauai_countywide.v0.1.json",
+      "sha256": "19813da27e25d3bc1e3792c1e73e81ac9b6b2f58be98a3535b664cb26787062e"
+    }
+  },
+  "routing": {
+    "strategy": "REUSE_GOVERNED_ROUTE",
+    "adapter_id": "BASE-HI-KAUAI-COUNTY",
+    "geoid": "15007",
+    "route_sha256": "777ff79864823ed3348bd74c0a9dfc028c8882730b51ca4a4f996a095d18fe6b",
+    "release_path": "civic_gps_extensions/hi_kauai_county_release_v0.1.json",
+    "release_sha256": "195a1ef070d9718135bc7e7929e0cf037f78953f2ab5874377cddd4530f2693d"
+  },
+  "expected": {
+    "office_rows": 2,
+    "current_holders": 8,
+    "address_controls": 2,
+    "qa_fail_count": 0,
+    "blocking_gap_count": 0,
+    "parity_ok": true
+  },
+  "live_addresses": [
+    "4444 Rice Street, Lihue, HI 96766",
+    "4396 Rice Street, Lihue, HI 96766"
+  ]
+}
