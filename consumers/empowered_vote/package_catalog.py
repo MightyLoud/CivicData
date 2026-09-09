@@ -8,6 +8,7 @@ geographic result and fails closed on unsupported or ambiguous matches.
 from __future__ import annotations
 
 import base64
+import copy
 import hashlib
 import json
 import re
@@ -16,7 +17,7 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from consumers.empowered_vote import live_civic_gps, package_source, production_profile
+from consumers.empowered_vote import countywide_candidate, live_civic_gps, package_source, production_profile
 
 CATALOG_VERSION = "0.1"
 DEFAULT_CATALOG = Path(__file__).with_name("package_catalog.v0.1.json")
@@ -47,7 +48,7 @@ def bindings_from_entry(entry: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
-def load_catalog(path: str | Path = DEFAULT_CATALOG) -> dict[str, Any]:
+def load_catalog(path: str | Path = DEFAULT_CATALOG, *, allow_candidate: bool = False) -> dict[str, Any]:
     try:
         catalog = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -80,6 +81,16 @@ def load_catalog(path: str | Path = DEFAULT_CATALOG) -> dict[str, Any]:
         for key in ("parts_glob", "archive_sha256", "package_subdir"):
             if not artifact.get(key):
                 raise PackageCatalogError("PACKAGE_CATALOG_ARTIFACT_FIELD_MISSING", f"{entry_id}:{key}")
+
+        if "countywide_binding" in row or row.get("candidate_only") is True:
+            if allow_candidate is not True:
+                raise PackageCatalogError("COUNTYWIDE_CANDIDATE_NOT_ENABLED", entry_id)
+            try:
+                countywide_candidate.validate_entry(row)
+            except countywide_candidate.CountywideCandidateError as exc:
+                raise PackageCatalogError(exc.code, entry_id) from exc
+            except (KeyError, TypeError, ValueError, AttributeError) as exc:
+                raise PackageCatalogError("COUNTYWIDE_CANDIDATE_INPUT_INVALID", entry_id) from exc
 
         binding = row.get("district_binding")
         multi_bindings = row.get("district_bindings")
@@ -202,6 +213,8 @@ def binding_from_entry(entry: dict[str, Any]) -> dict[str, Any]:
         "civic_gps_jurisdiction_id": entry["civic_gps_jurisdiction_id"],
     }
     district = entry.get("district_binding")
+    if "countywide_binding" in entry:
+        binding["countywide_binding"] = copy.deepcopy(entry["countywide_binding"])
     if district:
         binding["district_adapter_id"] = district["adapter_id"]
         binding["division_template"] = district["division_template"]

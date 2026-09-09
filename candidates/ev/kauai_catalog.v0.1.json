@@ -1,0 +1,57 @@
+{
+  "catalog_version": "0.1",
+  "entries": [
+    {
+      "entry_id": "candidate-hi-kauai-countywide-v0.1",
+      "profile": "municipal_representation",
+      "civic_gps_jurisdiction_id": "jur-us-hi-kauai-county",
+      "package_jurisdiction_id": "jurisdiction-hi-kauai-county",
+      "package_schema_version": "0.1",
+      "artifact": {
+        "encoding": "base64-parts",
+        "parts_glob": "data/packages/hi/kauai-county/Kauai_County_Jurisdiction_Package_v0.1_2026-08-23.zip.b64.part*",
+        "archive_sha256": "fac5f85e589d237252f7067563f90f73c09f566237967201ef30c994d524081e",
+        "package_subdir": "Kauai_County_Jurisdiction_Package_v0.1_2026-08-23/package"
+      },
+      "countywide_binding": {
+        "binding_version": "0.1",
+        "binding_id": "candidate-hi-kauai-countywide-v0.1",
+        "mode": "COUNTYWIDE_CANDIDATE",
+        "geoid": "15007",
+        "scope": "KAUAI_COUNTYWIDE_MAYOR_AND_COUNCIL_ONLY",
+        "offices": [
+          {
+            "office_id": "office-hi-kauai-mayor",
+            "constituency": "COUNTYWIDE",
+            "seats": 1,
+            "expected_person_ids": [
+              "person-hi-kauai-derek-kawakami"
+            ]
+          },
+          {
+            "office_id": "office-hi-kauai-council-member-multiseat",
+            "constituency": "COUNTYWIDE_AT_LARGE",
+            "seats": 7,
+            "expected_person_ids": [
+              "person-hi-kauai-addison-bulosan",
+              "person-hi-kauai-arryl-kaneshiro",
+              "person-hi-kauai-bernard-carvalho",
+              "person-hi-kauai-felicia-cowden",
+              "person-hi-kauai-fern-holland",
+              "person-hi-kauai-kipukai-kualii",
+              "person-hi-kauai-mel-rapozo"
+            ]
+          }
+        ],
+        "expected_leadership_ids": [
+          "leadership-hi-kauai-chair-mel-rapozo",
+          "leadership-hi-kauai-vice-chair-kipukai-kualii"
+        ]
+      },
+      "candidate_only": true,
+      "production_eligible": false,
+      "publication_eligible": false,
+      "complete_jurisdiction": false
+    }
+  ]
+}
