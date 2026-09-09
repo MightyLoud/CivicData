@@ -1,0 +1,107 @@
+{
+  "activation_evidence": {
+    "certified_head": "c277080bc401b07943d6833def9fb23ecab448ff",
+    "fresh_live_run": false,
+    "hosted_delivery_evidence": false,
+    "live_json_sha256": "c82480a4511922abfce54dfb0d9cb5804a72abee1731da123ec8aa112c3fec54",
+    "mode": "RETAINED_LIVE_CIVIC_GPS",
+    "negative_controls": 1,
+    "negative_geography_basis": "CERTIFIED_RUN_ASSERTION; RAW_NEGATIVE_GEOGRAPHY_NOT_IN_ARTIFACT",
+    "original_zip_sha256": "c3c5be135e146a3a066107b3d72f2c918286e6ac8b548cbd98367bb0653973ef",
+    "positive_controls": 2,
+    "retention_receipt": "candidates/ev/kauai_publication.v0.1/evidence/retention.v0.1.json",
+    "workflow_run_id": 34305859296,
+    "workflow_url": "https://github.com/MightyLoud/CivicData/actions/runs/34305859296"
+  },
+  "archive_sha256": "fac5f85e589d237252f7067563f90f73c09f566237967201ef30c994d524081e",
+  "artifact_kind": "METADATA_ONLY_INTEGRATION_MANIFEST",
+  "binding_sha256": "4c8dd2ba849bce54560daa8b522001cb98eddca5ae3421b85cef3e0f9b4fd375",
+  "candidate_gate": "EV-KAUAI-PUBLICATION-CANDIDATE-001",
+  "capabilities": {
+    "complete_jurisdiction": false,
+    "countywide_mayor_council_representation": true,
+    "election_results": false,
+    "full_essentials": false,
+    "hosted_delivery_certified": false
+  },
+  "civic_gps_jurisdiction_id": "jur-us-hi-kauai-county",
+  "counts": {
+    "current_holders": 8,
+    "divisions": 0,
+    "leadership_overlays": 2,
+    "office_rows": 2,
+    "seat_capacity": 8
+  },
+  "county_geoid": "15007",
+  "entry_id": "hi-kauai-countywide-representation-v0.1",
+  "holds": {
+    "canonical_writes": 0,
+    "deployment_authorized": false,
+    "kalawao_work_authorized": false,
+    "merge_authorized": false,
+    "other_hi_production_counties": [
+      "15001",
+      "15003",
+      "15009"
+    ],
+    "publication_authorized": false
+  },
+  "input_hashes": {
+    "acceptance/ev/kauai_countywide.v0.1.json": "19813da27e25d3bc1e3792c1e73e81ac9b6b2f58be98a3535b664cb26787062e",
+    "civic_gps_extensions/hi_kauai_county_release_v0.1.json": "195a1ef070d9718135bc7e7929e0cf037f78953f2ab5874377cddd4530f2693d",
+    "civic_gps_extensions/registry_bundles.v0.1.json": "4b6aad7a6cc835c59c3013a40f57326d59af2b4e7af23a9b36ff2f6e71a176e9",
+    "consumers/empowered_vote/package_catalog.v0.1.json": "6f38f5ebf24dfee8a7c6dc5ab93f562602fc41d865dbca6dd29290e8d3ee312f",
+    "onboarding/ev/kauai-county.v0.1.json": "9ea237c4db6a23a832192c9f67200a1cd15d3cdc97aaf9961648b181baf23fc3"
+  },
+  "integration_pr": "https://github.com/MightyLoud/CivicData/pull/60",
+  "integration_target_commit": "a24dd03a9958ffe7bc7a5ba2d0808ef9d1d81eed",
+  "integration_target_tree": "71c9f04666fff5789d2d52f41a4284b9570a29bb",
+  "manifest_schema": "kauai-mayor-council-integration/0.1",
+  "package_jurisdiction_id": "jurisdiction-hi-kauai-county",
+  "package_sha256": "b9627bbf6cbe5a03e9ee449cb23738af73d7002f257c73b1f2c2a82f4c4c90bd",
+  "preserved_production_flags": {
+    "candidate_only": false,
+    "complete_jurisdiction": false,
+    "production_eligible": true,
+    "publication_eligible": false
+  },
+  "profile_id": "kauai_countywide_mayor_council_v0.1",
+  "proposed_release": {
+    "asset_type": "application/json",
+    "assets": [
+      "kauai-mayor-council-integration-manifest-v0.1.json"
+    ],
+    "officeholder_payload_assets": false,
+    "raw_package_assets": false,
+    "tag": "kauai-mayor-council-integration-v0.1",
+    "tag_reserved": false,
+    "target_commit": "a24dd03a9958ffe7bc7a5ba2d0808ef9d1d81eed"
+  },
+  "repository": "MightyLoud/CivicData",
+  "retained_warnings": [
+    "UNNUMBERED_MULTI_SEAT_COUNCIL",
+    "EXACT_TENURE_INTERVALS_UNRESOLVED"
+  ],
+  "route_sha256": "777ff79864823ed3348bd74c0a9dfc028c8882730b51ca4a4f996a095d18fe6b",
+  "runtime_archive_sha256": "32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797",
+  "scope": "KAUAI_COUNTYWIDE_MAYOR_AND_COUNCIL_ONLY",
+  "source_review": {
+    "expires_on": "2026-12-01",
+    "expiry_timezone": "UTC",
+    "identity_policy": "PRESERVE_LEGACY_ACTIVE_REJECT_EXPLICIT_PROVISIONAL",
+    "known_omitted_offices": [
+      "Prosecuting Attorney"
+    ],
+    "recheck_required_before_release": true,
+    "reviewed_on": "2026-09-09",
+    "sources": [
+      "https://elections.hawaii.gov/cok-mayor/",
+      "https://elections.hawaii.gov/cok-councilmembers/",
+      "https://www.kauai.gov/Government/Council/Councilmembers-2024-2026",
+      "https://elections.hawaii.gov/cok-prosecuting-attorney/",
+      "https://elections.hawaii.gov/2026-proclamation/"
+    ],
+    "tenure_policy": "PRESERVE_UNRESOLVED_INTERVALS"
+  },
+  "status": "CANDIDATE_PUBLICATION_HELD"
+}
