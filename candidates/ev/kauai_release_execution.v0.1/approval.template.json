@@ -1,0 +1,23 @@
+{
+  "approval_reference": null,
+  "approved": false,
+  "approved_at_utc": null,
+  "asset_sha256": "7a40e104999c2bb891b5ecadb2dfefec511f1fcc783e122f7cd31402987f850f",
+  "candidate_pr": null,
+  "canonical_writes": 0,
+  "catalog_promotion": false,
+  "certified_candidate_head": null,
+  "contract_sha256": "c7f7b2d91766d40fff8965130d708fef26d623198cb8bf64f7bc59c921b4fb15",
+  "deployment_authorized": false,
+  "expected_execution_head": null,
+  "expires_at_utc": null,
+  "kalawao_work": false,
+  "notes_sha256": "5d158e9bc1524d01a3226fe68f9482c8d743c2b02c7a4a820dfefe8caa3cc66c",
+  "operation_id": null,
+  "publication_authorized": false,
+  "repository": "MightyLoud/CivicData",
+  "schema": "kauai-release-execution-approval/0.1",
+  "source_recheck_sha256": null,
+  "tag": "kauai-mayor-council-integration-v0.1",
+  "target_commit": "a24dd03a9958ffe7bc7a5ba2d0808ef9d1d81eed"
+}
