@@ -1,0 +1,138 @@
+name: Kauaʻi held release-execution candidate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "candidates/ev/kauai_release_execution.v0.1/**"
+      - "tools/ev_kauai_release_execution.py"
+      - "tests/ev_kauai_release_execution_test.py"
+      - "docs/ev-kauai-integration-release-notes-v0.1.md"
+      - "docs/ev-kauai-release-execution-candidate-001.md"
+      - ".github/workflows/ev-kauai-release-execution-candidate.yml"
+  workflow_dispatch:
+    inputs:
+      execute:
+        description: "Execute only after separate publication authorization and a complete fresh source recheck"
+        type: boolean
+        required: true
+        default: false
+      expected_head_sha:
+        description: "Separately approved exact main SHA (required for execution)"
+        type: string
+        required: false
+      approval_json:
+        description: "Separately approved receipt; committed unapproved template is rejected"
+        type: string
+        required: false
+      source_recheck_json:
+        description: "Complete fresh primary-source review bound by approval; committed PARTIAL review is rejected"
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    name: Kauaʻi held execution integrity and rejection controls
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && !inputs.execute)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      CANDIDATE_BASE_SHA: ${{ github.event.pull_request.base.sha || '028c7c2241a9302c8b481c4ceeab2a73319c4aba' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact head and eight additions only
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from tools.ev_kauai_release_execution import verify_git
+          print(verify_git(Path('.'), os.environ['CANDIDATE_HEAD_SHA'], os.environ['CANDIDATE_BASE_SHA']))
+          PY
+      - name: Verify original manifest and retained evidence
+        run: python tests/ev_kauai_publication_candidate_test.py
+      - name: Test execution approval, asset integrity, collision and recovery controls offline
+        run: python tests/ev_kauai_release_execution_test.py
+      - name: Build held candidate with read-only destination checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python tools/ev_kauai_release_execution.py --repo-root .
+          --head "$CANDIDATE_HEAD_SHA" --base "$CANDIDATE_BASE_SHA"
+          --read-destination --output-dir artifacts/ev-kauai-release-execution/candidate
+      - name: Retain held candidate verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-kauai-release-execution-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/ev-kauai-release-execution/candidate/
+          if-no-files-found: error
+          retention-days: 30
+
+  execute-separately-approved-release:
+    name: Execute separately approved metadata release
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.execute == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: kauai-mayor-council-integration-v0.1-release
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: read
+    env:
+      EXPECTED_HEAD_SHA: ${{ inputs.expected_head_sha }}
+    steps:
+      - name: Require dispatch of the exact approved main head
+        run: test -n "$EXPECTED_HEAD_SHA" && test "$EXPECTED_HEAD_SHA" = "$GITHUB_SHA"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Stage separately approved inputs outside the repository
+        env:
+          APPROVAL_JSON: ${{ inputs.approval_json }}
+          SOURCE_RECHECK_JSON: ${{ inputs.source_recheck_json }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from tools.ev_kauai_release_execution import load_json, validate_approval
+          approval = os.environ['APPROVAL_JSON'].encode()
+          recheck = os.environ['SOURCE_RECHECK_JSON'].encode()
+          validate_approval(approval, recheck, os.environ['EXPECTED_HEAD_SHA'])
+          target = Path(os.environ['RUNNER_TEMP'])
+          (target / 'kauai-approval.json').write_bytes(approval)
+          (target / 'kauai-source-recheck.json').write_bytes(recheck)
+          PY
+      - name: Execute the guarded draft, upload, verify and publication sequence
+        env:
+          GH_TOKEN: ${{ secrets.KAUAI_RELEASE_TOKEN || github.token }}
+        run: >-
+          python tools/ev_kauai_release_execution.py --repo-root . --execute
+          --head "$EXPECTED_HEAD_SHA"
+          --approval "$RUNNER_TEMP/kauai-approval.json"
+          --source-recheck "$RUNNER_TEMP/kauai-source-recheck.json"
+          --output-dir artifacts/ev-kauai-release-execution/execution
+      - name: Retain execution or partial-failure receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-kauai-release-execution-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/ev-kauai-release-execution/execution/
+          if-no-files-found: warn
+          retention-days: 90

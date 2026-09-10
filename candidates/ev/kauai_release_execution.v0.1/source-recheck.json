@@ -1,0 +1,23 @@
+{
+  "schema": "kauai-release-source-recheck/0.1",
+  "checked_at_utc": "2026-09-10T04:05:49Z",
+  "archive_sha256": "fac5f85e589d237252f7067563f90f73c09f566237967201ef30c994d524081e",
+  "package_sha256": "b9627bbf6cbe5a03e9ee449cb23738af73d7002f257c73b1f2c2a82f4c4c90bd",
+  "source_review_expires_on": "2026-12-01",
+  "status": "PARTIAL",
+  "roster_matches_package": true,
+  "leadership_matches_package": null,
+  "scope_matches_package": true,
+  "production_receipt_extended": false,
+  "publication_authorized": false,
+  "blockers": ["LIVE_COUNCIL_LEADERSHIP_RECHECK_REQUIRED"],
+  "sources": [
+    {"url": "https://elections.hawaii.gov/cok-mayor/", "authority": "PRIMARY_OFFICIAL", "retrieval": "DIRECT_FETCH", "supports": ["MAYOR_ROSTER"], "finding": "Incumbent matches the packaged Mayor."},
+    {"url": "https://elections.hawaii.gov/cok-councilmembers/", "authority": "PRIMARY_OFFICIAL", "retrieval": "DIRECT_FETCH", "supports": ["COUNCIL_ROSTER"], "finding": "Seven incumbents match the packaged Council, allowing documented punctuation and middle-initial variants."},
+    {"url": "https://elections.hawaii.gov/2026-proclamation/", "authority": "PRIMARY_OFFICIAL", "retrieval": "DIRECT_FETCH", "supports": ["COUNTYWIDE_SCOPE", "TERM_TRANSITION"], "finding": "Seven Council seats are at-large; the next Mayor and Council terms begin December 1, 2026 local noon. The existing earlier UTC cutoff is preserved."},
+    {"url": "https://elections.hawaii.gov/cok-prosecuting-attorney/", "authority": "PRIMARY_OFFICIAL", "retrieval": "DIRECT_FETCH", "supports": ["OMITTED_PROSECUTING_ATTORNEY"], "finding": "The elected Prosecuting Attorney remains outside this release scope; the historical vacancy footnote is not used to infer current tenure."},
+    {"url": "https://spo.hawaii.gov/chief-procurement-officers/", "authority": "PRIMARY_OFFICIAL", "retrieval": "DIRECT_FETCH", "supports": ["COUNCIL_CHAIR"], "finding": "The State directory identifies Mel Rapozo as Council Chair."},
+    {"url": "https://www.kauai.gov/Government/Council/Councilmembers-2024-2026", "authority": "PRIMARY_OFFICIAL", "retrieval": "HTTP_403", "supports": [], "finding": "Direct retrieval failed. An indexed official excerpt corroborates the retained Chair/Vice Chair, but is not counted as a fresh direct leadership check."},
+    {"url": "https://www.kauai.gov/Government/Council", "authority": "PRIMARY_OFFICIAL", "retrieval": "HTTP_403", "supports": [], "finding": "Direct retrieval failed; indexed content is supporting only."}
+  ]
+}

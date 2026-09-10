@@ -1,0 +1,82 @@
+{
+  "allowed_changed_paths": [
+    ".github/workflows/ev-kauai-release-execution-candidate.yml",
+    "candidates/ev/kauai_release_execution.v0.1/approval.template.json",
+    "candidates/ev/kauai_release_execution.v0.1/contract.json",
+    "candidates/ev/kauai_release_execution.v0.1/source-recheck.json",
+    "docs/ev-kauai-integration-release-notes-v0.1.md",
+    "docs/ev-kauai-release-execution-candidate-001.md",
+    "tests/ev_kauai_release_execution_test.py",
+    "tools/ev_kauai_release_execution.py"
+  ],
+  "approval_max_age_hours": 24,
+  "asset": {
+    "bytes": 4593,
+    "content_type": "application/json",
+    "name": "kauai-mayor-council-integration-manifest-v0.1.json",
+    "path": "candidates/ev/kauai_publication.v0.1/manifest.json",
+    "sha256": "7a40e104999c2bb891b5ecadb2dfefec511f1fcc783e122f7cd31402987f850f"
+  },
+  "candidate_source_recheck_status": "PARTIAL",
+  "certified_manifest_head": "352fceebc010426195e481eb02aca6ea870e94de",
+  "collision_policy": "FAIL_CLOSED_NO_OVERWRITE_DELETE_OR_AUTOMATIC_RETRY",
+  "execution_authority": "SEPARATELY_APPROVED_MANUAL_MAIN_DISPATCH_AND_BOUND_RECEIPT",
+  "execution_blockers": [
+    "SEPARATE_PUBLICATION_AUTHORIZATION_REQUIRED",
+    "LIVE_COUNCIL_LEADERSHIP_RECHECK_REQUIRED"
+  ],
+  "execution_steps": [
+    "PREFLIGHT",
+    "CREATE_DRAFT",
+    "UPLOAD_ONE_MANIFEST",
+    "VERIFY_DRAFT_ASSET",
+    "CREATE_OR_VERIFY_EXACT_TAG",
+    "RECHECK",
+    "PUBLISH",
+    "VERIFY_PUBLISHED_RELEASE"
+  ],
+  "external_boundaries": {
+    "railway_source_ref": "agent/day12-tx-post-activation-runtime-v0.2",
+    "railway_source_sha": "bf95d7e79c8cfc8be644326d0b0ea2c1065b0a67",
+    "texas_asset_sha256": "80bcb6f3d4d668ce62af84450b1db726156c0beaf7bc24b053b8c6291704cffe",
+    "texas_release_id": 383744766,
+    "texas_target": "defefa6d31987187839fa90434b201a287518e34"
+  },
+  "gate": "EV-KAUAI-RELEASE-EXECUTION-CANDIDATE-001",
+  "holds": {
+    "canonical_writes": 0,
+    "catalog_promotion": false,
+    "deployment_authorized": false,
+    "kalawao_work": false,
+    "merge_authorized": false,
+    "publication_authorized": false
+  },
+  "input_sha256": {
+    "candidates/ev/kauai_publication.v0.1/evidence/activation-c277080.zip.b64": "7a5e2a082b62d0588cdfaff20fc0620a9e6e98c48fce35c102ff24a8a5818890",
+    "candidates/ev/kauai_publication.v0.1/evidence/retention.v0.1.json": "3c8e25e5227de8d14189df95ed25ba04c70e488b3d18a33ce9e5c3f11981526d",
+    "candidates/ev/kauai_publication.v0.1/manifest.json": "7a40e104999c2bb891b5ecadb2dfefec511f1fcc783e122f7cd31402987f850f",
+    "candidates/ev/kauai_release_execution.v0.1/source-recheck.json": "14f3ee9a2137e9e51d0e784c3a5655bb1a3ea2c8b8f937b553a140d6c4f4577c",
+    "docs/ev-kauai-integration-release-notes-v0.1.md": "5d158e9bc1524d01a3226fe68f9482c8d743c2b02c7a4a820dfefe8caa3cc66c",
+    "schemas/kauai_integration_manifest_v0.1.schema.json": "7d9827407e1046fd2a0ea5f6d7ceeaf66c719241776e0d17fe111946d9024716",
+    "tools/ev_kauai_publication_candidate.py": "535829a642dcf9aa69e2aa78c34603f507da0912715b8624e40f75800bef5ccc"
+  },
+  "integration_target": "a24dd03a9958ffe7bc7a5ba2d0808ef9d1d81eed",
+  "integration_target_tree": "71c9f04666fff5789d2d52f41a4284b9570a29bb",
+  "make_latest": "false",
+  "preparation_base": "028c7c2241a9302c8b481c4ceeab2a73319c4aba",
+  "preparation_base_tree": "e0db7d510d8d3855b9eeaddee8d4fc4311197e0a",
+  "prerelease": false,
+  "release_name": "Kauaʻi countywide Mayor/Council integration v0.1",
+  "repository": "MightyLoud/CivicData",
+  "required_candidate_workflows": [
+    ".github/workflows/civic-gps-live-smoke.yml",
+    ".github/workflows/ev-kauai-adapter-candidate.yml",
+    ".github/workflows/ev-kauai-production-activation.yml",
+    ".github/workflows/ev-kauai-release-execution-candidate.yml"
+  ],
+  "schema": "kauai-release-execution-contract/0.1",
+  "source_recheck_max_age_hours": 24,
+  "source_review_expires_on": "2026-12-01",
+  "status": "CANDIDATE_EXECUTION_HELD",
+  "tag": "kauai-mayor-council-integration-v0.1"
+}
