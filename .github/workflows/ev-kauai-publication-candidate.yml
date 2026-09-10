@@ -1,0 +1,86 @@
+name: Kauaʻi manifest-only publication candidate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "candidates/ev/kauai_publication.v0.1/**"
+      - "tools/ev_kauai_publication_candidate.py"
+      - "tests/ev_kauai_publication_candidate_test.py"
+      - "schemas/kauai_integration_manifest_v0.1.schema.json"
+      - "docs/ev-kauai-publication-candidate-001.md"
+      - ".github/workflows/ev-kauai-publication-candidate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  manifest-candidate:
+    name: Kauaʻi manifest integrity and publication holds
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      CANDIDATE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact head and unchanged production surfaces
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from tools.ev_kauai_publication_candidate import verify_git
+          print(verify_git(Path('.'), os.environ['CANDIDATE_HEAD_SHA'], os.environ['CANDIDATE_BASE_SHA']))
+          PY
+      - name: Verify candidate integrity and rejection controls offline
+        run: python tests/ev_kauai_publication_candidate_test.py
+      - name: Read proposed tag and release destination without reserving it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from tools.ev_kauai_publication_candidate import REPOSITORY, TAG, TARGET, encoded
+          def get(path):
+              request = urllib.request.Request('https://api.github.com/repos/' + REPOSITORY + '/' + path,
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                           'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'})
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  return json.load(response)
+          refs = get('git/matching-refs/tags/' + TAG)
+          releases = []
+          for page in range(1, 101):
+              rows = get('releases?per_page=100&page=' + str(page))
+              releases.extend(rows)
+              if len(rows) < 100:
+                  break
+          else:
+              raise ValueError('Release inventory pagination incomplete')
+          target = get('git/commits/' + TARGET)
+          snapshot = {'repository': REPOSITORY, 'complete': True, 'proposed_tag': TAG,
+              'checked_at_utc': datetime.now(timezone.utc).isoformat(),
+              'target_commit': target['sha'], 'target_tree': target['tree']['sha'],
+              'tag_refs': [row['ref'] for row in refs], 'release_tags': [row['tag_name'] for row in releases]}
+          (Path(os.environ['RUNNER_TEMP']) / 'kauai-destination.json').write_bytes(encoded(snapshot))
+          PY
+      - name: Build one manifest asset with exact-head verification
+        run: >-
+          python tools/ev_kauai_publication_candidate.py --repo-root .
+          --head "$CANDIDATE_HEAD_SHA" --base "$CANDIDATE_BASE_SHA"
+          --remote-snapshot "$RUNNER_TEMP/kauai-destination.json"
+          --output-dir artifacts/ev-kauai-publication-candidate/build
+      - name: Retain candidate verification artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-kauai-publication-candidate-${{ github.event.pull_request.head.sha }}
+          path: artifacts/ev-kauai-publication-candidate/build/
+          if-no-files-found: error
+          retention-days: 30

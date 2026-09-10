@@ -1,0 +1,32 @@
+{
+  "artifact_id": 10086608935,
+  "artifact_url": "https://github.com/MightyLoud/CivicData/actions/runs/34305859296/artifacts/10086608935",
+  "deployment_authorized": false,
+  "encoding": "BASE64_ORIGINAL_GITHUB_ACTIONS_ZIP",
+  "fresh_live_run": false,
+  "hosted_delivery_evidence": false,
+  "identical_source_and_target_tree": "71c9f04666fff5789d2d52f41a4284b9570a29bb",
+  "integration_target": "a24dd03a9958ffe7bc7a5ba2d0808ef9d1d81eed",
+  "job_id": 102322283047,
+  "members": [
+    {
+      "bytes": 65052,
+      "path": "live.json",
+      "sha256": "c82480a4511922abfce54dfb0d9cb5804a72abee1731da123ec8aa112c3fec54"
+    }
+  ],
+  "negative_geography_basis": "CERTIFIED_RUN_ASSERTION; RAW_NEGATIVE_GEOGRAPHY_NOT_IN_ARTIFACT",
+  "original_created_at": "2026-09-09T03:07:10Z",
+  "original_expires_at": "2026-10-09T03:07:09Z",
+  "path": "candidates/ev/kauai_publication.v0.1/evidence/activation-c277080.zip.b64",
+  "publication_authorized": false,
+  "release_asset": false,
+  "repository": "MightyLoud/CivicData",
+  "retained_on": "2026-09-09",
+  "retention_schema": "kauai-activation-evidence-retention/0.1",
+  "source_commit": "c277080bc401b07943d6833def9fb23ecab448ff",
+  "validation_mode": "RETAINED_LIVE_CIVIC_GPS",
+  "workflow_run_id": 34305859296,
+  "zip_bytes": 4905,
+  "zip_sha256": "c3c5be135e146a3a066107b3d72f2c918286e6ac8b548cbd98367bb0653973ef"
+}
