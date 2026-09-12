@@ -1,0 +1,59 @@
+name: Maui held correction and countywide preview
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "consumers/empowered_vote/**"
+      - "previews/ev/maui**"
+      - "previews/ev/maui/**"
+      - "tools/ev_maui_*.py"
+      - "tools/ev_onboarding_proposal.py"
+      - "tools/jurisdiction_package.py"
+      - "tests/ev_maui_countywide_preview_test.py"
+      - "docs/ev-maui-source-correction-preview-001.md"
+      - "data/packages/hi/maui-county/**"
+      - "onboarding/ev/**"
+      - "acceptance/ev/**"
+      - "civic_gps_extensions/**"
+      - "civic_gps_runtime_parts/**"
+      - "requirements-civic-gps.txt"
+      - ".github/workflows/ev-maui-countywide-preview.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  held-preview:
+    name: Maui source parity, rejection controls, and live countywide preview
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+      - name: Reconstruct unchanged Civic GPS runtime
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+      - name: Verify held correction and rejection controls
+        run: |
+          python tools/ev_maui_source_correction.py --repo-root .
+          python tests/ev_maui_countywide_preview_test.py
+      - name: Resolve Wailuku, Lanai City, and the Hilo negative control
+        run: python tools/ev_maui_countywide_preview.py --repo-root . --output artifacts/ev-maui-preview/live.json
+      - name: Upload held preview evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-maui-preview-${{ github.event.pull_request.head.sha }}
+          path: artifacts/ev-maui-preview/
+          if-no-files-found: warn
+          retention-days: 30
