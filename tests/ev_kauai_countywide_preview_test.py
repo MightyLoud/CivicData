@@ -228,7 +228,7 @@ class CountywidePreviewTest(unittest.TestCase):
         self.assertEqual(len(resolver.calls), 3)
         self.assertEqual(len(result["positive_controls"]), 2)
         self.assertEqual(len(result["routing_holds"]), 4)
-        self.assertEqual(sorted(row["status"] for row in result["routing_holds"]), ["READY"] + ["REVIEW_REQUIRED"] * 3)
+        self.assertEqual(sorted(row["status"] for row in result["routing_holds"]), ["READY"] * 2 + ["REVIEW_REQUIRED"] * 2)
         self.assertEqual(result["auto_promoted"], 0)
         self.assertEqual(result["canonical_writes"], 0)
         self.assertEqual(before, runner.snapshot(ROOT))

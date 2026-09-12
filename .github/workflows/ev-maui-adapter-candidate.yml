@@ -39,11 +39,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - name: Verify exact head and protected data/runtime boundaries
-        shell: bash
-        run: |
-          test "$(git rev-parse HEAD)" = "$CANDIDATE_HEAD_SHA"
-          git diff --exit-code "$CANDIDATE_BASE_SHA" HEAD -- data previews civic_gps_extensions civic_gps_runtime_parts civic_gps services onboarding acceptance consumers/empowered_vote/package_catalog.v0.1.json railway.toml railway.json Dockerfile requirements-hosted-runtime.txt
+      - name: Verify exact head and bounded production installation
+        run: python tools/ev_maui_activation_diff.py --repo-root . --base-sha "$CANDIDATE_BASE_SHA" --head-sha "$CANDIDATE_HEAD_SHA"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

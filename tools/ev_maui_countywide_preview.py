@@ -33,12 +33,15 @@ def snapshot(root):
 
 def assert_holds(root):
     require = correction.require
+    from consumers.empowered_vote import maui_countywide_production
+    installed = maui_countywide_production.installed_spec(root)
     catalog = json.loads((root / "consumers/empowered_vote/package_catalog.v0.1.json").read_text())
-    require(not any(r.get("package_jurisdiction_id") == preview.PACKAGE_ID
+    require(installed is not None or not any(r.get("package_jurisdiction_id") == preview.PACKAGE_ID
                     or r.get("civic_gps_jurisdiction_id") == preview.CIVIC_ID
                     for r in catalog["entries"]), "MAUI_PRODUCTION_CATALOG_PROMOTION")
     for path in (root / "onboarding/ev").glob("*.json"):
-        require(json.loads(path.read_text()).get("package_jurisdiction_id") != preview.PACKAGE_ID,
+        require(json.loads(path.read_text()).get("package_jurisdiction_id") != preview.PACKAGE_ID
+                or (installed is not None and path.relative_to(root) == maui_countywide_production.SPEC_PATH),
                 "MAUI_PRODUCTION_SPEC_CREATED")
     require(countywide_production.installed_spec(root) is not None, "KAUAI_EXISTING_INSTALLATION_MISSING")
     registry_path = Path("civic_gps_extensions/registry_bundles.v0.1.json")
@@ -70,8 +73,8 @@ def assert_holds(root):
             "MAUI_PROPOSAL_HOLD_CHANGED")
     runtime = b"".join(p.read_bytes() for p in sorted((root / "civic_gps_runtime_parts").glob("part.*")))
     require(hashlib.sha256(runtime).hexdigest() == RUNTIME_SHA256, "CORE_RUNTIME_SHA256_DRIFT")
-    return {"package_jurisdiction_id": preview.PACKAGE_ID, "status": held["status"],
-            "production_spec": None, "ev_onboarding_status": "ROUTING_ONLY",
+    return {"package_jurisdiction_id": preview.PACKAGE_ID, "status": "READY" if installed else held["status"],
+            "original_package_status": held["status"], "production_spec": installed, "ev_onboarding_status": "ROUTING_ONLY",
             "kauai_existing_installation": "PRESERVED", "runtime_sha256": RUNTIME_SHA256}
 
 

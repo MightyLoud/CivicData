@@ -232,13 +232,15 @@ def normalize_spec(spec: dict[str, Any]) -> dict[str, Any]:
 
 
 def propose(repo_root: Path, package_jurisdiction_id: str) -> dict[str, Any]:
-    if package_jurisdiction_id == "jurisdiction-hi-kauai-county":
-        from consumers.empowered_vote import countywide_production
-        existing = countywide_production.installed_spec(repo_root)
+    if package_jurisdiction_id in {"jurisdiction-hi-kauai-county", "jurisdiction-hi-maui-county"}:
+        from consumers.empowered_vote import countywide_production, maui_countywide_production
+        production = (countywide_production if package_jurisdiction_id == "jurisdiction-hi-kauai-county"
+                      else maui_countywide_production)
+        existing = production.installed_spec(repo_root)
         if existing is not None:
             return {"gate": "EV-IMP-009", "status": "READY",
                     "package_jurisdiction_id": package_jurisdiction_id,
-                    "package_schema_version": existing["package_schema_version"], "package_geoid": "15007",
+                    "package_schema_version": existing["package_schema_version"], "package_geoid": existing["countywide_binding"]["geoid"],
                     "profile": existing["profile"], "artifact": existing["artifact"], "expected": existing["expected"],
                     "live_addresses": existing["live_addresses"], "candidate_entry_id": existing["entry_id"],
                     "candidate_civic_gps_jurisdiction_id": existing["civic_gps_jurisdiction_id"],

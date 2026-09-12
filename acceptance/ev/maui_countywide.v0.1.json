@@ -1,0 +1,62 @@
+{
+  "receipt_schema": "maui-countywide-acceptance/0.1",
+  "status": "PASS",
+  "profile_id": "maui_countywide_mayor_council_v0.1",
+  "scope": "MAUI_COUNTYWIDE_MAYOR_AND_COUNCIL_ONLY",
+  "acceptance_basis": "CERTIFIED_CORRECTED_PACKAGE_AND_FRESH_PRIMARY_SOURCE_REVIEW",
+  "authorization_boundary": "EXACT_HEAD_PR_MERGE_APPROVAL_REQUIRED_FOR_MAIN_ACTIVATION",
+  "archive_sha256": "3ba797f102b18d7c560cd918f2eddb0ffeb406c850e7c1751d6ed7cd9222301a",
+  "package_sha256": "7ddaf33b2184f9a465128cac581e75b5b6a3a5601ca052d5ff9403b2ffc006e3",
+  "binding_sha256": "0336d269e51cfce7d36c7650a8d803656415bc2f6d9e556479a170886f9c70be",
+  "source_review": {
+    "path": "acceptance/ev/maui_source_review.v0.1.json",
+    "sha256": "b85827b4056d70e70ebb8e1e69bb02a60da3009854d5d80840a2edfe00c4b6b2"
+  },
+  "source_correction": {
+    "path": "previews/ev/maui_source_correction.v0.1.json",
+    "sha256": "1155e5ba2128cd6d85daf212d8e1b0acd01ac39df791db941b40cd7d70dbc262"
+  },
+  "publication_authorized": false,
+  "deployment_authorized": false,
+  "complete_jurisdiction": false,
+  "routing": {
+    "strategy": "REUSE_GOVERNED_ROUTE",
+    "adapter_id": "BASE-HI-MAUI-COUNTY",
+    "geoid": "15009",
+    "route_sha256": "695d2f3c0b7cb5d84bf4328c0cdc735ad8623101bd66b01032361a56d65359d2",
+    "release_path": "civic_gps_extensions/hi_maui_county_release_v0.1.json",
+    "release_sha256": "9ae1e0872ee347e0bbbe7a57721ecc67ac39cebc2c2d4b29cf06c04c8d3fe781"
+  },
+  "positive_addresses": [
+    "200 South High Street, Wailuku, HI 96793",
+    "814 Fraser Avenue, Lanai City, HI 96763"
+  ],
+  "negative_control": {
+    "address": "25 Aupuni Street, Hilo, HI 96720",
+    "expected_civic_jurisdiction_id": "jur-us-hi-hawaii-county"
+  },
+  "onboarding_expected": {
+    "office_rows": 10,
+    "current_holders": 10,
+    "address_controls": 2,
+    "qa_fail_count": 0,
+    "blocking_gap_count": 0,
+    "parity_ok": true
+  },
+  "prerequisite_adapter_evidence": {
+    "certified_head": "eda7b18c0e407d9c879560d03bf289c693fce513",
+    "merge_sha": "d2004dc3cd4828bfef28b05f5ee061d80d9c7d57",
+    "workflow_run_id": 34714568245,
+    "artifact_id": 10304187911,
+    "artifact_sha256": "7896d5f38cc92b45d4226fdcffa74d5647c577503ccff28043bdd9529dd7377c",
+    "validation_mode": "LIVE_CIVIC_GPS",
+    "positive_controls": 2,
+    "negative_controls": 1
+  },
+  "correction_acceptance": {
+    "csv_tables_checked": 7,
+    "parity_ok": true,
+    "corrected_role_terms": 1,
+    "canonical_writes": 0
+  }
+}

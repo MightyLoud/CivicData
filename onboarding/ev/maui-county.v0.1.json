@@ -1,0 +1,133 @@
+{
+  "spec_version": "0.1",
+  "entry_id": "hi-maui-countywide-representation-v0.1",
+  "profile": "municipal_representation",
+  "civic_gps_jurisdiction_id": "jur-us-hi-maui-county",
+  "package_jurisdiction_id": "jurisdiction-hi-maui-county",
+  "package_schema_version": "0.1",
+  "artifact": {
+    "encoding": "base64-parts",
+    "parts_glob": "previews/ev/maui/Maui_County_Preview_Package_v0.1_2026-09-12.zip.b64.part01",
+    "archive_sha256": "3ba797f102b18d7c560cd918f2eddb0ffeb406c850e7c1751d6ed7cd9222301a",
+    "package_subdir": "Maui_County_Preview_Package_v0.1_2026-09-12/package"
+  },
+  "countywide_binding": {
+    "binding_version": "0.1",
+    "binding_id": "hi-maui-countywide-representation-v0.1",
+    "mode": "MAUI_COUNTYWIDE_RESIDENCY_REPRESENTATION",
+    "geoid": "15009",
+    "scope": "MAUI_COUNTYWIDE_MAYOR_AND_COUNCIL_ONLY",
+    "offices": [
+      {
+        "office_id": "office-hi-maui-mayor",
+        "constituency": "COUNTYWIDE",
+        "seats": 1,
+        "expected_person_id": "person-hi-maui-richard-bissen",
+        "residency_area_id": null
+      },
+      {
+        "office_id": "office-hi-maui-council-lanai",
+        "constituency": "COUNTYWIDE_AT_LARGE_WITH_RESIDENCY_REQUIREMENT",
+        "seats": 1,
+        "expected_person_id": "person-hi-maui-gabe-johnson",
+        "residency_area_id": "division-hi-maui-residency-lanai"
+      },
+      {
+        "office_id": "office-hi-maui-council-molokai",
+        "constituency": "COUNTYWIDE_AT_LARGE_WITH_RESIDENCY_REQUIREMENT",
+        "seats": 1,
+        "expected_person_id": "person-hi-maui-keani-rawlins-fernandez",
+        "residency_area_id": "division-hi-maui-residency-molokai"
+      },
+      {
+        "office_id": "office-hi-maui-council-east-maui",
+        "constituency": "COUNTYWIDE_AT_LARGE_WITH_RESIDENCY_REQUIREMENT",
+        "seats": 1,
+        "expected_person_id": "person-hi-maui-shane-sinenci",
+        "residency_area_id": "division-hi-maui-residency-east-maui"
+      },
+      {
+        "office_id": "office-hi-maui-council-west-maui",
+        "constituency": "COUNTYWIDE_AT_LARGE_WITH_RESIDENCY_REQUIREMENT",
+        "seats": 1,
+        "expected_person_id": "person-hi-maui-tamara-paltin",
+        "residency_area_id": "division-hi-maui-residency-west-maui"
+      },
+      {
+        "office_id": "office-hi-maui-council-makawao-haiku-paia",
+        "constituency": "COUNTYWIDE_AT_LARGE_WITH_RESIDENCY_REQUIREMENT",
+        "seats": 1,
+        "expected_person_id": "person-hi-maui-nohelani-uu-hodgins",
+        "residency_area_id": "division-hi-maui-residency-makawao-haiku-paia"
+      },
+      {
+        "office_id": "office-hi-maui-council-upcountry",
+        "constituency": "COUNTYWIDE_AT_LARGE_WITH_RESIDENCY_REQUIREMENT",
+        "seats": 1,
+        "expected_person_id": "person-hi-maui-yuki-lei-sugimura",
+        "residency_area_id": "division-hi-maui-residency-upcountry"
+      },
+      {
+        "office_id": "office-hi-maui-council-south-maui",
+        "constituency": "COUNTYWIDE_AT_LARGE_WITH_RESIDENCY_REQUIREMENT",
+        "seats": 1,
+        "expected_person_id": "person-hi-maui-tom-cook",
+        "residency_area_id": "division-hi-maui-residency-south-maui"
+      },
+      {
+        "office_id": "office-hi-maui-council-kahului",
+        "constituency": "COUNTYWIDE_AT_LARGE_WITH_RESIDENCY_REQUIREMENT",
+        "seats": 1,
+        "expected_person_id": "person-hi-maui-kauanoe-batangan",
+        "residency_area_id": "division-hi-maui-residency-kahului"
+      },
+      {
+        "office_id": "office-hi-maui-council-wailuku-waihee-waikapu",
+        "constituency": "COUNTYWIDE_AT_LARGE_WITH_RESIDENCY_REQUIREMENT",
+        "seats": 1,
+        "expected_person_id": "person-hi-maui-alice-lee",
+        "residency_area_id": "division-hi-maui-residency-wailuku-waihee-waikapu"
+      }
+    ],
+    "expected_leadership_ids": [
+      "leadership-hi-maui-chair-alice-lee",
+      "leadership-hi-maui-vice-chair-yuki-lei-sugimura"
+    ],
+    "expected_package_sha256": "7ddaf33b2184f9a465128cac581e75b5b6a3a5601ca052d5ff9403b2ffc006e3",
+    "source_correction": {
+      "path": "previews/ev/maui_source_correction.v0.1.json",
+      "sha256": "1155e5ba2128cd6d85daf212d8e1b0acd01ac39df791db941b40cd7d70dbc262"
+    }
+  },
+  "candidate_only": false,
+  "production_eligible": true,
+  "publication_eligible": false,
+  "complete_jurisdiction": false,
+  "countywide_profile": {
+    "profile_id": "maui_countywide_mayor_council_v0.1",
+    "acceptance_receipt": {
+      "path": "acceptance/ev/maui_countywide.v0.1.json",
+      "sha256": "7b5e0ba92020b59bacb3959b17fa7735e62d92c9b75f5f697ea4406e598ba8c8"
+    }
+  },
+  "routing": {
+    "strategy": "REUSE_GOVERNED_ROUTE",
+    "adapter_id": "BASE-HI-MAUI-COUNTY",
+    "geoid": "15009",
+    "route_sha256": "695d2f3c0b7cb5d84bf4328c0cdc735ad8623101bd66b01032361a56d65359d2",
+    "release_path": "civic_gps_extensions/hi_maui_county_release_v0.1.json",
+    "release_sha256": "9ae1e0872ee347e0bbbe7a57721ecc67ac39cebc2c2d4b29cf06c04c8d3fe781"
+  },
+  "expected": {
+    "office_rows": 10,
+    "current_holders": 10,
+    "address_controls": 2,
+    "qa_fail_count": 0,
+    "blocking_gap_count": 0,
+    "parity_ok": true
+  },
+  "live_addresses": [
+    "200 South High Street, Wailuku, HI 96793",
+    "814 Fraser Avenue, Lanai City, HI 96763"
+  ]
+}

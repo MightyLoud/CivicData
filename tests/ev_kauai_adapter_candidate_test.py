@@ -295,7 +295,7 @@ class CountywideCandidateTest(unittest.TestCase):
         self.assertIsNone(report["source_commit"])
         self.assertEqual(len(report["positive_controls"]), 2)
         self.assertEqual(len(report["routing_holds"]), 4)
-        self.assertEqual(sorted(row["status"] for row in report["routing_holds"]), ["READY"] + ["REVIEW_REQUIRED"] * 3)
+        self.assertEqual(sorted(row["status"] for row in report["routing_holds"]), ["READY"] * 2 + ["REVIEW_REQUIRED"] * 2)
         self.assertEqual(report["auto_promoted"], 0)
         self.assertEqual(report["canonical_writes"], 0)
         self.assertEqual(before, runner.preview_runner.snapshot(ROOT))

@@ -48,9 +48,10 @@ def run() -> None:
         )
 
         result = proposal.propose(ROOT, package_id)
-        if package_id == "jurisdiction-hi-kauai-county":
-            from consumers.empowered_vote import countywide_production
-            installed = countywide_production.installed_spec(ROOT)
+        if package_id in {"jurisdiction-hi-kauai-county", "jurisdiction-hi-maui-county"}:
+            from consumers.empowered_vote import countywide_production, maui_countywide_production
+            production = countywide_production if package_id == "jurisdiction-hi-kauai-county" else maui_countywide_production
+            installed = production.installed_spec(ROOT)
             assert installed is not None
             assert result["status"] == "READY" and result["production_spec"] == installed
             assert result["auto_promoted"] is False
@@ -75,7 +76,8 @@ def run() -> None:
                 "routing_only_counties": 4,
                 "auto_promoted": 0,
                 "explicit_kauai_installations": 1,
-                "other_hi_production_holds": 3,
+                "explicit_maui_installations": 1,
+                "other_hi_production_holds": 2,
                 "kalawao_touched": False,
                 "canonical_writes": 0,
             },

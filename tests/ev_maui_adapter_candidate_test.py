@@ -67,13 +67,16 @@ class MauiCandidateTest(unittest.TestCase):
             self.assertEqual(model[field], self.package["provenance"][field])
         self.assertEqual(model["warnings"], self.package["warnings"])
 
-    def test_default_catalog_and_nonboolean_opt_in_stay_closed(self):
+    def test_default_production_is_distinct_and_candidate_opt_in_stays_required(self):
         for allow in (False, None, 1, "true"):
             self.closed(self.build(allow=allow), "COUNTYWIDE_CANDIDATE_NOT_ENABLED")
         for allow in (False, True):
-            self.closed(representation_catalog.build_representation_from_catalog(
-                "fixture", geography(), repo_root=ROOT, allow_candidate=allow),
-                "PACKAGE_NOT_GOVERNED_FOR_RESOLVED_ADDRESS")
+            result = representation_catalog.build_representation_from_catalog(
+                "fixture", geography(), repo_root=ROOT, allow_candidate=allow)
+            self.assertEqual(result["status"], "PASS", result)
+            self.assertEqual(result["package_catalog_entry_id"], "hi-maui-countywide-representation-v0.1")
+            self.assertFalse(result["preview_only"])
+            self.assertFalse(result["publication_eligible"])
 
     def test_full_essentials_has_no_candidate_opt_in(self):
         self.closed(package_catalog.build_essentials_from_catalog(
@@ -244,7 +247,8 @@ class MauiCandidateTest(unittest.TestCase):
         self.assertIsNone(report["source_commit"])
         self.assertEqual(len(report["positive_controls"]), 2)
         self.assertEqual(report["source_correction"]["status"], "PASS")
-        self.assertEqual(report["route_verification"]["production_hold"]["status"], "REVIEW_REQUIRED")
+        self.assertEqual(report["route_verification"]["production_hold"]["status"], "READY")
+        self.assertEqual(report["route_verification"]["production_hold"]["original_package_status"], "REVIEW_REQUIRED")
         self.assertEqual(report["auto_promoted"], 0)
         self.assertEqual(report["canonical_writes"], 0)
         self.assertEqual(before, runner.snapshot(ROOT))

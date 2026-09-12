@@ -1,0 +1,66 @@
+name: Maui production activation candidate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "consumers/empowered_vote/**"
+      - "onboarding/ev/**"
+      - "acceptance/ev/**"
+      - "candidates/ev/**"
+      - "previews/ev/**"
+      - "tools/ev_*.py"
+      - "tools/jurisdiction_package.py"
+      - "tests/ev_*test.py"
+      - "data/packages/hi/maui-county/**"
+      - "civic_gps_extensions/**"
+      - "civic_gps_runtime_parts/**"
+      - "requirements-civic-gps.txt"
+      - "docs/ev-maui-prod-activation-candidate-001.md"
+      - ".github/workflows/ev-maui-production-activation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  production-activation:
+    name: Maui default catalog, source acceptance, and retained holds
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ACTIVATION_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      ACTIVATION_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact head and bounded activation diff
+        run: python tools/ev_maui_activation_diff.py --repo-root . --base-sha "$ACTIVATION_BASE_SHA" --head-sha "$ACTIVATION_HEAD_SHA"
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+      - name: Reconstruct unchanged Civic GPS runtime
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+      - name: Verify correction parity, production integrity, expiry, and candidate isolation
+        run: |
+          python tools/ev_maui_source_correction.py --repo-root .
+          python tests/ev_maui_production_activation_test.py
+          python tests/ev_maui_adapter_candidate_test.py
+          python tests/ev_maui_countywide_preview_test.py
+      - name: Exercise default catalog for Wailuku, Lanai City, and Hilo
+        run: python tools/ev_maui_production_activation.py --repo-root . --output artifacts/ev-maui-production-activation/live.json
+      - name: Upload exact-head activation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-maui-production-activation-${{ github.event.pull_request.head.sha }}
+          path: artifacts/ev-maui-production-activation/
+          if-no-files-found: warn
+          retention-days: 30
