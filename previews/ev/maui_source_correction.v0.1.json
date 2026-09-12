@@ -1,0 +1,63 @@
+{
+  "canonical_writes": 0,
+  "date_scope_note": "The Mayor announcement described a planned January 1 assumption; the Council reported the January 5 swearing-in. This candidate asserts appointment selection only and adds no exact tenure dates.",
+  "gate": "EV-MAUI-SOURCE-CORRECTION-001",
+  "mode": "HELD_PREVIEW_ONLY",
+  "publication_eligible": false,
+  "raw_observations": [
+    {
+      "accessed_at": "2026-09-12",
+      "authority_level": "PRIMARY_OFFICIAL",
+      "key": "mayor-appointment",
+      "locator": "Opening paragraph",
+      "normalized_selection_type": "APPOINTED",
+      "observed_text": "he is appointing Kauanoe Batangan to fill the Maui County Council Kahului residency area seat vacancy.",
+      "publication_date": "2025-12-16",
+      "publisher": "County of Maui",
+      "source_type": "OFFICIAL_PRESS_RELEASE",
+      "title": "Mayor Richard Bissen appoints Kauanoe Batangan as Kahului’s Maui County Councilmember",
+      "url": "https://www.mauicounty.gov/m/newsflash/home/detail/18065"
+    },
+    {
+      "accessed_at": "2026-09-12",
+      "authority_level": "PRIMARY_OFFICIAL",
+      "key": "council-seating",
+      "locator": "Second body paragraph",
+      "normalized_selection_type": "APPOINTED",
+      "observed_text": "He was appointed following the Oct. 26 passing of Councilmember Tasha Kama.",
+      "publication_date": "2026-01-06",
+      "publisher": "Maui County Council",
+      "source_type": "OFFICIAL_PRESS_RELEASE",
+      "title": "Batangan seated as councilmember; changes to committees adopted",
+      "url": "https://mauicounty.us/press-release/batangan-seated-as-councilmember-changes-to-committees-adopted/"
+    },
+    {
+      "accessed_at": "2026-09-12",
+      "authority_level": "PRIMARY_OFFICIAL",
+      "key": "state-elections",
+      "locator": "County of Maui Councilmembers; Batangan footnote",
+      "normalized_selection_type": "APPOINTED",
+      "observed_text": "Councilmember Kauanoe Batangan was appointed by Mayor Richard Bissen to fill the vacancy created upon the passing of Tasha Kama.",
+      "publication_date": null,
+      "publisher": "Hawaiʻi Office of Elections",
+      "source_type": "OFFICIAL_ROSTER",
+      "title": "Elected Officials",
+      "url": "https://elections.hawaii.gov/resources/elected-officials/"
+    }
+  ],
+  "review_method": "Official web text reviewed on 2026-09-12. These short observed excerpts are preserved as RAW; they are not complete page snapshots or a publication authorization.",
+  "source_artifact": {
+    "archive_sha256": "9458ec4ce0498daf88bd6a55f88e48c15c95f48b9c1a97ae07b4ffb52acf2110",
+    "encoding": "base64-parts",
+    "package_subdir": "Maui_County_Jurisdiction_Package_v0.1_2026-08-23/package",
+    "parts_glob": "data/packages/hi/maui-county/Maui_County_Jurisdiction_Package_v0.1_2026-08-23.zip.b64.part*"
+  },
+  "target": {
+    "after": "APPOINTED",
+    "before": "ELECTED",
+    "field": "selection_type",
+    "office_id": "office-hi-maui-council-kahului",
+    "person_id": "person-hi-maui-kauanoe-batangan",
+    "role_term_id": "role-hi-maui-kauanoe-batangan"
+  }
+}
