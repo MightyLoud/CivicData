@@ -1,0 +1,72 @@
+name: Maui countywide adapter candidate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "consumers/empowered_vote/**"
+      - "candidates/ev/maui**"
+      - "previews/ev/maui**"
+      - "previews/ev/maui/**"
+      - "tools/ev_maui_*.py"
+      - "tools/ev_jurisdiction_onboarding.py"
+      - "tools/ev_onboarding_materialize.py"
+      - "tools/ev_onboarding_proposal.py"
+      - "tools/jurisdiction_package.py"
+      - "tests/ev_maui*test.py"
+      - "docs/ev-maui-prod-adapter-candidate-001.md"
+      - "data/packages/hi/maui-county/**"
+      - "onboarding/ev/**"
+      - "acceptance/ev/**"
+      - "civic_gps_extensions/**"
+      - "civic_gps_runtime_parts/**"
+      - "requirements-civic-gps.txt"
+      - ".github/workflows/ev-maui-adapter-candidate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  countywide-candidate:
+    name: Maui catalog candidate, source parity, and production isolation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      CANDIDATE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Verify exact head and protected data/runtime boundaries
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_HEAD_SHA"
+          git diff --exit-code "$CANDIDATE_BASE_SHA" HEAD -- data previews civic_gps_extensions civic_gps_runtime_parts civic_gps services onboarding acceptance consumers/empowered_vote/package_catalog.v0.1.json railway.toml railway.json Dockerfile requirements-hosted-runtime.txt
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Civic GPS runtime dependency
+        run: python -m pip install -r requirements-civic-gps.txt
+      - name: Reconstruct unchanged Civic GPS runtime
+        shell: bash
+        run: |
+          cat civic_gps_runtime_parts/part.* > civic_gps_runtime.zip
+          echo '32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797  civic_gps_runtime.zip' | sha256sum --check --strict
+          unzip -q civic_gps_runtime.zip
+      - name: Verify corrected package, catalog adapter, and preview regressions
+        run: |
+          python tools/ev_maui_source_correction.py --repo-root .
+          python tests/ev_maui_adapter_candidate_test.py
+          python tests/ev_maui_countywide_preview_test.py
+      - name: Resolve Wailuku, Lanai City, and Hilo through the catalog
+        run: python tools/ev_maui_adapter_candidate.py --repo-root . --output artifacts/ev-maui-adapter-candidate/live.json
+      - name: Upload inactive candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-maui-adapter-candidate-${{ github.event.pull_request.head.sha }}
+          path: artifacts/ev-maui-adapter-candidate/
+          if-no-files-found: warn
+          retention-days: 30

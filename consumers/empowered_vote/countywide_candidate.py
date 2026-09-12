@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Explicit, inactive Kauaʻi countywide catalog adapter candidate."""
+"""Explicit, inactive countywide catalog adapter candidates."""
 from __future__ import annotations
 
 import copy
 from typing import Any
 
 from consumers.empowered_vote import countywide_preview as preview
+from consumers.empowered_vote import maui_countywide_candidate as maui
 
 GATE = "EV-KAUAI-PROD-ADAPTER-CANDIDATE-001"
 ENTRY_ID = "candidate-hi-kauai-countywide-v0.1"
@@ -29,6 +30,12 @@ def require(condition: bool, code: str) -> None:
 def validate_entry(entry: dict[str, Any]) -> None:
     """Reject mixed bindings, scope/identity drift, and attempted activation."""
     require(isinstance(entry, dict), "COUNTYWIDE_CANDIDATE_ENTRY_INVALID")
+    if entry.get("entry_id") == maui.ENTRY_ID:
+        try:
+            maui.validate_entry(entry)
+        except maui.MauiCandidateError as exc:
+            raise CountywideCandidateError(exc.code) from exc
+        return
     require(all(entry.get(key) is value for key, value in FLAGS.items()),
             "COUNTYWIDE_CANDIDATE_HOLD_REQUIRED")
     require(entry.get("entry_id") == ENTRY_ID
@@ -75,6 +82,8 @@ def validate_entry(entry: dict[str, Any]) -> None:
 def build_representation(package: dict[str, Any], address: str, geographic: Any,
                          entry: dict[str, Any]) -> dict[str, Any]:
     """Reuse the certified projection with an explicit candidate catalog contract."""
+    if isinstance(entry, dict) and entry.get("entry_id") == maui.ENTRY_ID:
+        return maui.build_representation(package, address, geographic, entry)
     try:
         validate_entry(entry)
         binding = entry["countywide_binding"]
