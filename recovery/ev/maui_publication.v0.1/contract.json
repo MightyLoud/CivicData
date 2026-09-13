@@ -1,0 +1,71 @@
+{
+  "allowed_added_paths": [
+    ".github/workflows/ev-maui-release-recovery.yml",
+    "docs/ev-maui-release-recovery-001.md",
+    "recovery/ev/maui_publication.v0.1/approval.template.json",
+    "recovery/ev/maui_publication.v0.1/contract.json",
+    "recovery/ev/maui_publication.v0.1/failed-execution-receipt.json",
+    "tests/ev_maui_release_recovery_test.py",
+    "tools/ev_maui_release_recovery.py"
+  ],
+  "approval_max_age_hours": 24,
+  "asset_bytes": 5596,
+  "asset_id": 561768290,
+  "asset_sha256": "eb577b26a899f5e03bb6450225438bcbebd0efb3b53993e14426eddb8506683a",
+  "automatic_cleanup": false,
+  "automatic_retry": false,
+  "base": "6260d0c6da3971f2e13309e3746c51cc02044543",
+  "base_tree": "78975d979409484ee4f6318d17a6c6e0436154f6",
+  "creates": 0,
+  "deletes": 0,
+  "execution_authority": "CURRENT_APPROVAL_BOUND_MANUAL_MAIN_DISPATCH",
+  "failed_job": 103776766384,
+  "failed_run": 34776975180,
+  "failure_artifact_id": 10323877402,
+  "failure_artifact_sha256": "f84a9546af7ee67a7671e78b671ddf9800471a6fb83ac1c7cf96e907d797bb71",
+  "gate": "EV-MAUI-RELEASE-RECOVERY-001",
+  "holds": {
+    "canonical_writes": 0,
+    "catalog_promotion": false,
+    "deployment_authorized": false,
+    "kalawao_work": false,
+    "publication_authorized": false
+  },
+  "integration_target": "2b3e8d5df11ed4f4b19f7579c9bd1663131070bf",
+  "only_mutation": {
+    "data": {
+      "draft": false,
+      "make_latest": "false"
+    },
+    "method": "PATCH",
+    "path": "releases/388004869"
+  },
+  "original_authorization": "RETAINED_HISTORICAL_RECEIPT",
+  "original_certified_head": "d9c3878f558c571eeed87661653a1416ac4d9e2b",
+  "original_pr": 67,
+  "pinned_inputs": {
+    ".github/workflows/ev-maui-release-execution-candidate.yml": "b399ec5ac35e25a14bf25e7f8881674007c36e8669af49e0033acd6ed7aa759a",
+    "recovery/ev/maui_publication.v0.1/failed-execution-receipt.json": "c997dd25cb7d5348f4ffe480590181b1016c46173fae34d34743765782204601",
+    "tools/ev_maui_release_execution.py": "0e7553258458f053ce404b819d6e42192676d47cc970d73fc51418e9faedb13f"
+  },
+  "published_readback_attempts": 3,
+  "readback_wait_seconds": 1,
+  "release_id": 388004869,
+  "repository": "MightyLoud/CivicData",
+  "required_workflows": [
+    ".github/workflows/civic-gps-live-smoke.yml",
+    ".github/workflows/ev-kauai-adapter-candidate.yml",
+    ".github/workflows/ev-kauai-production-activation.yml",
+    ".github/workflows/ev-maui-adapter-candidate.yml",
+    ".github/workflows/ev-maui-countywide-preview.yml",
+    ".github/workflows/ev-maui-production-activation.yml",
+    ".github/workflows/ev-maui-release-recovery.yml"
+  ],
+  "schema": "maui-release-recovery-contract/0.1",
+  "source_recheck_max_age_hours": 24,
+  "source_review_expires_on": "2026-10-12",
+  "status": "RECOVERY_CANDIDATE_HELD",
+  "tag": "maui-mayor-council-integration-v0.1",
+  "tag_writes": 0,
+  "uploads": 0
+}

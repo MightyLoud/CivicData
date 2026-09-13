@@ -1,0 +1,68 @@
+{
+  "approval": {
+    "approval_reference": "Creyton's explicit y in this conversation authorizes Maui's single 5596-byte manifest publication after PR 67 merge; deployment remains held (2026-09-13).",
+    "approved": true,
+    "approved_at_utc": "2026-09-13T16:45:33.264492+00:00",
+    "asset_sha256": "eb577b26a899f5e03bb6450225438bcbebd0efb3b53993e14426eddb8506683a",
+    "candidate_pr": 67,
+    "canonical_writes": 0,
+    "catalog_promotion": false,
+    "certified_candidate_head": "d9c3878f558c571eeed87661653a1416ac4d9e2b",
+    "contract_sha256": "f335177c734bdf07d94df9105677776f87d88ec3161a45a4df82a62126952c5d",
+    "deployment_authorized": false,
+    "expected_execution_head": "6260d0c6da3971f2e13309e3746c51cc02044543",
+    "expires_at_utc": "2026-09-14T15:53:03.101372+00:00",
+    "kalawao_work": false,
+    "notes_sha256": "b49808473dd60f622f1b4ce219d350c10a43605d8bac9dc019e755e528001245",
+    "operation_id": "maui_publication_20260913_6260d0c6",
+    "publication_authorized": true,
+    "repository": "MightyLoud/CivicData",
+    "schema": "maui-release-execution-approval/0.1",
+    "source_recheck_sha256": "e5b56e4f0f5a7b8cfe5511cfde4fe6cdeb7ce55115971e923f6d9d235a8fbb52",
+    "tag": "maui-mayor-council-integration-v0.1",
+    "target_commit": "2b3e8d5df11ed4f4b19f7579c9bd1663131070bf"
+  },
+  "asset_id": 561768290,
+  "automatic_cleanup": false,
+  "automatic_retry": false,
+  "boundaries_before": {
+    "kauai_asset_sha256": "7a40e104999c2bb891b5ecadb2dfefec511f1fcc783e122f7cd31402987f850f",
+    "kauai_release_id": 387664986,
+    "railway_live_deployment_checked": false,
+    "railway_source_sha": "bf95d7e79c8cfc8be644326d0b0ea2c1065b0a67",
+    "texas_asset_sha256": "80bcb6f3d4d668ce62af84450b1db726156c0beaf7bc24b053b8c6291704cffe",
+    "texas_release_id": 383744766
+  },
+  "canonical_writes": 0,
+  "catalog_promotion": false,
+  "completed_phases": [
+    "PREFLIGHT",
+    "CREATE_DRAFT",
+    "UPLOAD_ONE_MANIFEST",
+    "VERIFY_DRAFT_ASSET"
+  ],
+  "context": {
+    "certified_head": "d9c3878f558c571eeed87661653a1416ac4d9e2b",
+    "head": "6260d0c6da3971f2e13309e3746c51cc02044543",
+    "workflow_runs": [
+      34767713405,
+      34767713406,
+      34767713438,
+      34767713442,
+      34767713443,
+      34767713459,
+      34767713477,
+      34767713503
+    ]
+  },
+  "deployment_authorized": false,
+  "error": "EXACT_LIGHTWEIGHT_TAG_REQUIRED",
+  "gate": "EV-MAUI-RELEASE-EXECUTION-CANDIDATE-001",
+  "kalawao_work": false,
+  "manifest_sha256": "eb577b26a899f5e03bb6450225438bcbebd0efb3b53993e14426eddb8506683a",
+  "operation_id": "maui_publication_20260913_6260d0c6",
+  "phase": "CREATE_OR_VERIFY_EXACT_TAG",
+  "publication_completed": null,
+  "release_id": 388004869,
+  "status": "FAIL_CLOSED_RECONCILIATION_REQUIRED"
+}

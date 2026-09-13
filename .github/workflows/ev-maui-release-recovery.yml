@@ -1,0 +1,139 @@
+name: Maui guarded draft release recovery
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/ev-maui-release-recovery.yml"
+      - "docs/ev-maui-release-recovery-001.md"
+      - "recovery/ev/maui_publication.v0.1/approval.template.json"
+      - "recovery/ev/maui_publication.v0.1/contract.json"
+      - "recovery/ev/maui_publication.v0.1/failed-execution-receipt.json"
+      - "tests/ev_maui_release_recovery_test.py"
+      - "tools/ev_maui_release_recovery.py"
+  workflow_dispatch:
+    inputs:
+      execute:
+        description: "Resume only reconciled draft 388004869 with current approval and fresh source review"
+        type: boolean
+        required: true
+        default: false
+      expected_head_sha:
+        description: "Separately approved exact main SHA (required for execution)"
+        type: string
+        required: false
+      approval_json:
+        description: "Separately approved receipt; committed unapproved template is rejected"
+        type: string
+        required: false
+      source_recheck_json:
+        description: "Complete fresh primary-source review bound by approval; review must be fresh at execution"
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    name: Maui recovery integrity and read-only candidate checks
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && !inputs.execute)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CANDIDATE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      CANDIDATE_BASE_SHA: ${{ github.event.pull_request.base.sha || '6260d0c6da3971f2e13309e3746c51cc02044543' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact recovery head and seven additions only
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from tools.ev_maui_release_recovery import verify_git
+          print(verify_git(Path('.'), os.environ['CANDIDATE_HEAD_SHA'], os.environ['CANDIDATE_BASE_SHA']))
+          PY
+      - name: Verify original manifest and retained evidence
+        run: python tests/ev_maui_publication_candidate_test.py
+      - name: Test recovery approval, object integrity, single-PATCH and ambiguous-failure controls offline
+        run: python tests/ev_maui_release_recovery_test.py
+      - name: Build held recovery without release mutations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python tools/ev_maui_release_recovery.py --repo-root .
+          --head "$CANDIDATE_HEAD_SHA" --base "$CANDIDATE_BASE_SHA"
+          --output-dir artifacts/ev-maui-release-recovery/candidate
+      - name: Retain held candidate verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-maui-release-recovery-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/ev-maui-release-recovery/candidate/
+          if-no-files-found: error
+          retention-days: 30
+
+  execute-separately-approved-release:
+    name: Publish reconciled existing Maui draft
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.execute == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: maui-mayor-council-integration-v0.1-release
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: read
+    env:
+      EXPECTED_HEAD_SHA: ${{ inputs.expected_head_sha }}
+    steps:
+      - name: Require dispatch of the exact approved main head
+        run: test -n "$EXPECTED_HEAD_SHA" && test "$EXPECTED_HEAD_SHA" = "$GITHUB_SHA"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Stage separately approved inputs outside the repository
+        env:
+          APPROVAL_JSON: ${{ inputs.approval_json }}
+          SOURCE_RECHECK_JSON: ${{ inputs.source_recheck_json }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from tools.ev_maui_release_recovery import load_json, validate_approval
+          approval = os.environ['APPROVAL_JSON'].encode()
+          recheck = os.environ['SOURCE_RECHECK_JSON'].encode()
+          validate_approval(approval, recheck, os.environ['EXPECTED_HEAD_SHA'])
+          target = Path(os.environ['RUNNER_TEMP'])
+          (target / 'maui-recovery-approval.json').write_bytes(approval)
+          (target / 'maui-source-recheck.json').write_bytes(recheck)
+          PY
+      - name: Recheck and publish only the existing verified draft
+        env:
+          GH_TOKEN: ${{ secrets.MAUI_RELEASE_TOKEN || github.token }}
+        run: >-
+          python tools/ev_maui_release_recovery.py --repo-root . --execute
+          --head "$EXPECTED_HEAD_SHA"
+          --approval "$RUNNER_TEMP/maui-recovery-approval.json"
+          --source-recheck "$RUNNER_TEMP/maui-source-recheck.json"
+          --output-dir artifacts/ev-maui-release-recovery/execution
+      - name: Retain execution or partial-failure receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ev-maui-release-recovery-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/ev-maui-release-recovery/execution/
+          if-no-files-found: warn
+          retention-days: 90
