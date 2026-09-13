@@ -1,0 +1,23 @@
+{
+  "approval_reference": null,
+  "approved": false,
+  "approved_at_utc": null,
+  "asset_sha256": "eb577b26a899f5e03bb6450225438bcbebd0efb3b53993e14426eddb8506683a",
+  "candidate_pr": null,
+  "canonical_writes": 0,
+  "catalog_promotion": false,
+  "certified_candidate_head": null,
+  "contract_sha256": "f335177c734bdf07d94df9105677776f87d88ec3161a45a4df82a62126952c5d",
+  "deployment_authorized": false,
+  "expected_execution_head": null,
+  "expires_at_utc": null,
+  "kalawao_work": false,
+  "notes_sha256": "b49808473dd60f622f1b4ce219d350c10a43605d8bac9dc019e755e528001245",
+  "operation_id": null,
+  "publication_authorized": false,
+  "repository": "MightyLoud/CivicData",
+  "schema": "maui-release-execution-approval/0.1",
+  "source_recheck_sha256": null,
+  "tag": "maui-mayor-council-integration-v0.1",
+  "target_commit": "2b3e8d5df11ed4f4b19f7579c9bd1663131070bf"
+}
