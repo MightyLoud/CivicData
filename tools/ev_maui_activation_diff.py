@@ -41,6 +41,12 @@ def verify_diff(root, base_sha, head_sha):
     # The publication candidate adds only its immutable metadata/evidence contract.
     # It must pass an exact base/tree, nine-path allowlist, and all unchanged-input hashes.
     all_changed = git("diff", "--name-only", base_sha, "HEAD").decode().splitlines()
+    if any(p.startswith("candidates/ev/maui_release_execution.v0.1/") for p in all_changed):
+        from tools import ev_maui_release_execution as execution
+        result = execution.verify_git(root, head_sha, base_sha)
+        execution.verify_local(root)
+        return {**result, "mode": "HELD_MAUI_RELEASE_EXECUTION_CANDIDATE",
+                "all_production_entries_preserved": 6, "protected_content_unchanged": True}
     if any(p.startswith("candidates/ev/maui_publication.v0.1/") for p in all_changed):
         from tools import ev_maui_publication_candidate as publication
         result = publication.verify_git(root, head_sha, base_sha)

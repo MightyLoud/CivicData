@@ -1,0 +1,745 @@
+{
+  "address_controls_match_receipt": true,
+  "archive_sha256": "3ba797f102b18d7c560cd918f2eddb0ffeb406c850e7c1751d6ed7cd9222301a",
+  "blockers": [],
+  "checked_at_utc": "2026-09-13T15:55:35.047235+00:00",
+  "leadership_matches_package": true,
+  "limitations": [
+    "Retained fragments are noncontiguous and whitespace-normalized; complete response hashes identify retrieved HTML.",
+    "The executor checks review integrity and bindings; authenticated operator review establishes the evidence meaning.",
+    "This recheck does not resolve canonical exact tenure intervals or certify a hosted endpoint."
+  ],
+  "normalized_assertions": [
+    {
+      "assertion_id": "maui-release-recheck-20260913-holder-person-hi-maui-richard-bissen",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-mayor",
+      "person_id": "person-hi-maui-richard-bissen",
+      "source_ids": [
+        "maui-release-recheck-20260913-state-elections"
+      ],
+      "status": "NORMALIZED",
+      "type": "CURRENT_HOLDER"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-holder-person-hi-maui-alice-lee",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-wailuku-waihee-waikapu",
+      "person_id": "person-hi-maui-alice-lee",
+      "source_ids": [
+        "maui-release-recheck-20260913-lee"
+      ],
+      "status": "NORMALIZED",
+      "type": "CURRENT_HOLDER"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-residency-lee",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-wailuku-waihee-waikapu",
+      "representation_scope": "COUNTYWIDE",
+      "residency_area_id": "division-hi-maui-residency-wailuku-waihee-waikapu",
+      "source_ids": [
+        "maui-release-recheck-20260913-lee",
+        "maui-release-recheck-20260913-faq"
+      ],
+      "status": "NORMALIZED",
+      "type": "RESIDENCY_QUALIFICATION"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-holder-person-hi-maui-yuki-lei-sugimura",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-upcountry",
+      "person_id": "person-hi-maui-yuki-lei-sugimura",
+      "source_ids": [
+        "maui-release-recheck-20260913-sugimura"
+      ],
+      "status": "NORMALIZED",
+      "type": "CURRENT_HOLDER"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-residency-sugimura",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-upcountry",
+      "representation_scope": "COUNTYWIDE",
+      "residency_area_id": "division-hi-maui-residency-upcountry",
+      "source_ids": [
+        "maui-release-recheck-20260913-sugimura",
+        "maui-release-recheck-20260913-faq"
+      ],
+      "status": "NORMALIZED",
+      "type": "RESIDENCY_QUALIFICATION"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-holder-person-hi-maui-kauanoe-batangan",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-kahului",
+      "person_id": "person-hi-maui-kauanoe-batangan",
+      "source_ids": [
+        "maui-release-recheck-20260913-batangan"
+      ],
+      "status": "NORMALIZED",
+      "type": "CURRENT_HOLDER"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-residency-batangan",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-kahului",
+      "representation_scope": "COUNTYWIDE",
+      "residency_area_id": "division-hi-maui-residency-kahului",
+      "source_ids": [
+        "maui-release-recheck-20260913-batangan",
+        "maui-release-recheck-20260913-faq"
+      ],
+      "status": "NORMALIZED",
+      "type": "RESIDENCY_QUALIFICATION"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-holder-person-hi-maui-tom-cook",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-south-maui",
+      "person_id": "person-hi-maui-tom-cook",
+      "source_ids": [
+        "maui-release-recheck-20260913-cook"
+      ],
+      "status": "NORMALIZED",
+      "type": "CURRENT_HOLDER"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-residency-cook",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-south-maui",
+      "representation_scope": "COUNTYWIDE",
+      "residency_area_id": "division-hi-maui-residency-south-maui",
+      "source_ids": [
+        "maui-release-recheck-20260913-cook",
+        "maui-release-recheck-20260913-faq"
+      ],
+      "status": "NORMALIZED",
+      "type": "RESIDENCY_QUALIFICATION"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-holder-person-hi-maui-gabe-johnson",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-lanai",
+      "person_id": "person-hi-maui-gabe-johnson",
+      "source_ids": [
+        "maui-release-recheck-20260913-johnson"
+      ],
+      "status": "NORMALIZED",
+      "type": "CURRENT_HOLDER"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-residency-johnson",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-lanai",
+      "representation_scope": "COUNTYWIDE",
+      "residency_area_id": "division-hi-maui-residency-lanai",
+      "source_ids": [
+        "maui-release-recheck-20260913-johnson",
+        "maui-release-recheck-20260913-faq"
+      ],
+      "status": "NORMALIZED",
+      "type": "RESIDENCY_QUALIFICATION"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-holder-person-hi-maui-tamara-paltin",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-west-maui",
+      "person_id": "person-hi-maui-tamara-paltin",
+      "source_ids": [
+        "maui-release-recheck-20260913-paltin"
+      ],
+      "status": "NORMALIZED",
+      "type": "CURRENT_HOLDER"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-residency-paltin",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-west-maui",
+      "representation_scope": "COUNTYWIDE",
+      "residency_area_id": "division-hi-maui-residency-west-maui",
+      "source_ids": [
+        "maui-release-recheck-20260913-paltin",
+        "maui-release-recheck-20260913-faq"
+      ],
+      "status": "NORMALIZED",
+      "type": "RESIDENCY_QUALIFICATION"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-holder-person-hi-maui-keani-rawlins-fernandez",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-molokai",
+      "person_id": "person-hi-maui-keani-rawlins-fernandez",
+      "source_ids": [
+        "maui-release-recheck-20260913-rawlins-fernandez"
+      ],
+      "status": "NORMALIZED",
+      "type": "CURRENT_HOLDER"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-residency-rawlins-fernandez",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-molokai",
+      "representation_scope": "COUNTYWIDE",
+      "residency_area_id": "division-hi-maui-residency-molokai",
+      "source_ids": [
+        "maui-release-recheck-20260913-rawlins-fernandez",
+        "maui-release-recheck-20260913-faq"
+      ],
+      "status": "NORMALIZED",
+      "type": "RESIDENCY_QUALIFICATION"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-holder-person-hi-maui-shane-sinenci",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-east-maui",
+      "person_id": "person-hi-maui-shane-sinenci",
+      "source_ids": [
+        "maui-release-recheck-20260913-sinenci"
+      ],
+      "status": "NORMALIZED",
+      "type": "CURRENT_HOLDER"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-residency-sinenci",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-east-maui",
+      "representation_scope": "COUNTYWIDE",
+      "residency_area_id": "division-hi-maui-residency-east-maui",
+      "source_ids": [
+        "maui-release-recheck-20260913-sinenci",
+        "maui-release-recheck-20260913-faq"
+      ],
+      "status": "NORMALIZED",
+      "type": "RESIDENCY_QUALIFICATION"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-holder-person-hi-maui-nohelani-uu-hodgins",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-makawao-haiku-paia",
+      "person_id": "person-hi-maui-nohelani-uu-hodgins",
+      "source_ids": [
+        "maui-release-recheck-20260913-uu-hodgins"
+      ],
+      "status": "NORMALIZED",
+      "type": "CURRENT_HOLDER"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-residency-uu-hodgins",
+      "confidence": "HIGH",
+      "office_id": "office-hi-maui-council-makawao-haiku-paia",
+      "representation_scope": "COUNTYWIDE",
+      "residency_area_id": "division-hi-maui-residency-makawao-haiku-paia",
+      "source_ids": [
+        "maui-release-recheck-20260913-uu-hodgins",
+        "maui-release-recheck-20260913-faq"
+      ],
+      "status": "NORMALIZED",
+      "type": "RESIDENCY_QUALIFICATION"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-leadership-hi-maui-chair-alice-lee",
+      "confidence": "HIGH",
+      "leadership_id": "leadership-hi-maui-chair-alice-lee",
+      "person_id": "person-hi-maui-alice-lee",
+      "role_type": "CHAIR",
+      "source_ids": [
+        "maui-release-recheck-20260913-roster"
+      ],
+      "status": "NORMALIZED",
+      "type": "LEADERSHIP"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-leadership-hi-maui-vice-chair-yuki-lei-sugimura",
+      "confidence": "HIGH",
+      "leadership_id": "leadership-hi-maui-vice-chair-yuki-lei-sugimura",
+      "person_id": "person-hi-maui-yuki-lei-sugimura",
+      "role_type": "VICE_CHAIR",
+      "source_ids": [
+        "maui-release-recheck-20260913-roster"
+      ],
+      "status": "NORMALIZED",
+      "type": "LEADERSHIP"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-batangan-selection",
+      "confidence": "HIGH",
+      "role_term_id": "role-hi-maui-kauanoe-batangan",
+      "selection_type": "APPOINTED",
+      "source_ids": [
+        "maui-release-recheck-20260913-state-elections",
+        "maui-release-recheck-20260913-seating"
+      ],
+      "status": "NORMALIZED",
+      "type": "CURRENT_SELECTION"
+    },
+    {
+      "assertion_id": "maui-release-recheck-20260913-countywide",
+      "confidence": "HIGH",
+      "representation_scope": "COUNTYWIDE",
+      "residency_areas": 9,
+      "source_ids": [
+        "maui-release-recheck-20260913-faq"
+      ],
+      "status": "NORMALIZED",
+      "type": "COUNCIL_ELECTORATE"
+    },
+    {
+      "address": "200 South High Street, Wailuku, HI 96793",
+      "assertion_id": "maui-release-recheck-20260913-street-wailuku",
+      "confidence": "HIGH",
+      "source_ids": [
+        "maui-release-recheck-20260913-faq"
+      ],
+      "status": "NORMALIZED",
+      "type": "ADDRESS_CONTROL_SOURCE"
+    },
+    {
+      "address": "814 Fraser Avenue, Lanai City, HI 96763",
+      "assertion_id": "maui-release-recheck-20260913-street-lanai",
+      "confidence": "HIGH",
+      "source_ids": [
+        "maui-release-recheck-20260913-johnson"
+      ],
+      "status": "NORMALIZED",
+      "type": "ADDRESS_CONTROL_SOURCE"
+    }
+  ],
+  "package_sha256": "7ddaf33b2184f9a465128cac581e75b5b6a3a5601ca052d5ff9403b2ffc006e3",
+  "production_receipt_extended": false,
+  "publication_authorized": false,
+  "qa": {
+    "blocking_gap_count": 0,
+    "holder_parity": 10,
+    "leadership_parity": 2,
+    "normalized_count": 25,
+    "parity_ok": true,
+    "raw_count": 13,
+    "residency_parity": 9,
+    "source_joins_valid": true,
+    "status": "PASS"
+  },
+  "residency_matches_package": true,
+  "review_method": "Direct official page retrieval; retained fragments and all 25 joins rechecked against the immutable accepted package.",
+  "roster_matches_package": true,
+  "schema": "maui-release-source-recheck/0.1",
+  "scope_matches_package": true,
+  "selection_matches_package": true,
+  "source_review_expires_on": "2026-10-12",
+  "sources": [
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://elections.hawaii.gov/resources/elected-officials/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "County of Maui",
+        "County of Maui Mayor - 4 year term",
+        "4 year term beginning noon on second day of January following election",
+        "Maximum of 2 consecutive full terms",
+        "Jurisdiction",
+        "Incumbent",
+        "Next",
+        "Election",
+        "County of Maui",
+        "Richard Bissen",
+        "2026",
+        "County of Maui Councilmembers - 2 year term",
+        "2 year term beginning noon on second day of January following election",
+        "Maximum of 5 consecutive full terms",
+        "Jurisdiction",
+        "Incumbent",
+        "Next",
+        "Election",
+        "East Maui",
+        "Shane Sinenci",
+        "2026",
+        "West Maui",
+        "Tamara Paltin",
+        "2026",
+        "Wailuku-Waihee-Waikapu",
+        "Alice Lee",
+        "2026",
+        "Kahului",
+        "Kauanoe Batangan*",
+        "2026",
+        "South Maui",
+        "Tom Cook",
+        "2026",
+        "Makawao-Haiku-Paia",
+        "Nohe Uu-Hodgins",
+        "2026",
+        "Upcountry",
+        "Yuki Lei Sugimura",
+        "2026",
+        "Lanai",
+        "Gabe Johnson",
+        "2026",
+        "Molokai",
+        "Keani Rawlins-Fernandez",
+        "2026",
+        "*On December 16, 2025, Councilmember Kauanoe Batangan was appointed by Mayor Richard Bissen to fill the vacancy created upon the passing of Tasha Kama."
+      ],
+      "raw_excerpts_sha256": "f8f30705ee4043df48983891da93175843ef16497fbc74f28986c8afece4b79d",
+      "response_sha256": "b2fbbfe2e73babe569fe0b67db3f51ae082e3e695e0322532a924d710ae62b84",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:04.650348+00:00",
+      "source_id": "maui-release-recheck-20260913-state-elections",
+      "supports": [
+        "MAYOR_ROSTER",
+        "COUNCIL_ROSTER",
+        "RESIDENCY_AREAS",
+        "APPOINTED_SELECTION",
+        "TERM_POLICY"
+      ],
+      "url": "https://elections.hawaii.gov/resources/elected-officials/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/councilmembers/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Councilmembers – Nā Lālā ʻAha",
+        "The Maui County Council is a nine-member legislative body of officials who are elected on at-large basis (i.e., all County voters can cast votes for all nine seats), one each from nine residency areas. Each Council member is elected for a two-year term.",
+        "The Council is the legislative and policy-making body of the Maui County government, as provided by Section 2-2 of the",
+        "Charter of the County of Maui",
+        ": ‘All powers of the county shall be carried into execution as provided by this charter, or, if the charter makes no provisions, as provided by ordinance or resolution of the county council.’",
+        "Members",
+        "Alice Lee, Council Chair",
+        "Yuki Lei Sugimura, Vice-Chair",
+        "Tasha Kama (In Memoriam)",
+        "Kauanoe Batangan, Councilmember",
+        "Tom Cook, Councilmember",
+        "Gabe Johnson, Councilmember",
+        "Tamara Paltin, Councilmember",
+        "Keani Rawlins-Fernandez, Councilmember",
+        "Shane Sinenci, Councilmember",
+        "Nohelani Uʻu-Hodgins, Councilmember"
+      ],
+      "raw_excerpts_sha256": "293a75dcb58bde7663964a55ab70981f5149c7516699a52581af441c3579f11b",
+      "response_sha256": "2bb32b5408b3d77aa062b4a055c63004b3177a0348ccbb73163739f9ae203e27",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:03.101372+00:00",
+      "source_id": "maui-release-recheck-20260913-roster",
+      "supports": [
+        "COUNCIL_ROSTER",
+        "COUNCIL_CHAIR",
+        "COUNCIL_VICE_CHAIR",
+        "COUNTYWIDE_SCOPE"
+      ],
+      "url": "https://mauicounty.us/councilmembers/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/frequently-asked-questions/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Frequently Asked Questions -Nā nīnau i hāpai pinepine ʻia",
+        "1. How can I contact a Councilmember?",
+        "Please visit",
+        "MauiCounty.us/contact",
+        "or",
+        "the",
+        "councilmember page",
+        "for phone, fax and email contacts.",
+        "2. Which Councilmember holds the seat from each residency area?",
+        "Please note that all county voters are eligible to vote in council elections for all nine residency areas.",
+        "Alice L. Lee: Wailuku-Waiheʻe-Waikapū",
+        "Yuki Lei K. Sugimura: Upcountry",
+        "Kauanoe Batangan: Kahului",
+        "Tom Cook: South Maui",
+        "Gabe Johnson: Lānaʻi",
+        "Tamara Paltin: West Maui",
+        "Keani N.W. Rawlins-Fernandez: Molokai",
+        "Shane M. Sinenci: East Maui",
+        "Nohe Uʻu-Hodgins: Makawao-Haʻikū-Pāʻia",
+        "3. Which Councilmember should I contact to voice my concerns?",
+        "Although they are subject to district residency requirements, Councilmembers are elected “at large” by the voters of the county. Therefore, concerns may be voiced to any Councilmember.",
+        "7. How do I submit testimony if I can’t be there in person?",
+        "For Committee meeting agenda items, written testimony should be addressed to the Committee Chair and mailed or faxed to the Office of Council Services, 200 South High Street, Wailuku, HI 96793, 808-270-7686 (fax).",
+        "See",
+        "How to testify.",
+        "For Council meeting agenda items, written testimony should be addressed to the Council Chair and mailed or faxed to the Office of the County Clerk, 200 South High Street, Wailuku, HI 96793, 808-270-7171 (fax). Testimony for Council meetings may be emailed to",
+        "county.clerk@mauicounty.us",
+        ".",
+        "For Council and Committee meetings held in the Council Chamber, oral testimony may be received by telephone from each of the Council",
+        "residency area offices",
+        "in South Maui, West Maui, Makawao-Ha‘ikū-Pā‘ia, Hāna, Lānaʻi, and Molokai."
+      ],
+      "raw_excerpts_sha256": "2f3ccc35f19592a1a3b3fdd8c44c01c79818ce98414d9080b23d65b0e4611022",
+      "response_sha256": "cf6cc2ae56cb747a4a918483b89115d256ceef8fca3a0029c8435353760b5e4b",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:03.157238+00:00",
+      "source_id": "maui-release-recheck-20260913-faq",
+      "supports": [
+        "COUNCIL_ROSTER",
+        "RESIDENCY_AREAS",
+        "COUNTYWIDE_SCOPE",
+        "WAILUKU_ADDRESS"
+      ],
+      "url": "https://mauicounty.us/frequently-asked-questions/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/press-release/batangan-seated-as-councilmember-changes-to-committees-adopted/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Batangan seated as councilmember; changes to committees adopted",
+        "by",
+        "Alice Lee",
+        "on",
+        "January 6, 2026",
+        "For Immediate Release:",
+        "Press Release by:",
+        "Alice L. Lee, Chair",
+        "Maui County Council",
+        "media@mauicounty.us",
+        "Batangan seated as councilmember",
+        "; changes to committees adopted",
+        "WAILUKU, Hawaiʻi (Jan. 6, 2026)—Councilmember Kauanoe Batangan was seated on the Maui County Council at a swearing-in ceremony yesterday, which was followed by a special meeting where councilmembers agreed to committee-assignment changes, Chair Alice L. Lee announced today.",
+        "Batangan accepted the council seat for the Kahului residency area for the remainder of the 2025-27 term. He was appointed following the Oct. 26 passing of Councilmember Tasha Kama.",
+        "“Yesterday marked a meaningful occasion for the council,” said Lee, who holds the seat for the Wailuku-Waiheʻe-Waikapū residency area. “With Councilmember Batangan seated, the council immediately begins its work for the new year.”",
+        "By an 8-0 vote, the council adopted",
+        "Resolution 26-1",
+        "to add Batangan as a voting member to all eight standing committees. The resolution also named Batangan as chair of the Government Relations, Ethics and Transparency Committee, replacing Councilmember Nohelani Uʻu-Hodgins, who was named chair of the Housing and Land Use Committee."
+      ],
+      "raw_excerpts_sha256": "fb321abde9ac983c1382218e026ea72c64530069efef4dfff1c5510c99b79dfe",
+      "response_sha256": "ff550631a2c67d7587cd8fb51dffdd6e42d3de395b056741b27370c9411ea2f6",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:03.191767+00:00",
+      "source_id": "maui-release-recheck-20260913-seating",
+      "supports": [
+        "APPOINTED_SELECTION"
+      ],
+      "url": "https://mauicounty.us/press-release/batangan-seated-as-councilmember-changes-to-committees-adopted/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/lee/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Alice L. Lee",
+        "Alice L. Lee is the Chair of the Maui County Council.",
+        "She holds the County Council seat for the Wailuku-Waiheʻe-Waikapū residency area."
+      ],
+      "raw_excerpts_sha256": "011a3908c0dd0a4abdd826a330260c799ec6781a4734027e424a792fe1968bc1",
+      "response_sha256": "fac970794d31886774018704fe46181d7b4240f73dba90c66a23f2c118babfbf",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:03.168969+00:00",
+      "source_id": "maui-release-recheck-20260913-lee",
+      "supports": [
+        "COUNCIL_CHAIR",
+        "RESIDENCY_AREAS"
+      ],
+      "url": "https://mauicounty.us/lee/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/sugimura/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Yuki Lei Sugimura",
+        "Yuki Lei Sugimura is the Vice-Chair of the Maui County Council and the Chair of the Budget, Finance, and Economic Development Committee.",
+        "She holds the County Council seat for the Upcountry residency area.",
+        "Upcountry water source development meeting",
+        "View the",
+        "meeting",
+        ":",
+        "Download (PDF, 5.38MB)"
+      ],
+      "raw_excerpts_sha256": "d63c5dbe41e05b6c3f8037f3174dfc2f74919d869c0dcd6d8ada48f7ef82d995",
+      "response_sha256": "d81c45d7feb4187ce631272b9ed78ae005812b5e838a6ed03b3f4c841c96bd31",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:09.477807+00:00",
+      "source_id": "maui-release-recheck-20260913-sugimura",
+      "supports": [
+        "COUNCIL_VICE_CHAIR",
+        "RESIDENCY_AREAS"
+      ],
+      "url": "https://mauicounty.us/sugimura/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/batangan/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Kauanoe Batangan",
+        "Kauanoe Batangan is the Chair of the Government Relations, Ethics and Transparency Committee.",
+        "He holds the County Council seat for the Kahului residency area."
+      ],
+      "raw_excerpts_sha256": "ac61fabb2e5cc15426daf24108fbeecfa11ca469f6d59248e75365a4d77b22f7",
+      "response_sha256": "b55c9ff3ab1c70af292d502c4d8c051c8ce2011c7fb9f1ed0b349949c9ef6788",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:09.535823+00:00",
+      "source_id": "maui-release-recheck-20260913-batangan",
+      "supports": [
+        "COUNCIL_ROSTER",
+        "RESIDENCY_AREAS"
+      ],
+      "url": "https://mauicounty.us/batangan/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/cook/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Tom Cook",
+        "Thomas Cook is the Chair of the Water and Infrastructure Committee.",
+        "He holds the County Council seat for the South Maui residency area."
+      ],
+      "raw_excerpts_sha256": "a94030a0a7e60409d4b0666972ab522454078d66ef2fb3ae4ceff638a0315df9",
+      "response_sha256": "dd2d528cad1fbce484226f8d1a5d3d2db9accc767cb75ab22b89bcb65bd4065f",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:09.520460+00:00",
+      "source_id": "maui-release-recheck-20260913-cook",
+      "supports": [
+        "COUNCIL_ROSTER",
+        "RESIDENCY_AREAS"
+      ],
+      "url": "https://mauicounty.us/cook/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/johnson/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Gabe Johnson",
+        "Gabe Johnson is the Chair of the Agriculture, Diversification, Environment and Public Transportation Committee.",
+        "He holds the County Council seat for the Lānaʻi residency area.",
+        "t and Communications",
+        "Roxanne Morita, Lānaʻi Office Executive Assistant",
+        "Residency Area Office Staff",
+        "Roxanne Morita",
+        "P.O. Box 630647",
+        "814 Fraser Avenue",
+        "Lānaʻi City, Hawaii 96763",
+        "(808) 565-7094",
+        "(808) 866-4489",
+        "Contact",
+        "Email:",
+        "gabe.johnson@mauicounty.us",
+        "Kalana O Maui Building",
+        "200 South High St.",
+        "8th Floor",
+        "Wailuku, Hawaii 96793",
+        "Ph: (808)"
+      ],
+      "raw_excerpts_sha256": "1974e78ce2d24557701ff593cdd372045a226778107ab8bd6f5b996dfea92010",
+      "response_sha256": "9a6f4c3f74a8d5f229fe83e1847947cd2be2fd19d67ac2e42d0c81f3636d3608",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:09.696298+00:00",
+      "source_id": "maui-release-recheck-20260913-johnson",
+      "supports": [
+        "LANAI_ADDRESS",
+        "RESIDENCY_AREAS"
+      ],
+      "url": "https://mauicounty.us/johnson/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/paltin/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Tamara Paltin",
+        "Tamara Paltin is the Chair of the Disaster Recovery, International Affairs, and Planning Committee.",
+        "She holds the County Council seat for the West Maui residency area."
+      ],
+      "raw_excerpts_sha256": "4c6f202cc1ecb5f6a1c58a8fb959e92fdc113ece13d61844b048a7e9589cf338",
+      "response_sha256": "db5f8ab08b691cc8a8e97ae72f31efe6f5532cc45d49a096818f8a1bb50291d9",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:09.560609+00:00",
+      "source_id": "maui-release-recheck-20260913-paltin",
+      "supports": [
+        "COUNCIL_ROSTER",
+        "RESIDENCY_AREAS"
+      ],
+      "url": "https://mauicounty.us/paltin/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/rawlins-fernandez/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Keani Rawlins-Fernandez",
+        "Keani Rawlins-Fernandez is the Chair of Kōmike Aloha ʻĀina.",
+        "She holds the County Council seat for the Molokai residency area."
+      ],
+      "raw_excerpts_sha256": "167a5e0653a01c6077309364fccc6fc6c448ad9b35fdb95e7e30130a9831eb6d",
+      "response_sha256": "eb29af00d33f7fe91023b889a68ac147bcb865a9a25e309b2d76b69685fcb9cd",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:14.249417+00:00",
+      "source_id": "maui-release-recheck-20260913-rawlins-fernandez",
+      "supports": [
+        "COUNCIL_ROSTER",
+        "RESIDENCY_AREAS"
+      ],
+      "url": "https://mauicounty.us/rawlins-fernandez/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/sinenci/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Shane Sinenci",
+        "Shane Sinenci is the Chair of the Water Authority, Social Services, and Parks Committee.",
+        "He holds the County Council seat for the East Maui residency area."
+      ],
+      "raw_excerpts_sha256": "19e50b5c29d9b1c511456cf2c178414432d8610499c47e26be8751bb91d73ffb",
+      "response_sha256": "ac619856049ec2a371bde00e58e154e06bb64671c576ef14454c357b1a952aa2",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:14.330373+00:00",
+      "source_id": "maui-release-recheck-20260913-sinenci",
+      "supports": [
+        "COUNCIL_ROSTER",
+        "RESIDENCY_AREAS"
+      ],
+      "url": "https://mauicounty.us/sinenci/"
+    },
+    {
+      "all_prior_evidence_fragments_present": true,
+      "authority": "PRIMARY_OFFICIAL",
+      "extraction": "NONCONTIGUOUS_MATCHED_TEXT_FRAGMENTS",
+      "final_url": "https://mauicounty.us/uu-hodgins/",
+      "http_status": 200,
+      "raw_excerpts": [
+        "Nohelani Uʻu-Hodgins",
+        "Nohelani Uʻu-Hodgins is the Chair of the Housing and Land Use Committee.",
+        "She holds the County Council seat for the Makawao-Haʻikū-Pāʻia residency area."
+      ],
+      "raw_excerpts_sha256": "8e557d88e21e6587ecd2464d872a7ba86c04f1cf983b6cfe5b76b857584421f1",
+      "response_sha256": "00111fb6943973479f9cb080bb1341381028b7463a663efd2e6fe608f75c8f89",
+      "retrieval": "DIRECT_FETCH",
+      "retrieved_at_utc": "2026-09-13T15:53:14.266617+00:00",
+      "source_id": "maui-release-recheck-20260913-uu-hodgins",
+      "supports": [
+        "COUNCIL_ROSTER",
+        "RESIDENCY_AREAS"
+      ],
+      "url": "https://mauicounty.us/uu-hodgins/"
+    }
+  ],
+  "status": "PASS"
+}

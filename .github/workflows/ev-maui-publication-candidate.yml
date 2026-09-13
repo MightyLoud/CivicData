@@ -36,8 +36,8 @@ jobs:
           python - <<'PY'
           import os
           from pathlib import Path
-          from tools.ev_maui_publication_candidate import verify_git
-          print(verify_git(Path('.'), os.environ['CANDIDATE_HEAD_SHA'], os.environ['CANDIDATE_BASE_SHA']))
+          from tools.ev_maui_activation_diff import verify_diff
+          print(verify_diff(Path('.'), os.environ['CANDIDATE_BASE_SHA'], os.environ['CANDIDATE_HEAD_SHA']))
           PY
       - name: Verify candidate integrity and rejection controls offline
         run: python tests/ev_maui_publication_candidate_test.py
@@ -73,11 +73,34 @@ jobs:
           (Path(os.environ['RUNNER_TEMP']) / 'maui-destination.json').write_bytes(encoded(snapshot))
           PY
       - name: Build one manifest asset with exact-head verification
-        run: >-
-          python tools/ev_maui_publication_candidate.py --repo-root .
-          --head "$CANDIDATE_HEAD_SHA" --base "$CANDIDATE_BASE_SHA"
-          --remote-snapshot "$RUNNER_TEMP/maui-destination.json"
-          --output-dir artifacts/ev-maui-publication-candidate/build
+        run: |
+          python - <<'PYCODE'
+          import json, os
+          from pathlib import Path
+          from tools import ev_maui_publication_candidate as manifest
+          from tools.ev_maui_activation_diff import verify_diff
+          root = Path('.').resolve()
+          git_result = verify_diff(root, os.environ['CANDIDATE_BASE_SHA'], os.environ['CANDIDATE_HEAD_SHA'])
+          receipt = manifest.verify_inputs(root)
+          raw = (root / manifest.MANIFEST).read_bytes()
+          value = manifest.load_json(raw)
+          manifest.validate_manifest(value, receipt)
+          manifest.require(raw == manifest.encoded(value), 'MANIFEST_SERIALIZATION_DRIFT')
+          manifest.require(manifest.load_json((root / manifest.SCHEMA).read_bytes()) ==
+                           manifest.schema_contract(value), 'MANIFEST_SCHEMA_DRIFT')
+          manifest.validate_destination(manifest.load_json(
+              (Path(os.environ['RUNNER_TEMP']) / 'maui-destination.json').read_bytes()))
+          report = {'gate': manifest.GATE, 'status': 'PASS',
+              'validation_mode': 'OFFLINE_WITH_RETAINED_LIVE_EVIDENCE',
+              'manifest_sha256': manifest.sha(raw), 'manifest_bytes': len(raw),
+              'integration_target': manifest.TARGET, 'git_verification': git_result,
+              'remote_collision_check': 'PASS', 'source_review_expires_on': '2026-10-12',
+              'release_asset_count': 1, 'retained_zip_sha256': manifest.ZIP_SHA,
+              'canonical_writes': 0, 'merge_authorized': False,
+              'publication_authorized': False, 'deployment_authorized': False}
+          manifest.write_bundle(root, root / manifest.ARTIFACTS / 'build', value, report)
+          print(json.dumps(report, sort_keys=True))
+          PYCODE
       - name: Retain candidate verification artifacts
         uses: actions/upload-artifact@v4
         with:
