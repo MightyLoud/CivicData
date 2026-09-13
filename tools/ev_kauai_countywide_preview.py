@@ -40,20 +40,22 @@ def assert_holds(root: Path) -> list[dict[str, str]]:
     for row in routes:
         if row.get("ev_onboarding_status") != "ROUTING_ONLY" or not (row.get("scope_match") or {}).get("all"):
             raise ValueError("routing-only contract drift")
-    from consumers.empowered_vote import countywide_production
-    installed = countywide_production.installed_spec(root)
-    held_ids = HI_IDS - ({"jurisdiction-hi-kauai-county"} if installed else set())
+    from consumers.empowered_vote import countywide_production, maui_countywide_production
+    installed = {module.candidate.preview.PACKAGE_ID: module
+                 for module in (countywide_production, maui_countywide_production)
+                 if module.installed_spec(root) is not None}
+    held_ids = HI_IDS - installed.keys()
     catalog = json.loads((root / "consumers/empowered_vote/package_catalog.v0.1.json").read_text())
     if any(row.get("package_jurisdiction_id") in held_ids for row in catalog["entries"]):
         raise ValueError("Unreviewed Hawaiʻi production catalog promotion detected")
     for path in (root / "onboarding/ev").glob("*.json"):
         jid = json.loads(path.read_text()).get("package_jurisdiction_id")
-        if jid in held_ids or (jid == "jurisdiction-hi-kauai-county" and path.relative_to(root) != countywide_production.SPEC_PATH):
+        if jid in held_ids or (jid in installed and path.relative_to(root) != installed[jid].SPEC_PATH):
             raise ValueError("Unreviewed Hawaiʻi production onboarding spec detected")
     results = []
     for jid in sorted(HI_IDS):
         row = proposal.propose(root, jid)
-        expected = "READY" if installed and jid == "jurisdiction-hi-kauai-county" else "REVIEW_REQUIRED"
+        expected = "READY" if jid in installed else "REVIEW_REQUIRED"
         if row["status"] != expected or (expected == "REVIEW_REQUIRED" and row["production_spec"] is not None):
             raise ValueError("Hawaiʻi proposal hold changed")
         results.append({"package_jurisdiction_id": jid, "status": row["status"]})

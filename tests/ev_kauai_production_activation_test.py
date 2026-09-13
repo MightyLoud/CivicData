@@ -167,7 +167,7 @@ class ProductionActivationTest(unittest.TestCase):
             self.closed(self.build(value))
         ambiguous = geography()
         ambiguous["payload"]["jurisdictions"].append({"jurisdiction_id": "jur-us-hi-maui-county"})
-        self.closed(self.build(ambiguous), "COUNTYWIDE_PREVIEW_AMBIGUOUS_COUNTY")
+        self.closed(self.build(ambiguous), "PACKAGE_SELECTION_AMBIGUOUS")
 
     def test_tampered_package_records_fail_even_if_loader_is_bypassed(self):
         package = package_catalog.reconstruct_package(self.entry, self.root)
@@ -220,10 +220,11 @@ class ProductionActivationTest(unittest.TestCase):
     def test_existing_tacoma_akron_fircrest_and_texas_entries_preserved(self):
         catalog = package_catalog.load_catalog(ROOT / "consumers/empowered_vote/package_catalog.v0.1.json")
         other = [row for row in catalog["entries"] if row["entry_id"] != production.ENTRY_ID]
-        self.assertEqual(len(other), 4)
+        self.assertEqual(len(other), 5)
         self.assertEqual({row["entry_id"] for row in other}, {
             "wa-tacoma-municipal-essentials-v0.2", "co-akron-municipal-representation-v0.1",
-            "wa-fircrest-municipal-essentials-v0.2", "tx-legislative-two-office-v0.1-hosted-candidate"})
+            "wa-fircrest-municipal-essentials-v0.2", "tx-legislative-two-office-v0.1-hosted-candidate",
+            "hi-maui-countywide-representation-v0.1"})
 
     def test_full_essentials_stays_unsupported_for_kauai(self):
         from consumers.empowered_vote import full_essentials_catalog
@@ -235,13 +236,13 @@ class ProductionActivationTest(unittest.TestCase):
             "synthetic", geography(), repo_root=self.root, catalog_path=self.catalog_path,
             profile="municipal_representation"))
 
-    def test_acceptance_runner_labels_synthetic_and_keeps_three_other_holds(self):
+    def test_acceptance_runner_labels_synthetic_and_keeps_two_other_holds(self):
         fixture = {"negative_address": {"address": "25 Aupuni Street, Hilo, HI 96720",
             "expected_civic_jurisdiction_id": "jur-us-hi-hawaii-county"}}
         report = runner.run_activation(ROOT, FixtureResolver(fixture), live=False)
         self.assertEqual(report["status"], "PASS")
         self.assertEqual(report["validation_mode"], "SYNTHETIC_FIXTURE")
-        self.assertEqual(report["other_hi_production_holds"], 3)
+        self.assertEqual(report["other_hi_production_holds"], 2)
         self.assertEqual(report["auto_promoted"], 0)
         self.assertFalse(report["publication_authorized"])
         self.assertFalse(report["deployment_authorized"])

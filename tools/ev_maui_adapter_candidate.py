@@ -117,9 +117,17 @@ def run_candidate(root, resolver, *, live=False):
                     address, geographic, repo_root=root, catalog_path=path)
                 essentials = package_catalog.build_essentials_from_catalog(
                     address, geographic, repo_root=root, catalog_path=path)
-                require(default.get("error") == "PACKAGE_NOT_GOVERNED_FOR_RESOLVED_ADDRESS"
+                from consumers.empowered_vote import maui_countywide_production
+                installed = maui_countywide_production.installed_spec(root)
+                default_ok = (default.get("status") == "PASS"
+                    and default.get("package_catalog_entry_id") == maui_countywide_production.ENTRY_ID
+                    and default.get("preview_only") is False
+                    and all(default.get(k) is v for k, v in maui_countywide_production.FLAGS.items())) if installed else (
+                    default.get("error") == "PACKAGE_NOT_GOVERNED_FOR_RESOLVED_ADDRESS"
+                    and "applicable_offices" not in default)
+                require(default_ok
                     and denied.get("error") == essentials.get("error") == "COUNTYWIDE_CANDIDATE_NOT_ENABLED"
-                    and all("applicable_offices" not in r for r in (default, denied, essentials)),
+                    and all("applicable_offices" not in r for r in (denied, essentials)),
                     "MAUI_CANDIDATE_PRODUCTION_ISOLATION_FAILED")
                 positives.append({"control": control, "representation": result,
                     "default_catalog": default, "without_opt_in": denied, "full_essentials": essentials})

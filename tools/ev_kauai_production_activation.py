@@ -65,8 +65,12 @@ def run_activation(root: Path, resolver: Any, *, live: bool) -> dict[str, Any]:
         require(replay.get("changes_required") == 0 and all(row["action"] == "NOOP" for row in replay["changes"]),
                 "production onboarding is not idempotent")
     holds = preview_runner.assert_holds(root)
-    require(sum(row["status"] == "READY" for row in holds) == 1
-            and sum(row["status"] == "REVIEW_REQUIRED" for row in holds) == 3, "other Hawaiʻi production holds drift")
+    from consumers.empowered_vote import maui_countywide_production
+    maui_installed = maui_countywide_production.installed_spec(root) is not None
+    expected_ready = 1 + int(maui_installed)
+    other_holds = 4 - expected_ready
+    require(sum(row["status"] == "READY" for row in holds) == expected_ready
+            and sum(row["status"] == "REVIEW_REQUIRED" for row in holds) == other_holds, "other Hawaiʻi production holds drift")
     require(before == preview_runner.snapshot(root), "protected repository contents changed")
     return {"gate": "EV-KAUAI-PROD-ACTIVATION-CANDIDATE-001", "status": "PASS",
             "validation_mode": "LIVE_CIVIC_GPS" if live else "SYNTHETIC_FIXTURE",
@@ -76,7 +80,7 @@ def run_activation(root: Path, resolver: Any, *, live: bool) -> dict[str, Any]:
             "acceptance_receipt_sha256": spec["countywide_profile"]["acceptance_receipt"]["sha256"],
             "source_review": receipt["source_review"], "positive_controls": positives,
             "negative_control": {"control": negative, "result": rejected}, "idempotence": replay,
-            "hi_dispositions": holds, "explicit_kauai_entries": 1, "other_hi_production_holds": 3,
+            "hi_dispositions": holds, "explicit_kauai_entries": 1, "other_hi_production_holds": other_holds,
             "routing_release_offices": 0, "routing_release_holders": 0,
             "auto_promoted": 0, "canonical_writes": 0, "publication_authorized": False,
             "deployment_authorized": False, "protected_content_unchanged": True}
@@ -96,7 +100,7 @@ def main() -> None:
     output.write_text(json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"status": result["status"], "validation_mode": result["validation_mode"],
         "source_commit": result["source_commit"], "positive_controls": 2, "negative_controls": 1,
-        "office_count": 2, "current_holder_count": 8, "other_hi_production_holds": 3,
+        "office_count": 2, "current_holder_count": 8, "other_hi_production_holds": result["other_hi_production_holds"],
         "auto_promoted": 0, "canonical_writes": 0, "publication_authorized": False, "deployment_authorized": False}))
 
 

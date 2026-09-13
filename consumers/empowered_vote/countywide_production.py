@@ -1,4 +1,4 @@
-"""Receipt-bound Kauaʻi Mayor/Council production representation; publication held."""
+"""Receipt-bound countywide Mayor/Council production representation; publication held."""
 from __future__ import annotations
 
 import copy
@@ -10,6 +10,7 @@ import re
 from typing import Any
 
 from consumers.empowered_vote import countywide_candidate as candidate
+from consumers.empowered_vote import maui_countywide_production as maui
 
 PROFILE_ID = "kauai_countywide_mayor_council_v0.1"
 ENTRY_ID = "hi-kauai-countywide-representation-v0.1"
@@ -23,6 +24,13 @@ class CountywideProductionError(ValueError):
     def __init__(self, code: str):
         self.code = code
         super().__init__(code)
+
+
+def _maui_call(function, *args, **kwargs):
+    try:
+        return function(*args, **kwargs)
+    except maui.MauiProductionError as exc:
+        raise CountywideProductionError(exc.code) from exc
 
 
 def require(ok: bool, code: str) -> None:
@@ -46,6 +54,8 @@ def candidate_entry(entry: dict[str, Any]) -> dict[str, Any]:
 
 
 def validate_entry(entry: dict[str, Any]) -> None:
+    if isinstance(entry, dict) and entry.get("entry_id") == maui.ENTRY_ID:
+        return _maui_call(maui.validate_entry, entry)
     require(isinstance(entry, dict) and entry.get("entry_id") == ENTRY_ID,
             "COUNTYWIDE_PRODUCTION_ENTRY_INVALID")
     require(all(entry.get(k) is v for k, v in FLAGS.items()), "COUNTYWIDE_PRODUCTION_FLAGS_INVALID")
@@ -67,6 +77,8 @@ def validate_entry(entry: dict[str, Any]) -> None:
 
 
 def load_receipt(entry: dict[str, Any], root: Path, *, today: date | None = None) -> dict[str, Any]:
+    if isinstance(entry, dict) and entry.get("entry_id") == maui.ENTRY_ID:
+        return _maui_call(maui.load_receipt, entry, root, today=today)
     validate_entry(entry)
     reference = entry["countywide_profile"]["acceptance_receipt"]
     path = (root / reference["path"]).resolve()
@@ -115,6 +127,8 @@ def load_receipt(entry: dict[str, Any], root: Path, *, today: date | None = None
 
 
 def existing_route(root: Path, receipt: dict[str, Any]) -> dict[str, Any]:
+    if isinstance(receipt, dict) and receipt.get("profile_id") == maui.PROFILE_ID:
+        return _maui_call(maui.existing_route, root, receipt)
     reference = receipt.get("routing")
     require(isinstance(reference, dict), "COUNTYWIDE_PRODUCTION_ROUTE_REFERENCE_INVALID")
     require(reference.get("strategy") == "REUSE_GOVERNED_ROUTE"
@@ -143,6 +157,8 @@ def existing_route(root: Path, receipt: dict[str, Any]) -> dict[str, Any]:
 
 
 def validate_package(entry: dict[str, Any], root: Path, package: dict[str, Any]) -> dict[str, Any]:
+    if isinstance(entry, dict) and entry.get("entry_id") == maui.ENTRY_ID:
+        return _maui_call(maui.validate_package, entry, root, package)
     receipt = load_receipt(entry, root)
     require(digest(package) == receipt.get("package_sha256"), "COUNTYWIDE_PRODUCTION_PACKAGE_DRIFT")
     existing_route(root, receipt)
@@ -151,6 +167,8 @@ def validate_package(entry: dict[str, Any], root: Path, package: dict[str, Any])
 
 def build_representation(package: dict[str, Any], address: str, geographic: Any,
                          entry: dict[str, Any], root: Path) -> dict[str, Any]:
+    if isinstance(entry, dict) and entry.get("entry_id") == maui.ENTRY_ID:
+        return maui.build_representation(package, address, geographic, entry, root)
     try:
         receipt = validate_package(entry, root, package)
         result = candidate.build_representation(package, address, geographic, candidate_entry(entry))
@@ -174,6 +192,8 @@ def build_representation(package: dict[str, Any], address: str, geographic: Any,
 
 
 def validate_spec(spec: dict[str, Any], root: Path) -> dict[str, Any]:
+    if isinstance(spec, dict) and spec.get("entry_id") == maui.ENTRY_ID:
+        return _maui_call(maui.validate_spec, spec, root)
     # Lazy import keeps the package loader independent of onboarding initialization.
     from consumers.empowered_vote import package_catalog
     from tools.ev_jurisdiction_onboarding import build_catalog_entry

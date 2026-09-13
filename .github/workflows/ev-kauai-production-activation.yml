@@ -38,28 +38,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify exact head and bounded activation diff
-        shell: bash
-        run: |
-          test "$(git rev-parse HEAD)" = "$ACTIVATION_HEAD_SHA"
-          git diff --exit-code "$ACTIVATION_BASE_SHA" HEAD -- data civic_gps_extensions civic_gps_runtime_parts civic_gps services railway.toml railway.json Dockerfile requirements-hosted-runtime.txt
-          python - <<'PY'
-          import json, os, pathlib, subprocess
-          base = os.environ["ACTIVATION_BASE_SHA"]
-          path = "consumers/empowered_vote/package_catalog.v0.1.json"
-          old = json.loads(subprocess.check_output(["git", "show", base + ":" + path]))
-          new = json.loads(pathlib.Path(path).read_text())
-          entry_id = "hi-kauai-countywide-representation-v0.1"
-          assert sum(row["entry_id"] == entry_id for row in new["entries"]) == 1
-          old["entries"] = [row for row in old["entries"] if row["entry_id"] != entry_id]
-          new["entries"] = [row for row in new["entries"] if row["entry_id"] != entry_id]
-          assert old == new, "Other production catalog entries changed"
-          changed = subprocess.check_output(["git", "diff", "--name-only", base, "HEAD", "--",
-              "onboarding/ev", "acceptance/ev"]).decode().splitlines()
-          assert set(changed) <= {"onboarding/ev/kauai-county.v0.1.json",
-                                  "acceptance/ev/kauai_countywide.v0.1.json"}, changed
-          print("PASS: only explicit Kauai catalog/spec/receipt; other catalog entries and protected data unchanged")
-          PY
+      - name: Verify exact head and preserve all non-Maui production entries
+        run: python tools/ev_maui_activation_diff.py --repo-root . --base-sha "$ACTIVATION_BASE_SHA" --head-sha "$ACTIVATION_HEAD_SHA"
       - name: Install Civic GPS runtime dependency
         run: python -m pip install -r requirements-civic-gps.txt
       - name: Reconstruct exact Civic GPS runtime
