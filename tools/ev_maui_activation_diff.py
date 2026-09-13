@@ -38,6 +38,22 @@ def verify_diff(root, base_sha, head_sha):
         return subprocess.check_output(["git", "-C", str(root), *args])
     if git("rev-parse", "HEAD").decode().strip() != head_sha:
         raise ValueError("Checkout differs from expected head")
+    # The publication candidate adds only its immutable metadata/evidence contract.
+    # It must pass an exact base/tree, nine-path allowlist, and all unchanged-input hashes.
+    all_changed = git("diff", "--name-only", base_sha, "HEAD").decode().splitlines()
+    if any(p.startswith("candidates/ev/maui_publication.v0.1/") for p in all_changed):
+        from tools import ev_maui_publication_candidate as publication
+        result = publication.verify_git(root, head_sha, base_sha)
+        receipt = publication.verify_inputs(root)
+        manifest_raw = (root / publication.MANIFEST).read_bytes()
+        manifest = publication.load_json(manifest_raw)
+        publication.validate_manifest(manifest, receipt)
+        if manifest_raw != publication.encoded(manifest):
+            raise ValueError("Publication manifest serialization drift")
+        if publication.load_json((root / publication.SCHEMA).read_bytes()) != publication.schema_contract(manifest):
+            raise ValueError("Publication schema drift")
+        return {**result, "mode": "HELD_MAUI_PUBLICATION_CANDIDATE",
+                "all_production_entries_preserved": 6, "protected_content_unchanged": True}
     git("diff", "--exit-code", base_sha, "HEAD", "--", *PROTECTED)
     old = json.loads(git("show", base_sha + ":" + CATALOG_PATH))
     new = json.loads((root / CATALOG_PATH).read_text())

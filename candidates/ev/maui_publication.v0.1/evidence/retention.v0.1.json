@@ -1,0 +1,32 @@
+{
+  "artifact_id": 10305356930,
+  "artifact_url": "https://github.com/MightyLoud/CivicData/actions/runs/34717704026/artifacts/10305356930",
+  "deployment_authorized": false,
+  "encoding": "BASE64_ORIGINAL_GITHUB_ACTIONS_ZIP",
+  "fresh_live_run": false,
+  "hosted_delivery_evidence": false,
+  "identical_source_and_target_tree": "f44d953d2e31d04cebce20368627b5938c83d140",
+  "integration_target": "2b3e8d5df11ed4f4b19f7579c9bd1663131070bf",
+  "job_id": 103617800188,
+  "members": [
+    {
+      "bytes": 137349,
+      "path": "live.json",
+      "sha256": "5fed9c6740d1fa9d3f76c86ab3d2a6fb8b7d35c8f4feba9336588a0d143f7a67"
+    }
+  ],
+  "negative_geography_basis": "RETAINED_MATCHED_HAWAII_COUNTY_GEOGRAPHY_AND_REJECTED_CONSUMER_RESULT",
+  "original_created_at": "2026-09-12T20:44:19Z",
+  "original_expires_at": "2026-10-12T20:44:19Z",
+  "path": "candidates/ev/maui_publication.v0.1/evidence/activation-fe15b3c.zip.b64",
+  "publication_authorized": false,
+  "release_asset": false,
+  "repository": "MightyLoud/CivicData",
+  "retained_on": "2026-09-13",
+  "retention_schema": "maui-activation-evidence-retention/0.1",
+  "source_commit": "fe15b3c6a61a4f46851a52992369428ab9ef413b",
+  "validation_mode": "RETAINED_LIVE_CIVIC_GPS",
+  "workflow_run_id": 34717704026,
+  "zip_bytes": 11581,
+  "zip_sha256": "96f16d92b8bbdabe13b12260d5de61183e63cf1771cc4c319fafe48ca0c175f1"
+}

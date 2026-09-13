@@ -1,0 +1,128 @@
+{
+  "activation_evidence": {
+    "certified_head": "fe15b3c6a61a4f46851a52992369428ab9ef413b",
+    "fresh_live_run": false,
+    "hosted_delivery_evidence": false,
+    "idempotent_noops": 3,
+    "live_json_sha256": "5fed9c6740d1fa9d3f76c86ab3d2a6fb8b7d35c8f4feba9336588a0d143f7a67",
+    "mode": "RETAINED_LIVE_CIVIC_GPS",
+    "negative_controls": 1,
+    "negative_geography_basis": "RETAINED_MATCHED_HAWAII_COUNTY_GEOGRAPHY_AND_REJECTED_CONSUMER_RESULT",
+    "original_zip_sha256": "96f16d92b8bbdabe13b12260d5de61183e63cf1771cc4c319fafe48ca0c175f1",
+    "positive_controls": 2,
+    "retention_receipt": "candidates/ev/maui_publication.v0.1/evidence/retention.v0.1.json",
+    "workflow_run_id": 34717704026,
+    "workflow_url": "https://github.com/MightyLoud/CivicData/actions/runs/34717704026"
+  },
+  "archive_sha256": "3ba797f102b18d7c560cd918f2eddb0ffeb406c850e7c1751d6ed7cd9222301a",
+  "artifact_kind": "METADATA_ONLY_INTEGRATION_MANIFEST",
+  "binding_sha256": "0336d269e51cfce7d36c7650a8d803656415bc2f6d9e556479a170886f9c70be",
+  "candidate_gate": "EV-MAUI-PUBLICATION-CANDIDATE-001",
+  "capabilities": {
+    "complete_jurisdiction": false,
+    "countywide_mayor_council_representation": true,
+    "election_results": false,
+    "full_essentials": false,
+    "hosted_delivery_certified": false
+  },
+  "civic_gps_jurisdiction_id": "jur-us-hi-maui-county",
+  "correction": {
+    "csv_tables_checked": 7,
+    "exact_intervals_added": 0,
+    "original_canonical_archive_replaced": false,
+    "parity_ok": true,
+    "reference": {
+      "path": "previews/ev/maui_source_correction.v0.1.json",
+      "sha256": "1155e5ba2128cd6d85daf212d8e1b0acd01ac39df791db941b40cd7d70dbc262"
+    }
+  },
+  "counts": {
+    "current_holders": 10,
+    "leadership_overlays": 2,
+    "office_rows": 10,
+    "residency_areas": 9,
+    "seat_capacity": 10
+  },
+  "county_geoid": "15009",
+  "entry_id": "hi-maui-countywide-representation-v0.1",
+  "holds": {
+    "canonical_writes": 0,
+    "deployment_authorized": false,
+    "existing_kauai_installation_preserved": true,
+    "kalawao_work_authorized": false,
+    "merge_authorized": false,
+    "other_hi_production_counties": [
+      "15001",
+      "15003"
+    ],
+    "publication_authorized": false
+  },
+  "input_hashes": {
+    "acceptance/ev/maui_countywide.v0.1.json": "7b5e0ba92020b59bacb3959b17fa7735e62d92c9b75f5f697ea4406e598ba8c8",
+    "acceptance/ev/maui_source_review.v0.1.json": "b85827b4056d70e70ebb8e1e69bb02a60da3009854d5d80840a2edfe00c4b6b2",
+    "civic_gps_extensions/hi_maui_county_release_v0.1.json": "9ae1e0872ee347e0bbbe7a57721ecc67ac39cebc2c2d4b29cf06c04c8d3fe781",
+    "civic_gps_extensions/registry_bundles.v0.1.json": "4b6aad7a6cc835c59c3013a40f57326d59af2b4e7af23a9b36ff2f6e71a176e9",
+    "consumers/empowered_vote/package_catalog.v0.1.json": "51ff1a52efaeef42dc65524f5bac0a53ac0500e0f989c74b8241914594c1a388",
+    "onboarding/ev/maui-county.v0.1.json": "39ea46639bd3c45872198801e251184bbe5812bc28a22cf109cf7acd4357ee5d",
+    "previews/ev/maui_source_correction.v0.1.json": "1155e5ba2128cd6d85daf212d8e1b0acd01ac39df791db941b40cd7d70dbc262"
+  },
+  "integration_pr": "https://github.com/MightyLoud/CivicData/pull/65",
+  "integration_target_commit": "2b3e8d5df11ed4f4b19f7579c9bd1663131070bf",
+  "integration_target_tree": "f44d953d2e31d04cebce20368627b5938c83d140",
+  "manifest_schema": "maui-mayor-council-integration/0.1",
+  "package_jurisdiction_id": "jurisdiction-hi-maui-county",
+  "package_sha256": "7ddaf33b2184f9a465128cac581e75b5b6a3a5601ca052d5ff9403b2ffc006e3",
+  "preserved_production_flags": {
+    "candidate_only": false,
+    "complete_jurisdiction": false,
+    "production_eligible": true,
+    "publication_eligible": false
+  },
+  "profile_id": "maui_countywide_mayor_council_v0.1",
+  "proposed_release": {
+    "asset_type": "application/json",
+    "assets": [
+      "maui-mayor-council-integration-manifest-v0.1.json"
+    ],
+    "officeholder_payload_assets": false,
+    "raw_package_assets": false,
+    "tag": "maui-mayor-council-integration-v0.1",
+    "tag_reserved": false,
+    "target_commit": "2b3e8d5df11ed4f4b19f7579c9bd1663131070bf"
+  },
+  "repository": "MightyLoud/CivicData",
+  "retained_warnings": [
+    "COUNTYWIDE_AT_LARGE_WITH_RESIDENCY",
+    "TENURE_INTERVAL_UNRESOLVED"
+  ],
+  "route_sha256": "695d2f3c0b7cb5d84bf4328c0cdc735ad8623101bd66b01032361a56d65359d2",
+  "runtime_archive_sha256": "32828535194b669f425f31dfcee6c986b139479b4d1317114461396022f5c797",
+  "scope": "MAUI_COUNTYWIDE_MAYOR_AND_COUNCIL_ONLY",
+  "source_review": {
+    "expires_on": "2026-10-12",
+    "expiry_basis": "CONSERVATIVE_30_DAY_REVALIDATION_NOT_TERM_END",
+    "expiry_timezone": "UTC",
+    "identity_policy": "PRESERVE_LEGACY_ACTIVE_REJECT_EXPLICIT_PROVISIONAL",
+    "normalized_assertions": 25,
+    "qa": {
+      "blocking_gap_count": 0,
+      "holder_parity": 10,
+      "leadership_parity": 2,
+      "parity_ok": true,
+      "residency_parity": 9,
+      "source_joins_valid": true
+    },
+    "raw_observations": 13,
+    "recheck_required_before_release": true,
+    "reference": {
+      "path": "acceptance/ev/maui_source_review.v0.1.json",
+      "sha256": "b85827b4056d70e70ebb8e1e69bb02a60da3009854d5d80840a2edfe00c4b6b2"
+    },
+    "residency_policy": "COUNTYWIDE_ELECTORATE_RESIDENCY_IS_NOT_VOTER_FILTER",
+    "retrieval_limitations": "THREE_COUNTY_PAGES_HTTP_502_REQUIRED_FACTS_COVERED_BY_RETAINED_OFFICIAL_ALTERNATIVES",
+    "reviewed_on": "2026-09-12",
+    "selection_policy": "PRESERVE_APPOINTED_HOLDER_AND_ELECTED_OFFICE_METHOD",
+    "tenure_policy": "PRESERVE_UNRESOLVED_INTERVALS"
+  },
+  "status": "CANDIDATE_PUBLICATION_HELD"
+}
