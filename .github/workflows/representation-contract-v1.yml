@@ -31,6 +31,9 @@ on:
       - "tools/representation_semantics.py"
       - "tests/test_representation_semantics.py"
       - "tools/reconcile_representation.py"
+      - "tools/export_representation.py"
+      - "tests/test_export_representation.py"
+      - "docs/representation-conformance-engine-v0.1.md"
       - "tests/test_civicpatch_representation_export.py"
       - "tests/test_representation_contract_akron.py"
       - "tests/test_empowered_vote_contract_v1.py"
@@ -73,6 +76,8 @@ jobs:
         run: python -m unittest -v tests.test_shared_identity_adapter_integration
       - name: SeeGov and Civic Mirror partner adapters
         run: python -m unittest -v tests.test_partner_adapters
+      - name: Generic multi-jurisdiction conformance engine
+        run: python -m unittest -v tests.test_export_representation
       - name: Compile adapters, reconciler, and EV consumer
         run: >-
           python -m py_compile
@@ -87,3 +92,4 @@ jobs:
           consumers/empowered_vote/contract_v1_catalog.py
           tools/representation_semantics.py
           tools/reconcile_representation.py
+          tools/export_representation.py
