@@ -1,0 +1,155 @@
+{
+  "schema_version": "0.1",
+  "snapshot_id": "synthetic-county",
+  "jurisdictions": [
+    {
+      "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:zz/government",
+      "division_ocdid": "ocd-division/country:us/state:zz",
+      "name": "Synthetic State Government",
+      "level": "STATE",
+      "record_status": "ACTIVE",
+      "parent_jurisdiction_ocdid": null,
+      "source_ids": [
+        "ev-county-1"
+      ]
+    },
+    {
+      "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:zz/county:sample/government",
+      "division_ocdid": "ocd-division/country:us/state:zz/county:sample",
+      "name": "Sample County Government",
+      "level": "COUNTY",
+      "record_status": "ACTIVE",
+      "parent_jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:zz/government",
+      "source_ids": [
+        "ev-county-1"
+      ]
+    }
+  ],
+  "divisions": [
+    {
+      "division_ocdid": "ocd-division/country:us/state:zz",
+      "name": "Synthetic State",
+      "division_type": "STATE",
+      "record_status": "ACTIVE",
+      "parent_division_ocdid": null,
+      "source_ids": [
+        "ev-county-1"
+      ]
+    },
+    {
+      "division_ocdid": "ocd-division/country:us/state:zz/county:sample",
+      "name": "Sample County",
+      "division_type": "COUNTY",
+      "record_status": "ACTIVE",
+      "parent_division_ocdid": "ocd-division/country:us/state:zz",
+      "source_ids": [
+        "ev-county-1"
+      ]
+    }
+  ],
+  "organizations": [
+    {
+      "organization_id": "org-synthetic-county-commission",
+      "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:zz/county:sample/government",
+      "name": "Sample County Commission",
+      "organization_type": "COMMISSION",
+      "record_status": "ACTIVE",
+      "parent_organization_id": null,
+      "source_ids": [
+        "ev-county-1"
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "role_id": "county-commissioner",
+      "label": "County Commissioner",
+      "record_status": "ACTIVE",
+      "aliases": [],
+      "source_ids": [
+        "ev-county-1"
+      ]
+    }
+  ],
+  "posts": [
+    {
+      "post_id": "post-synthetic-county-commissioner",
+      "organization_id": "org-synthetic-county-commission",
+      "role_id": "county-commissioner",
+      "division_ocdid": "ocd-division/country:us/state:zz/county:sample",
+      "seats": 3,
+      "selection_method": "ELECTED",
+      "record_status": "ACTIVE",
+      "source_ids": [
+        "ev-county-1"
+      ]
+    }
+  ],
+  "people": [
+    {
+      "person_id": "person-synthetic-county-1",
+      "name": "Synthetic County Official",
+      "record_status": "ACTIVE",
+      "source_ids": [
+        "ev-county-1"
+      ]
+    }
+  ],
+  "memberships": [
+    {
+      "membership_id": "membership-synthetic-county-1",
+      "person_id": "person-synthetic-county-1",
+      "post_id": "post-synthetic-county-commissioner",
+      "membership_status": "CURRENT",
+      "start_date": null,
+      "end_date": null,
+      "label": null,
+      "designations": [],
+      "source_ids": [
+        "ev-county-1"
+      ],
+      "confidence": "HIGH"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-county-1",
+      "source_url": "https://example.invalid/synthetic-county/source",
+      "source_class": "OFFICIAL",
+      "source_type": "SYNTHETIC_OFFICIAL_FIXTURE",
+      "retrieved_at": "2026-09-25T23:20:00-06:00",
+      "confidence": "HIGH"
+    }
+  ],
+  "assertions": [
+    {
+      "assertion_id": "assertion-synthetic-county-1",
+      "subject_type": "post",
+      "subject_id": "post-synthetic-county-commissioner",
+      "field_path": "seats",
+      "value": 3,
+      "evidence_ids": [
+        "ev-county-1"
+      ],
+      "normalization_status": "NORMALIZED",
+      "review_status": "ACCEPTED",
+      "confidence": "HIGH"
+    }
+  ],
+  "review": {
+    "status": "READY",
+    "reviewer": "canonical-core-test",
+    "reviewed_at": "2026-09-25T23:21:00-06:00",
+    "qa_result": "PASS",
+    "parity_ok": true
+  },
+  "certification": {
+    "status": "certified",
+    "raw_complete": true,
+    "normalized_complete": true,
+    "qa_passed": true,
+    "parity_ok": true,
+    "reviewer": "canonical-core-test",
+    "verified_at": "2026-09-25T23:22:00-06:00"
+  }
+}
