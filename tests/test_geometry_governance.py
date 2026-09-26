@@ -21,6 +21,10 @@ from tools.geometry_governance import (
 
 REGISTRY = ROOT / "data/reference/co/district_geometry_sources_v0.1.json"
 FIXTURE = ROOT / "acceptance/geometry/synthetic_four_districts_v0.1.json"
+ALAMOSA_GEOMETRY = ROOT / "data/reference/co/geometry/alamosa_wards_2023_v0.1.json"
+ARVADA_GEOMETRY = ROOT / "data/reference/co/geometry/arvada_council_districts_2023_v0.1.json"
+ALAMOSA_PACKAGE = ROOT / "data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json"
+ARVADA_PACKAGE = ROOT / "data/normalized/co/jurisdiction-co-arvada/jurisdiction.json"
 
 
 class GeometryGovernanceTests(unittest.TestCase):
@@ -92,37 +96,72 @@ class GeometryGovernanceTests(unittest.TestCase):
             validate_geometry_snapshot(snapshot),
         )
 
-    def test_source_registry_is_valid_and_fail_closed_for_both_current_blockers(self):
+    def test_source_registry_resolves_both_governed_geometry_snapshots(self):
         registry = load_source_registry(REGISTRY)
         self.assertEqual(validate_source_registry(registry), [])
-        by_id = {
-            row["jurisdiction_id"]: row
-            for row in registry["entries"]
+        expected = {
+            "jurisdiction-co-alamosa": (
+                "https://services2.arcgis.com/kQ9CrbL3URg6t3jo/arcgis/rest/services/Wards/FeatureServer/0",
+                "data/reference/co/geometry/alamosa_wards_2023_v0.1.json",
+            ),
+            "jurisdiction-co-arvada": (
+                "https://services1.arcgis.com/eQyVgDz2cjhzbzN7/arcgis/rest/services/Council_Districts/FeatureServer/1",
+                "data/reference/co/geometry/arvada_council_districts_2023_v0.1.json",
+            ),
         }
-        self.assertEqual(
-            by_id["jurisdiction-co-alamosa"]["machine_source_status"],
-            "UNRESOLVED_ENDPOINT",
+        for jurisdiction_id, (url, snapshot_path) in expected.items():
+            with self.subTest(jurisdiction_id=jurisdiction_id):
+                row = assert_registry_snapshot_ready(registry, jurisdiction_id)
+                self.assertEqual(
+                    row["machine_source_status"],
+                    "RESOLVED_MACHINE_READABLE",
+                )
+                self.assertEqual(row["machine_source_url"], url)
+                self.assertEqual(row["governed_snapshot_path"], snapshot_path)
+                self.assertIsNone(row["blocker_code"])
+
+    def test_real_alamosa_and_arvada_snapshots_validate(self):
+        for path in (ALAMOSA_GEOMETRY, ARVADA_GEOMETRY):
+            with self.subTest(path=path.name):
+                snapshot = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(validate_geometry_snapshot(snapshot), [])
+                self.assertEqual(
+                    len(snapshot["feature_collection"]["features"]),
+                    4,
+                )
+
+    def test_eight_real_district_control_points_resolve_to_expected_polygons(self):
+        cases = (
+            (ALAMOSA_PACKAGE, ALAMOSA_GEOMETRY),
+            (ARVADA_PACKAGE, ARVADA_GEOMETRY),
         )
-        self.assertEqual(
-            by_id["jurisdiction-co-arvada"]["machine_source_status"],
-            "UNRESOLVED_ENDPOINT",
-        )
-        with self.assertRaisesRegex(
-            GeometryGovernanceError,
-            "ALAMOSA_WARD_MACHINE_SOURCE_UNRESOLVED",
-        ):
-            assert_registry_snapshot_ready(
-                registry,
-                "jurisdiction-co-alamosa",
-            )
-        with self.assertRaisesRegex(
-            GeometryGovernanceError,
-            "ARVADA_COUNCIL_DISTRICT_MACHINE_SOURCE_UNRESOLVED",
-        ):
-            assert_registry_snapshot_ready(
-                registry,
-                "jurisdiction-co-arvada",
-            )
+        checked = 0
+        for package_path, geometry_path in cases:
+            package = json.loads(package_path.read_text(encoding="utf-8"))
+            snapshot = json.loads(geometry_path.read_text(encoding="utf-8"))
+            native_to_ocdid = {
+                row["division_id"]: row["ocd_division_id"]
+                for row in package["records"]["divisions"]
+                if row.get("division_id") and row.get("ocd_division_id")
+            }
+            for control in package["qa"]["address_tests"]:
+                if control.get("coordinate_role") != "DERIVED_TEST_POINT_ONLY":
+                    continue
+                checked += 1
+                expected = native_to_ocdid[control["expected_division_id"]]
+                actual = resolve_point(
+                    snapshot,
+                    x=float(control["longitude"]),
+                    y=float(control["latitude"]),
+                )
+                with self.subTest(test_id=control["test_id"]):
+                    self.assertEqual(actual, expected)
+                    self.assertEqual(
+                        control["coordinate_source"],
+                        "ESRI_WORLD_GEOCODER",
+                    )
+                    self.assertEqual(control["coordinate_score"], 100)
+        self.assertEqual(checked, 8)
 
     def test_registry_forbids_claiming_resolved_without_snapshot_and_url(self):
         registry = load_source_registry(REGISTRY)
