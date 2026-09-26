@@ -37,10 +37,15 @@ LAYERS = {
         "jurisdiction_id": "jurisdiction-co-arvada",
         "source_system": "City of Arvada ArcGIS",
         "instant_app_item_id": "332a7eba6a4641999d278cfa6ee149f4",
-        "service_item_id": None,
-        "layer_url": None,
-        "number_field": "District",
-        "name_field": "NAME",
+        "webmap_item_id": "7aaa9ec0a1994708991b4506214cf13e",
+        "selected_layer_id": "1967c942da5-layer-2",
+        "service_item_id": "7aaa9ec0a1994708991b4506214cf13e",
+        "layer_url": (
+            "https://maps.arvada.org/arcgis/rest/services/"
+            "CMO/City_Council/MapServer/1"
+        ),
+        "number_field": "DISTRICT",
+        "name_field": "DISTRICT",
         "division_template": "division-co-arvada-district-{number}",
         "output": "arvada_council_districts.geojson",
         "expected_numbers": [1, 2, 3, 4],
@@ -218,157 +223,56 @@ def _bbox_within(actual: list[float], expected: list[float]) -> bool:
     )
 
 
-def discover_arvada_layer() -> tuple[str, str]:
-    app_id = LAYERS["arvada"]["instant_app_item_id"]
+def verify_arvada_layer_binding() -> None:
+    spec = LAYERS["arvada"]
     base = "https://www.arcgis.com/sharing/rest/content/items"
+    app_id = spec["instant_app_item_id"]
     app_data = _get_json(f"{base}/{app_id}/data?f=json")
     values = app_data.get("values") if isinstance(app_data, Mapping) else None
     if not isinstance(values, Mapping):
         raise GeometryFetchError("ARVADA_APP_VALUES_INVALID")
+    if values.get("webmap") != spec["webmap_item_id"]:
+        raise GeometryFetchError("ARVADA_WEBMAP_DRIFT")
 
-    webmap_id = str(values.get("webmap") or "").strip()
-    if len(webmap_id) != 32:
-        raise GeometryFetchError("ARVADA_WEBMAP_NOT_FOUND")
-    webmap_data = _get_json(f"{base}/{webmap_id}/data?f=json")
-
+    selected = (
+        (values.get("selectedLayers") or {}).get("layers", [])
+        if isinstance(values.get("selectedLayers"), Mapping)
+        else []
+    )
     selected_ids = {
         str(row.get("id"))
-        for row in (
-            (values.get("selectedLayers") or {}).get("layers", [])
-            if isinstance(values.get("selectedLayers"), Mapping)
-            else []
-        )
+        for row in selected
         if isinstance(row, Mapping) and row.get("id")
     }
+    if spec["selected_layer_id"] not in selected_ids:
+        raise GeometryFetchError("ARVADA_SELECTED_LAYER_DRIFT")
 
-    candidates = _walk_layer_candidates(webmap_data)
+    webmap_data = _get_json(
+        f"{base}/{spec['webmap_item_id']}/data?f=json"
+    )
+    operational = webmap_data.get("operationalLayers", [])
+    selected_layer = next(
+        (
+            row
+            for row in operational
+            if isinstance(row, Mapping)
+            and row.get("id") == spec["selected_layer_id"]
+        ),
+        None,
+    )
+    if selected_layer is None:
+        raise GeometryFetchError("ARVADA_SELECTED_LAYER_NOT_IN_WEBMAP")
+    if str(selected_layer.get("url") or "").rstrip("/") != str(
+        spec["layer_url"]
+    ).rstrip("/"):
+        raise GeometryFetchError("ARVADA_LAYER_URL_DRIFT")
 
-    # Prefer the exact layer the Instant App selected for filtering.
-    def candidate_rank(row: Mapping[str, Any]) -> tuple[int, int, str]:
-        row_id = str(row.get("id") or "")
-        title = str(row.get("title") or "").lower()
-        selected = 0 if row_id in selected_ids else 1
-        named = 0 if ("district" in title or "council" in title) else 1
-        return selected, named, str(row.get("url") or "")
 
-    # _walk_layer_candidates does not currently retain Web Map layer IDs, so
-    # collect direct/nested operational layer metadata with IDs as well.
-    def collect(value: Any) -> list[dict[str, Any]]:
-        rows: list[dict[str, Any]] = []
-        if isinstance(value, Mapping):
-            url = value.get("url")
-            item_id = value.get("itemId")
-            if isinstance(url, str) and "FeatureServer" in url:
-                rows.append(
-                    {
-                        "id": str(value.get("id") or ""),
-                        "url": url.rstrip("/"),
-                        "title": str(value.get("title") or ""),
-                        "item_id": str(item_id or ""),
-                    }
-                )
-            elif isinstance(item_id, str) and len(item_id) == 32:
-                metadata = _get_json(f"{base}/{item_id}?f=json")
-                item_url = metadata.get("url")
-                if isinstance(item_url, str) and "FeatureServer" in item_url:
-                    rows.append(
-                        {
-                            "id": str(value.get("id") or ""),
-                            "url": item_url.rstrip("/"),
-                            "title": str(
-                                value.get("title")
-                                or metadata.get("title")
-                                or ""
-                            ),
-                            "item_id": item_id,
-                        }
-                    )
-            for child in value.values():
-                rows.extend(collect(child))
-        elif isinstance(value, list):
-            for child in value:
-                rows.extend(collect(child))
-        return rows
-
-    candidates.extend(collect(webmap_data))
-    dedup: dict[tuple[str, str], dict[str, Any]] = {}
-    for row in candidates:
-        key = (str(row.get("id") or ""), str(row.get("url") or ""))
-        dedup[key] = row
-
-    for candidate in sorted(dedup.values(), key=candidate_rank):
-        title = str(candidate.get("title") or "").lower()
-        row_id = str(candidate.get("id") or "")
-        if (
-            row_id not in selected_ids
-            and "district" not in title
-            and "council" not in title
-        ):
-            continue
-        url = str(candidate["url"]).rstrip("/")
-        layer_url = url if url.rsplit("/", 1)[-1].isdigit() else url + "/0"
-        try:
-            query = urlencode(
-                {
-                    "where": "1=1",
-                    "outFields": "*",
-                    "returnGeometry": "true",
-                    "outSR": "4326",
-                    "f": "geojson",
-                }
-            )
-            collection = _get_json(f"{layer_url}/query?{query}")
-            if collection.get("type") != "FeatureCollection":
-                continue
-            bbox = _layer_bbox(collection)
-            if not _bbox_within(bbox, LAYERS["arvada"]["expected_bbox"]):
-                continue
-            properties = [
-                feature.get("properties") or {}
-                for feature in collection.get("features", [])
-                if isinstance(feature, Mapping)
-            ]
-            field_candidates = ("DISTRICT", "District", "district")
-            district_field = next(
-                (
-                    field
-                    for field in field_candidates
-                    if any(field in props for props in properties)
-                ),
-                None,
-            )
-            if district_field is None:
-                continue
-            numbers = sorted(
-                {
-                    int(props[district_field])
-                    for props in properties
-                    if props.get(district_field) not in (None, "")
-                }
-            )
-            if numbers != [1, 2, 3, 4]:
-                continue
-
-            LAYERS["arvada"]["number_field"] = district_field
-            item_id = str(candidate.get("item_id") or "")
-            if not item_id:
-                service_url = (
-                    url.rsplit("/FeatureServer", 1)[0] + "/FeatureServer"
-                )
-                metadata = _get_json(f"{service_url}?f=json")
-                item_id = str(metadata.get("serviceItemId") or "")
-            return layer_url, item_id
-        except (GeometryFetchError, KeyError, TypeError, ValueError):
-            continue
-
-    raise GeometryFetchError("ARVADA_DISTRICT_LAYER_NOT_FOUND")
 
 def fetch_layer(key: str) -> dict[str, Any]:
     spec = dict(LAYERS[key])
     if key == "arvada":
-        layer_url, service_item_id = discover_arvada_layer()
-        spec["layer_url"] = layer_url
-        spec["service_item_id"] = service_item_id
+        verify_arvada_layer_binding()
     params = urlencode(
         {
             "where": "1=1",
