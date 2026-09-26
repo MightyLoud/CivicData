@@ -147,7 +147,7 @@ def geocode(address: str) -> tuple[float, float, dict[str, Any]]:
         "outSR": "4326",
     })
     payload = get_json(
-        "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?"
+        "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?"
         + params
     )
     candidates = payload.get("candidates") or []
