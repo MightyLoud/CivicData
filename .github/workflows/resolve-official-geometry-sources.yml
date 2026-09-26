@@ -1,0 +1,22 @@
+name: Resolve official district geometry sources
+
+on:
+  pull_request:
+    paths:
+      - "tools/resolve_official_geometry_sources.py"
+      - ".github/workflows/resolve-official-geometry-sources.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Query public ArcGIS APIs
+        run: python tools/resolve_official_geometry_sources.py
