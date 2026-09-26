@@ -7,50 +7,298 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   retrieve:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Fetch official district GeoJSON
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsSL --retry 3 --retry-all-errors             'https://services2.arcgis.com/kQ9CrbL3URg6t3jo/ArcGIS/rest/services/Wards/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson'             -o /tmp/alamosa.geojson
-          curl -fsSL --retry 3 --retry-all-errors             'https://maps.arvada.org/arcgis/rest/services/CMO/City_Council/MapServer/1/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson'             -o /tmp/arvada.geojson
+          mkdir -p data/geometry/co/source data/geometry/co/governed acceptance/geometry
+          curl -fsSL --retry 3 --retry-all-errors             'https://services2.arcgis.com/kQ9CrbL3URg6t3jo/ArcGIS/rest/services/Wards/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson'             -o data/geometry/co/source/alamosa_wards_arcgis_2026-09-26.geojson
+          curl -fsSL --retry 3 --retry-all-errors             'https://maps.arvada.org/arcgis/rest/services/CMO/City_Council/MapServer/1/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson'             -o data/geometry/co/source/arvada_council_districts_arcgis_2026-09-26.geojson
 
-      - name: Validate and emit retrieval payloads
+      - name: Build governed snapshots and Census-geocoded PIP controls
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
+          from __future__ import annotations
+
+          from datetime import datetime, timezone
+          import hashlib
           import json
           from pathlib import Path
+          import re
+          import time
+          import urllib.parse
+          import urllib.request
 
-          for name in ("alamosa", "arvada"):
-              path = Path(f"/tmp/{name}.geojson")
-              obj = json.loads(path.read_text())
-              assert obj.get("type") == "FeatureCollection", (name, obj)
-              features = obj.get("features")
-              assert isinstance(features, list) and len(features) == 4, (name, len(features or []))
-              kinds = sorted({f.get("geometry", {}).get("type") for f in features})
-              assert set(kinds) <= {"Polygon", "MultiPolygon"}, (name, kinds)
-              keys = sorted({
-                  key
-                  for feature in features
-                  for key in (feature.get("properties") or {}).keys()
+          from tools.geometry_governance import (
+              resolve_point,
+              validate_geometry_snapshot,
+              validate_source_registry,
+          )
+
+          ROOT = Path(".")
+          retrieved_at = datetime.now(timezone.utc).replace(
+              microsecond=0
+          ).isoformat().replace("+00:00", "Z")
+
+          configs = {
+              "alamosa": {
+                  "raw": ROOT / "data/geometry/co/source/alamosa_wards_arcgis_2026-09-26.geojson",
+                  "snapshot": ROOT / "data/geometry/co/governed/alamosa_wards_v0.1.json",
+                  "jurisdiction_id": "jurisdiction-co-alamosa",
+                  "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:co/place:alamosa/government",
+                  "query_url": "https://services2.arcgis.com/kQ9CrbL3URg6t3jo/ArcGIS/rest/services/Wards/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson",
+                  "expected": [
+                      "ocd-division/country:us/state:co/place:alamosa/ward:1",
+                      "ocd-division/country:us/state:co/place:alamosa/ward:2",
+                      "ocd-division/country:us/state:co/place:alamosa/ward:3",
+                      "ocd-division/country:us/state:co/place:alamosa/ward:4",
+                  ],
+              },
+              "arvada": {
+                  "raw": ROOT / "data/geometry/co/source/arvada_council_districts_arcgis_2026-09-26.geojson",
+                  "snapshot": ROOT / "data/geometry/co/governed/arvada_council_districts_v0.1.json",
+                  "jurisdiction_id": "jurisdiction-co-arvada",
+                  "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:co/place:arvada/government",
+                  "query_url": "https://maps.arvada.org/arcgis/rest/services/CMO/City_Council/MapServer/1/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson",
+                  "expected": [
+                      "ocd-division/country:us/state:co/place:arvada/council_district:1",
+                      "ocd-division/country:us/state:co/place:arvada/council_district:2",
+                      "ocd-division/country:us/state:co/place:arvada/council_district:3",
+                      "ocd-division/country:us/state:co/place:arvada/council_district:4",
+                  ],
+              },
+          }
+
+          snapshots = {}
+          raw_hashes = {}
+
+          for name, cfg in configs.items():
+              raw_bytes = cfg["raw"].read_bytes()
+              raw_hash = hashlib.sha256(raw_bytes).hexdigest()
+              raw_hashes[name] = raw_hash
+              raw = json.loads(raw_bytes)
+              features = raw.get("features")
+              assert raw.get("type") == "FeatureCollection"
+              assert isinstance(features, list) and len(features) == 4
+
+              out_features = []
+              seen = set()
+              for feature in features:
+                  props = feature.get("properties") or {}
+                  if name == "alamosa":
+                      key = int(props["WARD"])
+                      division = (
+                          "ocd-division/country:us/state:co/place:alamosa/ward:"
+                          + str(key)
+                      )
+                      source_props = {
+                          "WARD": key,
+                          "Label": props.get("Label"),
+                          "RefName": props.get("RefName"),
+                          "FID": props.get("FID"),
+                      }
+                  else:
+                      match = re.search(r"(\d+)", str(props["DISTRICT"]))
+                      assert match is not None
+                      key = int(match.group(1))
+                      division = (
+                          "ocd-division/country:us/state:co/place:arvada/council_district:"
+                          + str(key)
+                      )
+                      source_props = {
+                          "DISTRICT": props.get("DISTRICT"),
+                          "OBJECTID": props.get("OBJECTID"),
+                          "COUNCIL_MEMBER": props.get("COUNCIL_MEMBER"),
+                          "WEBSITE": props.get("WEBSITE"),
+                      }
+                  assert division in cfg["expected"]
+                  assert division not in seen
+                  seen.add(division)
+                  geometry = feature.get("geometry")
+                  assert geometry and geometry.get("type") in {"Polygon", "MultiPolygon"}
+                  out_features.append({
+                      "type": "Feature",
+                      "properties": {
+                          "division_ocdid": division,
+                          "source": source_props,
+                      },
+                      "geometry": geometry,
+                  })
+
+              assert seen == set(cfg["expected"])
+              out_features.sort(
+                  key=lambda f: f["properties"]["division_ocdid"]
+              )
+              snapshot = {
+                  "snapshot_version": "0.1",
+                  "snapshot_id": (
+                      f"{name}-district-geometry-"
+                      + raw_hash[:16]
+                  ),
+                  "generated_at": retrieved_at,
+                  "jurisdiction_ocdid": cfg["jurisdiction_ocdid"],
+                  "source": {
+                      "authority": "PRIMARY_OFFICIAL",
+                      "locator": cfg["query_url"],
+                      "retrieved_at": retrieved_at,
+                      "source_snapshot_id": "sha256:" + raw_hash,
+                      "derivation": "DIRECT_MACHINE_SOURCE",
+                  },
+                  "division_property": "division_ocdid",
+                  "expected_division_ids": cfg["expected"],
+                  "feature_collection": {
+                      "type": "FeatureCollection",
+                      "features": out_features,
+                  },
+              }
+              errors = validate_geometry_snapshot(snapshot)
+              assert errors == [], (name, errors)
+              cfg["snapshot"].write_text(
+                  json.dumps(snapshot, indent=2, sort_keys=True) + "\n",
+                  encoding="utf-8",
+              )
+              snapshots[name] = snapshot
+
+          registry_path = ROOT / "data/reference/co/district_geometry_sources_v0.1.json"
+          registry = json.loads(registry_path.read_text(encoding="utf-8"))
+          by_id = {
+              row["jurisdiction_id"]: row
+              for row in registry["entries"]
+          }
+          for name, cfg in configs.items():
+              row = by_id[cfg["jurisdiction_id"]]
+              row["machine_source_status"] = "RESOLVED_MACHINE_READABLE"
+              row["machine_source_url"] = cfg["query_url"]
+              row["governed_snapshot_path"] = str(cfg["snapshot"])
+              row["source_snapshot_id"] = "sha256:" + raw_hashes[name]
+              row["blocker_code"] = None
+              row["blocker_detail"] = None
+          registry["reviewed_at"] = retrieved_at
+          errors = validate_source_registry(registry)
+          assert errors == [], errors
+          registry_path.write_text(
+              json.dumps(registry, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+
+          controls = [
+              ("alamosa", "addrtest-co-alamosa-ward-1-cattails", "500 Cottonwood Dr, Alamosa, CO 81101", "ocd-division/country:us/state:co/place:alamosa/ward:1"),
+              ("alamosa", "addrtest-co-alamosa-ward-2-carroll-park", "860 Craft Dr, Alamosa, CO 81101", "ocd-division/country:us/state:co/place:alamosa/ward:2"),
+              ("alamosa", "addrtest-co-alamosa-ward-3-jardin-hermosa", "1555 W Sixth St, Alamosa, CO 81101", "ocd-division/country:us/state:co/place:alamosa/ward:3"),
+              ("alamosa", "addrtest-co-alamosa-ward-4-lee-fields", "1000 Twentieth St, Alamosa, CO 81101", "ocd-division/country:us/state:co/place:alamosa/ward:4"),
+              ("arvada", "addrtest-co-arvada-district-1-lake-arbor-golf", "8600 Wadsworth Boulevard, Arvada, CO 80003", "ocd-division/country:us/state:co/place:arvada/council_district:1"),
+              ("arvada", "addrtest-co-arvada-district-2-little-dry-creek", "7770 Pierce St, Arvada, CO 80003", "ocd-division/country:us/state:co/place:arvada/council_district:2"),
+              ("arvada", "addrtest-co-arvada-district-3-little-raven", "12140 W 57th Ave, Arvada, CO 80002", "ocd-division/country:us/state:co/place:arvada/council_district:3"),
+              ("arvada", "addrtest-co-arvada-district-4-west-woods", "6655 Quaker Street, Arvada, CO 80007", "ocd-division/country:us/state:co/place:arvada/council_district:4"),
+          ]
+
+          pip_rows = []
+          for name, test_id, address, expected in controls:
+              params = urllib.parse.urlencode({
+                  "address": address,
+                  "benchmark": "Public_AR_Current",
+                  "format": "json",
               })
-              values = [feature.get("properties") for feature in features]
-              print(f"GEOMETRY_SUMMARY {name} count={len(features)} kinds={kinds} keys={keys}")
-              print(f"GEOMETRY_PROPERTIES {name} {json.dumps(values, sort_keys=True)}")
+              url = (
+                  "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?"
+                  + params
+              )
+              with urllib.request.urlopen(url, timeout=30) as response:
+                  geocode = json.load(response)
+              matches = geocode["result"]["addressMatches"]
+              assert matches, (test_id, geocode)
+              best = matches[0]
+              lon = float(best["coordinates"]["x"])
+              lat = float(best["coordinates"]["y"])
+              resolved = resolve_point(
+                  snapshots[name],
+                  x=lon,
+                  y=lat,
+              )
+              assert resolved == expected, (
+                  test_id,
+                  address,
+                  best.get("matchedAddress"),
+                  (lon, lat),
+                  expected,
+                  resolved,
+              )
+              pip_rows.append({
+                  "jurisdiction_id": configs[name]["jurisdiction_id"],
+                  "test_id": test_id,
+                  "address": address,
+                  "matched_address": best.get("matchedAddress"),
+                  "longitude": lon,
+                  "latitude": lat,
+                  "point_source": "US_CENSUS_GEOCODER_PUBLIC_AR_CURRENT",
+                  "expected_division_ocdid": expected,
+                  "resolved_division_ocdid": resolved,
+                  "geometry_snapshot_path": str(configs[name]["snapshot"]),
+                  "result": True,
+              })
+              time.sleep(0.15)
+
+          out = {
+              "contract_version": "0.1",
+              "generated_at": retrieved_at,
+              "point_source": {
+                  "system": "US Census Geocoder",
+                  "benchmark": "Public_AR_Current",
+                  "endpoint": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress",
+                  "role": "ADDRESS_TO_POINT_DERIVATION_ONLY",
+              },
+              "controls": pip_rows,
+          }
+          Path("acceptance/geometry/co_district_pip_controls_v0.1.json").write_text(
+              json.dumps(out, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+
+          print("PASS governed snapshots:", {
+              name: {
+                  "sha256": raw_hashes[name],
+                  "features": len(
+                      snapshots[name]["feature_collection"]["features"]
+                  ),
+              }
+              for name in sorted(snapshots)
+          })
+          for row in pip_rows:
+              print(
+                  "PIP",
+                  row["test_id"],
+                  row["matched_address"],
+                  row["resolved_division_ocdid"],
+              )
           PY
 
-          for name in alamosa arvada; do
-            upper="$(echo "$name" | tr '[:lower:]' '[:upper:]')"
-            echo "BEGIN_${upper}_GZIP_BASE64"
-            gzip -c "/tmp/$name.geojson" | base64 -w 0
-            echo
-            echo "END_${upper}_GZIP_BASE64"
-          done
+      - name: Commit generated snapshots to PR branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             data/geometry/co/source             data/geometry/co/governed             data/reference/co/district_geometry_sources_v0.1.json             acceptance/geometry/co_district_pip_controls_v0.1.json
+          if git diff --cached --quiet; then
+            echo "No generated changes."
+            exit 0
+          fi
+          git commit -m "Archive official Alamosa and Arvada district geometry"
+          git push origin "HEAD:${{ github.head_ref || github.ref_name }}"
