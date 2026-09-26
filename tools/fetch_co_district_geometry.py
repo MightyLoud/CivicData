@@ -10,6 +10,7 @@ import argparse
 from hashlib import sha256
 import json
 import math
+import re
 from pathlib import Path
 from typing import Any, Mapping
 from urllib.parse import urlencode
@@ -293,10 +294,11 @@ def fetch_layer(key: str) -> dict[str, Any]:
         if not isinstance(raw_feature, Mapping):
             continue
         props = raw_feature.get("properties") or {}
-        try:
-            number = int(props[spec["number_field"]])
-        except (KeyError, TypeError, ValueError) as exc:
-            raise GeometryFetchError(f"{key}:DISTRICT_NUMBER_INVALID") from exc
+        raw_number = props.get(spec["number_field"])
+        match = re.search(r"(?<!\\d)([1-9][0-9]*)(?!\\d)", str(raw_number or ""))
+        if match is None:
+            raise GeometryFetchError(f"{key}:DISTRICT_NUMBER_INVALID")
+        number = int(match.group(1))
         if number not in spec["expected_numbers"]:
             continue
         observed_numbers.append(number)
