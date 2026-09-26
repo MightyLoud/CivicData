@@ -82,19 +82,42 @@ def _fixture_jurisdiction_id(package: Mapping[str, Any]) -> str:
     return "fixture:" + native
 
 
+def _base_division_ocdid(contract: Mapping[str, Any]) -> str | None:
+    jurisdiction = _clean(
+        contract.get("jurisdiction", {}).get("jurisdiction_ocdid")
+    )
+    prefix = "ocd-jurisdiction/"
+    suffix = "/government"
+    if not jurisdiction.startswith(prefix) or not jurisdiction.endswith(suffix):
+        return None
+    return "ocd-division/" + jurisdiction[len(prefix):-len(suffix)]
+
+
 def _gps_fixture(
     *,
     address: str,
     matched_address: str,
     fixture_jurisdiction_id: str,
+    district_adapter_id: str | None = None,
+    district_key: str | None = None,
 ) -> dict[str, Any]:
+    assignments = []
+    if district_adapter_id is not None:
+        if district_key is None:
+            raise RuntimeConformanceError("DISTRICT_KEY_REQUIRED")
+        assignments.append(
+            {
+                "adapter_id": district_adapter_id,
+                "district_key": district_key,
+            }
+        )
     return {
         "payload": {
             "input": {"matched_address": matched_address or address},
             "jurisdictions": [
                 {"jurisdiction_id": fixture_jurisdiction_id}
             ],
-            "district_assignments": [],
+            "district_assignments": assignments,
         }
     }
 
@@ -157,12 +180,30 @@ def evaluate_address_control(
     binding = {
         "contract_jurisdiction_ocdid": contract["jurisdiction"]["jurisdiction_ocdid"],
         "civic_gps_jurisdiction_id": fixture_jurisdiction_id,
-        "division_ocdid": expected_division_ocdid,
     }
+    base_division = _base_division_ocdid(contract)
+    if expected_division_ocdid == base_division:
+        binding["division_ocdid"] = expected_division_ocdid
+        district_adapter_id = None
+        district_key = None
+    else:
+        district_adapter_id = (
+            "fixture:"
+            + _clean(package.get("jurisdiction", {}).get("jurisdiction_id"))
+            + ":district"
+        )
+        district_key = expected_native_division
+        binding["district_adapter_id"] = district_adapter_id
+        binding["district_division_map"] = {
+            district_key: expected_division_ocdid,
+        }
+
     gps = _gps_fixture(
         address=address,
         matched_address=_clean(control.get("normalized_address")),
         fixture_jurisdiction_id=fixture_jurisdiction_id,
+        district_adapter_id=district_adapter_id,
+        district_key=district_key,
     )
     model = build_representation_from_civic_gps_result(
         dict(contract),
