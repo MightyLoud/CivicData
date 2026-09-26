@@ -62,3 +62,23 @@ Public output fails closed when Contract v1 is uncertified. A CivicPatch-rendere
 Current Contract v1 scope is representation only. Election, contest, candidacy, countywide-special-case, and multi-binding production profiles continue on their existing governed paths until separately migrated and parity-tested.
 
 See `docs/empowered-vote-contract-v1.md`.
+
+
+## Generic governed-address runtime conformance
+
+`runtime_conformance.py` generalizes the Contract-v1 runtime proof across
+governed Jurisdiction Packages.
+
+It uses each package's passing `qa.address_tests` rows as the reviewed
+address → division/office fixture boundary and then executes the same
+Contract-v1 representative lookup used by Empowered Vote.
+
+This is intentionally labeled:
+
+```text
+GOVERNED_FACTORY_ADDRESS_CONTROL
+```
+
+rather than `CIVIC_GPS_LIVE`. Live/network Civic GPS remains a separate smoke
+test. District/ward divisions without a governed address control are reported as
+coverage gaps, never inferred.
