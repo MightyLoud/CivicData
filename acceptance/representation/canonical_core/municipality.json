@@ -1,0 +1,176 @@
+{
+  "schema_version": "0.1",
+  "snapshot_id": "synthetic-municipality",
+  "jurisdictions": [
+    {
+      "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:zz/government",
+      "division_ocdid": "ocd-division/country:us/state:zz",
+      "name": "Synthetic State Government",
+      "level": "STATE",
+      "record_status": "ACTIVE",
+      "parent_jurisdiction_ocdid": null,
+      "source_ids": [
+        "ev-municipality-1"
+      ]
+    },
+    {
+      "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:zz/county:example/government",
+      "division_ocdid": "ocd-division/country:us/state:zz/county:example",
+      "name": "Example County Government",
+      "level": "COUNTY",
+      "record_status": "ACTIVE",
+      "parent_jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:zz/government",
+      "source_ids": [
+        "ev-municipality-1"
+      ]
+    },
+    {
+      "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:zz/place:exampleville/government",
+      "division_ocdid": "ocd-division/country:us/state:zz/place:exampleville",
+      "name": "Exampleville Government",
+      "level": "MUNICIPAL",
+      "record_status": "ACTIVE",
+      "parent_jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:zz/county:example/government",
+      "source_ids": [
+        "ev-municipality-1"
+      ]
+    }
+  ],
+  "divisions": [
+    {
+      "division_ocdid": "ocd-division/country:us/state:zz",
+      "name": "Synthetic State",
+      "division_type": "STATE",
+      "record_status": "ACTIVE",
+      "parent_division_ocdid": null,
+      "source_ids": [
+        "ev-municipality-1"
+      ]
+    },
+    {
+      "division_ocdid": "ocd-division/country:us/state:zz/county:example",
+      "name": "Example County",
+      "division_type": "COUNTY",
+      "record_status": "ACTIVE",
+      "parent_division_ocdid": "ocd-division/country:us/state:zz",
+      "source_ids": [
+        "ev-municipality-1"
+      ]
+    },
+    {
+      "division_ocdid": "ocd-division/country:us/state:zz/place:exampleville",
+      "name": "Exampleville",
+      "division_type": "MUNICIPALITY",
+      "record_status": "ACTIVE",
+      "parent_division_ocdid": "ocd-division/country:us/state:zz/county:example",
+      "source_ids": [
+        "ev-municipality-1"
+      ]
+    }
+  ],
+  "organizations": [
+    {
+      "organization_id": "org-synthetic-exampleville-council",
+      "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:zz/place:exampleville/government",
+      "name": "Exampleville Council",
+      "organization_type": "COUNCIL",
+      "record_status": "ACTIVE",
+      "parent_organization_id": null,
+      "source_ids": [
+        "ev-municipality-1"
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "role_id": "council-member",
+      "label": "Council Member",
+      "record_status": "ACTIVE",
+      "aliases": [],
+      "source_ids": [
+        "ev-municipality-1"
+      ]
+    }
+  ],
+  "posts": [
+    {
+      "post_id": "post-exampleville-at-large",
+      "organization_id": "org-synthetic-exampleville-council",
+      "role_id": "council-member",
+      "division_ocdid": "ocd-division/country:us/state:zz/place:exampleville",
+      "seats": 5,
+      "selection_method": "ELECTED",
+      "record_status": "ACTIVE",
+      "source_ids": [
+        "ev-municipality-1"
+      ]
+    }
+  ],
+  "people": [
+    {
+      "person_id": "person-synthetic-municipal-1",
+      "name": "Synthetic Municipal Official",
+      "record_status": "ACTIVE",
+      "source_ids": [
+        "ev-municipality-1"
+      ]
+    }
+  ],
+  "memberships": [
+    {
+      "membership_id": "membership-synthetic-municipal-1",
+      "person_id": "person-synthetic-municipal-1",
+      "post_id": "post-exampleville-at-large",
+      "membership_status": "CURRENT",
+      "start_date": null,
+      "end_date": null,
+      "label": null,
+      "designations": [],
+      "source_ids": [
+        "ev-municipality-1"
+      ],
+      "confidence": "HIGH"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-municipality-1",
+      "source_url": "https://example.invalid/synthetic-municipality/source",
+      "source_class": "OFFICIAL",
+      "source_type": "SYNTHETIC_OFFICIAL_FIXTURE",
+      "retrieved_at": "2026-09-25T23:20:00-06:00",
+      "confidence": "HIGH"
+    }
+  ],
+  "assertions": [
+    {
+      "assertion_id": "assertion-synthetic-municipal-1",
+      "subject_type": "membership",
+      "subject_id": "membership-synthetic-municipal-1",
+      "field_path": "membership_status",
+      "value": "CURRENT",
+      "evidence_ids": [
+        "ev-municipality-1"
+      ],
+      "normalization_status": "NORMALIZED",
+      "review_status": "ACCEPTED",
+      "confidence": "HIGH"
+    }
+  ],
+  "review": {
+    "status": "READY",
+    "reviewer": "canonical-core-test",
+    "reviewed_at": "2026-09-25T23:21:00-06:00",
+    "qa_result": "PASS",
+    "parity_ok": true
+  },
+  "certification": {
+    "status": "certified",
+    "raw_complete": true,
+    "normalized_complete": true,
+    "qa_passed": true,
+    "parity_ok": true,
+    "reviewer": "canonical-core-test",
+    "verified_at": "2026-09-25T23:22:00-06:00"
+  }
+}

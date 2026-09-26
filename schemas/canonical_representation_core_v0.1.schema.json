@@ -1,0 +1,635 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civicdata.tech/schemas/canonical_representation_core_v0.1.schema.json",
+  "title": "CivicData Canonical Representation Core v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "jurisdictions",
+    "divisions",
+    "organizations",
+    "roles",
+    "posts",
+    "people",
+    "memberships",
+    "evidence",
+    "assertions",
+    "review",
+    "certification"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "snapshot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "jurisdictions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/jurisdiction"
+      }
+    },
+    "divisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/division"
+      }
+    },
+    "organizations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/organization"
+      }
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/role"
+      }
+    },
+    "posts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/post"
+      }
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/person"
+      }
+    },
+    "memberships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/membership"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "assertions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/assertion"
+      }
+    },
+    "review": {
+      "$ref": "#/$defs/review"
+    },
+    "certification": {
+      "$ref": "#/$defs/certification"
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "record_status": {
+      "enum": [
+        "ACTIVE",
+        "INACTIVE",
+        "UNKNOWN"
+      ]
+    },
+    "confidence": {
+      "enum": [
+        "HIGH",
+        "MEDIUM",
+        "LOW"
+      ]
+    },
+    "source_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "jurisdiction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jurisdiction_ocdid",
+        "division_ocdid",
+        "name",
+        "level",
+        "record_status",
+        "source_ids"
+      ],
+      "properties": {
+        "jurisdiction_ocdid": {
+          "type": "string",
+          "pattern": "^ocd-jurisdiction/"
+        },
+        "division_ocdid": {
+          "type": "string",
+          "pattern": "^ocd-division/"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "level": {
+          "enum": [
+            "FEDERAL",
+            "STATE",
+            "COUNTY",
+            "MUNICIPAL",
+            "OTHER"
+          ]
+        },
+        "record_status": {
+          "$ref": "#/$defs/record_status"
+        },
+        "parent_jurisdiction_ocdid": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^ocd-jurisdiction/"
+        },
+        "source_ids": {
+          "$ref": "#/$defs/source_ids"
+        }
+      }
+    },
+    "division": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "division_ocdid",
+        "name",
+        "division_type",
+        "record_status",
+        "source_ids"
+      ],
+      "properties": {
+        "division_ocdid": {
+          "type": "string",
+          "pattern": "^ocd-division/"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "division_type": {
+          "enum": [
+            "COUNTRY",
+            "STATE",
+            "COUNTY",
+            "MUNICIPALITY",
+            "CONGRESSIONAL_DISTRICT",
+            "STATE_LEGISLATIVE_DISTRICT",
+            "LOCAL_DISTRICT",
+            "OTHER"
+          ]
+        },
+        "record_status": {
+          "$ref": "#/$defs/record_status"
+        },
+        "parent_division_ocdid": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^ocd-division/"
+        },
+        "source_ids": {
+          "$ref": "#/$defs/source_ids"
+        }
+      }
+    },
+    "organization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "jurisdiction_ocdid",
+        "name",
+        "organization_type",
+        "record_status",
+        "source_ids"
+      ],
+      "properties": {
+        "organization_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "jurisdiction_ocdid": {
+          "type": "string",
+          "pattern": "^ocd-jurisdiction/"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "organization_type": {
+          "enum": [
+            "EXECUTIVE",
+            "LEGISLATURE",
+            "COUNCIL",
+            "BOARD",
+            "COMMISSION",
+            "OTHER"
+          ]
+        },
+        "record_status": {
+          "$ref": "#/$defs/record_status"
+        },
+        "parent_organization_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_ids": {
+          "$ref": "#/$defs/source_ids"
+        }
+      }
+    },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role_id",
+        "label",
+        "record_status",
+        "source_ids"
+      ],
+      "properties": {
+        "role_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "record_status": {
+          "$ref": "#/$defs/record_status"
+        },
+        "aliases": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "source_ids": {
+          "$ref": "#/$defs/source_ids"
+        }
+      }
+    },
+    "post": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "post_id",
+        "organization_id",
+        "role_id",
+        "division_ocdid",
+        "seats",
+        "selection_method",
+        "record_status",
+        "source_ids"
+      ],
+      "properties": {
+        "post_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "organization_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "division_ocdid": {
+          "type": "string",
+          "pattern": "^ocd-division/"
+        },
+        "seats": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "selection_method": {
+          "enum": [
+            "ELECTED",
+            "APPOINTED",
+            "EX_OFFICIO",
+            "OTHER",
+            "UNKNOWN"
+          ]
+        },
+        "record_status": {
+          "$ref": "#/$defs/record_status"
+        },
+        "source_ids": {
+          "$ref": "#/$defs/source_ids"
+        }
+      }
+    },
+    "person": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "person_id",
+        "name",
+        "record_status",
+        "source_ids"
+      ],
+      "properties": {
+        "person_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "record_status": {
+          "$ref": "#/$defs/record_status"
+        },
+        "source_ids": {
+          "$ref": "#/$defs/source_ids"
+        }
+      }
+    },
+    "membership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "membership_id",
+        "person_id",
+        "post_id",
+        "membership_status",
+        "source_ids",
+        "confidence"
+      ],
+      "properties": {
+        "membership_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "person_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "post_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "membership_status": {
+          "enum": [
+            "CURRENT",
+            "FORMER",
+            "UNKNOWN"
+          ]
+        },
+        "start_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "end_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "designations": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "source_ids": {
+          "$ref": "#/$defs/source_ids"
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "source_url",
+        "source_class",
+        "source_type",
+        "retrieved_at",
+        "confidence"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_class": {
+          "enum": [
+            "OFFICIAL",
+            "PARTNER",
+            "INTERNAL",
+            "OTHER"
+          ]
+        },
+        "source_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retrieved_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assertion_id",
+        "subject_type",
+        "subject_id",
+        "field_path",
+        "value",
+        "evidence_ids",
+        "normalization_status",
+        "review_status",
+        "confidence"
+      ],
+      "properties": {
+        "assertion_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subject_type": {
+          "enum": [
+            "jurisdiction",
+            "division",
+            "organization",
+            "role",
+            "post",
+            "person",
+            "membership",
+            "other"
+          ]
+        },
+        "subject_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "field_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {},
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "normalization_status": {
+          "enum": [
+            "RAW",
+            "NORMALIZED"
+          ]
+        },
+        "review_status": {
+          "enum": [
+            "UNREVIEWED",
+            "ACCEPTED",
+            "REJECTED",
+            "NEEDS_EVIDENCE",
+            "IDENTITY_CONFLICT",
+            "SCOPE_CONFLICT"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reviewer",
+        "reviewed_at",
+        "qa_result",
+        "parity_ok"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "DRAFT",
+            "REVIEW",
+            "READY",
+            "BLOCKED"
+          ]
+        },
+        "reviewer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewed_at": {
+          "type": "string",
+          "minLength": 1
+        },
+        "qa_result": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT_RUN"
+          ]
+        },
+        "parity_ok": {
+          "type": "boolean"
+        }
+      }
+    },
+    "certification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "raw_complete",
+        "normalized_complete",
+        "qa_passed",
+        "parity_ok",
+        "reviewer",
+        "verified_at"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "uncertified",
+            "evidence_review",
+            "external_blocker",
+            "rule_fix",
+            "certified"
+          ]
+        },
+        "raw_complete": {
+          "type": "boolean"
+        },
+        "normalized_complete": {
+          "type": "boolean"
+        },
+        "qa_passed": {
+          "type": "boolean"
+        },
+        "parity_ok": {
+          "type": "boolean"
+        },
+        "reviewer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verified_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
