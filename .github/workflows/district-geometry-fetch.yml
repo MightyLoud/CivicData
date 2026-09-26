@@ -22,8 +22,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Fetch official ArcGIS polygons and verify controls
-        run: python tools/fetch_district_geometry.py --output-dir artifacts/district-geometry
+      - name: Fetch official ArcGIS polygons and build diagnostics
+        run: python tools/fetch_district_geometry.py --diagnostic --output-dir artifacts/district-geometry
       - name: Show verification
         run: |
           cat artifacts/district-geometry/source_manifest.json
