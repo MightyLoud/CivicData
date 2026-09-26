@@ -13,7 +13,7 @@ OUT = ROOT / "artifacts" / "district_geometry_extract"
 OUT.mkdir(parents=True, exist_ok=True)
 
 ALAMOSA_APP_ID = "debd2347c9b647878a46a98f58a712a4"
-ARVADA_LAYER = "https://services1.arcgis.com/YdUP5V6WwzeG8T8r/arcgis/rest/services/CouncilDistricts/FeatureServer/0"
+ARVADA_APP_ID = "332a7eba6a4641999d278cfa6ee149f4"
 
 
 def get_json(url: str) -> dict:
@@ -44,8 +44,13 @@ def find_hex_ids(obj) -> set[str]:
     return ids
 
 
-def resolve_alamosa_layer() -> tuple[str, dict]:
-    app = sharing_data(ALAMOSA_APP_ID)
+def resolve_app_layer(
+    app_id: str,
+    *,
+    title_terms: tuple[str, ...],
+    field_terms: tuple[str, ...],
+) -> tuple[str, dict]:
+    app = sharing_data(app_id)
     candidates = list(find_hex_ids(app))
     checked = []
     for item_id in candidates:
@@ -54,36 +59,66 @@ def resolve_alamosa_layer() -> tuple[str, dict]:
         except Exception:
             continue
         checked.append({"id":item_id,"type":meta.get("type"),"title":meta.get("title")})
-        if meta.get("type") == "Web Map":
-            webmap = sharing_data(item_id)
-            for layer in webmap.get("operationalLayers", []):
-                url = layer.get("url")
-                title = str(layer.get("title") or "")
-                if url and "FeatureServer" in url and "ward" in title.lower():
-                    return url.rstrip("/"), {
-                        "app_id":ALAMOSA_APP_ID,
-                        "webmap_id":item_id,
-                        "webmap_title":meta.get("title"),
-                        "layer_title":title,
-                        "checked_items":checked,
-                    }
-            for layer in webmap.get("operationalLayers", []):
-                url = layer.get("url")
-                if url and "FeatureServer" in url:
-                    try:
-                        lm = get_json(url + "?f=json")
-                    except Exception:
-                        continue
-                    fields = [str(f.get("name","")).lower() for f in lm.get("fields",[])]
-                    if any("ward" in f for f in fields) and lm.get("geometryType") == "esriGeometryPolygon":
-                        return url.rstrip("/"), {
-                            "app_id":ALAMOSA_APP_ID,
-                            "webmap_id":item_id,
-                            "webmap_title":meta.get("title"),
-                            "layer_title":layer.get("title"),
-                            "checked_items":checked,
-                        }
-    raise RuntimeError("No Alamosa ward polygon layer found. Checked: " + json.dumps(checked))
+        if meta.get("type") != "Web Map":
+            continue
+        webmap = sharing_data(item_id)
+        for layer in webmap.get("operationalLayers", []):
+            url = layer.get("url")
+            title = str(layer.get("title") or "")
+            if (
+                url
+                and "FeatureServer" in url
+                and any(term in title.lower() for term in title_terms)
+            ):
+                return url.rstrip("/"), {
+                    "app_id": app_id,
+                    "webmap_id": item_id,
+                    "webmap_title": meta.get("title"),
+                    "layer_title": title,
+                    "checked_items": checked,
+                }
+        for layer in webmap.get("operationalLayers", []):
+            url = layer.get("url")
+            if not url or "FeatureServer" not in url:
+                continue
+            try:
+                lm = get_json(url + "?f=json")
+            except Exception:
+                continue
+            fields = [str(field.get("name","")).lower() for field in lm.get("fields",[])]
+            if (
+                lm.get("geometryType") == "esriGeometryPolygon"
+                and any(any(term in field for term in field_terms) for field in fields)
+            ):
+                return url.rstrip("/"), {
+                    "app_id": app_id,
+                    "webmap_id": item_id,
+                    "webmap_title": meta.get("title"),
+                    "layer_title": layer.get("title"),
+                    "checked_items": checked,
+                }
+    raise RuntimeError(
+        "No matching polygon layer found for app "
+        + app_id
+        + ". Checked: "
+        + json.dumps(checked)
+    )
+
+
+def resolve_alamosa_layer() -> tuple[str, dict]:
+    return resolve_app_layer(
+        ALAMOSA_APP_ID,
+        title_terms=("ward",),
+        field_terms=("ward",),
+    )
+
+
+def resolve_arvada_layer() -> tuple[str, dict]:
+    return resolve_app_layer(
+        ARVADA_APP_ID,
+        title_terms=("district", "council"),
+        field_terms=("district", "cncl"),
+    )
 
 
 def query_geojson(layer_url: str) -> dict:
@@ -105,8 +140,9 @@ def summarize(fc: dict) -> dict:
 
 
 alamosa_url, alamosa_prov = resolve_alamosa_layer()
+arvada_url, arvada_prov = resolve_arvada_layer()
 alamosa = query_geojson(alamosa_url)
-arvada = query_geojson(ARVADA_LAYER)
+arvada = query_geojson(arvada_url)
 
 (OUT/"alamosa_raw.geojson").write_text(json.dumps(alamosa, separators=(",",":"), sort_keys=True)+"\n")
 (OUT/"arvada_raw.geojson").write_text(json.dumps(arvada, separators=(",",":"), sort_keys=True)+"\n")
@@ -117,7 +153,8 @@ report = {
         "summary": summarize(alamosa),
     },
     "arvada": {
-        "layer_url": ARVADA_LAYER,
+        "layer_url": arvada_url,
+        "provenance": arvada_prov,
         "summary": summarize(arvada),
     },
 }
@@ -234,7 +271,7 @@ def normalize_features(city: str, fc: dict[str, Any], layer_url: str) -> dict[st
 
 
 alamosa_norm = normalize_features("alamosa", alamosa, alamosa_url)
-arvada_norm = normalize_features("arvada", arvada, ARVADA_LAYER)
+arvada_norm = normalize_features("arvada", arvada, arvada_url)
 
 if len(alamosa_norm["features"]) != 4 or len(arvada_norm["features"]) != 4:
     raise RuntimeError("Expected exactly four local divisions per city")
