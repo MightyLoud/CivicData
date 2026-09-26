@@ -106,6 +106,26 @@ CONTROLS = [
 ]
 
 
+ALAMOSA_PUBLIC_FACILITY_CANDIDATES = [
+    ("Cattails Golf Course", "500 Cottonwood Dr, Alamosa, CO 81101"),
+    ("Carroll Park", "860 Craft Dr, Alamosa, CO 81101"),
+    ("Diamond Park", "703 Diamond Dr, Alamosa, CO 81101"),
+    ("Olympian Park", "2096 First St, Alamosa, CO 81101"),
+    ("Cole Park", "402 Second St, Alamosa, CO 81101"),
+    ("Jardin Hermosa Park", "1555 W Sixth St, Alamosa, CO 81101"),
+    ("Sunset Park", "1185 Eighth St, Alamosa, CO 81101"),
+    ("Centennial Park", "512 State Ave, Alamosa, CO 81101"),
+    ("Zapata Park", "885 Ross Ave, Alamosa, CO 81101"),
+    ("Friends Park", "1107 Positive Pl, Alamosa, CO 81101"),
+    ("Boyd Park", "1140 Hunt Ave, Alamosa, CO 81101"),
+    ("Family Recreation Center", "2222 Old Sanford Rd, Alamosa, CO 81101"),
+    ("Ice Rink", "2242 Old Sanford Rd, Alamosa, CO 81101"),
+    ("Lee Fields", "1000 Twentieth St, Alamosa, CO 81101"),
+    ("Alamosa Cemetery", "2190 State Ave, Alamosa, CO 81101"),
+    ("Blanca Vista Park", "6540 North River Rd, Alamosa, CO 81101"),
+]
+
+
 class GeometryFetchError(RuntimeError):
     pass
 
@@ -456,6 +476,58 @@ def geocode_address(address: str) -> dict[str, Any]:
     }
 
 
+def discover_alamosa_candidate_points(
+    collection: Mapping[str, Any],
+) -> dict[str, Any]:
+    features = [
+        feature
+        for feature in collection.get("features", [])
+        if isinstance(feature, Mapping)
+    ]
+    rows = []
+    for name, address in ALAMOSA_PUBLIC_FACILITY_CANDIDATES:
+        try:
+            point = geocode_address(address)
+            containing = sorted(
+                feature["properties"]["division_id"]
+                for feature in features
+                if geometry_contains(
+                    feature["geometry"],
+                    point["longitude"],
+                    point["latitude"],
+                )
+            )
+            rows.append(
+                {
+                    "name": name,
+                    "address": address,
+                    **point,
+                    "containing_divisions": containing,
+                    "unique_division_id": (
+                        containing[0] if len(containing) == 1 else None
+                    ),
+                }
+            )
+        except Exception as exc:
+            rows.append(
+                {
+                    "name": name,
+                    "address": address,
+                    "error": f"{type(exc).__name__}:{exc}",
+                    "containing_divisions": [],
+                    "unique_division_id": None,
+                }
+            )
+    return {
+        "source": "City of Alamosa Park and Recreation Facilities",
+        "source_url": (
+            "https://cityofalamosa.org/wp-content/uploads/2018/10/"
+            "ALAMOSA_PARKS_MAP2018.pdf"
+        ),
+        "candidates": rows,
+    }
+
+
 def build_control_points(
     layers: Mapping[str, Mapping[str, Any]]
 ) -> dict[str, Any]:
@@ -526,6 +598,11 @@ def write_snapshot(output_root: Path) -> None:
     for key, collection in layers.items():
         output = output_root / LAYERS[key]["output"]
         output.write_bytes(canonical_json_bytes(collection))
+
+    candidates = discover_alamosa_candidate_points(layers["alamosa"])
+    (output_root / "alamosa_candidate_points.json").write_bytes(
+        canonical_json_bytes(candidates)
+    )
 
     points = build_control_points(layers)
     points_path = output_root / "district_control_points.json"
