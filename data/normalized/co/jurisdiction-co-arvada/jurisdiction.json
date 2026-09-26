@@ -2062,17 +2062,17 @@
   "schema_version": "0.1",
   "warnings": [
     {
-      "batch_id": "CO-NORM-001",
+      "batch_id": "CO-RUNTIME-003",
       "blocking": false,
-      "description": "Districts 1–4 and their representation keys are normalized from the official map, but a separate machine-readable backing-service URL and district-level point-in-polygon control output were not archived in this execution unit.",
+      "description": "Council District 1–4 governed address controls are now archived and pass. The official interactive/PDF map is retained, but the backing machine-readable feature-service URL/snapshot is still not archived as a governed Factory artifact.",
       "entity_id": "division-co-arvada-citywide",
       "entity_type": "Division",
-      "gap_id": "gap-co-arvada-district-pip-archive",
-      "gap_type": "DISTRICT_ADDRESS_PIP_ARCHIVE",
+      "gap_id": "gap-co-arvada-machine-readable-district-geometry",
+      "gap_type": "MACHINE_READABLE_DISTRICT_GEOMETRY_NOT_ARCHIVED",
       "jurisdiction_id": "jurisdiction-co-arvada",
       "owner": "Creyton",
       "severity": "WARNING",
-      "source_id": "src-co-arvada-council-district-map",
+      "source_id": "src-co-arvada-council-districts-pdf-2026",
       "status": "OPEN"
     }
   ]
