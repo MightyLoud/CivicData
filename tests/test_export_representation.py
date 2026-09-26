@@ -107,7 +107,7 @@ class GenericRepresentationConformanceTests(unittest.TestCase):
                 self.assertEqual(consumer["semantic_loss"], [])
                 self.assertGreaterEqual(len(consumer["identity_gaps"]), 1)
 
-    def test_empowered_vote_static_contract_is_valid_but_runtime_is_explicitly_untested(self):
+    def test_empowered_vote_runs_governed_address_runtime_and_keeps_live_network_explicit(self):
         report, _ = build_report(
             discover_packages(ROOT),
             root=ROOT,
@@ -119,11 +119,20 @@ class GenericRepresentationConformanceTests(unittest.TestCase):
             with self.subTest(jurisdiction=row["jurisdiction_name"]):
                 consumer = row["consumers"]["empowered_vote"]
                 self.assertEqual(consumer["status"], "PASS")
-                self.assertIn(
+                self.assertEqual(
+                    consumer["mode"],
+                    "GOVERNED_ADDRESS_FIXTURE_RUNTIME",
+                )
+                self.assertEqual(consumer["details"]["controls_total"], 2)
+                self.assertEqual(consumer["details"]["controls_passed"], 2)
+                self.assertNotIn(
                     "address_resolution_without_binding_fixture",
                     consumer["untested_capabilities"],
                 )
-                self.assertIn("civic_gps_runtime", consumer["untested_capabilities"])
+                self.assertIn(
+                    "live_civic_gps_network",
+                    consumer["untested_capabilities"],
+                )
 
     def test_alma_nonblocking_conflict_remains_held_across_core_and_contract(self):
         alma = ROOT / "data/normalized/co/jurisdiction-co-alma/jurisdiction.json"
@@ -221,6 +230,7 @@ class GenericRepresentationConformanceTests(unittest.TestCase):
             self.assertTrue((out / "canonical_core.json").is_file())
             self.assertTrue((out / "representation_contract_v1.json").is_file())
             self.assertTrue((out / "civicpatch_bundle.json").is_file())
+            self.assertTrue((out / "empowered_vote_runtime.json").is_file())
             self.assertTrue((out / "conformance.json").is_file())
 
     def test_consumer_subset_does_not_fake_unrequested_results(self):
