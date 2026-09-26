@@ -209,10 +209,16 @@ jobs:
               ("arvada", "addrtest-co-arvada-district-4-west-woods", "6655 Quaker Street, Arvada, CO 80007", "ocd-division/country:us/state:co/place:arvada/council_district:4"),
           ]
 
+          geocode_aliases = {
+              "addrtest-co-alamosa-ward-4-lee-fields":
+                  "1000 20th St, Alamosa, CO 81101",
+          }
+
           pip_rows = []
           for name, test_id, address, expected in controls:
+              geocode_address = geocode_aliases.get(test_id, address)
               params = urllib.parse.urlencode({
-                  "address": address,
+                  "address": geocode_address,
                   "benchmark": "Public_AR_Current",
                   "format": "json",
               })
@@ -244,6 +250,7 @@ jobs:
                   "jurisdiction_id": configs[name]["jurisdiction_id"],
                   "test_id": test_id,
                   "address": address,
+                  "geocode_input": geocode_address,
                   "matched_address": best.get("matchedAddress"),
                   "longitude": lon,
                   "latitude": lat,
