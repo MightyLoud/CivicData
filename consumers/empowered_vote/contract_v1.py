@@ -428,6 +428,7 @@ def build_representation_from_civic_gps_result(
     civic_gps_result: Any,
     *,
     binding: dict[str, Any],
+    resolution_source: str = "CIVIC_GPS_LIVE",
 ) -> dict[str, Any]:
     """Join Civic GPS geography to a certified Contract v1 representation graph."""
     errors = validate_contract(contract, require_certified=True)
@@ -546,7 +547,7 @@ def build_representation_from_civic_gps_result(
         "full_essentials_supported": False,
         "input_address": address,
         "matched_address": normalized.get("matched_address"),
-        "address_resolution_source": "CIVIC_GPS_LIVE",
+        "address_resolution_source": resolution_source,
         "resolved_jurisdictions": normalized["jurisdiction_ids"],
         "district_assignments": normalized["district_assignments"],
         "resolved_division_ocdid": resolved_division,
