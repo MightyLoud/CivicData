@@ -442,6 +442,9 @@ def _map_assertion_subject(
     row: Mapping[str, Any],
     *,
     leadership_to_membership: Mapping[str, str],
+    jurisdiction_native_id: str,
+    jurisdiction_ocdid: str,
+    division_ocdid_by_native: Mapping[str, str],
 ) -> tuple[str, str]:
     subject_type = _clean(row.get("subject_type")).lower()
     subject_id = _clean(row.get("subject_id"))
@@ -460,7 +463,12 @@ def _map_assertion_subject(
     if subject_type == "leadershiprole":
         membership_id = leadership_to_membership.get(subject_id)
         return ("membership", membership_id) if membership_id else ("other", subject_id)
-    return mapping.get(subject_type, "other"), subject_id
+    canonical_type = mapping.get(subject_type, "other")
+    if canonical_type == "jurisdiction" and subject_id == jurisdiction_native_id:
+        return "jurisdiction", jurisdiction_ocdid
+    if canonical_type == "division":
+        return "division", division_ocdid_by_native.get(subject_id, subject_id)
+    return canonical_type, subject_id
 
 
 def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
@@ -678,6 +686,9 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
         subject_type, subject_id = _map_assertion_subject(
             row,
             leadership_to_membership=leadership_to_membership,
+            jurisdiction_native_id=_clean(jurisdiction.get("jurisdiction_id")),
+            jurisdiction_ocdid=jurisdiction_ocdid,
+            division_ocdid_by_native=division_ocdid_by_native,
         )
         normalized = _clean(row.get("normalized_status")).upper() == "NORMALIZED"
         assertions.append(
