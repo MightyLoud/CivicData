@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civicdata.tech/schemas/shared_identity_registry_v0.1.schema.json",
+  "title": "CivicData Shared Identity Registry v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "registry_version",
+    "registry_owner",
+    "id_strategy",
+    "entities",
+    "crosswalks",
+    "events"
+  ],
+  "properties": {
+    "registry_version": {
+      "const": "0.1"
+    },
+    "registry_owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "id_strategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization",
+        "person"
+      ],
+      "properties": {
+        "organization": {
+          "const": "org-<uuidv4>"
+        },
+        "person": {
+          "const": "per-<uuidv4>"
+        }
+      }
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "canonical_id",
+          "entity_type",
+          "display_name",
+          "status",
+          "created_at"
+        ],
+        "properties": {
+          "canonical_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "entity_type": {
+            "enum": [
+              "organization",
+              "person"
+            ]
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "MERGED",
+              "RETIRED"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "minLength": 1
+          },
+          "superseded_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "crosswalks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "crosswalk_id",
+          "entity_type",
+          "canonical_id",
+          "system",
+          "external_id",
+          "status",
+          "verified_at",
+          "source"
+        ],
+        "properties": {
+          "crosswalk_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "entity_type": {
+            "enum": [
+              "organization",
+              "person"
+            ]
+          },
+          "canonical_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "system": {
+            "type": "string",
+            "minLength": 1
+          },
+          "external_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "external_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "RETIRED"
+            ]
+          },
+          "verified_at": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_id",
+          "event_type",
+          "entity_type",
+          "reviewed_at",
+          "reviewer",
+          "reason",
+          "evidence",
+          "details"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "event_type": {
+            "enum": [
+              "RENAME",
+              "MERGE",
+              "ROLLBACK_MERGE",
+              "SPLIT",
+              "ROLLBACK_SPLIT"
+            ]
+          },
+          "entity_type": {
+            "enum": [
+              "organization",
+              "person"
+            ]
+          },
+          "reviewed_at": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reviewer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 1
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}
