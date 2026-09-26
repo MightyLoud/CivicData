@@ -23,6 +23,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Resolve official Arvada map backing layers
+        run: |
+          mkdir -p artifacts/district-geometry
+          python tools/discover_arvada_arcgis.py | tee artifacts/district-geometry/arvada_arcgis_discovery.json
       - name: Fetch official ArcGIS polygons and build diagnostics
         run: python tools/fetch_district_geometry.py --diagnostic --output-dir artifacts/district-geometry
       - name: Show verification
