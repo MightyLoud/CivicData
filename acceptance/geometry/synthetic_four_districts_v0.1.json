@@ -1,0 +1,159 @@
+{
+  "snapshot_version": "0.1",
+  "snapshot_id": "synthetic-four-districts-001",
+  "generated_at": "2026-09-26T18:53:00Z",
+  "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:zz/place:synthetic/government",
+  "source": {
+    "authority": "PRIMARY_OFFICIAL",
+    "locator": "https://example.invalid/official/districts.geojson",
+    "retrieved_at": "2026-09-26T18:53:00Z",
+    "source_snapshot_id": "synthetic-source-001",
+    "derivation": "DIRECT_MACHINE_SOURCE"
+  },
+  "division_property": "division_ocdid",
+  "expected_division_ids": [
+    "ocd-division/country:us/state:zz/place:synthetic/district:1",
+    "ocd-division/country:us/state:zz/place:synthetic/district:2",
+    "ocd-division/country:us/state:zz/place:synthetic/district:3",
+    "ocd-division/country:us/state:zz/place:synthetic/district:4"
+  ],
+  "feature_collection": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "division_ocdid": "ocd-division/country:us/state:zz/place:synthetic/district:1"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                0,
+                1
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "division_ocdid": "ocd-division/country:us/state:zz/place:synthetic/district:2"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                1,
+                2
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "division_ocdid": "ocd-division/country:us/state:zz/place:synthetic/district:3"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "division_ocdid": "ocd-division/country:us/state:zz/place:synthetic/district:4"
+        },
+        "geometry": {
+          "type": "MultiPolygon",
+          "coordinates": [
+            [
+              [
+                [
+                  1,
+                  0
+                ],
+                [
+                  2,
+                  0
+                ],
+                [
+                  2,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  1,
+                  0
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}
