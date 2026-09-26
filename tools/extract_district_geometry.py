@@ -201,7 +201,17 @@ def resolve_alamosa_layer() -> tuple[str, dict]:
     )
 
 
+def dump_debug_item(item_id: str, name: str) -> None:
+    try:
+        payload = sharing_data(item_id)
+    except Exception as exc:
+        payload = {"error": str(exc)}
+    (OUT / name).write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
 def resolve_arvada_layer() -> tuple[str, dict]:
+    dump_debug_item("7aaa9ec0a1994708991b4506214cf13e", "arvada_webmap_debug.json")
+    dump_debug_item(ARVADA_APP_ID, "arvada_app_debug.json")
     return resolve_app_layer(
         ARVADA_APP_ID,
         title_terms=("district", "council"),
