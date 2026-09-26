@@ -1,0 +1,92 @@
+{
+  "registry_version": "0.1",
+  "registry_owner": "MightyLoud/CivicData",
+  "id_strategy": {
+    "organization": "org-<uuidv4>",
+    "person": "per-<uuidv4>"
+  },
+  "entities": [
+    {
+      "canonical_id": "org-11111111-1111-4111-8111-111111111111",
+      "entity_type": "organization",
+      "display_name": "Example City Council",
+      "status": "ACTIVE",
+      "created_at": "2026-09-25",
+      "superseded_by": null
+    },
+    {
+      "canonical_id": "per-22222222-2222-4222-8222-222222222222",
+      "entity_type": "person",
+      "display_name": "Alex Example",
+      "status": "ACTIVE",
+      "created_at": "2026-09-25",
+      "superseded_by": null
+    },
+    {
+      "canonical_id": "per-33333333-3333-4333-8333-333333333333",
+      "entity_type": "person",
+      "display_name": "Alexander Example",
+      "status": "ACTIVE",
+      "created_at": "2026-09-25",
+      "superseded_by": null
+    }
+  ],
+  "crosswalks": [
+    {
+      "crosswalk_id": "xw-org-civicpatch-example",
+      "entity_type": "organization",
+      "canonical_id": "org-11111111-1111-4111-8111-111111111111",
+      "system": "civicpatch",
+      "external_id": "organizations/example-city-council",
+      "external_url": "https://example.invalid/civicpatch/org",
+      "status": "ACTIVE",
+      "verified_at": "2026-09-25",
+      "source": "synthetic acceptance fixture"
+    },
+    {
+      "crosswalk_id": "xw-org-seegov-example",
+      "entity_type": "organization",
+      "canonical_id": "org-11111111-1111-4111-8111-111111111111",
+      "system": "seegov",
+      "external_id": "government/example-city",
+      "external_url": "https://example.invalid/seegov/government",
+      "status": "ACTIVE",
+      "verified_at": "2026-09-25",
+      "source": "synthetic acceptance fixture"
+    },
+    {
+      "crosswalk_id": "xw-person-civicpatch-alex",
+      "entity_type": "person",
+      "canonical_id": "per-22222222-2222-4222-8222-222222222222",
+      "system": "civicpatch",
+      "external_id": "people/alex-example",
+      "external_url": "https://example.invalid/civicpatch/person",
+      "status": "ACTIVE",
+      "verified_at": "2026-09-25",
+      "source": "synthetic acceptance fixture"
+    },
+    {
+      "crosswalk_id": "xw-person-civic-mirror-alex",
+      "entity_type": "person",
+      "canonical_id": "per-22222222-2222-4222-8222-222222222222",
+      "system": "civic_mirror",
+      "external_id": "official/alex-001",
+      "external_url": "https://example.invalid/civic-mirror/person",
+      "status": "ACTIVE",
+      "verified_at": "2026-09-25",
+      "source": "synthetic acceptance fixture"
+    },
+    {
+      "crosswalk_id": "xw-person-seegov-duplicate",
+      "entity_type": "person",
+      "canonical_id": "per-33333333-3333-4333-8333-333333333333",
+      "system": "seegov",
+      "external_id": "speaker/alexander-example",
+      "external_url": "https://example.invalid/seegov/person",
+      "status": "ACTIVE",
+      "verified_at": "2026-09-25",
+      "source": "synthetic acceptance fixture"
+    }
+  ],
+  "events": []
+}
