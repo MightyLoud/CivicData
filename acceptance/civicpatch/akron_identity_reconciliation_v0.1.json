@@ -1,0 +1,168 @@
+{
+  "contract_version": "0.1",
+  "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:co/place:akron/government",
+  "target": {
+    "repository": "CivicPatch/open-data",
+    "commit": "69331c2b0d97e13695dab07ec1d6a969c99a3e4d",
+    "path": "data/co/local/place_akron.yml"
+  },
+  "reviewed_at": "2026-09-26T15:35:00Z",
+  "reviewer": "CivicData interoperability review",
+  "evidence": [
+    {
+      "evidence_id": "akron-current-board-roster",
+      "authority": "PRIMARY_OFFICIAL",
+      "url": "https://www.townofakron.com/172/Board-of-Trustees",
+      "supports": "current roster, formal Mayor/Trustee display, term-expiration years"
+    },
+    {
+      "evidence_id": "akron-code-mayor-pro-tem",
+      "authority": "PRIMARY_OFFICIAL",
+      "url": "https://codelibrary.amlegal.com/codes/akron_co/latest/akron_co/0-0-0-134",
+      "supports": "Mayor Pro Tem is selected from among trustees"
+    },
+    {
+      "evidence_id": "akron-code-board-composition",
+      "authority": "PRIMARY_OFFICIAL",
+      "url": "https://codelibrary.amlegal.com/codes/akron_co/latest/akron_co/0-0-0-127",
+      "supports": "Board consists of one mayor and six trustees"
+    },
+    {
+      "evidence_id": "factory-akron-certified-package",
+      "authority": "CANONICAL_SOURCE",
+      "url": "data/normalized/co/jurisdiction-co-akron/jurisdiction.json",
+      "supports": "certified Factory current representation snapshot"
+    },
+    {
+      "evidence_id": "civicpatch-akron-pinned",
+      "authority": "PARTNER_SOURCE",
+      "url": "CivicPatch/open-data@69331c2b0d97e13695dab07ec1d6a969c99a3e4d:data/co/local/place_akron.yml",
+      "supports": "existing CivicPatch person IDs and stale published roster"
+    }
+  ],
+  "accepted_crosswalks": [
+    {
+      "core_person_id": "person-co-akron-braden-brent",
+      "civicpatch_id": "d31247df-3332-490e-b45d-fa8e7bb55e0b",
+      "name": "Braden Brent",
+      "review_status": "ACCEPTED_FOR_PARTNER_PATCH",
+      "patch_action": "RETAIN_ID_UPDATE_RECORD",
+      "evidence_ids": [
+        "akron-current-board-roster",
+        "factory-akron-certified-package",
+        "civicpatch-akron-pinned"
+      ],
+      "rationale": "Same named Trustee in the same jurisdiction in the pinned CivicPatch roster and current official Town roster."
+    },
+    {
+      "core_person_id": "person-co-akron-crystann-benson",
+      "civicpatch_id": "623089fb-bd23-4615-a440-1a61da966c15",
+      "name": "Crystann Benson",
+      "review_status": "ACCEPTED_FOR_PARTNER_PATCH",
+      "patch_action": "RETAIN_ID_UPDATE_RECORD",
+      "evidence_ids": [
+        "akron-current-board-roster",
+        "factory-akron-certified-package",
+        "civicpatch-akron-pinned"
+      ],
+      "rationale": "Same named Trustee in the same jurisdiction in the pinned CivicPatch roster and current official Town roster."
+    },
+    {
+      "core_person_id": "person-co-akron-jared-jefferson",
+      "civicpatch_id": "dd07c3f5-1432-4c30-9bc9-9f73bb3385c2",
+      "name": "Jared Jefferson",
+      "review_status": "ACCEPTED_FOR_PARTNER_PATCH",
+      "patch_action": "RETAIN_ID_CORRECT_FORMAL_ROLE",
+      "evidence_ids": [
+        "akron-current-board-roster",
+        "akron-code-mayor-pro-tem",
+        "akron-code-board-composition",
+        "factory-akron-certified-package",
+        "civicpatch-akron-pinned"
+      ],
+      "rationale": "Same named official in the same jurisdiction. Current Town roster identifies Trustee / Mayor Pro Tem, and the municipal code establishes Mayor Pro Tem as a leadership assignment chosen from among trustees. Retain person ID; publish formal Trustee role."
+    }
+  ],
+  "additions": [
+    {
+      "core_person_id": "person-co-akron-annette-bowin",
+      "name": "Annette Bowin",
+      "status": "NEW_PREVIEW_ID_PENDING_PARTNER_ACCEPTANCE",
+      "evidence_ids": [
+        "akron-current-board-roster",
+        "factory-akron-certified-package"
+      ]
+    },
+    {
+      "core_person_id": "person-co-akron-joe-tarnow",
+      "name": "Joe Tarnow",
+      "status": "NEW_PREVIEW_ID_PENDING_PARTNER_ACCEPTANCE",
+      "evidence_ids": [
+        "akron-current-board-roster",
+        "factory-akron-certified-package"
+      ]
+    },
+    {
+      "core_person_id": "person-co-akron-ron-kraich",
+      "name": "Ron Kraich",
+      "status": "NEW_PREVIEW_ID_PENDING_PARTNER_ACCEPTANCE",
+      "evidence_ids": [
+        "akron-current-board-roster",
+        "factory-akron-certified-package"
+      ]
+    },
+    {
+      "core_person_id": "person-co-akron-terry-alexander",
+      "name": "Terry Alexander",
+      "status": "NEW_PREVIEW_ID_PENDING_PARTNER_ACCEPTANCE",
+      "evidence_ids": [
+        "akron-current-board-roster",
+        "factory-akron-certified-package"
+      ]
+    }
+  ],
+  "omissions": [
+    {
+      "civicpatch_id": "0da81ab6-9301-4fe1-8d35-9e79db635c09",
+      "name": "Brandon Hill",
+      "status": "STALE_ROSTER_OMISSION_NOT_IDENTITY_DELETE",
+      "evidence_ids": [
+        "akron-current-board-roster",
+        "civicpatch-akron-pinned"
+      ]
+    },
+    {
+      "civicpatch_id": "bc652e26-3c0f-4233-8daa-8d3c3e20f02e",
+      "name": "Ariella Gonzales-Vondy",
+      "status": "STALE_ROSTER_OMISSION_NOT_IDENTITY_DELETE",
+      "evidence_ids": [
+        "akron-current-board-roster",
+        "civicpatch-akron-pinned"
+      ]
+    },
+    {
+      "civicpatch_id": "34f4f089-d358-44c7-9db0-e93441d05a44",
+      "name": "David Kembel",
+      "status": "STALE_ROSTER_OMISSION_NOT_IDENTITY_DELETE",
+      "evidence_ids": [
+        "akron-current-board-roster",
+        "civicpatch-akron-pinned"
+      ]
+    },
+    {
+      "civicpatch_id": "e34fed5d-71b5-4943-897e-c3fde4db4945",
+      "name": "Jennifer Hansen",
+      "status": "STALE_ROSTER_OMISSION_NOT_IDENTITY_DELETE",
+      "evidence_ids": [
+        "akron-current-board-roster",
+        "civicpatch-akron-pinned"
+      ]
+    }
+  ],
+  "constraints": {
+    "exact_name_matching_is_not_identity_authority": true,
+    "upstream_write_authorized": false,
+    "omitted_rows_are_identity_deletions": false,
+    "preview_addition_ids_are_accepted_partner_ids": false
+  }
+}
