@@ -214,13 +214,65 @@ def dump_debug_item(item_id: str, name: str) -> None:
 
 
 def resolve_arvada_layer() -> tuple[str, dict]:
-    dump_debug_item("7aaa9ec0a1994708991b4506214cf13e", "arvada_webmap_debug.json")
+    webmap_id = "7aaa9ec0a1994708991b4506214cf13e"
+    dump_debug_item(webmap_id, "arvada_webmap_debug.json")
     dump_debug_item(ARVADA_APP_ID, "arvada_app_debug.json")
-    return resolve_app_layer(
-        ARVADA_APP_ID,
-        title_terms=("district", "council"),
-        field_terms=("district", "cncl"),
-    )
+
+    app = sharing_data(ARVADA_APP_ID)
+    if webmap_id not in find_hex_ids(app):
+        raise RuntimeError(
+            "Official Arvada app no longer references expected City Council Districts Web Map"
+        )
+
+    meta = sharing_item(webmap_id)
+    if meta.get("type") != "Web Map" or meta.get("title") != "City Council Districts":
+        raise RuntimeError(
+            "Arvada Web Map identity changed: " + json.dumps(meta, sort_keys=True)
+        )
+
+    webmap = sharing_data(webmap_id)
+    candidates = []
+    for node in iter_dicts(webmap.get("operationalLayers", [])):
+        title = str(node.get("title") or "").strip()
+        url = node.get("url")
+        if (
+            title == "City Council Districts"
+            and isinstance(url, str)
+            and ("MapServer/" in url or "FeatureServer/" in url)
+        ):
+            candidates.append(url.rstrip("/"))
+
+    if len(set(candidates)) != 1:
+        raise RuntimeError(
+            "Expected exactly one official Arvada City Council Districts layer: "
+            + json.dumps(sorted(set(candidates)))
+        )
+
+    url = candidates[0]
+    layer_meta = get_json(url + "?f=json")
+    fields = {
+        str(row.get("name") or "")
+        for row in (layer_meta.get("fields") or [])
+    }
+    if (
+        layer_meta.get("geometryType") != "esriGeometryPolygon"
+        or "DISTRICT" not in fields
+    ):
+        raise RuntimeError(
+            "Official Arvada district layer no longer has expected polygon/DISTRICT schema: "
+            + json.dumps(layer_meta, sort_keys=True)
+        )
+
+    return url, {
+        "app_id": ARVADA_APP_ID,
+        "webmap_id": webmap_id,
+        "webmap_title": meta.get("title"),
+        "layer_title": "City Council Districts",
+        "checked_layer_schema": {
+            "geometryType": layer_meta.get("geometryType"),
+            "fields": sorted(fields),
+        },
+    }
 
 
 def query_geojson(layer_url: str) -> dict:
