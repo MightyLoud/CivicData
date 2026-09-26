@@ -1,0 +1,56 @@
+name: Geometry source retrieval
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/geometry-source-retrieval.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  retrieve:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Fetch official district GeoJSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --retry-all-errors             'https://services2.arcgis.com/kQ9CrbL3URg6t3jo/ArcGIS/rest/services/Wards/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson'             -o /tmp/alamosa.geojson
+          curl -fsSL --retry 3 --retry-all-errors             'https://maps.arvada.org/arcgis/rest/services/CMO/City_Council/MapServer/1/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson'             -o /tmp/arvada.geojson
+
+      - name: Validate and emit retrieval payloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          for name in ("alamosa", "arvada"):
+              path = Path(f"/tmp/{name}.geojson")
+              obj = json.loads(path.read_text())
+              assert obj.get("type") == "FeatureCollection", (name, obj)
+              features = obj.get("features")
+              assert isinstance(features, list) and len(features) == 4, (name, len(features or []))
+              kinds = sorted({f.get("geometry", {}).get("type") for f in features})
+              assert set(kinds) <= {"Polygon", "MultiPolygon"}, (name, kinds)
+              keys = sorted({
+                  key
+                  for feature in features
+                  for key in (feature.get("properties") or {}).keys()
+              })
+              values = [feature.get("properties") for feature in features]
+              print(f"GEOMETRY_SUMMARY {name} count={len(features)} kinds={kinds} keys={keys}")
+              print(f"GEOMETRY_PROPERTIES {name} {json.dumps(values, sort_keys=True)}")
+          PY
+
+          for name in alamosa arvada; do
+            upper="$(echo "$name" | tr '[:lower:]' '[:upper:]')"
+            echo "BEGIN_${upper}_GZIP_BASE64"
+            gzip -c "/tmp/$name.geojson" | base64 -w 0
+            echo
+            echo "END_${upper}_GZIP_BASE64"
+          done
