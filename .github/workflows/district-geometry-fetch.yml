@@ -1,0 +1,35 @@
+name: District geometry fetch candidate
+
+on:
+  pull_request:
+    paths:
+      - "tools/fetch_district_geometry.py"
+      - "data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json"
+      - "data/normalized/co/jurisdiction-co-arvada/jurisdiction.json"
+      - ".github/workflows/district-geometry-fetch.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    name: Fetch and verify district geometry
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch official ArcGIS polygons and verify controls
+        run: python tools/fetch_district_geometry.py --output-dir artifacts/district-geometry
+      - name: Show verification
+        run: |
+          cat artifacts/district-geometry/source_manifest.json
+          cat artifacts/district-geometry/verification.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: district-geometry
+          path: artifacts/district-geometry
+          if-no-files-found: error
