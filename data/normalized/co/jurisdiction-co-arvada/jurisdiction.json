@@ -14,7 +14,7 @@
     "jurisdiction_type": "Municipality",
     "municipal_type": "City",
     "name": "Arvada",
-    "notes": "CO-NORM-001 closeout completed on 2026-08-19 after QA, parity, replication/tracker, and DS-005 geography authority all passed. Seven elected offices and current terms reconcile. Nonblocking district-PIP and date-precision warnings remain documented. No 16_Release record or publication authorization exists.",
+    "notes": "CO-NORM-001 closeout completed on 2026-08-19 after QA, parity, replication/tracker, and DS-005 geography authority all passed. Seven elected offices and current terms reconcile. On 2026-09-26, governed routing controls expanded to 6/6 total: 2 citywide plus Council Districts 1–4. Date-precision warnings remain documented. No 16_Release record or publication authorization exists.",
     "ocd_jurisdiction_id": "ocd-jurisdiction/country:us/state:co/place:arvada/government",
     "official_url": "https://www.arvadaco.gov/",
     "place_fips": "03455",
@@ -1134,22 +1134,22 @@
     "blocking_gap_count": 0,
     "checks": [
       {
-        "actual": "2/2 controls pass for City Hall and Majestic View Nature Center. Both route to Arvada citywide and the Mayor plus two at-large offices; no Council-district assignment was inferred.",
+        "actual": "6/6 controls pass: City Hall and Majestic View cover citywide routing; Lake Arbor Golf Course, Little Dry Creek Park, Little Raven Park, and West Woods Golf Club cover Council Districts 1–4 respectively. District controls return Mayor + both At-Large offices + exactly one district office.",
         "batch_id": "CO-NORM-001",
         "blocker": false,
-        "check_name": "Two citywide address controls",
+        "check_name": "Citywide plus Council Districts 1–4 address controls",
         "check_type": "ADDRESS_TESTS",
-        "checked_at": 46253,
+        "checked_at": "2026-09-26",
         "entity_id": "division-co-arvada-citywide",
         "entity_type": "Division",
-        "expected": "At least two independent official in-city addresses route consistently to the citywide division and all citywide elected offices.",
+        "expected": "At least two citywide controls plus one governed address control for each Council District 1–4 route to the canonical division and applicable offices.",
         "jurisdiction_id": "jurisdiction-co-arvada",
-        "notes": "Citywide controls pass. District-level point-in-polygon outputs remain outside this execution record.",
+        "notes": "District-runtime coverage is complete for every normalized Arvada electoral division.",
         "owner": "GPT",
         "qa_id": "qa-co-arvada-address-tests",
         "result": true,
-        "severity": "WARNING",
-        "source_id": "src-co-arvada-majestic-view"
+        "severity": "INFO",
+        "source_id": "src-co-arvada-council-districts-pdf-2026"
       },
       {
         "actual": "Citywide GEOID 0803455 and four official Council-district divisions/keys are normalized. The interactive official map is retained, but a separate machine-readable service and district PIP archive were not captured.",
