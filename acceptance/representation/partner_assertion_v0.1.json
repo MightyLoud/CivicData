@@ -1,0 +1,122 @@
+{
+  "contract_version": "0.1",
+  "authority_matrix": {
+    "jurisdiction": "openstates_jurisdictions",
+    "division": "openstates_jurisdictions",
+    "organization": "civicdata_representation",
+    "post": "civicdata_representation",
+    "person": "civicdata_representation",
+    "membership": "civicdata_representation",
+    "certification": "civicdata_certification"
+  },
+  "base_snapshot": {
+    "snapshot_id": "snapshot-example-001",
+    "jurisdiction": {
+      "jurisdiction_id": "jurisdiction-example",
+      "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:ma/place:example/government",
+      "name": "Example"
+    },
+    "divisions": [],
+    "organizations": [
+      {
+        "organization_id": "org-11111111-1111-4111-8111-111111111111",
+        "name": "Example Select Board"
+      }
+    ],
+    "posts": [
+      {
+        "post_id": "post-example-select-board",
+        "organization_id": "org-11111111-1111-4111-8111-111111111111",
+        "role_id": "select-board-member"
+      }
+    ],
+    "people": [
+      {
+        "person_id": "per-22222222-2222-4222-8222-222222222222",
+        "name": "Alex Example"
+      }
+    ],
+    "memberships": [
+      {
+        "membership_id": "membership-example-001",
+        "person_id": "per-22222222-2222-4222-8222-222222222222",
+        "post_id": "post-example-select-board",
+        "start_date": "2025-01-01",
+        "end_date": null,
+        "label": null
+      }
+    ],
+    "certification": {
+      "status": "certified",
+      "raw_complete": true,
+      "normalized_complete": true,
+      "qa_passed": true,
+      "parity_ok": true,
+      "verified_at": "2026-09-20T12:00:00Z"
+    },
+    "ops": {
+      "tracker_synced": false
+    },
+    "assertion_ids_applied": [],
+    "promotion_history": []
+  },
+  "assertions": {
+    "end_date_correction": {
+      "assertion_id": "assertion-civic-mirror-end-date-001",
+      "source_system": "civic_mirror",
+      "subject_type": "membership",
+      "subject_id": "membership-example-001",
+      "field_path": "end_date",
+      "value": "2026-09-01",
+      "evidence": [
+        {
+          "evidence_id": "evidence-civic-mirror-001",
+          "locator": "https://example.invalid/evidence/end-date",
+          "captured_at": "2026-09-25T22:00:00-06:00"
+        }
+      ],
+      "asserted_at": "2026-09-25T22:05:00-06:00",
+      "base_snapshot_id": "snapshot-example-001",
+      "review_status": "proposed",
+      "review_history": []
+    },
+    "rejected_title_claim": {
+      "assertion_id": "assertion-seegov-title-001",
+      "source_system": "seegov",
+      "subject_type": "membership",
+      "subject_id": "membership-example-001",
+      "field_path": "label",
+      "value": "Council Member",
+      "evidence": [
+        {
+          "evidence_id": "evidence-seegov-001",
+          "locator": "https://example.invalid/evidence/title",
+          "captured_at": "2026-09-25T22:10:00-06:00"
+        }
+      ],
+      "asserted_at": "2026-09-25T22:11:00-06:00",
+      "base_snapshot_id": "snapshot-example-001",
+      "review_status": "proposed",
+      "review_history": []
+    },
+    "identity_conflict": {
+      "assertion_id": "assertion-empowered-person-001",
+      "source_system": "empowered_vote",
+      "subject_type": "person",
+      "subject_id": "per-22222222-2222-4222-8222-222222222222",
+      "field_path": "name",
+      "value": "Different Person",
+      "evidence": [
+        {
+          "evidence_id": "evidence-empowered-001",
+          "locator": "https://example.invalid/evidence/person",
+          "captured_at": "2026-09-25T22:15:00-06:00"
+        }
+      ],
+      "asserted_at": "2026-09-25T22:16:00-06:00",
+      "base_snapshot_id": "snapshot-example-001",
+      "review_status": "proposed",
+      "review_history": []
+    }
+  }
+}

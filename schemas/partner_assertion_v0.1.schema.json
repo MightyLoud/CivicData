@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civicdata.tech/schemas/partner_assertion_v0.1.schema.json",
+  "title": "CivicData Partner Assertion v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assertion_id",
+    "source_system",
+    "subject_type",
+    "subject_id",
+    "field_path",
+    "value",
+    "evidence",
+    "asserted_at",
+    "base_snapshot_id",
+    "review_status",
+    "review_history"
+  ],
+  "properties": {
+    "assertion_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_system": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject_type": {
+      "enum": [
+        "jurisdiction",
+        "division",
+        "organization",
+        "post",
+        "person",
+        "membership",
+        "certification"
+      ]
+    },
+    "subject_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "field_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "value": {},
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evidence_id",
+          "locator",
+          "captured_at"
+        ],
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "locator": {
+            "type": "string",
+            "minLength": 1
+          },
+          "captured_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "asserted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "base_snapshot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "review_status": {
+      "enum": [
+        "proposed",
+        "accepted",
+        "rejected",
+        "needs_evidence",
+        "identity_conflict",
+        "scope_conflict"
+      ]
+    },
+    "review_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "reviewer",
+          "authority",
+          "reviewed_at",
+          "reason"
+        ],
+        "properties": {
+          "outcome": {
+            "enum": [
+              "accepted",
+              "rejected",
+              "needs_evidence",
+              "identity_conflict",
+              "scope_conflict"
+            ]
+          },
+          "reviewer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "authority": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reviewed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}
