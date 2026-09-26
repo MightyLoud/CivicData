@@ -1,88 +1,76 @@
 #!/usr/bin/env python3
-"""Resolve ArcGIS item references behind Arvada's official Council District map app."""
+"""Resolve the backing ArcGIS feature layer for Arvada's official district map."""
 from __future__ import annotations
 
 import json
-import re
+import urllib.parse
 import urllib.request
 
 APP_ID = "332a7eba6a4641999d278cfa6ee149f4"
-BASE = "https://www.arcgis.com/sharing/rest/content/items"
-HEX32 = re.compile(r"^[0-9a-fA-F]{32}$")
+BASE = "https://www.arcgis.com/sharing/rest"
 
 
 def get_json(url: str) -> dict:
     req = urllib.request.Request(
         url,
-        headers={"User-Agent": "MightyLoud-CivicData-arcgis-discovery/0.1"},
+        headers={"User-Agent": "MightyLoud-CivicData-arcgis-discovery/0.2"},
     )
     with urllib.request.urlopen(req, timeout=60) as response:
-        return json.loads(response.read().decode("utf-8"))
-
-
-def item(item_id: str) -> dict:
-    return get_json(f"{BASE}/{item_id}?f=json")
-
-
-def data(item_id: str) -> dict:
-    return get_json(f"{BASE}/{item_id}/data?f=json")
-
-
-def strings(value):
-    if isinstance(value, str):
-        yield value
-    elif isinstance(value, dict):
-        for k, v in value.items():
-            yield from strings(k)
-            yield from strings(v)
-    elif isinstance(value, list):
-        for v in value:
-            yield from strings(v)
+        raw = response.read().decode("utf-8")
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return {"_non_json": raw[:500]}
 
 
 def main() -> None:
-    queue = [(APP_ID, 0)]
-    seen = set()
-    records = []
-    while queue:
-        item_id, depth = queue.pop(0)
-        if item_id in seen or depth > 3:
-            continue
-        seen.add(item_id)
-        meta = item(item_id)
-        payload = data(item_id)
-        values = list(strings(payload))
-        urls = sorted(
+    meta = get_json(f"{BASE}/content/items/{APP_ID}?f=json")
+    owner = str(meta.get("owner") or "").strip()
+    queries = [
+        f'owner:{owner} "Council District"',
+        f'owner:{owner} district',
+        '"Arvada" "Council District"',
+    ]
+    searches = []
+    for query in queries:
+        params = urllib.parse.urlencode({"q": query, "num": 100, "f": "json"})
+        payload = get_json(f"{BASE}/search?{params}")
+        rows = []
+        for item in payload.get("results", []) if isinstance(payload, dict) else []:
+            rows.append(
+                {
+                    "id": item.get("id"),
+                    "title": item.get("title"),
+                    "type": item.get("type"),
+                    "owner": item.get("owner"),
+                    "url": item.get("url"),
+                    "extent": item.get("extent"),
+                    "modified": item.get("modified"),
+                    "typeKeywords": item.get("typeKeywords"),
+                }
+            )
+        searches.append({"query": query, "results": rows})
+
+    app_data = get_json(f"{BASE}/content/items/{APP_ID}/data?f=pjson")
+    print(
+        json.dumps(
             {
-                s
-                for s in values
-                if "arcgis" in s.lower()
-                and ("FeatureServer" in s or "MapServer" in s)
-            }
+                "app": {
+                    "id": APP_ID,
+                    "title": meta.get("title"),
+                    "type": meta.get("type"),
+                    "owner": owner,
+                    "url": meta.get("url"),
+                    "extent": meta.get("extent"),
+                    "typeKeywords": meta.get("typeKeywords"),
+                },
+                "app_data": app_data,
+                "searches": searches,
+            },
+            indent=2,
+            sort_keys=True,
         )
-        refs = sorted(
-            {
-                s
-                for s in values
-                if HEX32.fullmatch(s)
-            }
-        )
-        records.append(
-            {
-                "item_id": item_id,
-                "depth": depth,
-                "title": meta.get("title"),
-                "type": meta.get("type"),
-                "owner": meta.get("owner"),
-                "url": meta.get("url"),
-                "service_urls": urls,
-                "referenced_item_ids": refs,
-            }
-        )
-        for ref in refs:
-            if ref not in seen:
-                queue.append((ref, depth + 1))
-    print(json.dumps(records, indent=2, sort_keys=True))
+    )
 
 
 if __name__ == "__main__":
