@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "tools/fetch_district_geometry.py"
+      - "tools/discover_arvada_arcgis.py"
       - "data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json"
       - "data/normalized/co/jurisdiction-co-arvada/jurisdiction.json"
       - ".github/workflows/district-geometry-fetch.yml"
