@@ -21,6 +21,7 @@ jobs:
       - name: Extract current ArcGIS geometry
         run: python tools/extract_district_geometry.py
       - name: Upload geometry extraction
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: district-geometry-extract
