@@ -366,6 +366,12 @@ CERTIFIED
 
 Unsupported or conflicting records remain fail-closed.
 
+A reviewed nonblocking conflict may remain as a RAW assertion with a held review
+state such as `NEEDS_EVIDENCE`, `IDENTITY_CONFLICT`, or
+`SCOPE_CONFLICT` while the canonical in-scope snapshot is certified. Such an
+assertion does not become a canonical fact. An `UNREVIEWED` RAW assertion still
+prevents `normalized_complete = true`.
+
 ## Generic level examples
 
 Machine-checkable synthetic examples live at:
