@@ -401,7 +401,7 @@ def normalize_features(city: str, fc: dict[str, Any], layer_url: str) -> dict[st
                 or props.get("COUNCIL_DISTRICT")
                 or ""
             ).strip()
-            match = re.search(r"(\\d+)$", raw_district)
+            match = re.search(r"([0-9]+)$", raw_district)
             if match is None:
                 raise RuntimeError(
                     "Arvada district key missing from feature: "
