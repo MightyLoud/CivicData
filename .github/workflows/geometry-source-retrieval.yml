@@ -29,6 +29,7 @@ jobs:
           mkdir -p data/geometry/co/source data/geometry/co/governed acceptance/geometry
           curl -fsSL --retry 3 --retry-all-errors             'https://services2.arcgis.com/kQ9CrbL3URg6t3jo/ArcGIS/rest/services/Wards/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson'             -o data/geometry/co/source/alamosa_wards_arcgis_2026-09-26.geojson
           curl -fsSL --retry 3 --retry-all-errors             'https://maps.arvada.org/arcgis/rest/services/CMO/City_Council/MapServer/1/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson'             -o data/geometry/co/source/arvada_council_districts_arcgis_2026-09-26.geojson
+          curl -fsSL --retry 3 --retry-all-errors             'https://services2.arcgis.com/kQ9CrbL3URg6t3jo/ArcGIS/rest/services/AddressForWebApp/FeatureServer/0/query?where=HOUSE_NUM%20IN%20(500%2C860%2C1000%2C1555)&outFields=OBJECTID%2CHOUSE_NUM%2CSTREET_NAM%2CSTREET_TYP%2CADDRESS%2CLABEL%2CNAME%2CSTATUS&returnGeometry=true&outSR=4326&f=geojson'             -o /tmp/alamosa-addresses.geojson
 
       - name: Build governed snapshots and Census-geocoded PIP controls
         shell: bash
@@ -209,30 +210,117 @@ jobs:
               ("arvada", "addrtest-co-arvada-district-4-west-woods", "6655 Quaker Street, Arvada, CO 80007", "ocd-division/country:us/state:co/place:arvada/council_district:4"),
           ]
 
-          geocode_aliases = {
-              "addrtest-co-alamosa-ward-4-lee-fields":
-                  "1000 20th St, Alamosa, CO 81101",
+          city_address_points = json.loads(
+              Path("/tmp/alamosa-addresses.geojson").read_text()
+          )
+          assert city_address_points.get("type") == "FeatureCollection"
+          address_features = city_address_points.get("features") or []
+
+          def normalize_text(value):
+              text = re.sub(r"[^A-Z0-9]+", " ", str(value or "").upper())
+              return " ".join(text.split())
+
+          alamosa_address_targets = {
+              "addrtest-co-alamosa-ward-1-cattails": (500, ("COTTONWOOD",)),
+              "addrtest-co-alamosa-ward-2-carroll-park": (860, ("CRAFT",)),
+              "addrtest-co-alamosa-ward-3-jardin-hermosa": (
+                  1555,
+                  ("SIXTH", "6TH"),
+              ),
+              "addrtest-co-alamosa-ward-4-lee-fields": (
+                  1000,
+                  ("TWENTIETH", "20TH"),
+              ),
           }
+
+          def alamosa_point(test_id):
+              house, street_tokens = alamosa_address_targets[test_id]
+              candidates = []
+              for feature in address_features:
+                  props = feature.get("properties") or {}
+                  try:
+                      candidate_house = int(float(props.get("HOUSE_NUM")))
+                  except (TypeError, ValueError):
+                      continue
+                  if candidate_house != house:
+                      continue
+                  haystack = normalize_text(
+                      " ".join(
+                          str(props.get(field) or "")
+                          for field in (
+                              "STREET_NAM",
+                              "STREET_TYP",
+                              "ADDRESS",
+                              "LABEL",
+                              "NAME",
+                          )
+                      )
+                  )
+                  if any(token in haystack for token in street_tokens):
+                      candidates.append(feature)
+              assert len(candidates) == 1, (
+                  test_id,
+                  house,
+                  street_tokens,
+                  [feature.get("properties") for feature in address_features],
+              )
+              feature = candidates[0]
+              geometry = feature.get("geometry") or {}
+              assert geometry.get("type") == "Point", (test_id, geometry)
+              lon, lat = geometry["coordinates"][:2]
+              return float(lon), float(lat), feature.get("properties") or {}
 
           pip_rows = []
           for name, test_id, address, expected in controls:
-              geocode_address = geocode_aliases.get(test_id, address)
-              params = urllib.parse.urlencode({
-                  "address": geocode_address,
-                  "benchmark": "Public_AR_Current",
-                  "format": "json",
-              })
-              url = (
-                  "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?"
-                  + params
-              )
-              with urllib.request.urlopen(url, timeout=30) as response:
-                  geocode = json.load(response)
-              matches = geocode["result"]["addressMatches"]
-              assert matches, (test_id, geocode)
-              best = matches[0]
-              lon = float(best["coordinates"]["x"])
-              lat = float(best["coordinates"]["y"])
+              if name == "alamosa":
+                  lon, lat, point_props = alamosa_point(test_id)
+                  matched_address = (
+                      point_props.get("ADDRESS")
+                      or point_props.get("LABEL")
+                      or address
+                  )
+                  point_source = (
+                      "CITY_OF_ALAMOSA_ADDRESS_FEATURESERVER"
+                  )
+                  geocode_input = None
+                  point_metadata = {
+                      key: point_props.get(key)
+                      for key in (
+                          "OBJECTID",
+                          "HOUSE_NUM",
+                          "STREET_NAM",
+                          "STREET_TYP",
+                          "ADDRESS",
+                          "LABEL",
+                          "NAME",
+                          "STATUS",
+                      )
+                  }
+              else:
+                  geocode_input = address
+                  params = urllib.parse.urlencode({
+                      "address": geocode_input,
+                      "benchmark": "Public_AR_Current",
+                      "format": "json",
+                  })
+                  url = (
+                      "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?"
+                      + params
+                  )
+                  with urllib.request.urlopen(url, timeout=30) as response:
+                      geocode = json.load(response)
+                  matches = geocode["result"]["addressMatches"]
+                  assert matches, (test_id, geocode)
+                  best = matches[0]
+                  lon = float(best["coordinates"]["x"])
+                  lat = float(best["coordinates"]["y"])
+                  matched_address = best.get("matchedAddress")
+                  point_source = (
+                      "US_CENSUS_GEOCODER_PUBLIC_AR_CURRENT"
+                  )
+                  point_metadata = None
+                  time.sleep(0.15)
+
               resolved = resolve_point(
                   snapshots[name],
                   x=lon,
@@ -241,7 +329,7 @@ jobs:
               assert resolved == expected, (
                   test_id,
                   address,
-                  best.get("matchedAddress"),
+                  matched_address,
                   (lon, lat),
                   expected,
                   resolved,
@@ -250,27 +338,36 @@ jobs:
                   "jurisdiction_id": configs[name]["jurisdiction_id"],
                   "test_id": test_id,
                   "address": address,
-                  "geocode_input": geocode_address,
-                  "matched_address": best.get("matchedAddress"),
+                  "geocode_input": geocode_input,
+                  "matched_address": matched_address,
                   "longitude": lon,
                   "latitude": lat,
-                  "point_source": "US_CENSUS_GEOCODER_PUBLIC_AR_CURRENT",
+                  "point_source": point_source,
+                  "point_metadata": point_metadata,
                   "expected_division_ocdid": expected,
                   "resolved_division_ocdid": resolved,
                   "geometry_snapshot_path": str(configs[name]["snapshot"]),
                   "result": True,
               })
-              time.sleep(0.15)
 
           out = {
               "contract_version": "0.1",
               "generated_at": retrieved_at,
-              "point_source": {
-                  "system": "US Census Geocoder",
-                  "benchmark": "Public_AR_Current",
-                  "endpoint": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress",
-                  "role": "ADDRESS_TO_POINT_DERIVATION_ONLY",
-              },
+              "point_sources": [
+                  {
+                      "system": "City of Alamosa Address FeatureServer",
+                      "endpoint": "https://services2.arcgis.com/kQ9CrbL3URg6t3jo/ArcGIS/rest/services/AddressForWebApp/FeatureServer/0",
+                      "authority": "PRIMARY_OFFICIAL",
+                      "role": "ADDRESS_TO_POINT_DERIVATION_ONLY",
+                  },
+                  {
+                      "system": "US Census Geocoder",
+                      "benchmark": "Public_AR_Current",
+                      "endpoint": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress",
+                      "authority": "FEDERAL_REFERENCE",
+                      "role": "ADDRESS_TO_POINT_DERIVATION_ONLY",
+                  },
+              ],
               "controls": pip_rows,
           }
           Path("acceptance/geometry/co_district_pip_controls_v0.1.json").write_text(
