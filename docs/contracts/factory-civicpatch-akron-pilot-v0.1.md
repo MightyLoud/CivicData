@@ -120,13 +120,24 @@ Any exact-name overlap is marked as a potential identity match requiring review.
 
 ## Outputs
 
+The pinned partner comparison input is committed at:
+
 ```text
-acceptance/civicpatch/akron_factory_candidate_bundle_v0.1.json
-acceptance/civicpatch/akron_factory_candidate_bundle_v0.1.manifest.json
-acceptance/civicpatch/akron_factory_candidate_v0.1.yml
-acceptance/civicpatch/akron_factory_candidate_drift_v0.1.json
 acceptance/civicpatch/akron_current_pinned_69331c2.json
 ```
+
+The deterministic builder produces these acceptance artifacts into the requested
+output directory:
+
+```text
+akron_factory_candidate_bundle_v0.1.json
+akron_factory_candidate_bundle_v0.1.manifest.json
+akron_factory_candidate_v0.1.yml
+akron_factory_candidate_drift_v0.1.json
+```
+
+CI builds those files twice and requires byte-for-byte equality, then validates
+the bundle, manifest, drift contract, YAML publish shape, and semantic round trip.
 
 Generator:
 
