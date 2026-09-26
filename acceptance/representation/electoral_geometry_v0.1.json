@@ -1,0 +1,163 @@
+{
+  "batch_id": "CO-GEO-004",
+  "contract_version": "0.1",
+  "crs": "OGC:CRS84 / EPSG:4326 longitude-latitude",
+  "extracted_at": "2026-09-26T18:48:16.607484+00:00",
+  "pip_controls": [
+    {
+      "address": "500 Cottonwood Dr, Alamosa, CO 81101",
+      "city": "alamosa",
+      "expected_division_id": "division-co-alamosa-ward-1",
+      "geocode_match": "500 Cottonwood Dr, Alamosa, Colorado, 81101",
+      "geocode_score": 100,
+      "latitude": 37.479843286555,
+      "longitude": -105.870897502578,
+      "matched_division_ids": [
+        "division-co-alamosa-ward-1"
+      ],
+      "result": true,
+      "test_id": "addrtest-co-alamosa-ward-1-cattails"
+    },
+    {
+      "address": "860 Craft Dr, Alamosa, CO 81101",
+      "city": "alamosa",
+      "expected_division_id": "division-co-alamosa-ward-2",
+      "geocode_match": "860 Craft Dr, Alamosa, Colorado, 81101",
+      "geocode_score": 100,
+      "latitude": 37.483935666962,
+      "longitude": -105.893469297277,
+      "matched_division_ids": [
+        "division-co-alamosa-ward-2"
+      ],
+      "result": true,
+      "test_id": "addrtest-co-alamosa-ward-2-carroll-park"
+    },
+    {
+      "address": "1555 W Sixth St, Alamosa, CO 81101",
+      "city": "alamosa",
+      "expected_division_id": "division-co-alamosa-ward-3",
+      "geocode_match": "1555 W 6th St, Alamosa, Colorado, 81101",
+      "geocode_score": 100,
+      "latitude": 37.466617460448,
+      "longitude": -105.881735837488,
+      "matched_division_ids": [
+        "division-co-alamosa-ward-3"
+      ],
+      "result": true,
+      "test_id": "addrtest-co-alamosa-ward-3-jardin-hermosa"
+    },
+    {
+      "address": "1000 Twentieth St, Alamosa, CO 81101",
+      "city": "alamosa",
+      "expected_division_id": "division-co-alamosa-ward-4",
+      "geocode_match": "1000 Twentieth St, Alamosa, Colorado, 81101",
+      "geocode_score": 100,
+      "latitude": 37.450472175819,
+      "longitude": -105.871596972398,
+      "matched_division_ids": [
+        "division-co-alamosa-ward-4"
+      ],
+      "result": true,
+      "test_id": "addrtest-co-alamosa-ward-4-lee-fields"
+    },
+    {
+      "address": "8600 Wadsworth Boulevard, Arvada, CO 80003",
+      "city": "arvada",
+      "expected_division_id": "division-co-arvada-district-1",
+      "geocode_match": "8600 Wadsworth Blvd, Arvada, Colorado, 80003",
+      "geocode_score": 100,
+      "latitude": 39.854018953561,
+      "longitude": -105.079852708187,
+      "matched_division_ids": [
+        "division-co-arvada-district-1"
+      ],
+      "result": true,
+      "test_id": "addrtest-co-arvada-district-1-lake-arbor-golf"
+    },
+    {
+      "address": "7770 Pierce St, Arvada, CO 80003",
+      "city": "arvada",
+      "expected_division_id": "division-co-arvada-district-2",
+      "geocode_match": "7770 Pierce St, Arvada, Colorado, 80003",
+      "geocode_score": 100,
+      "latitude": 39.838944352157,
+      "longitude": -105.070395406834,
+      "matched_division_ids": [
+        "division-co-arvada-district-2"
+      ],
+      "result": true,
+      "test_id": "addrtest-co-arvada-district-2-little-dry-creek"
+    },
+    {
+      "address": "12140 W 57th Ave, Arvada, CO 80002",
+      "city": "arvada",
+      "expected_division_id": "division-co-arvada-district-3",
+      "geocode_match": "12140 W 57th Ave, Arvada, Colorado, 80002",
+      "geocode_score": 100,
+      "latitude": 39.799440149124,
+      "longitude": -105.134618638612,
+      "matched_division_ids": [
+        "division-co-arvada-district-3"
+      ],
+      "result": true,
+      "test_id": "addrtest-co-arvada-district-3-little-raven"
+    },
+    {
+      "address": "6655 Quaker Street, Arvada, CO 80007",
+      "city": "arvada",
+      "expected_division_id": "division-co-arvada-district-4",
+      "geocode_match": "6655 Quaker St, Arvada, Colorado, 80007",
+      "geocode_score": 100,
+      "latitude": 39.816501932133,
+      "longitude": -105.18539000544,
+      "matched_division_ids": [
+        "division-co-arvada-district-4"
+      ],
+      "result": true,
+      "test_id": "addrtest-co-arvada-district-4-west-woods"
+    }
+  ],
+  "result": true,
+  "simplification": {
+    "method": "shapely.simplify(preserve_topology=True)",
+    "tolerance_degrees": 1e-05
+  },
+  "sources": {
+    "alamosa": {
+      "app_id": "debd2347c9b647878a46a98f58a712a4",
+      "artifact_path": "data/reference/co/electoral_geometry/alamosa_wards.geojson",
+      "division_ids": [
+        "division-co-alamosa-ward-1",
+        "division-co-alamosa-ward-2",
+        "division-co-alamosa-ward-3",
+        "division-co-alamosa-ward-4"
+      ],
+      "feature_count": 4,
+      "layer_title": "Wards",
+      "layer_url": "https://services2.arcgis.com/kQ9CrbL3URg6t3jo/arcgis/rest/services/Wards/FeatureServer/0",
+      "sha256": "a835871b1428ffa145a5dbff217ba591b5b984ab581f603bbb06c2bdd4a61df8",
+      "source_id": "src-co-alamosa-ward-feature-service-2026-09-26",
+      "webmap_id": "1c72c2e09c2d40d1955a08b9b42f02d1",
+      "webmap_title": "Ward Map"
+    },
+    "arvada": {
+      "app_id": "332a7eba6a4641999d278cfa6ee149f4",
+      "artifact_path": "data/reference/co/electoral_geometry/arvada_council_districts.geojson",
+      "division_ids": [
+        "division-co-arvada-district-1",
+        "division-co-arvada-district-2",
+        "division-co-arvada-district-3",
+        "division-co-arvada-district-4"
+      ],
+      "feature_count": 4,
+      "layer_title": "City Council Districts",
+      "layer_url": "https://maps.arvada.org/arcgis/rest/services/CMO/City_Council/MapServer/1",
+      "sha256": "8d2ee02cacdb10570e1a9f189fe4020878d97959596a18c643171ea68c9e5276",
+      "source_id": "src-co-arvada-council-mapserver-2026-09-26",
+      "webmap_id": "7aaa9ec0a1994708991b4506214cf13e",
+      "webmap_title": "City Council Districts"
+    }
+  },
+  "workflow_head_sha": "95f5d16b7427719a4a5fe0e8b1add840e1e2c314",
+  "workflow_run_id": "36263812652"
+}
