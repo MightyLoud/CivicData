@@ -38,6 +38,17 @@ jobs:
 
           app_meta = get(f"{base}/{app_id}?f=json")
           app_data = get(f"{base}/{app_id}/data?f=json")
+          webmap_id = str((app_data.get("values") or {}).get("webmap") or "")
+          webmap_meta = (
+              get(f"{base}/{webmap_id}?f=json")
+              if len(webmap_id) == 32
+              else None
+          )
+          webmap_data = (
+              get(f"{base}/{webmap_id}/data?f=json")
+              if len(webmap_id) == 32
+              else None
+          )
           ids = sorted(
               set(
                   re.findall(
@@ -66,6 +77,9 @@ jobs:
           out = {
               "app_metadata": app_meta,
               "app_data": app_data,
+              "webmap_id": webmap_id,
+              "webmap_metadata": webmap_meta,
+              "webmap_data": webmap_data,
               "referenced_items": items,
           }
           Path("geometry-artifact/arvada_app_discovery.json").write_text(
