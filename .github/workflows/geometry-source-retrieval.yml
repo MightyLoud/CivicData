@@ -221,20 +221,30 @@ jobs:
               return " ".join(text.split())
 
           alamosa_address_targets = {
-              "addrtest-co-alamosa-ward-1-cattails": (500, ("COTTONWOOD",)),
-              "addrtest-co-alamosa-ward-2-carroll-park": (860, ("CRAFT",)),
+              "addrtest-co-alamosa-ward-1-cattails": (
+                  500,
+                  ("COTTONWOOD",),
+                  ("CATTAILS", "GOLF"),
+              ),
+              "addrtest-co-alamosa-ward-2-carroll-park": (
+                  860,
+                  ("CRAFT",),
+                  ("CARROLL", "PARK"),
+              ),
               "addrtest-co-alamosa-ward-3-jardin-hermosa": (
                   1555,
                   ("SIXTH", "6TH"),
+                  ("JARDIN", "HERMOSA"),
               ),
               "addrtest-co-alamosa-ward-4-lee-fields": (
                   1000,
                   ("TWENTIETH", "20TH"),
+                  ("LEE", "FIELD"),
               ),
           }
 
           def alamosa_point(test_id):
-              house, street_tokens = alamosa_address_targets[test_id]
+              house, street_tokens, name_tokens = alamosa_address_targets[test_id]
               candidates = []
               for feature in address_features:
                   props = feature.get("properties") or {}
@@ -256,12 +266,17 @@ jobs:
                           )
                       )
                   )
-                  if any(token in haystack for token in street_tokens):
+                  name_haystack = normalize_text(props.get("NAME"))
+                  if (
+                      any(token in haystack for token in street_tokens)
+                      and all(token in name_haystack for token in name_tokens)
+                  ):
                       candidates.append(feature)
               assert len(candidates) == 1, (
                   test_id,
                   house,
                   street_tokens,
+                  name_tokens,
                   [feature.get("properties") for feature in address_features],
               )
               feature = candidates[0]
