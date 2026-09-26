@@ -1,0 +1,2 @@
+crosswalk_id,entity_id,entity_type,external_id,external_url,id_type,jurisdiction_id,notes,source_id,status,system,verified_at
+xw-hi-hawaii-county-geoid,jurisdiction-hi-hawaii-county,Jurisdiction,15001,https://tigerweb.geo.census.gov/tigerwebmain/Files/bas26/tigerweb_bas26_county_hi.html,COUNTY_GEOID,jurisdiction-hi-hawaii-county,Governed county GEOID retained from official BAS26 county inventory.,src-hi-hawaii-census-county-20260823,VERIFIED,US_CENSUS,46257

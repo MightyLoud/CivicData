@@ -1,0 +1,2 @@
+body_id,body_type,branch,jurisdiction_id,name,notes,official_url,row_updated_at,scope_version,source_ids,status
+body-hi-honolulu-city-council,CITY_COUNTY_COUNCIL,LEGISLATIVE,jurisdiction-hi-honolulu-county,Honolulu City Council,Current legislative body of the single consolidated City and County government; no duplicate city-government body created.,https://www.honolulucitycouncil.org/,46257,HI-NORM-001,src-hi-honolulu-city-council-roster-20260823;src-hi-honolulu-charter-20260823,ACTIVE

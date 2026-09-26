@@ -1,0 +1,3 @@
+blocking,entity_id,entity_type,jurisdiction_id,message,type
+False,jurisdiction-hi-honolulu-county,Jurisdiction,jurisdiction-hi-honolulu-county,Honolulu is modeled as one consolidated City and County government; no duplicate city-government graph is created.,CONSOLIDATED_GOVERNMENT
+False,jurisdiction-hi-honolulu-county,Jurisdiction,jurisdiction-hi-honolulu-county,Exact current-holder selection/start/end dates are not inferred in v0.1; CURRENT/HIGH holder relationships are source-backed.,TENURE_INTERVAL_UNRESOLVED

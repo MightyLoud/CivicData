@@ -1,0 +1,2 @@
+crosswalk_id,entity_id,entity_type,external_id,external_url,id_type,jurisdiction_id,notes,source_id,status,system,verified_at
+xwalk-hi-kalawao-county-census-geoid,jurisdiction-hi-kalawao-county,Jurisdiction,15005,https://tigerweb.geo.census.gov/tigerwebmain/Files/bas26/tigerweb_bas26_county_hi.html,COUNTY_GEOID,jurisdiction-hi-kalawao-county,Canonical Current/BAS26 county-equivalent identifier crosswalk.,src-hi-kalawao-census-county-20260823,VERIFIED,US_CENSUS,46257

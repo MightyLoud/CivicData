@@ -1,0 +1,3 @@
+blocking,entity_id,entity_type,jurisdiction_id,message,type
+False,jurisdiction-hi-kalawao-county,Jurisdiction,jurisdiction-hi-kalawao-county,Kalawao is preserved as the current state-administered county-equivalent with zero ordinary elected county offices; no synthetic local mayor/council is created.,STATE_ADMINISTERED_STRUCTURAL_EXCEPTION
+False,jurisdiction-hi-kalawao-county,Jurisdiction,jurisdiction-hi-kalawao-county,Act 171 (2026) is treated as future-triggered transition authority and is not applied before its statutory trigger.,FUTURE_TRANSITION_NOT_APPLIED

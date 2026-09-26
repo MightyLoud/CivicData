@@ -1,0 +1,3 @@
+blocking,entity_id,entity_type,jurisdiction_id,message,type
+False,jurisdiction-hi-kauai-county,Jurisdiction,jurisdiction-hi-kauai-county,Kauaʻi Council is modeled as one seven-seat unnumbered countywide at-large office; synthetic RAW numeric seat ordering is not promoted.,MULTI_SEAT_UNNUMBERED_OFFICE
+False,jurisdiction-hi-kauai-county,Jurisdiction,jurisdiction-hi-kauai-county,Exact current-holder selection/start/end dates are not inferred in v0.1; CURRENT/HIGH holder relationships are source-backed.,TENURE_INTERVAL_UNRESOLVED

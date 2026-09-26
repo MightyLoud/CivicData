@@ -1,0 +1,2 @@
+blocking,entity_id,entity_type,jurisdiction_id,message,type
+False,jurisdiction-hi-hawaii-county,Jurisdiction,jurisdiction-hi-hawaii-county,Exact current-holder selection/start/end dates are not inferred in v0.1; CURRENT/HIGH holder relationships are source-backed.,TENURE_INTERVAL_UNRESOLVED
