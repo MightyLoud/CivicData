@@ -1,0 +1,28 @@
+{
+  "artifacts": {
+    "patch": "akron_civicpatch_upstream.patch",
+    "pr_body": "UPSTREAM_PR_BODY.md",
+    "review_checklist": "UPSTREAM_REVIEW_CHECKLIST.md"
+  },
+  "candidate": {
+    "candidate_blob_sha": "ac9a96cdb8c7052cb6681844cbdafbacdca2ee27",
+    "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:co/place:akron/government",
+    "source_path": "candidates/civicpatch/akron_v0.1/place_akron.yml",
+    "upstream_base_blob_sha": "3c335cac8e5d07fb18b67db70aa12c7dc1d7a7d7"
+  },
+  "generated_at": "2026-09-26T15:35:00Z",
+  "handoff_version": "0.1",
+  "submission": {
+    "pr_not_submitted": true,
+    "requires_fork_or_maintainer_branch": true,
+    "upstream_write_authorized": false
+  },
+  "upstream": {
+    "branch": "main",
+    "commit": "69331c2b0d97e13695dab07ec1d6a969c99a3e4d",
+    "connected_account_push_permission": false,
+    "repository": "CivicPatch/open-data",
+    "target_blob_sha": "3c335cac8e5d07fb18b67db70aa12c7dc1d7a7d7",
+    "target_path": "data/co/local/place_akron.yml"
+  }
+}
