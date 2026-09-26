@@ -10,6 +10,20 @@ import urllib.parse
 import urllib.request
 
 ARVADA_ITEM = "a6bfdc31a8dd4e128d388032fe5a0bf6"
+ARVADA_SERVICE = "https://services1.arcgis.com/eQyVgDz2cjhzbzN7/arcgis/rest/services/Council_Districts/FeatureServer"
+ALAMOSA_ITEM = "ef74f0c6ea8f45328b894c30b3120dda"
+ALAMOSA_SERVICE = "https://services2.arcgis.com/kQ9CrbL3URg6t3jo/arcgis/rest/services/Wards/FeatureServer"
+
+DISTRICT_ADDRESSES = [
+    ("alamosa", "ward:1", "500 Cottonwood Dr, Alamosa, CO 81101"),
+    ("alamosa", "ward:2", "860 Craft Dr, Alamosa, CO 81101"),
+    ("alamosa", "ward:3", "1555 W Sixth St, Alamosa, CO 81101"),
+    ("alamosa", "ward:4", "1000 Twentieth St, Alamosa, CO 81101"),
+    ("arvada", "council_district:1", "8600 Wadsworth Boulevard, Arvada, CO 80003"),
+    ("arvada", "council_district:2", "7770 Pierce St, Arvada, CO 80003"),
+    ("arvada", "council_district:3", "12140 W 57th Ave, Arvada, CO 80002"),
+    ("arvada", "council_district:4", "6655 Quaker Street, Arvada, CO 80007"),
+]
 
 
 def get_json(url: str, *, allow_empty: bool = False) -> dict:
@@ -73,11 +87,95 @@ def collect_urls(value, prefix=""):
     return out
 
 
+
+def feature_service_summary(name: str, service_url: str) -> None:
+    print(f"=== FEATURE SERVICE {name} ===")
+    service = get_json(service_url + "?f=json")
+    print(json.dumps({
+        "serviceDescription": service.get("serviceDescription"),
+        "layers": service.get("layers"),
+        "tables": service.get("tables"),
+        "fullExtent": service.get("fullExtent"),
+        "initialExtent": service.get("initialExtent"),
+    }, sort_keys=True))
+    for layer in service.get("layers", []):
+        layer_id = layer.get("id")
+        layer_url = f"{service_url}/{layer_id}"
+        meta = get_json(layer_url + "?f=json")
+        print("LAYER_META=" + json.dumps({
+            "service": name,
+            "id": layer_id,
+            "name": meta.get("name"),
+            "geometryType": meta.get("geometryType"),
+            "objectIdField": meta.get("objectIdField"),
+            "displayField": meta.get("displayField"),
+            "fields": [
+                {
+                    "name": field.get("name"),
+                    "alias": field.get("alias"),
+                    "type": field.get("type"),
+                }
+                for field in meta.get("fields", [])
+            ],
+            "drawingInfo": meta.get("drawingInfo"),
+            "extent": meta.get("extent"),
+            "editingInfo": meta.get("editingInfo"),
+        }, sort_keys=True))
+        params = urllib.parse.urlencode({
+            "where": "1=1",
+            "outFields": "*",
+            "returnGeometry": "false",
+            "f": "json",
+        })
+        attrs = get_json(layer_url + "/query?" + params)
+        print("LAYER_ATTRIBUTES=" + json.dumps({
+            "service": name,
+            "id": layer_id,
+            "features": [row.get("attributes") for row in attrs.get("features", [])],
+        }, sort_keys=True))
+
+
+def geocode_address(label: str, address: str) -> None:
+    params = urllib.parse.urlencode({
+        "SingleLine": address,
+        "f": "json",
+        "outFields": "Match_addr,Addr_type",
+        "maxLocations": 3,
+    })
+    url = (
+        "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/"
+        "findAddressCandidates?" + params
+    )
+    payload = get_json(url)
+    print("GEOCODE=" + json.dumps({
+        "label": label,
+        "address": address,
+        "candidates": [
+            {
+                "address": row.get("address"),
+                "score": row.get("score"),
+                "location": row.get("location"),
+                "attributes": row.get("attributes"),
+            }
+            for row in payload.get("candidates", [])
+        ],
+    }, sort_keys=True))
+
 def main() -> int:
     print("=== ARVADA OFFICIAL HUB ITEM ===")
     item = arcgis_item(ARVADA_ITEM)
     print(json.dumps(summarize_item(item["meta"]), sort_keys=True))
     print("ARVADA_EMBEDDED_SERVICE_URLS=" + json.dumps(collect_urls(item["data"]), sort_keys=True))
+
+    alamosa = arcgis_item(ALAMOSA_ITEM)
+    print("=== ALAMOSA OFFICIAL FEATURE ITEM ===")
+    print(json.dumps(summarize_item(alamosa["meta"]), sort_keys=True))
+
+    feature_service_summary("ARVADA", ARVADA_SERVICE)
+    feature_service_summary("ALAMOSA", ALAMOSA_SERVICE)
+
+    for city, division, address in DISTRICT_ADDRESSES:
+        geocode_address(f"{city}:{division}", address)
 
     queries = [
         'title:"Council Districts" Arvada',
