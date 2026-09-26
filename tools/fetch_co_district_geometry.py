@@ -393,12 +393,32 @@ def _geometry_rings(geometry: Mapping[str, Any]) -> list[list[list[float]]]:
     return []
 
 
+def _ring_signed_area(ring: list[list[float]]) -> float:
+    return 0.5 * sum(
+        first[0] * second[1] - second[0] * first[1]
+        for first, second in zip(ring, ring[1:])
+    )
+
+
 def geometry_contains(geometry: Mapping[str, Any], x: float, y: float) -> bool:
-    # ArcGIS can encode multipart Esri rings as separate GeoJSON polygon parts,
-    # including hole rings. Even/odd parity across every ring in the feature is
-    # stable regardless of ring ordering or Polygon/MultiPolygon grouping.
+    # ArcGIS -> GeoJSON can emit multipart hole rings as separate polygon
+    # members. Ring orientation is preserved, but the exterior orientation can
+    # differ by service. Treat the largest absolute-area ring as the exterior
+    # orientation for that feature; same-orientation rings add shells/islands
+    # and opposite-orientation rings subtract holes.
     rings = _geometry_rings(geometry)
-    return sum(_ring_contains(ring, x, y) for ring in rings) % 2 == 1
+    if not rings:
+        return False
+    areas = [_ring_signed_area(ring) for ring in rings]
+    exterior_area = max(areas, key=lambda value: abs(value))
+    exterior_sign = 1 if exterior_area > 0 else -1
+    score = 0
+    for ring, area in zip(rings, areas):
+        if not _ring_contains(ring, x, y):
+            continue
+        ring_sign = 1 if area > 0 else -1
+        score += 1 if ring_sign == exterior_sign else -1
+    return score > 0
 
 
 def geocode_address(address: str) -> dict[str, Any]:
