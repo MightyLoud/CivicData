@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civicdata.tech/schemas/seegov_partner_snapshot_v0.1.schema.json",
+  "title": "SeeGov Partner Snapshot v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot_id",
+    "captured_at",
+    "jurisdiction_ocdid",
+    "meetings"
+  ],
+  "properties": {
+    "snapshot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "jurisdiction_ocdid": {
+      "type": "string",
+      "pattern": "^ocd-jurisdiction/"
+    },
+    "meetings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/meeting"
+      }
+    }
+  },
+  "$defs": {
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject_type",
+        "field_path",
+        "value"
+      ],
+      "properties": {
+        "observation_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subject_type": {
+          "enum": [
+            "person",
+            "organization",
+            "membership",
+            "post"
+          ]
+        },
+        "field_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {},
+        "asserted_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "evidence_locator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_captured_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "speaker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "person_external_id",
+        "display_name",
+        "representation_observations"
+      ],
+      "properties": {
+        "person_external_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "display_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "representation_observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/observation"
+          }
+        }
+      }
+    },
+    "meeting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "meeting_id",
+        "organization_external_id",
+        "started_at",
+        "source_url",
+        "speakers"
+      ],
+      "properties": {
+        "meeting_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "organization_external_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "video_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "transcript_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "agenda_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "moments": {
+          "type": "array",
+          "items": {}
+        },
+        "vote_outcomes": {
+          "type": "array",
+          "items": {}
+        },
+        "speakers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/speaker"
+          }
+        }
+      }
+    }
+  }
+}
