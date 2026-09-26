@@ -1,0 +1,132 @@
+{
+  "contract_version": "0.1",
+  "cases": [
+    {
+      "id": "millbury-chair",
+      "input": {
+        "formal_role_id": "select-board-member",
+        "formal_role_label": "Select Board Member",
+        "base_division_ocdid": "ocd-division/country:us/state:ma/place:millbury",
+        "source_title": "Chair",
+        "classification": "INTERNAL_TITLE",
+        "seats": 5,
+        "active_memberships": 5
+      },
+      "expect": {
+        "role_id": "select-board-member",
+        "role_label": "Select Board Member",
+        "division_ocdid": "ocd-division/country:us/state:ma/place:millbury",
+        "membership_label": "Chair",
+        "designations": [],
+        "vacancy_count": 0
+      }
+    },
+    {
+      "id": "millbury-vice-chair",
+      "input": {
+        "formal_role_id": "select-board-member",
+        "formal_role_label": "Select Board Member",
+        "base_division_ocdid": "ocd-division/country:us/state:ma/place:millbury",
+        "source_title": "Vice Chair",
+        "classification": "INTERNAL_TITLE",
+        "seats": 5,
+        "active_memberships": 5
+      },
+      "expect": {
+        "role_id": "select-board-member",
+        "role_label": "Select Board Member",
+        "division_ocdid": "ocd-division/country:us/state:ma/place:millbury",
+        "membership_label": "Vice Chair",
+        "designations": [],
+        "vacancy_count": 0
+      }
+    },
+    {
+      "id": "akron-mayor-pro-tem",
+      "input": {
+        "formal_role_id": "trustee",
+        "formal_role_label": "Trustee",
+        "base_division_ocdid": "ocd-division/country:us/state:co/place:akron",
+        "source_title": "Mayor Pro Tem",
+        "classification": "INTERNAL_TITLE",
+        "seats": 6,
+        "active_memberships": 6
+      },
+      "expect": {
+        "role_id": "trustee",
+        "role_label": "Trustee",
+        "division_ocdid": "ocd-division/country:us/state:co/place:akron",
+        "membership_label": "Mayor Pro Tem",
+        "designations": [],
+        "vacancy_count": 0
+      }
+    },
+    {
+      "id": "district-1-geographic-post",
+      "input": {
+        "formal_role_id": "council-member",
+        "formal_role_label": "Council Member",
+        "base_division_ocdid": "ocd-division/country:us/state:wa/place:tacoma",
+        "source_title": "Council Member",
+        "classification": "FORMAL_ROLE",
+        "seats": 1,
+        "active_memberships": 1,
+        "seat_designation": "District 1",
+        "seat_is_geographic": true,
+        "geographic_division_ocdid": "ocd-division/country:us/state:wa/place:tacoma/council_district:1"
+      },
+      "expect": {
+        "role_id": "council-member",
+        "role_label": "Council Member",
+        "division_ocdid": "ocd-division/country:us/state:wa/place:tacoma/council_district:1",
+        "membership_label": null,
+        "designations": [],
+        "vacancy_count": 0
+      }
+    },
+    {
+      "id": "seat-2-nongeographic-designation",
+      "input": {
+        "formal_role_id": "council-member",
+        "formal_role_label": "Council Member",
+        "base_division_ocdid": "ocd-division/country:us/state:tx/place:example",
+        "source_title": "Council Member",
+        "classification": "FORMAL_ROLE",
+        "seats": 5,
+        "active_memberships": 4,
+        "seat_designation": "Seat 2",
+        "seat_is_geographic": false
+      },
+      "expect": {
+        "role_id": "council-member",
+        "role_label": "Council Member",
+        "division_ocdid": "ocd-division/country:us/state:tx/place:example",
+        "membership_label": null,
+        "designations": [
+          "Seat 2"
+        ],
+        "vacancy_count": 1
+      }
+    },
+    {
+      "id": "millbury-bad-source-title-raw-only",
+      "input": {
+        "formal_role_id": "select-board-member",
+        "formal_role_label": "Select Board Member",
+        "base_division_ocdid": "ocd-division/country:us/state:ma/place:millbury",
+        "source_title": "Council Member",
+        "classification": "RAW_ONLY",
+        "seats": 5,
+        "active_memberships": 4
+      },
+      "expect": {
+        "role_id": "select-board-member",
+        "role_label": "Select Board Member",
+        "division_ocdid": "ocd-division/country:us/state:ma/place:millbury",
+        "membership_label": null,
+        "designations": [],
+        "vacancy_count": 1
+      }
+    }
+  ]
+}
