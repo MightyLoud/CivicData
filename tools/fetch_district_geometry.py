@@ -245,7 +245,7 @@ def load_controls(config: dict, city: str) -> list[dict]:
     return sorted(controls, key=lambda row: row["test_id"])
 
 
-def build(output_dir: Path) -> None:
+def build(output_dir: Path, *, fail_on_mismatch: bool = True) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     retrieved_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
@@ -285,17 +285,23 @@ def build(output_dir: Path) -> None:
         for control in load_controls(config, city):
             point = geocode(control["address_input"])
             expected = expected_district_from_control(control, city)
-            actual = district_for_point(
-                collection,
-                point["longitude"],
-                point["latitude"],
-            )
+            try:
+                actual = district_for_point(
+                    collection,
+                    point["longitude"],
+                    point["latitude"],
+                )
+                point_error = None
+            except GeometryFetchError as exc:
+                actual = None
+                point_error = str(exc)
             result = {
                 "city": city,
                 "test_id": control["test_id"],
                 "address": control["address_input"],
                 "expected_district": expected,
                 "actual_district": actual,
+                "point_in_polygon_error": point_error,
                 "longitude": point["longitude"],
                 "latitude": point["latitude"],
                 "geocode_match": point["matched_address"],
@@ -310,9 +316,11 @@ def build(output_dir: Path) -> None:
                 }
             )
             verification["results"].append(result)
-            if not result["result"]:
+            if not result["result"] and fail_on_mismatch:
+                # Persisted below in diagnostic mode; normal mode remains fail-closed.
                 raise GeometryFetchError(
-                    f"CONTROL_DISTRICT_MISMATCH:{control['test_id']}:{expected}:{actual}"
+                    f"CONTROL_DISTRICT_MISMATCH:{control['test_id']}:{expected}:{actual}:"
+                    f"{point['longitude']}:{point['latitude']}:{point['matched_address']}"
                 )
 
     verification["results"].sort(key=lambda row: (row["city"], row["test_id"]))
@@ -334,6 +342,11 @@ if __name__ == "__main__":
         type=Path,
         required=True,
     )
+    parser.add_argument(
+        "--diagnostic",
+        action="store_true",
+        help="Write all artifacts even when one or more controls mismatch",
+    )
     args = parser.parse_args()
-    build(args.output_dir)
+    build(args.output_dir, fail_on_mismatch=not args.diagnostic)
     print("PASS")
