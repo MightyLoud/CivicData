@@ -31,6 +31,74 @@ jobs:
           curl -fsSL --retry 3 --retry-all-errors             'https://maps.arvada.org/arcgis/rest/services/CMO/City_Council/MapServer/1/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson'             -o data/geometry/co/source/arvada_council_districts_arcgis_2026-09-26.geojson
           curl -fsSL --retry 3 --retry-all-errors             'https://services2.arcgis.com/kQ9CrbL3URg6t3jo/ArcGIS/rest/services/AddressForWebApp/FeatureServer/0/query?where=HOUSE_NUM%20IN%20(500%2C860%2C1000%2C1555)&outFields=OBJECTID%2CHOUSE_NUM%2CSTREET_NAM%2CSTREET_TYP%2CADDRESS%2CLABEL%2CNAME%2CSTATUS&returnGeometry=true&outSR=4326&f=geojson'             -o /tmp/alamosa-addresses.geojson
 
+      - name: Discover City of Arvada point-source services
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import urllib.parse
+          import urllib.request
+
+          ROOT = "https://maps.arvada.org/arcgis/rest/services"
+          keywords = (
+              "address", "park", "golf", "facility", "facilities",
+              "parcel", "property", "site", "recreation"
+          )
+
+          def get(url):
+              joiner = "&" if "?" in url else "?"
+              with urllib.request.urlopen(url + joiner + "f=pjson", timeout=30) as response:
+                  return json.load(response)
+
+          root = get(ROOT)
+          folders = [str(x) for x in root.get("folders", [])]
+          candidates = []
+
+          def scan_catalog(base, label):
+              data = get(base)
+              for service in data.get("services", []):
+                  name = str(service.get("name") or "")
+                  kind = str(service.get("type") or "")
+                  haystack = (label + " " + name).lower()
+                  if any(keyword in haystack for keyword in keywords):
+                      candidates.append((name, kind))
+                      print("ARVADA_SERVICE", name, kind)
+
+          scan_catalog(ROOT, "root")
+          for folder in folders:
+              try:
+                  scan_catalog(
+                      ROOT + "/" + urllib.parse.quote(folder, safe=""),
+                      folder,
+                  )
+              except Exception as exc:
+                  print("ARVADA_FOLDER_SKIP", folder, type(exc).__name__, str(exc))
+
+          seen = set()
+          for name, kind in candidates:
+              key = (name, kind)
+              if key in seen:
+                  continue
+              seen.add(key)
+              service_url = ROOT + "/" + name + "/" + kind
+              try:
+                  meta = get(service_url)
+              except Exception as exc:
+                  print("ARVADA_SERVICE_META_SKIP", service_url, type(exc).__name__, str(exc))
+                  continue
+              for layer in (meta.get("layers") or []) + (meta.get("tables") or []):
+                  layer_id = layer.get("id")
+                  layer_name = str(layer.get("name") or "")
+                  haystack = (name + " " + layer_name).lower()
+                  if any(keyword in haystack for keyword in keywords):
+                      print(
+                          "ARVADA_LAYER",
+                          service_url + "/" + str(layer_id),
+                          json.dumps(layer, sort_keys=True),
+                      )
+          PY
+
       - name: Build governed snapshots and Census-geocoded PIP controls
         shell: bash
         run: |
