@@ -106,6 +106,41 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
             }.issubset(arvada_ids)
         )
 
+    def test_every_address_control_references_committed_boundary_evidence(self):
+        for path in discover_packages(ROOT):
+            package = load(path)
+            source_ids = {
+                row["source_id"]
+                for row in package.get("provenance", {}).get("source_evidence", [])
+            }
+            for control in package.get("qa", {}).get("address_tests", []):
+                with self.subTest(
+                    jurisdiction=package["jurisdiction"]["name"],
+                    test_id=control.get("test_id"),
+                ):
+                    self.assertIn(control.get("boundary_source_id"), source_ids)
+
+    def test_alamosa_and_arvada_warnings_are_narrowed_to_machine_readable_geometry(self):
+        expected = {
+            "Alamosa": "gap-co-alamosa-machine-readable-ward-geometry",
+            "Arvada": "gap-co-arvada-machine-readable-district-geometry",
+        }
+        for path in discover_packages(ROOT):
+            package = load(path)
+            name = package["jurisdiction"]["name"]
+            if name not in expected:
+                continue
+            warnings = package.get("warnings", [])
+            self.assertEqual(len(warnings), 1)
+            warning = warnings[0]
+            self.assertEqual(warning["gap_id"], expected[name])
+            self.assertEqual(
+                warning["gap_type"],
+                "MACHINE_READABLE_DISTRICT_GEOMETRY_NOT_ARCHIVED",
+            )
+            self.assertFalse(warning["blocking"])
+            self.assertEqual(warning["status"], "OPEN")
+
     def test_new_district_controls_select_citywide_plus_one_local_office(self):
         expectations = {
             "Alamosa": {
