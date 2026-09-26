@@ -27,9 +27,9 @@ LAYERS = {
     },
     "arvada": {
         "jurisdiction": "Arvada",
-        "layer_url": "https://services1.arcgis.com/YdUP5V6WwzeG8T8r/arcgis/rest/services/CouncilDistricts/FeatureServer/0",
-        "district_field": "COUNCIL_DISTRICT",
-        "fallback_fields": ["CNCL_ID", "CNCL", "CDID"],
+        "layer_url": "https://services1.arcgis.com/eQyVgDz2cjhzbzN7/arcgis/rest/services/Council_Districts/FeatureServer/1",
+        "district_field": "DISTRICT",
+        "fallback_fields": [],
         "expected": ["1", "2", "3", "4"],
         "package": "data/normalized/co/jurisdiction-co-arvada/jurisdiction.json",
         "test_prefix": "addrtest-co-arvada-district-",
