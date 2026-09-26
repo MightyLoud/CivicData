@@ -74,11 +74,10 @@ CONTROLS = [
         "address": "1555 W Sixth St, Alamosa, CO 81101",
     },
     {
-        "test_id": "addrtest-co-alamosa-ward-4-lee-fields",
+        "test_id": "addrtest-co-alamosa-ward-4-centennial-park",
         "jurisdiction": "alamosa",
         "division_id": "division-co-alamosa-ward-4",
-        "address": "1000 Twentieth St, Alamosa, CO 81101",
-        "geocode_address": "1000 20th St, Alamosa, CO 81101",
+        "address": "512 State Ave, Alamosa, CO 81101",
     },
     {
         "test_id": "addrtest-co-arvada-district-1-lake-arbor-golf",
