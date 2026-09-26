@@ -36,16 +36,15 @@ LAYERS = {
     "arvada": {
         "jurisdiction_id": "jurisdiction-co-arvada",
         "source_system": "City of Arvada ArcGIS",
-        "service_item_id": "99eeb87a31af46c49e7ea34e5a8c2e46",
-        "layer_url": (
-            "https://services.arcgis.com/j3zNT485kmwrBtMJ/ArcGIS/rest/services/"
-            "City_Council_Districts/FeatureServer/0"
-        ),
+        "instant_app_item_id": "332a7eba6a4641999d278cfa6ee149f4",
+        "service_item_id": None,
+        "layer_url": None,
         "number_field": "District",
         "name_field": "NAME",
         "division_template": "division-co-arvada-district-{number}",
         "output": "arvada_council_districts.geojson",
         "expected_numbers": [1, 2, 3, 4],
+        "expected_bbox": [-105.3, 39.6, -104.8, 40.0],
     },
 }
 
@@ -146,8 +145,183 @@ def _normalize_geometry(geometry: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _walk_item_ids(value: Any) -> set[str]:
+    found: set[str] = set()
+    if isinstance(value, Mapping):
+        for child in value.values():
+            found.update(_walk_item_ids(child))
+    elif isinstance(value, list):
+        for child in value:
+            found.update(_walk_item_ids(child))
+    elif isinstance(value, str):
+        stripped = value.strip()
+        if (
+            len(stripped) == 32
+            and all(char in "0123456789abcdefABCDEF" for char in stripped)
+        ):
+            found.add(stripped.lower())
+    return found
+
+
+def _walk_layer_candidates(value: Any) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    if isinstance(value, Mapping):
+        url = value.get("url")
+        title = value.get("title") or value.get("name")
+        item_id = value.get("itemId") or value.get("item_id")
+        if isinstance(url, str) and "FeatureServer" in url:
+            candidates.append(
+                {
+                    "url": url.rstrip("/"),
+                    "title": str(title or ""),
+                    "item_id": str(item_id or ""),
+                }
+            )
+        for child in value.values():
+            candidates.extend(_walk_layer_candidates(child))
+    elif isinstance(value, list):
+        for child in value:
+            candidates.extend(_walk_layer_candidates(child))
+    return candidates
+
+
+def _layer_bbox(collection: Mapping[str, Any]) -> list[float]:
+    points: list[list[float]] = []
+
+    def collect(value: Any) -> None:
+        if (
+            isinstance(value, list)
+            and len(value) >= 2
+            and all(isinstance(item, (int, float)) for item in value[:2])
+        ):
+            points.append([float(value[0]), float(value[1])])
+        elif isinstance(value, list):
+            for child in value:
+                collect(child)
+
+    for feature in collection.get("features", []):
+        if isinstance(feature, Mapping):
+            collect((feature.get("geometry") or {}).get("coordinates"))
+    if not points:
+        raise GeometryFetchError("LAYER_BBOX_EMPTY")
+    xs = [point[0] for point in points]
+    ys = [point[1] for point in points]
+    return [min(xs), min(ys), max(xs), max(ys)]
+
+
+def _bbox_within(actual: list[float], expected: list[float]) -> bool:
+    return (
+        actual[0] >= expected[0]
+        and actual[1] >= expected[1]
+        and actual[2] <= expected[2]
+        and actual[3] <= expected[3]
+    )
+
+
+def discover_arvada_layer() -> tuple[str, str]:
+    app_id = LAYERS["arvada"]["instant_app_item_id"]
+    base = "https://www.arcgis.com/sharing/rest/content/items"
+    app_data = _get_json(f"{base}/{app_id}/data?f=json")
+    item_ids = _walk_item_ids(app_data)
+
+    webmaps: list[tuple[str, Mapping[str, Any]]] = []
+    for item_id in sorted(item_ids):
+        metadata = _get_json(f"{base}/{item_id}?f=json")
+        if metadata.get("type") == "Web Map":
+            webmaps.append(
+                (
+                    item_id,
+                    _get_json(f"{base}/{item_id}/data?f=json"),
+                )
+            )
+
+    if not webmaps:
+        raise GeometryFetchError("ARVADA_WEBMAP_NOT_FOUND")
+
+    layer_candidates: list[dict[str, Any]] = []
+    for _, webmap_data in webmaps:
+        layer_candidates.extend(_walk_layer_candidates(webmap_data))
+
+    # Operational layers can also be referenced by itemId only.
+    for item_id in sorted(
+        {
+            candidate["item_id"]
+            for candidate in layer_candidates
+            if candidate.get("item_id")
+        }
+        | set().union(*(_walk_item_ids(data) for _, data in webmaps))
+    ):
+        metadata = _get_json(f"{base}/{item_id}?f=json")
+        url = metadata.get("url")
+        if isinstance(url, str) and "FeatureServer" in url:
+            layer_candidates.append(
+                {
+                    "url": url.rstrip("/"),
+                    "title": str(metadata.get("title") or ""),
+                    "item_id": item_id,
+                }
+            )
+
+    seen: set[str] = set()
+    for candidate in layer_candidates:
+        title = candidate.get("title", "").lower()
+        if "district" not in title and "council" not in title:
+            continue
+        url = candidate["url"]
+        if url in seen:
+            continue
+        seen.add(url)
+        layer_url = url if url.rsplit("/", 1)[-1].isdigit() else url + "/0"
+        try:
+            query = urlencode(
+                {
+                    "where": "1=1",
+                    "outFields": "*",
+                    "returnGeometry": "true",
+                    "outSR": "4326",
+                    "f": "geojson",
+                }
+            )
+            collection = _get_json(f"{layer_url}/query?{query}")
+            if collection.get("type") != "FeatureCollection":
+                continue
+            bbox = _layer_bbox(collection)
+            if not _bbox_within(bbox, LAYERS["arvada"]["expected_bbox"]):
+                continue
+            properties = [
+                feature.get("properties") or {}
+                for feature in collection.get("features", [])
+                if isinstance(feature, Mapping)
+            ]
+            numbers = sorted(
+                {
+                    int(props["District"])
+                    for props in properties
+                    if props.get("District") not in (None, "")
+                }
+            )
+            if numbers != [1, 2, 3, 4]:
+                continue
+            metadata = _get_json(
+                f"{url.rsplit('/FeatureServer', 1)[0]}/FeatureServer?f=json"
+            )
+            return layer_url, str(
+                candidate.get("item_id")
+                or metadata.get("serviceItemId")
+                or ""
+            )
+        except (GeometryFetchError, KeyError, TypeError, ValueError):
+            continue
+
+    raise GeometryFetchError("ARVADA_DISTRICT_LAYER_NOT_FOUND")
+
+
 def fetch_layer(key: str) -> dict[str, Any]:
-    spec = LAYERS[key]
+    spec = dict(LAYERS[key])
+    if key == "arvada":
+        layer_url, service_item_id = discover_arvada_layer()
+        spec["layer_url"] = layer_url
+        spec["service_item_id"] = service_item_id
     params = urlencode(
         {
             "where": "1=1",
@@ -205,6 +379,7 @@ def fetch_layer(key: str) -> dict[str, Any]:
             "jurisdiction_id": spec["jurisdiction_id"],
             "source_system": spec["source_system"],
             "service_item_id": spec["service_item_id"],
+            "instant_app_item_id": spec.get("instant_app_item_id"),
             "layer_url": spec["layer_url"],
             "query": {
                 "where": "1=1",
@@ -253,21 +428,24 @@ def _ring_contains(ring: list[list[float]], x: float, y: float) -> bool:
     return inside
 
 
-def _polygon_contains(rings: list[list[list[float]]], x: float, y: float) -> bool:
-    if not rings or not _ring_contains(rings[0], x, y):
-        return False
-    return not any(_ring_contains(hole, x, y) for hole in rings[1:])
+def _geometry_rings(geometry: Mapping[str, Any]) -> list[list[list[float]]]:
+    if geometry.get("type") == "Polygon":
+        return list(geometry["coordinates"])
+    if geometry.get("type") == "MultiPolygon":
+        return [
+            ring
+            for polygon in geometry["coordinates"]
+            for ring in polygon
+        ]
+    return []
 
 
 def geometry_contains(geometry: Mapping[str, Any], x: float, y: float) -> bool:
-    if geometry.get("type") == "Polygon":
-        return _polygon_contains(geometry["coordinates"], x, y)
-    if geometry.get("type") == "MultiPolygon":
-        return any(
-            _polygon_contains(polygon, x, y)
-            for polygon in geometry["coordinates"]
-        )
-    return False
+    # ArcGIS can encode multipart Esri rings as separate GeoJSON polygon parts,
+    # including hole rings. Even/odd parity across every ring in the feature is
+    # stable regardless of ring ordering or Polygon/MultiPolygon grouping.
+    rings = _geometry_rings(geometry)
+    return sum(_ring_contains(ring, x, y) for ring in rings) % 2 == 1
 
 
 def geocode_address(address: str) -> dict[str, Any]:
