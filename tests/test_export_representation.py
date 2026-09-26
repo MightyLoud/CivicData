@@ -125,6 +125,27 @@ class GenericRepresentationConformanceTests(unittest.TestCase):
                 )
                 self.assertIn("civic_gps_runtime", consumer["untested_capabilities"])
 
+    def test_alma_nonblocking_conflict_remains_held_across_core_and_contract(self):
+        alma = ROOT / "data/normalized/co/jurisdiction-co-alma/jurisdiction.json"
+        result, payloads = evaluate_package(
+            alma,
+            root=ROOT,
+            generated_at=STAMP,
+        )
+        self.assertEqual(result["certification"], "certified")
+        core = payloads["canonical_core"]
+        held_core = [
+            row for row in core["assertions"]
+            if row["review_status"] == "NEEDS_EVIDENCE"
+        ]
+        self.assertEqual(len(held_core), 1)
+        contract = payloads["representation_contract"]
+        held_contract = [
+            row for row in contract["assertions"]
+            if row["review_status"] == "held"
+        ]
+        self.assertEqual(len(held_contract), 1)
+
     def test_contract_date_enrichment_is_visible_not_silent(self):
         akron = ROOT / "data/normalized/co/jurisdiction-co-akron/jurisdiction.json"
         result, _ = evaluate_package(
