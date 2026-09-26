@@ -18,6 +18,69 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Capture Arvada Instant App discovery metadata
+        run: |
+          mkdir -p geometry-artifact
+          python - <<'PY'
+          import json, re, urllib.request
+          from pathlib import Path
+
+          app_id = "332a7eba6a4641999d278cfa6ee149f4"
+          base = "https://www.arcgis.com/sharing/rest/content/items"
+
+          def get(url):
+              req = urllib.request.Request(
+                  url,
+                  headers={"User-Agent": "MightyLoud-CivicData-Geometry-Ingest/0.1"},
+              )
+              with urllib.request.urlopen(req, timeout=60) as response:
+                  return json.loads(response.read().decode())
+
+          app_meta = get(f"{base}/{app_id}?f=json")
+          app_data = get(f"{base}/{app_id}/data?f=json")
+          ids = sorted(
+              set(
+                  re.findall(
+                      r"(?i)\\b[0-9a-f]{32}\\b",
+                      json.dumps(app_data),
+                  )
+              )
+          )
+          items = []
+          for item_id in ids:
+              try:
+                  meta = get(f"{base}/{item_id}?f=json")
+                  row = {
+                      "id": item_id,
+                      "title": meta.get("title"),
+                      "type": meta.get("type"),
+                      "url": meta.get("url"),
+                      "owner": meta.get("owner"),
+                  }
+                  if meta.get("type") == "Web Map":
+                      row["data"] = get(f"{base}/{item_id}/data?f=json")
+                  items.append(row)
+              except Exception as exc:
+                  items.append({"id": item_id, "error": type(exc).__name__})
+
+          out = {
+              "app_metadata": app_meta,
+              "app_data": app_data,
+              "referenced_items": items,
+          }
+          Path("geometry-artifact/arvada_app_discovery.json").write_text(
+              json.dumps(out, indent=2, sort_keys=True) + "\n"
+          )
+          print(
+              json.dumps(
+                  [
+                      {key: value for key, value in row.items() if key != "data"}
+                      for row in items
+                  ],
+                  indent=2,
+              )
+          )
+          PY
       - name: Fetch and verify official polygons and control points
         run: |
           python tools/fetch_co_district_geometry.py \
