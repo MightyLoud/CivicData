@@ -26,6 +26,7 @@ from consumers.civicpatch.adapter import (
     validate_civicpatch_officials,
 )
 from consumers.empowered_vote.contract_v1 import validate_contract
+from consumers.empowered_vote.runtime_conformance import evaluate_governed_address_runtime
 from tools.canonical_representation_core import (
     CanonicalCoreError,
     from_jurisdiction_package,
@@ -226,6 +227,7 @@ def _consumer_result(
     semantic_notes: Sequence[str] = (),
     untested_capabilities: Sequence[str] = (),
     errors: Sequence[str] = (),
+    details: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     if status not in STATUSES:
         raise ConformanceError("STATUS_INVALID")
@@ -238,6 +240,7 @@ def _consumer_result(
         "semantic_notes": list(semantic_notes),
         "untested_capabilities": list(untested_capabilities),
         "errors": list(errors),
+        "details": dict(details) if isinstance(details, Mapping) else {},
     }
 
 
@@ -438,7 +441,7 @@ def evaluate_package(
             if contract is None:
                 result["consumers"][consumer] = _consumer_result(
                     "BLOCKED",
-                    mode="REPRESENTATION_CONTRACT_INPUT",
+                    mode="GOVERNED_ADDRESS_FIXTURE_RUNTIME",
                     errors=result["representation_contract"]["errors"],
                 )
                 continue
@@ -446,24 +449,45 @@ def evaluate_package(
             if ev_errors:
                 result["consumers"][consumer] = _consumer_result(
                     "BLOCKED",
-                    mode="REPRESENTATION_CONTRACT_INPUT",
+                    mode="GOVERNED_ADDRESS_FIXTURE_RUNTIME",
                     errors=ev_errors,
                 )
             else:
-                result["consumers"][consumer] = _consumer_result(
-                    "PASS",
-                    mode="REPRESENTATION_CONTRACT_INPUT",
-                    semantic_loss=result["representation_contract"]["semantic_loss"],
-                    identity_gaps=contract_identity_gaps,
-                    semantic_notes=result["representation_contract"]["semantic_notes"],
-                    untested_capabilities=[
-                        "address_resolution_without_binding_fixture",
-                        "civic_gps_runtime",
-                        "election_full_essentials"
-                        if "elections" not in contract
-                        else "none",
-                    ],
+                runtime = evaluate_governed_address_runtime(package, contract)
+                runtime_status = str(runtime.get("status") or "NOT_TESTED")
+                contract_loss = list(
+                    result["representation_contract"]["semantic_loss"]
                 )
+                if runtime_status == "BLOCKED":
+                    overall_status = "BLOCKED"
+                elif runtime_status == "LOSSY" or contract_loss:
+                    overall_status = "LOSSY"
+                elif runtime_status == "PASS":
+                    overall_status = "PASS"
+                else:
+                    overall_status = "NOT_TESTED"
+
+                untested = list(runtime.get("untested_capabilities") or [])
+                if "elections" not in contract:
+                    untested.append("election_full_essentials")
+
+                result["consumers"][consumer] = _consumer_result(
+                    overall_status,
+                    mode="GOVERNED_ADDRESS_FIXTURE_RUNTIME",
+                    semantic_loss=contract_loss,
+                    identity_gaps=contract_identity_gaps,
+                    geography_gaps=runtime.get("geography_gaps") or [],
+                    semantic_notes=result["representation_contract"]["semantic_notes"],
+                    untested_capabilities=sorted(set(untested)),
+                    errors=runtime.get("errors") or [],
+                    details={
+                        "controls_total": runtime.get("controls_total"),
+                        "controls_passed": runtime.get("controls_passed"),
+                        "controls_lossy": runtime.get("controls_lossy"),
+                        "controls_blocked": runtime.get("controls_blocked"),
+                    },
+                )
+                payloads["empowered_vote_runtime"] = runtime
 
         elif consumer == "civic_mirror":
             result["consumers"][consumer] = _consumer_result(
@@ -565,18 +589,20 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         "",
         f"Generated: `{report['generated_at']}`",
         "",
-        "| Jurisdiction | Certified | Core | Contract v1 | CivicPatch | Empowered Vote | Civic Mirror | SeeGov | Identity gaps | Semantic loss |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| Jurisdiction | Certified | Core | Contract v1 | CivicPatch | Empowered Vote | Civic Mirror | SeeGov | Identity gaps | Geography gaps | Semantic loss |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in report.get("results", []):
         consumers = row.get("consumers", {})
         identity_gaps = set()
         semantic_loss = set(row.get("representation_contract", {}).get("semantic_loss", []))
+        geography_gaps = set()
         for consumer in consumers.values():
             identity_gaps.update(consumer.get("identity_gaps", []))
+            geography_gaps.update(consumer.get("geography_gaps", []))
             semantic_loss.update(consumer.get("semantic_loss", []))
         lines.append(
-            "| {name} | {cert} | {core} | {contract} | {cp} | {ev} | {cm} | {sg} | {ig} | {sl} |".format(
+            "| {name} | {cert} | {core} | {contract} | {cp} | {ev} | {cm} | {sg} | {ig} | {gg} | {sl} |".format(
                 name=row.get("jurisdiction_name") or row.get("jurisdiction_id") or row.get("package_path"),
                 cert=row.get("certification"),
                 core=row.get("canonical_core", {}).get("status"),
@@ -586,6 +612,7 @@ def render_markdown(report: Mapping[str, Any]) -> str:
                 cm=consumers.get("civic_mirror", {}).get("status", "—"),
                 sg=consumers.get("seegov", {}).get("status", "—"),
                 ig=len(identity_gaps),
+                gg=len(geography_gaps),
                 sl=len(semantic_loss),
             )
         )
@@ -640,6 +667,11 @@ def write_artifacts(
         if "civicpatch_bundle" in payloads:
             (dest / "civicpatch_bundle.json").write_text(
                 pretty_json(payloads["civicpatch_bundle"]),
+                encoding="utf-8",
+            )
+        if "empowered_vote_runtime" in payloads:
+            (dest / "empowered_vote_runtime.json").write_text(
+                pretty_json(payloads["empowered_vote_runtime"]),
                 encoding="utf-8",
             )
         (dest / "conformance.json").write_text(
