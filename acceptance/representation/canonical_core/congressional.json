@@ -1,0 +1,154 @@
+{
+  "schema_version": "0.1",
+  "snapshot_id": "synthetic-congressional",
+  "jurisdictions": [
+    {
+      "jurisdiction_ocdid": "ocd-jurisdiction/country:us/government",
+      "division_ocdid": "ocd-division/country:us",
+      "name": "Synthetic Federal Government",
+      "level": "FEDERAL",
+      "record_status": "ACTIVE",
+      "parent_jurisdiction_ocdid": null,
+      "source_ids": [
+        "ev-congressional-1"
+      ]
+    }
+  ],
+  "divisions": [
+    {
+      "division_ocdid": "ocd-division/country:us",
+      "name": "United States Synthetic Fixture",
+      "division_type": "COUNTRY",
+      "record_status": "ACTIVE",
+      "parent_division_ocdid": null,
+      "source_ids": [
+        "ev-congressional-1"
+      ]
+    },
+    {
+      "division_ocdid": "ocd-division/country:us/state:zz",
+      "name": "Synthetic State",
+      "division_type": "STATE",
+      "record_status": "ACTIVE",
+      "parent_division_ocdid": "ocd-division/country:us",
+      "source_ids": [
+        "ev-congressional-1"
+      ]
+    },
+    {
+      "division_ocdid": "ocd-division/country:us/state:zz/cd:1",
+      "name": "Synthetic Congressional District 1",
+      "division_type": "CONGRESSIONAL_DISTRICT",
+      "record_status": "ACTIVE",
+      "parent_division_ocdid": "ocd-division/country:us/state:zz",
+      "source_ids": [
+        "ev-congressional-1"
+      ]
+    }
+  ],
+  "organizations": [
+    {
+      "organization_id": "org-synthetic-federal-house",
+      "jurisdiction_ocdid": "ocd-jurisdiction/country:us/government",
+      "name": "Synthetic Federal House",
+      "organization_type": "LEGISLATURE",
+      "record_status": "ACTIVE",
+      "parent_organization_id": null,
+      "source_ids": [
+        "ev-congressional-1"
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "role_id": "representative",
+      "label": "Representative",
+      "record_status": "ACTIVE",
+      "aliases": [],
+      "source_ids": [
+        "ev-congressional-1"
+      ]
+    }
+  ],
+  "posts": [
+    {
+      "post_id": "post-synthetic-congressional-1",
+      "organization_id": "org-synthetic-federal-house",
+      "role_id": "representative",
+      "division_ocdid": "ocd-division/country:us/state:zz/cd:1",
+      "seats": 1,
+      "selection_method": "ELECTED",
+      "record_status": "ACTIVE",
+      "source_ids": [
+        "ev-congressional-1"
+      ]
+    }
+  ],
+  "people": [
+    {
+      "person_id": "person-synthetic-congressional-1",
+      "name": "Synthetic Federal Legislator",
+      "record_status": "ACTIVE",
+      "source_ids": [
+        "ev-congressional-1"
+      ]
+    }
+  ],
+  "memberships": [
+    {
+      "membership_id": "membership-synthetic-congressional-1",
+      "person_id": "person-synthetic-congressional-1",
+      "post_id": "post-synthetic-congressional-1",
+      "membership_status": "CURRENT",
+      "start_date": null,
+      "end_date": null,
+      "label": null,
+      "designations": [],
+      "source_ids": [
+        "ev-congressional-1"
+      ],
+      "confidence": "HIGH"
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-congressional-1",
+      "source_url": "https://example.invalid/synthetic-congressional/source",
+      "source_class": "OFFICIAL",
+      "source_type": "SYNTHETIC_OFFICIAL_FIXTURE",
+      "retrieved_at": "2026-09-25T23:20:00-06:00",
+      "confidence": "HIGH"
+    }
+  ],
+  "assertions": [
+    {
+      "assertion_id": "assertion-synthetic-congressional-1",
+      "subject_type": "post",
+      "subject_id": "post-synthetic-congressional-1",
+      "field_path": "division_ocdid",
+      "value": "ocd-division/country:us/state:zz/cd:1",
+      "evidence_ids": [
+        "ev-congressional-1"
+      ],
+      "normalization_status": "NORMALIZED",
+      "review_status": "ACCEPTED",
+      "confidence": "HIGH"
+    }
+  ],
+  "review": {
+    "status": "READY",
+    "reviewer": "canonical-core-test",
+    "reviewed_at": "2026-09-25T23:21:00-06:00",
+    "qa_result": "PASS",
+    "parity_ok": true
+  },
+  "certification": {
+    "status": "certified",
+    "raw_complete": true,
+    "normalized_complete": true,
+    "qa_passed": true,
+    "parity_ok": true,
+    "reviewer": "canonical-core-test",
+    "verified_at": "2026-09-25T23:22:00-06:00"
+  }
+}
