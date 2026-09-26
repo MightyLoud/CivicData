@@ -33,6 +33,12 @@ REVIEW_STATUSES = {
     "IDENTITY_CONFLICT",
     "SCOPE_CONFLICT",
 }
+HELD_REVIEW_STATUSES = {
+    "REJECTED",
+    "NEEDS_EVIDENCE",
+    "IDENTITY_CONFLICT",
+    "SCOPE_CONFLICT",
+}
 SNAPSHOT_REVIEW_STATUSES = {"DRAFT", "REVIEW", "READY", "BLOCKED"}
 QA_RESULTS = {"PASS", "FAIL", "NOT_RUN"}
 CERTIFICATION_STATUSES = {
@@ -430,10 +436,12 @@ def validate_core(snapshot: Mapping[str, Any]) -> list[str]:
             errors.add("RAW_COMPLETE_WITHOUT_EVIDENCE")
         if certification.get("normalized_complete") is True:
             if any(
-                isinstance(row, Mapping) and row.get("normalization_status") != "NORMALIZED"
+                isinstance(row, Mapping)
+                and row.get("normalization_status") != "NORMALIZED"
+                and row.get("review_status") not in HELD_REVIEW_STATUSES
                 for row in (assertions if isinstance(assertions, list) else [])
             ):
-                errors.add("NORMALIZED_COMPLETE_WITH_RAW_ASSERTIONS")
+                errors.add("NORMALIZED_COMPLETE_WITH_UNREVIEWED_RAW_ASSERTIONS")
         if review and isinstance(review, Mapping):
             if certification.get("qa_passed") is True and review.get("qa_result") != "PASS":
                 errors.add("QA_GATE_MISMATCH")
@@ -704,7 +712,16 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
             jurisdiction_ocdid=jurisdiction_ocdid,
             division_ocdid_by_native=division_ocdid_by_native,
         )
-        normalized = _clean(row.get("normalized_status")).upper() == "NORMALIZED"
+        source_status = _clean(row.get("normalized_status")).upper()
+        if source_status == "NORMALIZED":
+            normalization_status = "NORMALIZED"
+            review_status = "ACCEPTED"
+        elif source_status == "CONFLICT":
+            normalization_status = "RAW"
+            review_status = "NEEDS_EVIDENCE"
+        else:
+            normalization_status = "RAW"
+            review_status = "UNREVIEWED"
         assertions.append(
             {
                 "assertion_id": assertion_id,
@@ -713,8 +730,8 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
                 "field_path": _clean(row.get("predicate")) or "value",
                 "value": deepcopy(row.get("object_value")),
                 "evidence_ids": evidence_ids,
-                "normalization_status": "NORMALIZED" if normalized else "RAW",
-                "review_status": "ACCEPTED" if normalized else "UNREVIEWED",
+                "normalization_status": normalization_status,
+                "review_status": review_status,
                 "confidence": _confidence(row.get("confidence"), "MEDIUM"),
             }
         )
@@ -723,7 +740,9 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
     parity_ok = qa.get("parity_ok") is True
     raw_complete = bool(evidence)
     normalized_complete = bool(assertions) and all(
-        row["normalization_status"] == "NORMALIZED" for row in assertions
+        row["normalization_status"] == "NORMALIZED"
+        or row["review_status"] in HELD_REVIEW_STATUSES
+        for row in assertions
     )
     certified = raw_complete and normalized_complete and qa_passed and parity_ok
     reviewed_at = _clean(jurisdiction.get("row_updated_at")) or "UNKNOWN"

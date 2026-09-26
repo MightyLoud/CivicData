@@ -17,6 +17,7 @@ from tools.canonical_representation_core import (
 FIXTURES = ROOT / "acceptance" / "representation" / "canonical_core"
 SCHEMA = ROOT / "schemas" / "canonical_representation_core_v0.1.schema.json"
 AKRON = ROOT / "data" / "normalized" / "co" / "jurisdiction-co-akron" / "jurisdiction.json"
+ALMA = ROOT / "data" / "normalized" / "co" / "jurisdiction-co-alma" / "jurisdiction.json"
 
 
 def load_fixture(name: str):
@@ -176,7 +177,7 @@ class CanonicalRepresentationCoreTests(unittest.TestCase):
         snapshot = load_fixture("county")
         snapshot["assertions"][0]["normalization_status"] = "RAW"
         self.assertIn(
-            "NORMALIZED_COMPLETE_WITH_RAW_ASSERTIONS",
+            "NORMALIZED_COMPLETE_WITH_UNREVIEWED_RAW_ASSERTIONS",
             validate_core(snapshot),
         )
 
@@ -184,6 +185,20 @@ class CanonicalRepresentationCoreTests(unittest.TestCase):
         snapshot["review"]["parity_ok"] = False
         errors = validate_core(snapshot)
         self.assertIn("PARITY_GATE_MISMATCH", errors)
+
+    def test_reviewed_nonblocking_conflict_can_coexist_with_certified_scope(self):
+        package = json.loads(ALMA.read_text(encoding="utf-8"))
+        core = from_jurisdiction_package(package)
+        errors = validate_core(core)
+        self.assertEqual(errors, [])
+        self.assertEqual(core["certification"]["status"], "certified")
+        held = [
+            row
+            for row in core["assertions"]
+            if row["review_status"] == "NEEDS_EVIDENCE"
+        ]
+        self.assertEqual(len(held), 1)
+        self.assertEqual(held[0]["normalization_status"], "RAW")
 
     def test_existing_akron_pilot_converts_and_validates(self):
         package = json.loads(AKRON.read_text(encoding="utf-8"))
