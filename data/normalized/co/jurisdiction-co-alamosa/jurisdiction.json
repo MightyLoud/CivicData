@@ -1694,17 +1694,17 @@
   "schema_version": "0.1",
   "warnings": [
     {
-      "batch_id": "CO-NORM-002",
+      "batch_id": "CO-RUNTIME-003",
       "blocking": false,
-      "description": "Wards 1–4 and their official representation keys are normalized from the City/County ward map, but a separate machine-readable geometry service and district-level point-in-polygon control output were not archived in this execution unit.",
+      "description": "Ward 1–4 governed address controls are now archived and pass. A separate machine-readable polygon/feature-service artifact for the adopted ward geometry is still not archived; current boundary authority remains the official City/County ward map.",
       "entity_id": "division-co-alamosa-citywide",
       "entity_type": "Division",
-      "gap_id": "gap-co-alamosa-ward-pip-archive",
-      "gap_type": "WARD_ADDRESS_PIP_ARCHIVE",
+      "gap_id": "gap-co-alamosa-machine-readable-ward-geometry",
+      "gap_type": "MACHINE_READABLE_DISTRICT_GEOMETRY_NOT_ARCHIVED",
       "jurisdiction_id": "jurisdiction-co-alamosa",
       "owner": "Creyton",
       "severity": "WARNING",
-      "source_id": "src-co-alamosa-county-elections",
+      "source_id": "src-co-alamosa-ward-map-2023",
       "status": "OPEN"
     }
   ]
