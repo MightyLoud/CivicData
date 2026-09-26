@@ -120,8 +120,7 @@ def checklist() -> str:
 Run from the CivicPatch/open-data checkout:
 
 ```bash
-uv run python scripts/github_actions/validate_jurisdiction.py \
-  "ocd-jurisdiction/country:us/state:co/place:akron/government"
+uv run python scripts/github_actions/validate_jurisdiction.py "ocd-jurisdiction/country:us/state:co/place:akron/government"
 ```
 
 - [ ] CivicPatch schema validation passes.
