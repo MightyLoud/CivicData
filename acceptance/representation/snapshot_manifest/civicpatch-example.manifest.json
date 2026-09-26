@@ -1,0 +1,42 @@
+{
+  "manifest_version": "0.1",
+  "schema_version": "civicpatch-representation/2026-09-25",
+  "generated_at": "2026-09-25T18:05:00Z",
+  "producer": {
+    "system": "civicpatch",
+    "adapter_version": "representation-export/0.1"
+  },
+  "source_snapshots": [
+    {
+      "system": "civicpatch",
+      "snapshot_id": "69331c2b0d97e13695dab07ec1d6a969c99a3e4d",
+      "locator": "CivicPatch/open-data@main"
+    }
+  ],
+  "scope": {
+    "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:tx/place:arlington/government",
+    "division_ocdids": [
+      "ocd-division/country:us/state:tx/place:arlington/council_district:5"
+    ],
+    "complete_jurisdiction": false
+  },
+  "certification": {
+    "status": "uncertified",
+    "raw_complete": true,
+    "normalized_complete": true,
+    "qa_passed": false,
+    "parity_ok": false,
+    "verified_at": "2026-09-25T18:05:00Z"
+  },
+  "canonical_data_versions": {
+    "ocdid": "openstates/jurisdictions@2301513c99d275cca23cbcdf04aba09dbced3247",
+    "identity_registry": "shared-identity/0.1"
+  },
+  "payload": {
+    "media_type": "application/json",
+    "locator": "civicpatch-example.json",
+    "bytes": 312,
+    "content_sha256": "be8730026ac58f26ff49a82a7e25c9d03c55de59b3b21cf319f31af1ce9e4e58"
+  },
+  "manifest_sha256": "b7354e719fd1738e65ee53f5d141168b4184041c4acedb47ec75e7dc1393bf2a"
+}
