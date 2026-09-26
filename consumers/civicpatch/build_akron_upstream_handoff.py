@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-from hashlib import sha256
 import json
 from pathlib import Path
 
@@ -143,7 +142,7 @@ uv run python scripts/github_actions/validate_jurisdiction.py \
 """
 
 
-def metadata(base: bytes, candidate: bytes, patch: bytes) -> dict:
+def metadata() -> dict:
     return {
         "handoff_version": "0.1",
         "generated_at": GENERATED_AT,
@@ -158,9 +157,8 @@ def metadata(base: bytes, candidate: bytes, patch: bytes) -> dict:
         "candidate": {
             "source_path": str(CANDIDATE.relative_to(ROOT)),
             "jurisdiction_ocdid": JURISDICTION_OCDID,
-            "base_sha256": sha256(base).hexdigest(),
-            "candidate_sha256": sha256(candidate).hexdigest(),
-            "patch_sha256": sha256(patch).hexdigest(),
+            "upstream_base_blob_sha": UPSTREAM_BLOB_SHA,
+            "candidate_blob_sha": "ac9a96cdb8c7052cb6681844cbdafbacdca2ee27",
         },
         "submission": {
             "upstream_write_authorized": False,
@@ -187,7 +185,7 @@ def build_handoff(output_dir: Path) -> None:
     (output_dir / PR_BODY_NAME).write_text(pr_body(), encoding="utf-8")
     (output_dir / CHECKLIST_NAME).write_text(checklist(), encoding="utf-8")
     (output_dir / METADATA_NAME).write_text(
-        json.dumps(metadata(base, candidate, patch), indent=2, sort_keys=True) + "\n",
+        json.dumps(metadata(), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 
