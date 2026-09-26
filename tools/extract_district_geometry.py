@@ -63,7 +63,7 @@ def expand_feature_urls(webmap: dict) -> list[tuple[str, str | None, str | None]
         clean = url.rstrip("/")
         if clean in seen:
             return
-        if clean.endswith("FeatureServer"):
+        if clean.endswith("FeatureServer") or clean.endswith("MapServer"):
             try:
                 service = get_json(clean + "?f=json")
             except Exception:
@@ -81,14 +81,16 @@ def expand_feature_urls(webmap: dict) -> list[tuple[str, str | None, str | None]
                                 item_id,
                             )
                         )
-        elif "FeatureServer/" in clean:
+        elif "FeatureServer/" in clean or "MapServer/" in clean:
             seen.add(clean)
             found.append((clean, title, item_id))
 
     for node in iter_dicts(webmap):
         url = node.get("url")
         title = str(node.get("title") or node.get("name") or "") or None
-        if isinstance(url, str) and "FeatureServer" in url:
+        if isinstance(url, str) and (
+            "FeatureServer" in url or "MapServer" in url
+        ):
             add_url(url, title, None)
 
         item_id = node.get("itemId") or node.get("itemid")
@@ -98,7 +100,9 @@ def expand_feature_urls(webmap: dict) -> list[tuple[str, str | None, str | None]
             except Exception:
                 continue
             item_url = meta.get("url")
-            if isinstance(item_url, str) and "FeatureServer" in item_url:
+            if isinstance(item_url, str) and (
+                "FeatureServer" in item_url or "MapServer" in item_url
+            ):
                 add_url(
                     item_url,
                     str(meta.get("title") or title or "") or None,
@@ -340,13 +344,23 @@ def normalize_features(city: str, fc: dict[str, Any], layer_url: str) -> dict[st
                 "OBJECTID_1": props.get("OBJECTID_1"),
             }
         else:
-            key = int(props["COUNCIL_DISTRICT"])
+            raw_district = str(
+                props.get("DISTRICT")
+                or props.get("COUNCIL_DISTRICT")
+                or ""
+            ).strip()
+            match = re.search(r"(\\d+)$", raw_district)
+            if match is None:
+                raise RuntimeError(
+                    "Arvada district key missing from feature: "
+                    + json.dumps(props, sort_keys=True)
+                )
+            key = int(match.group(1))
             division_id = f"division-co-arvada-district-{key}"
             kept = {
-                "COUNCIL_DISTRICT": key,
-                "CNCL_ID": props.get("CNCL_ID"),
-                "CNCL": props.get("CNCL"),
-                "CDID": props.get("CDID"),
+                "DISTRICT": props.get("DISTRICT"),
+                "COUNCIL_MEMBER": props.get("COUNCIL_MEMBER"),
+                "WEBSITE": props.get("WEBSITE"),
                 "OBJECTID": props.get("OBJECTID"),
             }
         kept["division_id"] = division_id
