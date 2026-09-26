@@ -33,7 +33,7 @@ def contract(package):
 
 
 class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
-    def test_all_ten_current_governed_address_controls_pass_runtime_join(self):
+    def test_all_eighteen_current_governed_address_controls_pass_runtime_join(self):
         total = 0
         by_jurisdiction = {}
         for path in discover_packages(ROOT):
@@ -61,14 +61,14 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
                 )
                 self.assertEqual(control["canonical_writes"], 0)
 
-        self.assertEqual(total, 10)
+        self.assertEqual(total, 18)
         self.assertEqual(by_jurisdiction["Akron"]["controls_total"], 2)
-        self.assertEqual(by_jurisdiction["Alamosa"]["controls_total"], 2)
+        self.assertEqual(by_jurisdiction["Alamosa"]["controls_total"], 6)
         self.assertEqual(by_jurisdiction["Alma"]["controls_total"], 2)
-        self.assertEqual(by_jurisdiction["Arvada"]["controls_total"], 2)
+        self.assertEqual(by_jurisdiction["Arvada"]["controls_total"], 6)
         self.assertEqual(by_jurisdiction["Aspen"]["controls_total"], 2)
 
-    def test_districted_cities_report_missing_district_address_coverage(self):
+    def test_all_current_local_electoral_divisions_have_governed_address_coverage(self):
         results = {}
         for path in discover_packages(ROOT):
             package = load(path)
@@ -76,22 +76,77 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
                 evaluate_governed_address_runtime(package, contract(package))
             )
 
-        self.assertEqual(len(results["Alamosa"]["geography_gaps"]), 4)
+        for name, result in results.items():
+            with self.subTest(jurisdiction=name):
+                self.assertEqual(result["geography_gaps"], [])
+
+        alamosa_ids = {
+            row["expected_division_id"]
+            for row in results["Alamosa"]["controls"]
+        }
         self.assertTrue(
-            all(
-                "division-co-alamosa-ward-" in gap
-                for gap in results["Alamosa"]["geography_gaps"]
-            )
+            {
+                "division-co-alamosa-ward-1",
+                "division-co-alamosa-ward-2",
+                "division-co-alamosa-ward-3",
+                "division-co-alamosa-ward-4",
+            }.issubset(alamosa_ids)
         )
-        self.assertEqual(len(results["Arvada"]["geography_gaps"]), 4)
+
+        arvada_ids = {
+            row["expected_division_id"]
+            for row in results["Arvada"]["controls"]
+        }
         self.assertTrue(
-            all(
-                "division-co-arvada-district-" in gap
-                for gap in results["Arvada"]["geography_gaps"]
-            )
+            {
+                "division-co-arvada-district-1",
+                "division-co-arvada-district-2",
+                "division-co-arvada-district-3",
+                "division-co-arvada-district-4",
+            }.issubset(arvada_ids)
         )
-        for name in ("Akron", "Alma", "Aspen"):
-            self.assertEqual(results[name]["geography_gaps"], [])
+
+    def test_new_district_controls_select_citywide_plus_one_local_office(self):
+        expectations = {
+            "Alamosa": {
+                "addrtest-co-alamosa-ward-1-cattails": "office-co-alamosa-council-ward-1",
+                "addrtest-co-alamosa-ward-2-carroll-park": "office-co-alamosa-council-ward-2",
+                "addrtest-co-alamosa-ward-3-jardin-hermosa": "office-co-alamosa-council-ward-3",
+                "addrtest-co-alamosa-ward-4-lee-fields": "office-co-alamosa-council-ward-4",
+            },
+            "Arvada": {
+                "addrtest-co-arvada-district-1-lake-arbor-golf": "office-co-arvada-council-district-1",
+                "addrtest-co-arvada-district-2-little-dry-creek": "office-co-arvada-council-district-2",
+                "addrtest-co-arvada-district-3-little-raven": "office-co-arvada-council-district-3",
+                "addrtest-co-arvada-district-4-west-woods": "office-co-arvada-council-district-4",
+            },
+        }
+        for path in discover_packages(ROOT):
+            package = load(path)
+            name = package["jurisdiction"]["name"]
+            if name not in expectations:
+                continue
+            result = evaluate_governed_address_runtime(package, contract(package))
+            controls = {row["test_id"]: row for row in result["controls"]}
+            for test_id, local_office in expectations[name].items():
+                with self.subTest(jurisdiction=name, test_id=test_id):
+                    row = controls[test_id]
+                    self.assertEqual(row["status"], "PASS", row)
+                    self.assertIn(local_office, row["actual_office_ids"])
+                    self.assertEqual(
+                        len(
+                            [
+                                office_id
+                                for office_id in row["actual_office_ids"]
+                                if (
+                                    "ward-" in office_id
+                                    or "district-" in office_id
+                                )
+                            ]
+                        ),
+                        1,
+                        row,
+                    )
 
     def test_synthetic_district_control_selects_citywide_plus_district_offices(self):
         path = ROOT / "data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json"
