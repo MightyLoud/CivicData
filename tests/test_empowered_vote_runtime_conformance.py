@@ -93,6 +93,36 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
         for name in ("Akron", "Alma", "Aspen"):
             self.assertEqual(results[name]["geography_gaps"], [])
 
+    def test_synthetic_district_control_selects_citywide_plus_district_offices(self):
+        path = ROOT / "data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json"
+        package = load(path)
+        control = {
+            "test_id": "synthetic-alamosa-ward-1-runtime",
+            "address_input": "SYNTHETIC GOVERNED WARD 1 CONTROL",
+            "normalized_address": "SYNTHETIC GOVERNED WARD 1 CONTROL",
+            "expected_division_id": "division-co-alamosa-ward-1",
+            "expected_office_ids": (
+                "office-co-alamosa-mayor;"
+                "office-co-alamosa-council-at-large;"
+                "office-co-alamosa-council-ward-1"
+            ),
+            "result": True,
+        }
+        result = evaluate_address_control(package, contract(package), control)
+        self.assertEqual(result["status"], "PASS", result)
+        self.assertEqual(
+            result["actual_office_ids"],
+            sorted([
+                "office-co-alamosa-mayor",
+                "office-co-alamosa-council-at-large",
+                "office-co-alamosa-council-ward-1",
+            ]),
+        )
+        self.assertEqual(
+            result["resolved_division_ocdid"],
+            "ocd-division/country:us/state:co/place:alamosa/ward:1",
+        )
+
     def test_missing_expected_division_fails_closed(self):
         path = ROOT / "data/normalized/co/jurisdiction-co-akron/jurisdiction.json"
         package = load(path)
