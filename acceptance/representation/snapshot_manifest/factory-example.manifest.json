@@ -1,0 +1,42 @@
+{
+  "manifest_version": "0.1",
+  "schema_version": "representation-contract/1.0.0-draft",
+  "generated_at": "2026-09-25T18:00:00Z",
+  "producer": {
+    "system": "jurisdiction_factory",
+    "adapter_version": "factory-representation/0.1"
+  },
+  "source_snapshots": [
+    {
+      "system": "jurisdiction_factory",
+      "snapshot_id": "CO-AKRON-2026-08-19",
+      "locator": "data/normalized/co/jurisdiction-co-akron/jurisdiction.json"
+    }
+  ],
+  "scope": {
+    "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:co/place:akron/government",
+    "division_ocdids": [
+      "ocd-division/country:us/state:co/place:akron"
+    ],
+    "complete_jurisdiction": true
+  },
+  "certification": {
+    "status": "certified",
+    "raw_complete": true,
+    "normalized_complete": true,
+    "qa_passed": true,
+    "parity_ok": true,
+    "verified_at": "2026-08-19T00:00:00Z"
+  },
+  "canonical_data_versions": {
+    "ocdid": "openstates/jurisdictions@2301513c99d275cca23cbcdf04aba09dbced3247",
+    "identity_registry": "shared-identity/0.1"
+  },
+  "payload": {
+    "media_type": "application/json",
+    "locator": "factory-example.json",
+    "bytes": 288,
+    "content_sha256": "14d0059d5a09719aff99dae54f45bf6b64dd835746fa60c46c9ea5dc9ca52388"
+  },
+  "manifest_sha256": "de37cc2581e2029ec7d8ea078b4fad105d6befc2d470e21fa35ceba49b619c9b"
+}
