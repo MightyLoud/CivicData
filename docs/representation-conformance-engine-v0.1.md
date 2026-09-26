@@ -72,17 +72,28 @@ identity.
 
 ### Empowered Vote
 
-Mode: `REPRESENTATION_CONTRACT_INPUT`.
+Mode: `GOVERNED_ADDRESS_FIXTURE_RUNTIME`.
 
-The current check proves the certified Representation Contract graph is accepted
-by the Empowered Vote Contract v1 consumer.
+The engine consumes every passing governed Factory `qa.address_tests` control.
+Each real address supplies the already-reviewed address → division/office
+boundary, then the actual Empowered Vote Contract-v1 runtime joins that
+geography to the certified representation graph.
 
-The report separately marks these capabilities untested unless a binding/runtime
-fixture is supplied:
+PASS requires:
 
-- address resolution;
-- live Civic GPS;
-- Full Essentials elections when the Contract has no election extension.
+- resolved OCD division matches the Factory control;
+- applicable office IDs exactly match the Factory control;
+- current-holder counts reconcile;
+- no canonical writes occur.
+
+This is deterministic runtime conformance, **not a live network geocode**.
+`live_civic_gps_network` remains explicitly untested here.
+
+When a jurisdiction contains ward/district divisions but no governed address
+control resolves those districts, the report records
+`NO_GOVERNED_ADDRESS_CONTROL` geography gaps rather than inferring coverage.
+Full Essentials elections also remain separately scoped when no certified
+election extension is present.
 
 ### Civic Mirror
 
@@ -138,6 +149,7 @@ With `--artifact-dir`, each selected jurisdiction gets:
   canonical_core.json
   representation_contract_v1.json
   civicpatch_bundle.json
+  empowered_vote_runtime.json
   conformance.json
 ```
 
