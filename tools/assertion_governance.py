@@ -82,7 +82,10 @@ def expected_authority(
     return authority
 
 
-def validate_assertion(assertion: Mapping[str, Any]) -> list[str]:
+def validate_assertion(
+    assertion: Mapping[str, Any],
+    authority_matrix: Mapping[str, str] | None = None,
+) -> list[str]:
     errors: set[str] = set()
     if not isinstance(assertion, Mapping):
         return ["ASSERTION_INVALID"]
@@ -146,6 +149,7 @@ def validate_assertion(assertion: Mapping[str, Any]) -> list[str]:
     if status not in {"proposed"} | REVIEW_OUTCOMES:
         errors.add("REVIEW_STATUS_INVALID")
 
+    matrix = DEFAULT_AUTHORITY_MATRIX if authority_matrix is None else authority_matrix
     history = assertion.get("review_history")
     if not isinstance(history, list):
         errors.add("REVIEW_HISTORY_INVALID")
@@ -164,6 +168,9 @@ def validate_assertion(assertion: Mapping[str, Any]) -> list[str]:
                 errors.add("REVIEW_OUTCOME_INVALID")
             if not _clean(row.get("reviewer")) or not _clean(row.get("authority")):
                 errors.add("REVIEWER_INVALID")
+            expected = matrix.get(subject_type)
+            if expected and _clean(row.get("authority")) != expected:
+                errors.add("REVIEW_AUTHORITY_HISTORY_MISMATCH")
             if not _valid_timestamp(row.get("reviewed_at")) or not _clean(row.get("reason")):
                 errors.add("REVIEW_HISTORY_INVALID")
 
@@ -186,7 +193,7 @@ def review_assertion(
     reason: str,
     authority_matrix: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
-    errors = validate_assertion(assertion)
+    errors = validate_assertion(assertion, authority_matrix=authority_matrix)
     if errors:
         raise AssertionGovernanceError("ASSERTION_INVALID:" + ",".join(errors))
     if assertion["review_status"] != "proposed":
@@ -216,7 +223,7 @@ def review_assertion(
             "reason": _clean(reason),
         }
     )
-    errors = validate_assertion(result)
+    errors = validate_assertion(result, authority_matrix=authority_matrix)
     if errors:
         raise AssertionGovernanceError("ASSERTION_INVALID:" + ",".join(errors))
     return result
