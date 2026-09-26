@@ -120,7 +120,7 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
                 ):
                     self.assertIn(control.get("boundary_source_id"), source_ids)
 
-    def test_alamosa_and_arvada_warnings_are_narrowed_to_machine_readable_geometry(self):
+    def test_alamosa_and_arvada_geometry_warnings_are_resolved_and_retained_for_audit(self):
         expected = {
             "Alamosa": "gap-co-alamosa-machine-readable-ward-geometry",
             "Arvada": "gap-co-arvada-machine-readable-district-geometry",
@@ -139,7 +139,9 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
                 "MACHINE_READABLE_DISTRICT_GEOMETRY_NOT_ARCHIVED",
             )
             self.assertFalse(warning["blocking"])
-            self.assertEqual(warning["status"], "OPEN")
+            self.assertEqual(warning["status"], "RESOLVED")
+            self.assertEqual(warning["resolved_at"], "2026-09-26")
+            self.assertIn("governed snapshot archived", warning["resolution"])
 
     def test_new_district_controls_select_citywide_plus_one_local_office(self):
         expectations = {
