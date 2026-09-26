@@ -158,7 +158,7 @@ def resolve_app_layer(
                 lm = get_json(url + "?f=json")
             except Exception:
                 continue
-            fields = [str(field.get("name","")).lower() for field in lm.get("fields",[])]
+            fields = [str(field.get("name","")).lower() for field in (lm.get("fields") or [])]
             if (
                 lm.get("geometryType") == "esriGeometryPolygon"
                 and any(any(term in field for term in field_terms) for field in fields)
