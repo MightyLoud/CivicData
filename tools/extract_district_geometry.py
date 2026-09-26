@@ -44,6 +44,69 @@ def find_hex_ids(obj) -> set[str]:
     return ids
 
 
+def iter_dicts(obj):
+    if isinstance(obj, dict):
+        yield obj
+        for value in obj.values():
+            yield from iter_dicts(value)
+    elif isinstance(obj, list):
+        for value in obj:
+            yield from iter_dicts(value)
+
+
+def expand_feature_urls(webmap: dict) -> list[tuple[str, str | None, str | None]]:
+    """Return (layer_url, title, source_item_id) from nested Web Map content."""
+    found: list[tuple[str, str | None, str | None]] = []
+    seen: set[str] = set()
+
+    def add_url(url: str, title: str | None, item_id: str | None):
+        clean = url.rstrip("/")
+        if clean in seen:
+            return
+        if clean.endswith("FeatureServer"):
+            try:
+                service = get_json(clean + "?f=json")
+            except Exception:
+                return
+            for layer in service.get("layers", []):
+                layer_id = layer.get("id")
+                if layer_id is not None:
+                    layer_url = clean + "/" + str(layer_id)
+                    if layer_url not in seen:
+                        seen.add(layer_url)
+                        found.append(
+                            (
+                                layer_url,
+                                str(layer.get("name") or title or ""),
+                                item_id,
+                            )
+                        )
+        elif "FeatureServer/" in clean:
+            seen.add(clean)
+            found.append((clean, title, item_id))
+
+    for node in iter_dicts(webmap):
+        url = node.get("url")
+        title = str(node.get("title") or node.get("name") or "") or None
+        if isinstance(url, str) and "FeatureServer" in url:
+            add_url(url, title, None)
+
+        item_id = node.get("itemId") or node.get("itemid")
+        if isinstance(item_id, str) and re.fullmatch(r"[0-9a-fA-F]{32}", item_id):
+            try:
+                meta = sharing_item(item_id)
+            except Exception:
+                continue
+            item_url = meta.get("url")
+            if isinstance(item_url, str) and "FeatureServer" in item_url:
+                add_url(
+                    item_url,
+                    str(meta.get("title") or title or "") or None,
+                    item_id.lower(),
+                )
+    return found
+
+
 def resolve_app_layer(
     app_id: str,
     *,
@@ -53,34 +116,40 @@ def resolve_app_layer(
     app = sharing_data(app_id)
     candidates = list(find_hex_ids(app))
     checked = []
+    webmaps = []
     for item_id in candidates:
         try:
             meta = sharing_item(item_id)
         except Exception:
             continue
         checked.append({"id":item_id,"type":meta.get("type"),"title":meta.get("title")})
-        if meta.get("type") != "Web Map":
-            continue
-        webmap = sharing_data(item_id)
-        for layer in webmap.get("operationalLayers", []):
-            url = layer.get("url")
-            title = str(layer.get("title") or "")
-            if (
-                url
-                and "FeatureServer" in url
-                and any(term in title.lower() for term in title_terms)
-            ):
-                return url.rstrip("/"), {
-                    "app_id": app_id,
-                    "webmap_id": item_id,
-                    "webmap_title": meta.get("title"),
-                    "layer_title": title,
-                    "checked_items": checked,
-                }
-        for layer in webmap.get("operationalLayers", []):
-            url = layer.get("url")
-            if not url or "FeatureServer" not in url:
-                continue
+        if meta.get("type") == "Web Map":
+            webmaps.append((item_id, meta, sharing_data(item_id)))
+
+    for item_id, meta, webmap in webmaps:
+        expanded = expand_feature_urls(webmap)
+
+        for url, title, source_item_id in expanded:
+            if title and any(term in title.lower() for term in title_terms):
+                try:
+                    lm = get_json(url + "?f=json")
+                except Exception:
+                    continue
+                if lm.get("geometryType") == "esriGeometryPolygon":
+                    return url.rstrip("/"), {
+                        "app_id": app_id,
+                        "webmap_id": item_id,
+                        "webmap_title": meta.get("title"),
+                        "layer_title": title,
+                        "feature_item_id": source_item_id,
+                        "checked_items": checked,
+                        "expanded_layers": [
+                            {"url": u, "title": t, "item_id": i}
+                            for u, t, i in expanded
+                        ],
+                    }
+
+        for url, title, source_item_id in expanded:
             try:
                 lm = get_json(url + "?f=json")
             except Exception:
@@ -94,16 +163,35 @@ def resolve_app_layer(
                     "app_id": app_id,
                     "webmap_id": item_id,
                     "webmap_title": meta.get("title"),
-                    "layer_title": layer.get("title"),
+                    "layer_title": title,
+                    "feature_item_id": source_item_id,
                     "checked_items": checked,
+                    "expanded_layers": [
+                        {"url": u, "title": t, "item_id": i}
+                        for u, t, i in expanded
+                    ],
                 }
+
     raise RuntimeError(
         "No matching polygon layer found for app "
         + app_id
         + ". Checked: "
         + json.dumps(checked)
+        + "; webmaps="
+        + json.dumps(
+            [
+                {
+                    "id": item_id,
+                    "title": meta.get("title"),
+                    "expanded_layers": [
+                        {"url": u, "title": t, "item_id": i}
+                        for u, t, i in expand_feature_urls(webmap)
+                    ],
+                }
+                for item_id, meta, webmap in webmaps
+            ]
+        )
     )
-
 
 def resolve_alamosa_layer() -> tuple[str, dict]:
     return resolve_app_layer(
