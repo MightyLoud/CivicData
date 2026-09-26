@@ -297,6 +297,31 @@ class AssertionGovernanceTests(unittest.TestCase):
                 reason="wrong authority",
             )
 
+    def test_tampered_accepted_authority_history_is_invalid(self):
+        assertion = deepcopy(fixture()["assertions"]["end_date_correction"])
+        assertion["review_status"] = "accepted"
+        assertion["review_history"] = [{
+            "outcome": "accepted",
+            "reviewer": "fake-reviewer",
+            "authority": "wrong-authority",
+            "reviewed_at": "2026-09-25T22:30:00-06:00",
+            "reason": "tampered review history",
+        }]
+        self.assertIn(
+            "REVIEW_AUTHORITY_HISTORY_MISMATCH",
+            validate_assertion(assertion),
+        )
+        with self.assertRaisesRegex(
+            AssertionGovernanceError,
+            "ASSERTION_INVALID",
+        ):
+            promote_accepted_assertion(
+                fixture()["base_snapshot"],
+                assertion,
+                new_snapshot_id="snapshot-tampered",
+                promoted_at="2026-09-25T22:31:00-06:00",
+            )
+
     def test_assertion_requires_evidence(self):
         assertion = deepcopy(fixture()["assertions"]["end_date_correction"])
         assertion["evidence"] = []
