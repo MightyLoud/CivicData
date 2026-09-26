@@ -8,6 +8,8 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+from shapely.geometry import mapping, shape
+
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "artifacts" / "district_geometry_extract"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -420,7 +422,12 @@ def normalize_features(city: str, fc: dict[str, Any], layer_url: str) -> dict[st
         features.append({
             "type": "Feature",
             "properties": kept,
-            "geometry": feature["geometry"],
+            "geometry": mapping(
+                shape(feature["geometry"]).simplify(
+                    0.00001,
+                    preserve_topology=True,
+                )
+            ),
         })
     features.sort(key=lambda row: row["properties"]["division_id"])
     return {
@@ -471,6 +478,10 @@ if not all(row["result"] for row in pip_results):
     raise RuntimeError("PIP control failure: " + json.dumps(pip_results, indent=2))
 
 report["pip_controls"] = pip_results
+report["simplification"] = {
+    "method": "shapely.simplify(preserve_topology=True)",
+    "tolerance_degrees": 0.00001,
+}
 report["governed_outputs"] = {
     "alamosa": {
         "path": "alamosa_wards.geojson",
