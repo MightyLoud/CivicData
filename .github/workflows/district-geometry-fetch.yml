@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   fetch:
@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -48,3 +50,21 @@ jobs:
               raise SystemExit("district geometry verification failed")
           print("PASS")
           PY
+      - name: Pin successful geometry artifacts to the PR branch
+        if: github.event_name == 'pull_request'
+        run: |
+          mkdir -p data/geometry/co
+          cp artifacts/district-geometry/alamosa_wards.geojson data/geometry/co/alamosa_wards.geojson
+          cp artifacts/district-geometry/arvada_council_districts.geojson data/geometry/co/arvada_council_districts.geojson
+          cp artifacts/district-geometry/control_points.json data/geometry/co/district_control_points.json
+          cp artifacts/district-geometry/verification.json data/geometry/co/district_geometry_verification.json
+          cp artifacts/district-geometry/source_manifest.json data/geometry/co/district_geometry_manifest.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/geometry/co
+          if git diff --cached --quiet; then
+            echo "Pinned geometry already current."
+            exit 0
+          fi
+          git commit -m "Pin verified Alamosa and Arvada district geometry"
+          git push origin HEAD:${{ github.head_ref }}
