@@ -121,6 +121,12 @@ CivicPatch publication/review status does **not** automatically satisfy Factory 
 
 Partner systems may submit proposed evidence/assertions. They do not perform last-write-wins updates against certified representation data.
 
+Factory assertions that are explicitly preserved as nonblocking source conflicts
+project with `review_status = held`. A held assertion remains evidence-bearing
+and queryable but is not an accepted canonical fact; this allows a certified
+in-scope representation snapshot to preserve an out-of-scope/nonblocking
+conflict without silently promoting or deleting it.
+
 ## Existing CivicData compatibility
 
 `jurisdiction_package_v0.2` remains supported during rollout. `bodies -> organizations`, `offices -> posts`, and `role_terms -> memberships` are compatibility mappings, not an in-place schema replacement. Existing Empowered Vote consumers stay on the current package until parity tests prove the new projection.
