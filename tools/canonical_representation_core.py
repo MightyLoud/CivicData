@@ -426,6 +426,20 @@ def validate_core(snapshot: Mapping[str, Any]) -> list[str]:
         ]
         if any(not isinstance(value, bool) for value in gates):
             errors.add("CERTIFICATION_GATES_INVALID")
+        if certification.get("raw_complete") is True and not evidence_ids:
+            errors.add("RAW_COMPLETE_WITHOUT_EVIDENCE")
+        if certification.get("normalized_complete") is True:
+            if any(
+                isinstance(row, Mapping) and row.get("normalization_status") != "NORMALIZED"
+                for row in (assertions if isinstance(assertions, list) else [])
+            ):
+                errors.add("NORMALIZED_COMPLETE_WITH_RAW_ASSERTIONS")
+        if review and isinstance(review, Mapping):
+            if certification.get("qa_passed") is True and review.get("qa_result") != "PASS":
+                errors.add("QA_GATE_MISMATCH")
+            if isinstance(certification.get("parity_ok"), bool) and isinstance(review.get("parity_ok"), bool):
+                if certification.get("parity_ok") != review.get("parity_ok"):
+                    errors.add("PARITY_GATE_MISMATCH")
         if certification.get("status") == "certified":
             if gates != [True, True, True, True]:
                 errors.add("CERTIFIED_GATES_INCOMPLETE")
