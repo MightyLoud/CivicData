@@ -629,6 +629,7 @@
           "enum": [
             "proposed",
             "accepted",
+            "held",
             "rejected",
             "superseded",
             "withdrawn"
