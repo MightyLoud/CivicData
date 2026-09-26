@@ -14,7 +14,7 @@
     "jurisdiction_type": "Municipality",
     "municipal_type": "City",
     "name": "Alamosa",
-    "notes": "CO-NORM-002 normalized Alamosa's Home Rule City structure, citywide and Ward 1–4 divisions, City Council, 7 elected seats represented by 6 Office records, 7 current holders, verified Census/ward identifiers, and 2 citywide address controls. Ward-level PIP archive remains a nonblocking warning. Formal QA, parity, replication, closeout, release, and publication remain separately gated.",
+    "notes": "CO-NORM-002 normalized Alamosa's Home Rule City structure, citywide and Ward 1–4 divisions, City Council, 7 elected seats represented by 6 Office records, 7 current holders, verified Census/ward identifiers, and 6 governed address controls (2 citywide + Wards 1–4). Formal QA, parity, replication, closeout, release, and publication remain separately gated.",
     "ocd_jurisdiction_id": "ocd-jurisdiction/country:us/state:co/place:alamosa/government",
     "official_url": "https://cityofalamosa.org/",
     "place_fips": "01090",
@@ -806,22 +806,22 @@
     "blocking_gap_count": 0,
     "checks": [
       {
-        "actual": "2/2 controls pass for City Hall and the Alamosa Recreation Center. Both route to Alamosa citywide and the Mayor plus aggregate at-large office; no Ward 1–4 result was inferred.",
+        "actual": "6/6 controls pass: City Hall and the Recreation Center cover citywide routing; Cattails Golf Course, Carroll Park, Jardin Hermosa Park, and Lee Fields cover Wards 1–4 respectively. Ward controls return Mayor + At-Large + exactly one ward office.",
         "batch_id": "CO-NORM-002",
         "blocker": false,
-        "check_name": "Two citywide address controls",
+        "check_name": "Citywide plus Ward 1–4 address controls",
         "check_type": "ADDRESS_TESTS",
-        "checked_at": "2026-08-19",
+        "checked_at": "2026-09-26",
         "entity_id": "division-co-alamosa-citywide",
         "entity_type": "Division",
-        "expected": "At least two independent official or official-authority-supported in-city addresses route consistently to the citywide division and citywide offices.",
+        "expected": "At least two citywide controls plus one governed address control for each Ward 1–4 route to the canonical division and applicable offices.",
         "jurisdiction_id": "jurisdiction-co-alamosa",
-        "notes": "Citywide controls pass; ward-level PIP remains outside this execution record.",
+        "notes": "District-runtime coverage is complete for every normalized Alamosa electoral division.",
         "owner": "GPT",
         "qa_id": "qa-co-alamosa-address-tests",
         "result": true,
-        "severity": "WARNING",
-        "source_id": "src-co-alamosa-county-assessor"
+        "severity": "INFO",
+        "source_id": "src-co-alamosa-ward-map-2023"
       },
       {
         "actual": "GEOID 0801090 maps to the citywide division and Wards 1–4 are normalized from the official City/County ward map. A separate machine-readable ward service and ward-level PIP archive were not captured.",
