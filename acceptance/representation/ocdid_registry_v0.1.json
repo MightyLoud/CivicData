@@ -1,0 +1,76 @@
+{
+  "contract_version": "0.1",
+  "registry": {
+    "source_repository": "openstates/jurisdictions",
+    "source_commit": "2301513c99d275cca23cbcdf04aba09dbced3247",
+    "manifest_generated_at": "2026-09-25T17:53:17.100791+00:00",
+    "published_states": [
+      "ak",
+      "al",
+      "az",
+      "oh",
+      "tx",
+      "wa"
+    ],
+    "master_divisions": [
+      "ocd-division/country:us/state:ma/place:millbury",
+      "ocd-division/country:us/state:tx/place:arlington",
+      "ocd-division/country:us/state:tx/place:arlington/council_district:5"
+    ],
+    "published_divisions": [
+      "ocd-division/country:us/state:tx/place:arlington/council_district:5"
+    ]
+  },
+  "reviewed_mappings": [
+    {
+      "entity_type": "division",
+      "source_id": "ocd-division/country:us/state:ma/county:worcester/place:millbury",
+      "canonical_id": "ocd-division/country:us/state:ma/place:millbury",
+      "review_status": "accepted",
+      "reviewed_at": "2026-09-25",
+      "reviewer": "CivicData interoperability review",
+      "evidence": "https://github.com/CivicMirror/Civic-Data/issues/80"
+    }
+  ],
+  "cases": [
+    {
+      "id": "tx-arlington-district-5-published",
+      "input": {
+        "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:tx/place:arlington/government",
+        "division_ocdid": "ocd-division/country:us/state:tx/place:arlington/council_district:5"
+      },
+      "expected": {
+        "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:tx/place:arlington/government",
+        "division_ocdid": "ocd-division/country:us/state:tx/place:arlington/council_district:5",
+        "registry_status": "PUBLISHED_LOOKUP",
+        "mapping_applied": false
+      }
+    },
+    {
+      "id": "ma-millbury-master-registry-compatibility",
+      "input": {
+        "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:ma/place:millbury/government",
+        "division_ocdid": "ocd-division/country:us/state:ma/place:millbury"
+      },
+      "expected": {
+        "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:ma/place:millbury/government",
+        "division_ocdid": "ocd-division/country:us/state:ma/place:millbury",
+        "registry_status": "MASTER_REGISTRY_COMPATIBILITY",
+        "mapping_applied": false
+      }
+    },
+    {
+      "id": "ma-millbury-reviewed-legacy-mapping",
+      "input": {
+        "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:ma/place:millbury/government",
+        "division_ocdid": "ocd-division/country:us/state:ma/county:worcester/place:millbury"
+      },
+      "expected": {
+        "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:ma/place:millbury/government",
+        "division_ocdid": "ocd-division/country:us/state:ma/place:millbury",
+        "registry_status": "REVIEWED_MAPPING",
+        "mapping_applied": true
+      }
+    }
+  ]
+}
