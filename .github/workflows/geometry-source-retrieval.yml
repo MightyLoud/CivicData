@@ -285,6 +285,11 @@ jobs:
               lon, lat = geometry["coordinates"][:2]
               return float(lon), float(lat), feature.get("properties") or {}
 
+          census_aliases = {
+              "addrtest-co-arvada-district-3-little-raven":
+                  "12140 West 57th Avenue, Arvada, CO 80002",
+          }
+
           pip_rows = []
           for name, test_id, address, expected in controls:
               if name == "alamosa":
@@ -312,7 +317,7 @@ jobs:
                       )
                   }
               else:
-                  geocode_input = address
+                  geocode_input = census_aliases.get(test_id, address)
                   params = urllib.parse.urlencode({
                       "address": geocode_input,
                       "benchmark": "Public_AR_Current",
