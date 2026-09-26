@@ -1,0 +1,79 @@
+{
+  "source_repository": "CivicPatch/open-data",
+  "source_commit": "69331c2b0d97e13695dab07ec1d6a969c99a3e4d",
+  "source_path": "data/co/local/place_akron.yml",
+  "comparison_only": true,
+  "identity_resolution_authorized": false,
+  "officials": [
+    {
+      "id": "0da81ab6-9301-4fe1-8d35-9e79db635c09",
+      "name": "Brandon Hill",
+      "roles": [
+        {
+          "role_id": "mayor",
+          "name": "Mayor"
+        }
+      ]
+    },
+    {
+      "id": "dd07c3f5-1432-4c30-9bc9-9f73bb3385c2",
+      "name": "Jared Jefferson",
+      "roles": [
+        {
+          "role_id": "mayor-pro-tempore",
+          "name": "Mayor Pro Tempore"
+        }
+      ]
+    },
+    {
+      "id": "bc652e26-3c0f-4233-8daa-8d3c3e20f02e",
+      "name": "Ariella Gonzales-Vondy",
+      "roles": [
+        {
+          "role_id": "trustee",
+          "name": "Trustee"
+        }
+      ]
+    },
+    {
+      "id": "d31247df-3332-490e-b45d-fa8e7bb55e0b",
+      "name": "Braden Brent",
+      "roles": [
+        {
+          "role_id": "trustee",
+          "name": "Trustee"
+        }
+      ]
+    },
+    {
+      "id": "623089fb-bd23-4615-a440-1a61da966c15",
+      "name": "Crystann Benson",
+      "roles": [
+        {
+          "role_id": "trustee",
+          "name": "Trustee"
+        }
+      ]
+    },
+    {
+      "id": "34f4f089-d358-44c7-9db0-e93441d05a44",
+      "name": "David Kembel",
+      "roles": [
+        {
+          "role_id": "trustee",
+          "name": "Trustee"
+        }
+      ]
+    },
+    {
+      "id": "e34fed5d-71b5-4943-897e-c3fde4db4945",
+      "name": "Jennifer Hansen",
+      "roles": [
+        {
+          "role_id": "trustee",
+          "name": "Trustee"
+        }
+      ]
+    }
+  ]
+}
