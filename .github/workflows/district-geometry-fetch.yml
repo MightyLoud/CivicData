@@ -1,0 +1,64 @@
+name: District geometry fetch candidate
+
+on:
+  pull_request:
+    paths:
+      - "tools/fetch_district_geometry.py"
+      - "data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json"
+      - "data/normalized/co/jurisdiction-co-arvada/jurisdiction.json"
+      - "data/geometry/co/**"
+      - "tests/test_district_geometry.py"
+      - "tools/verify_district_geometry.py"
+      - ".github/workflows/district-geometry-fetch.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    name: Fetch and verify district geometry
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch official ArcGIS polygons and build diagnostics
+        run: python tools/fetch_district_geometry.py --diagnostic --output-dir artifacts/district-geometry
+      - name: Show verification
+        run: |
+          cat artifacts/district-geometry/source_manifest.json
+          cat artifacts/district-geometry/verification.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: district-geometry
+          path: artifacts/district-geometry
+          if-no-files-found: error
+      - name: Enforce all eight point-in-polygon controls
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path("artifacts/district-geometry/verification.json").read_text())
+          if p.get("count") != 8 or p.get("passed") is not True:
+              raise SystemExit("district geometry verification failed")
+          print("PASS")
+          PY
+      - name: Compare live geometry hashes to governed snapshot
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          live = json.loads(Path("artifacts/district-geometry/source_manifest.json").read_text())
+          pinned = json.loads(Path("data/geometry/co/district_geometry_manifest.json").read_text())
+          for city in ("alamosa", "arvada"):
+              live_hash = live["sources"][city]["geojson_sha256"]
+              pinned_hash = pinned["sources"][city]["geojson_sha256"]
+              if live_hash != pinned_hash:
+                  raise SystemExit(
+                      f"{city} geometry drift: live={live_hash} pinned={pinned_hash}"
+                  )
+          print("PASS")
+          PY
