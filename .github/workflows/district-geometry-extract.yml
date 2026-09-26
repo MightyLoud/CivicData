@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install geometry dependency
+        run: python -m pip install --disable-pip-version-check shapely==2.1.2
       - name: Extract current ArcGIS geometry
         run: python tools/extract_district_geometry.py
       - name: Upload geometry extraction
