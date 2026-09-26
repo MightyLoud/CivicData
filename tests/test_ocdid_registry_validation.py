@@ -181,7 +181,7 @@ class OCDIDRegistryAcceptanceTests(unittest.TestCase):
                 jurisdiction_ocdid=(
                     "ocd-jurisdiction/country:us/state:tx/place:arlington/government"
                 ),
-                division_ocdid="ocd-division/country:us/state:tx/place:arlington",
+                division_ocdid="ocd-division/country:us/state:tx/place:austin",
                 registry=RegistrySnapshot(
                     source_repository=registry.source_repository,
                     source_commit=registry.source_commit,
