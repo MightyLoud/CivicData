@@ -167,7 +167,9 @@ class GeometryGovernanceTests(unittest.TestCase):
         registry = load_source_registry(REGISTRY)
         row = registry["entries"][0]
         row["machine_source_status"] = "RESOLVED_MACHINE_READABLE"
-        row["blocker_code"] = ""
+        row["machine_source_url"] = None
+        row["governed_snapshot_path"] = None
+        row["blocker_code"] = None
         self.assertIn(
             "RESOLVED_MACHINE_SOURCE_FIELDS_REQUIRED",
             validate_source_registry(registry),
