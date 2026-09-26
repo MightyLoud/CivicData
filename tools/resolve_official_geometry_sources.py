@@ -12,15 +12,25 @@ import urllib.request
 ARVADA_ITEM = "a6bfdc31a8dd4e128d388032fe5a0bf6"
 
 
-def get_json(url: str) -> dict:
+def get_json(url: str, *, allow_empty: bool = False) -> dict:
     with urllib.request.urlopen(url, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
+        text = response.read().decode("utf-8")
+    if not text.strip():
+        if allow_empty:
+            return {}
+        raise ValueError(f"empty response from {url}")
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        if allow_empty:
+            return {"_non_json_prefix": text[:500]}
+        raise
 
 
 def arcgis_item(item_id: str) -> dict:
     base = "https://www.arcgis.com/sharing/rest/content/items/"
     meta = get_json(base + item_id + "?f=json")
-    data = get_json(base + item_id + "/data?f=json")
+    data = get_json(base + item_id + "/data?f=json", allow_empty=True)
     return {"meta": meta, "data": data}
 
 
@@ -70,13 +80,13 @@ def main() -> int:
     print("ARVADA_EMBEDDED_SERVICE_URLS=" + json.dumps(collect_urls(item["data"]), sort_keys=True))
 
     queries = [
-        'title:"Council Districts" AND owner:*arvada*',
-        'title:"City Council Districts" AND owner:*arvada*',
-        'Arvada AND "Council Districts"',
-        'Alamosa AND Wards',
-        '"City of Alamosa" AND Wards',
-        'owner:*alamosa* AND Wards',
-        'Alamosa AND "Election Wards"',
+        'title:"Council Districts" Arvada',
+        'title:"City Council Districts" Arvada',
+        '"City of Arvada" "Council Districts"',
+        'Arvada Council Districts',
+        'Alamosa Wards',
+        '"City of Alamosa" Wards',
+        'Alamosa "Election Wards"',
     ]
     for query in queries:
         print(f"=== SEARCH {query} ===")
