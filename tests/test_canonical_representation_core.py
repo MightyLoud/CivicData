@@ -20,7 +20,7 @@ AKRON = ROOT / "data" / "normalized" / "co" / "jurisdiction-co-akron" / "jurisdi
 
 
 def load_fixture(name: str):
-    return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
+    return json.loads((FIXTURES / f"{name}.json").read_text(encoding="utf-8"))
 
 
 class CanonicalRepresentationCoreTests(unittest.TestCase):
