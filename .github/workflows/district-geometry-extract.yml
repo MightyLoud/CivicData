@@ -1,0 +1,27 @@
+name: District geometry extraction candidate
+
+on:
+  pull_request:
+    paths:
+      - "tools/extract_district_geometry.py"
+      - ".github/workflows/district-geometry-extract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Extract current ArcGIS geometry
+        run: python tools/extract_district_geometry.py
+      - name: Upload geometry extraction
+        uses: actions/upload-artifact@v4
+        with:
+          name: district-geometry-extract
+          path: artifacts/district_geometry_extract
