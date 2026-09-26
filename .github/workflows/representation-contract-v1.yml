@@ -14,6 +14,8 @@ on:
       - "adapters/seegov/**"
       - "adapters/partner_assertions.py"
       - "consumers/empowered_vote/contract_v1.py"
+      - "consumers/empowered_vote/runtime_conformance.py"
+      - "tests/test_empowered_vote_runtime_conformance.py"
       - "consumers/empowered_vote/contract_v1_catalog.py"
       - "consumers/empowered_vote/contract_v1_full_essentials.py"
       - "consumers/empowered_vote/contract_v1_full_essentials_catalog.py"
@@ -78,6 +80,8 @@ jobs:
         run: python -m unittest -v tests.test_partner_adapters
       - name: Generic multi-jurisdiction conformance engine
         run: python -m unittest -v tests.test_export_representation
+      - name: Empowered Vote governed-address runtime conformance
+        run: python -m unittest -v tests.test_empowered_vote_runtime_conformance
       - name: Compile adapters, reconciler, and EV consumer
         run: >-
           python -m py_compile
@@ -90,6 +94,7 @@ jobs:
           adapters/civic_mirror/adapter.py
           consumers/empowered_vote/contract_v1.py
           consumers/empowered_vote/contract_v1_catalog.py
+          consumers/empowered_vote/runtime_conformance.py
           tools/representation_semantics.py
           tools/reconcile_representation.py
           tools/export_representation.py
