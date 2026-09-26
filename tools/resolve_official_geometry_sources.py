@@ -182,7 +182,7 @@ def geocode_address(label: str, address: str) -> None:
         "maxLocations": 3,
     })
     url = (
-        "https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/"
+        "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/"
         "findAddressCandidates?" + params
     )
     payload = get_json(url)
