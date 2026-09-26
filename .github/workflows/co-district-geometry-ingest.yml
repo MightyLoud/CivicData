@@ -1,0 +1,41 @@
+name: Colorado district geometry ingest
+
+on:
+  pull_request:
+    paths:
+      - "tools/fetch_co_district_geometry.py"
+      - ".github/workflows/co-district-geometry-ingest.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    name: Fetch official district geometry
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch and verify official polygons and control points
+        run: |
+          python tools/fetch_co_district_geometry.py \
+            --output-root geometry-artifact
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("geometry-artifact")
+          manifest = json.loads((root / "manifest.json").read_text())
+          assert manifest["control_count"] == 8
+          assert manifest["all_point_in_polygon_pass"] is True
+          assert manifest["layers"]["alamosa"]["feature_count"] == 4
+          assert manifest["layers"]["arvada"]["feature_count"] == 4
+          print(json.dumps(manifest, indent=2, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: co-district-geometry-ingest
+          path: geometry-artifact/
+          if-no-files-found: error
+          retention-days: 7
