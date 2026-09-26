@@ -714,6 +714,18 @@ def export_factory_package(
         field_path = str(source_assertion.get("predicate") or "").strip()
         if source_type == "leadershiprole":
             field_path = f"leadership.{field_path}"
+        source_normalization_status = str(
+            source_assertion.get("normalized_status") or ""
+        ).strip().upper()
+        if source_normalization_status == "NORMALIZED":
+            review_status = "accepted"
+            reviewed_at = generated_at
+        elif source_normalization_status == "CONFLICT":
+            review_status = "held"
+            reviewed_at = generated_at
+        else:
+            review_status = "proposed"
+            reviewed_at = None
         assertions.append(
             {
                 "id": _contract_uuid("assertion", assertion_id),
@@ -723,10 +735,10 @@ def export_factory_package(
                 "value": source_assertion.get("object_value"),
                 "evidence_ids": [evidence_id],
                 "source_system": "jurisdiction_factory",
-                "review_status": "accepted",
+                "review_status": review_status,
                 "confidence": None,
                 "asserted_at": generated_at,
-                "reviewed_at": generated_at,
+                "reviewed_at": reviewed_at,
             }
         )
 
