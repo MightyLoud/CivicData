@@ -8,6 +8,8 @@ from __future__ import annotations
 import json
 import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
 
 ARVADA_ITEM = "a6bfdc31a8dd4e128d388032fe5a0bf6"
 ARVADA_SERVICE = "https://services1.arcgis.com/eQyVgDz2cjhzbzN7/arcgis/rest/services/Council_Districts/FeatureServer"
@@ -24,6 +26,43 @@ DISTRICT_ADDRESSES = [
     ("arvada", "council_district:3", "12140 W 57th Ave, Arvada, CO 80002"),
     ("arvada", "council_district:4", "6655 Quaker Street, Arvada, CO 80007"),
 ]
+
+ROOT = Path(__file__).resolve().parents[1]
+GEOMETRY_DIR = ROOT / "data" / "reference" / "co" / "geometry"
+GENERATED_AT = "2026-09-26T20:30:00Z"
+
+GEOMETRY_TARGETS = {
+    "alamosa": {
+        "item_id": ALAMOSA_ITEM,
+        "service_url": ALAMOSA_SERVICE,
+        "layer_id": 0,
+        "property": "WARD",
+        "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:co/place:alamosa/government",
+        "snapshot_id": "alamosa-wards-2023-ef74f0c6",
+        "path": GEOMETRY_DIR / "alamosa_wards_2023_v0.1.json",
+        "map": {
+            "1": "ocd-division/country:us/state:co/place:alamosa/ward:1",
+            "2": "ocd-division/country:us/state:co/place:alamosa/ward:2",
+            "3": "ocd-division/country:us/state:co/place:alamosa/ward:3",
+            "4": "ocd-division/country:us/state:co/place:alamosa/ward:4",
+        },
+    },
+    "arvada": {
+        "item_id": ARVADA_ITEM,
+        "service_url": ARVADA_SERVICE,
+        "layer_id": 1,
+        "property": "DISTRICT",
+        "jurisdiction_ocdid": "ocd-jurisdiction/country:us/state:co/place:arvada/government",
+        "snapshot_id": "arvada-council-districts-2023-a6bfdc31",
+        "path": GEOMETRY_DIR / "arvada_council_districts_2023_v0.1.json",
+        "map": {
+            "District 1": "ocd-division/country:us/state:co/place:arvada/council_district:1",
+            "District 2": "ocd-division/country:us/state:co/place:arvada/council_district:2",
+            "District 3": "ocd-division/country:us/state:co/place:arvada/council_district:3",
+            "District 4": "ocd-division/country:us/state:co/place:arvada/council_district:4",
+        },
+    },
+}
 
 
 def get_json(url: str, *, allow_empty: bool = False) -> dict:
@@ -161,6 +200,120 @@ def geocode_address(label: str, address: str) -> None:
         ],
     }, sort_keys=True))
 
+
+def get_geojson(url: str) -> dict:
+    with urllib.request.urlopen(url, timeout=60) as response:
+        text = response.read().decode("utf-8")
+    payload = json.loads(text)
+    if not isinstance(payload, dict) or payload.get("type") != "FeatureCollection":
+        raise ValueError(f"not a GeoJSON FeatureCollection: {url}")
+    return payload
+
+
+def build_geometry_snapshot(name: str, config: dict) -> dict:
+    layer_url = f"{config['service_url']}/{config['layer_id']}"
+    params = urllib.parse.urlencode({
+        "where": "1=1",
+        "outFields": "*",
+        "returnGeometry": "true",
+        "outSR": "4326",
+        "f": "geojson",
+    })
+    query_url = layer_url + "/query?" + params
+    payload = get_geojson(query_url)
+    if len(payload.get("features", [])) != 4:
+        raise ValueError(
+            f"{name} expected 4 geometry features, got "
+            f"{len(payload.get('features', []))}"
+        )
+
+    mapped_features = []
+    seen = set()
+    source_property = config["property"]
+    for feature in payload["features"]:
+        props = feature.get("properties") or {}
+        raw_key = str(props.get(source_property))
+        division_ocdid = config["map"].get(raw_key)
+        if division_ocdid is None:
+            raise ValueError(
+                f"{name} unexpected {source_property} value: {raw_key!r}"
+            )
+        if division_ocdid in seen:
+            raise ValueError(f"{name} duplicate division: {division_ocdid}")
+        seen.add(division_ocdid)
+        geometry = feature.get("geometry")
+        if not isinstance(geometry, dict) or geometry.get("type") not in {
+            "Polygon",
+            "MultiPolygon",
+        }:
+            raise ValueError(f"{name} non-polygon geometry")
+        mapped_features.append({
+            "type": "Feature",
+            "properties": {
+                "division_ocdid": division_ocdid,
+                "source_item_id": config["item_id"],
+                "source_layer_id": config["layer_id"],
+                "source_key": raw_key,
+            },
+            "geometry": geometry,
+        })
+
+    expected = set(config["map"].values())
+    if seen != expected:
+        raise ValueError(
+            f"{name} division coverage mismatch: "
+            f"seen={sorted(seen)} expected={sorted(expected)}"
+        )
+
+    item = arcgis_item(config["item_id"])["meta"]
+    modified = item.get("modified")
+    source_snapshot_id = (
+        f"arcgis-item:{config['item_id']}:modified:{modified}:"
+        f"layer:{config['layer_id']}"
+    )
+    snapshot = {
+        "snapshot_version": "0.1",
+        "snapshot_id": config["snapshot_id"],
+        "generated_at": GENERATED_AT,
+        "jurisdiction_ocdid": config["jurisdiction_ocdid"],
+        "source": {
+            "authority": "PRIMARY_OFFICIAL",
+            "locator": layer_url,
+            "retrieved_at": GENERATED_AT,
+            "source_snapshot_id": source_snapshot_id,
+            "derivation": "DIRECT_MACHINE_SOURCE",
+        },
+        "division_property": "division_ocdid",
+        "expected_division_ids": sorted(expected),
+        "feature_collection": {
+            "type": "FeatureCollection",
+            "features": sorted(
+                mapped_features,
+                key=lambda row: row["properties"]["division_ocdid"],
+            ),
+        },
+    }
+    return snapshot
+
+
+def write_geometry_snapshots() -> None:
+    GEOMETRY_DIR.mkdir(parents=True, exist_ok=True)
+    for name, config in GEOMETRY_TARGETS.items():
+        snapshot = build_geometry_snapshot(name, config)
+        config["path"].write_text(
+            json.dumps(snapshot, sort_keys=True, separators=(",", ":")) + "\n",
+            encoding="utf-8",
+        )
+        print(
+            "SNAPSHOT_WRITTEN="
+            + json.dumps({
+                "name": name,
+                "path": str(config["path"].relative_to(ROOT)),
+                "features": len(snapshot["feature_collection"]["features"]),
+                "source": snapshot["source"],
+            }, sort_keys=True)
+        )
+
 def main() -> int:
     print("=== ARVADA OFFICIAL HUB ITEM ===")
     item = arcgis_item(ARVADA_ITEM)
@@ -176,6 +329,8 @@ def main() -> int:
 
     for city, division, address in DISTRICT_ADDRESSES:
         geocode_address(f"{city}:{division}", address)
+
+    write_geometry_snapshots()
 
     queries = [
         'title:"Council Districts" Arvada',
