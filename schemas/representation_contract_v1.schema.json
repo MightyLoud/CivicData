@@ -1,0 +1,946 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civicdata.tech/schemas/representation_contract_v1.schema.json",
+  "title": "Civic Data Representation Contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "jurisdiction",
+    "organizations",
+    "roles",
+    "posts",
+    "people",
+    "memberships",
+    "evidence",
+    "assertions",
+    "certification"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0-draft"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "jurisdiction": {
+      "$ref": "#/$defs/jurisdiction"
+    },
+    "organizations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/organization"
+      }
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/role"
+      }
+    },
+    "posts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/post"
+      }
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/person"
+      }
+    },
+    "memberships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/membership"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "assertions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/assertion"
+      }
+    },
+    "certification": {
+      "$ref": "#/$defs/certification"
+    },
+    "elections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/election"
+      }
+    },
+    "contests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/contest"
+      }
+    },
+    "candidacies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/candidacy"
+      }
+    },
+    "election_certification": {
+      "$ref": "#/$defs/election_certification"
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheme",
+        "id"
+      ],
+      "properties": {
+        "scheme": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        }
+      }
+    },
+    "identifiers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/identifier"
+      }
+    },
+    "jurisdiction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jurisdiction_ocdid",
+        "name",
+        "classification",
+        "url",
+        "identifiers"
+      ],
+      "properties": {
+        "jurisdiction_ocdid": {
+          "type": "string",
+          "pattern": "^ocd-jurisdiction/"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "classification": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "identifiers": {
+          "$ref": "#/$defs/identifiers"
+        }
+      }
+    },
+    "organization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "jurisdiction_ocdid",
+        "name",
+        "classification",
+        "parent_organization_id",
+        "url",
+        "is_default",
+        "identifiers"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "jurisdiction_ocdid": {
+          "type": "string",
+          "pattern": "^ocd-jurisdiction/"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "classification": {
+          "enum": [
+            "government",
+            "council",
+            "board",
+            "commission",
+            "executive",
+            "legislature",
+            "school_board",
+            "court",
+            "prosecutorial",
+            "committee",
+            "other"
+          ]
+        },
+        "parent_organization_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "is_default": {
+          "type": "boolean"
+        },
+        "identifiers": {
+          "$ref": "#/$defs/identifiers"
+        },
+        "shared_identity_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^org-[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        }
+      }
+    },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "status",
+        "is_unique",
+        "aliases",
+        "identifiers"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "active",
+            "candidate",
+            "excluded",
+            "inactive"
+          ]
+        },
+        "is_unique": {
+          "type": "boolean"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "identifiers": {
+          "$ref": "#/$defs/identifiers"
+        }
+      }
+    },
+    "post": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "jurisdiction_ocdid",
+        "organization_id",
+        "role_id",
+        "division_ocdid",
+        "electorate_division_ocdid",
+        "meta_headcount",
+        "meta_is_tracked",
+        "selection_method",
+        "identifiers"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "jurisdiction_ocdid": {
+          "type": "string",
+          "pattern": "^ocd-jurisdiction/"
+        },
+        "organization_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "role_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "division_ocdid": {
+          "type": "string",
+          "pattern": "^ocd-division/"
+        },
+        "electorate_division_ocdid": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^ocd-division/"
+        },
+        "meta_headcount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "meta_is_tracked": {
+          "type": "boolean"
+        },
+        "selection_method": {
+          "enum": [
+            "elected",
+            "appointed",
+            "ex_officio",
+            "mixed",
+            "unknown",
+            null
+          ]
+        },
+        "identifiers": {
+          "$ref": "#/$defs/identifiers"
+        }
+      }
+    },
+    "person": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "other_names",
+        "phones",
+        "emails",
+        "urls",
+        "image",
+        "identifiers"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "other_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "phones": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "emails": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "urls": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "image": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "identifiers": {
+          "$ref": "#/$defs/identifiers"
+        },
+        "shared_identity_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^per-[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "url",
+        "note"
+      ],
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "membership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "post_id",
+        "organization_id",
+        "person_id",
+        "designations",
+        "label",
+        "start_date",
+        "end_date",
+        "opened_at",
+        "closed_at",
+        "sources",
+        "identifiers"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "post_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "organization_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "person_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "designations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "start_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$"
+        },
+        "end_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$"
+        },
+        "opened_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "closed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/source"
+          }
+        },
+        "identifiers": {
+          "$ref": "#/$defs/identifiers"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source_system",
+        "source_type",
+        "url",
+        "title",
+        "captured_at",
+        "content_hash",
+        "raw_record"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "source_system": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_type": {
+          "enum": [
+            "official_web",
+            "official_document",
+            "gis",
+            "election_record",
+            "meeting_record",
+            "partner_submission",
+            "other"
+          ]
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "content_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "raw_record": {}
+      }
+    },
+    "assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "subject_type",
+        "subject_id",
+        "field_path",
+        "value",
+        "evidence_ids",
+        "source_system",
+        "review_status",
+        "asserted_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "subject_type": {
+          "enum": [
+            "jurisdiction",
+            "organization",
+            "role",
+            "post",
+            "person",
+            "membership",
+            "election",
+            "contest",
+            "candidacy"
+          ]
+        },
+        "subject_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "field_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {},
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "source_system": {
+          "type": "string",
+          "minLength": 1
+        },
+        "review_status": {
+          "enum": [
+            "proposed",
+            "accepted",
+            "rejected",
+            "superseded",
+            "withdrawn"
+          ]
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "asserted_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reviewed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "certification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "raw_complete",
+        "normalized_complete",
+        "qa_passed",
+        "parity_ok",
+        "verified_at"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "uncertified",
+            "evidence_review",
+            "external_blocker",
+            "rule_fix",
+            "certified"
+          ]
+        },
+        "raw_complete": {
+          "type": "boolean"
+        },
+        "normalized_complete": {
+          "type": "boolean"
+        },
+        "qa_passed": {
+          "type": "boolean"
+        },
+        "parity_ok": {
+          "type": "boolean"
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "factory_extension": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tracker_synced": {
+              "type": "boolean"
+            },
+            "factory_complete": {
+              "type": "boolean"
+            },
+            "blocker_code": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "election": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "jurisdiction_ocdid",
+        "election_date",
+        "name",
+        "identifiers",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "jurisdiction_ocdid": {
+          "type": "string",
+          "pattern": "^ocd-jurisdiction/"
+        },
+        "election_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "identifiers": {
+          "$ref": "#/$defs/identifiers"
+        },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "contest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "election_id",
+        "post_id",
+        "name",
+        "identifiers",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "election_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "post_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "identifiers": {
+          "$ref": "#/$defs/identifiers"
+        },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "candidacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "contest_id",
+        "candidate_kind",
+        "source_candidate_id",
+        "person_id",
+        "candidate_name",
+        "ballot_name",
+        "outcome",
+        "votes",
+        "vote_share",
+        "identifiers",
+        "evidence_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "contest_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "candidate_kind": {
+          "enum": [
+            "person",
+            "write_in_bucket"
+          ]
+        },
+        "source_candidate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "person_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "candidate_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ballot_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "winner",
+            "loser",
+            "other",
+            "unknown",
+            null
+          ]
+        },
+        "votes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "vote_share": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "identifiers": {
+          "$ref": "#/$defs/identifiers"
+        },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "election_certification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "scope_complete",
+        "unexplained_loss",
+        "qa_passed",
+        "verified_at"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "uncertified",
+            "incomplete",
+            "certified"
+          ]
+        },
+        "scope_complete": {
+          "type": "boolean"
+        },
+        "unexplained_loss": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "qa_passed": {
+          "type": "boolean"
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "dependentRequired": {
+    "elections": [
+      "contests",
+      "candidacies",
+      "election_certification"
+    ],
+    "contests": [
+      "elections",
+      "candidacies",
+      "election_certification"
+    ],
+    "candidacies": [
+      "elections",
+      "contests",
+      "election_certification"
+    ],
+    "election_certification": [
+      "elections",
+      "contests",
+      "candidacies"
+    ]
+  }
+}

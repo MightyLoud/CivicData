@@ -1,0 +1,89 @@
+name: Representation Contract v1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "schemas/representation_contract_v1.schema.json"
+      - "schemas/civic_mirror_partner_snapshot_v0.1.schema.json"
+      - "schemas/seegov_partner_snapshot_v0.1.schema.json"
+      - "adapters/civicpatch/**"
+      - "adapters/factory/**"
+      - "adapters/shared_identity.py"
+      - "adapters/civic_mirror/**"
+      - "adapters/seegov/**"
+      - "adapters/partner_assertions.py"
+      - "consumers/empowered_vote/contract_v1.py"
+      - "consumers/empowered_vote/contract_v1_catalog.py"
+      - "consumers/empowered_vote/contract_v1_full_essentials.py"
+      - "consumers/empowered_vote/contract_v1_full_essentials_catalog.py"
+      - "consumers/empowered_vote/README.md"
+      - "docs/empowered-vote-contract-v1.md"
+      - "docs/representation-contract-v1.md"
+      - "docs/shared-identity-adapter-integration-v1.md"
+      - "docs/contracts/partner-assertion-governance-v0.1.md"
+      - "docs/contracts/canonical-representation-core-v0.1.md"
+      - "adapters/civic_mirror/README.md"
+      - "adapters/seegov/README.md"
+      - "docs/partner-adapters-seegov-civic-mirror-v1.md"
+      - "docs/contracts/representation-role-post-membership-v0.1.md"
+      - "docs/contracts/shared-identity-registry-v0.1.md"
+      - "tools/representation_semantics.py"
+      - "tests/test_representation_semantics.py"
+      - "tools/reconcile_representation.py"
+      - "tests/test_civicpatch_representation_export.py"
+      - "tests/test_representation_contract_akron.py"
+      - "tests/test_empowered_vote_contract_v1.py"
+      - "tests/test_empowered_vote_contract_v1_tacoma.py"
+      - "tests/test_election_contract_v1.py"
+      - "tests/test_shared_identity_adapter_integration.py"
+      - "tests/test_partner_adapters.py"
+      - "tests/fixtures/representation/**"
+      - ".github/workflows/representation-contract-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Contract, adapters, Akron reconciliation, and EV shadow parity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install schema validator
+        run: python -m pip install --disable-pip-version-check jsonschema
+      - name: Frozen Role/Post/Membership semantics
+        run: python -m unittest -v tests.test_representation_semantics
+      - name: Synthetic CivicPatch adapter tests
+        run: python -m unittest -v tests.test_civicpatch_representation_export
+      - name: Real Akron projection and reconciliation
+        run: python -m unittest -v tests.test_representation_contract_akron
+      - name: Empowered Vote Contract v1 Akron shadow parity
+        run: python -m unittest -v tests.test_empowered_vote_contract_v1
+      - name: Empowered Vote Contract v1 Tacoma district parity
+        run: python -m unittest -v tests.test_empowered_vote_contract_v1_tacoma
+      - name: Contract v1 election extension and Full Essentials parity
+        run: python -m unittest -v tests.test_election_contract_v1
+      - name: Shared identity adapter integration
+        run: python -m unittest -v tests.test_shared_identity_adapter_integration
+      - name: SeeGov and Civic Mirror partner adapters
+        run: python -m unittest -v tests.test_partner_adapters
+      - name: Compile adapters, reconciler, and EV consumer
+        run: >-
+          python -m py_compile
+          adapters/civicpatch/export_representation.py
+          adapters/civicpatch/rendered_open_data.py
+          adapters/factory/export_representation.py
+          adapters/shared_identity.py
+          adapters/partner_assertions.py
+          adapters/seegov/adapter.py
+          adapters/civic_mirror/adapter.py
+          consumers/empowered_vote/contract_v1.py
+          consumers/empowered_vote/contract_v1_catalog.py
+          tools/representation_semantics.py
+          tools/reconcile_representation.py

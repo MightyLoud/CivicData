@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://civicdata.tech/schemas/civic_mirror_partner_snapshot_v0.1.schema.json",
+  "title": "Civic Mirror Partner Snapshot v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot_id",
+    "captured_at",
+    "jurisdiction_ocdid",
+    "evidence"
+  ],
+  "properties": {
+    "snapshot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "jurisdiction_ocdid": {
+      "type": "string",
+      "pattern": "^ocd-jurisdiction/"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "bills": {
+      "type": "array",
+      "items": {}
+    },
+    "events": {
+      "type": "array",
+      "items": {}
+    }
+  },
+  "$defs": {
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject_type",
+        "field_path",
+        "value"
+      ],
+      "properties": {
+        "observation_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subject_type": {
+          "enum": [
+            "person",
+            "organization",
+            "membership",
+            "post"
+          ]
+        },
+        "field_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {},
+        "asserted_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "evidence_locator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_captured_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_external_id",
+        "source_url",
+        "representation_observations"
+      ],
+      "properties": {
+        "evidence_external_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "captured_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "editorial_tag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "person_external_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "organization_external_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "representation_observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/observation"
+          }
+        }
+      }
+    }
+  }
+}
