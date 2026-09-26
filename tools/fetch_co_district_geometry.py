@@ -78,6 +78,7 @@ CONTROLS = [
         "jurisdiction": "alamosa",
         "division_id": "division-co-alamosa-ward-4",
         "address": "1000 Twentieth St, Alamosa, CO 81101",
+        "geocode_address": "1000 20th St, Alamosa, CO 81101",
     },
     {
         "test_id": "addrtest-co-arvada-district-1-lake-arbor-golf",
@@ -375,14 +376,16 @@ def _point_on_segment(
     y2: float,
     epsilon: float = 1e-12,
 ) -> bool:
-    cross = (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1)
+    dx = x2 - x1
+    dy = y2 - y1
+    squared = dx * dx + dy * dy
+    if squared <= epsilon:
+        return (x - x1) ** 2 + (y - y1) ** 2 <= epsilon
+    cross = (x - x1) * dy - (y - y1) * dx
     if abs(cross) > epsilon:
         return False
-    dot = (x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)
-    if dot < -epsilon:
-        return False
-    squared = (x2 - x1) ** 2 + (y2 - y1) ** 2
-    return dot <= squared + epsilon
+    dot = (x - x1) * dx + (y - y1) * dy
+    return -epsilon <= dot <= squared + epsilon
 
 
 def _ring_contains(ring: list[list[float]], x: float, y: float) -> bool:
@@ -538,7 +541,9 @@ def build_control_points(
     }
     rows = []
     for control in CONTROLS:
-        point = geocode_address(control["address"])
+        point = geocode_address(
+            control.get("geocode_address") or control["address"]
+        )
         feature = features_by_division.get(control["division_id"])
         if feature is None:
             raise GeometryFetchError(
@@ -572,6 +577,9 @@ def build_control_points(
             {
                 **control,
                 **point,
+                "geocode_query": (
+                    control.get("geocode_address") or control["address"]
+                ),
                 "coordinate_source": "US_CENSUS_GEOCODER",
                 "pip_result": True,
             }
