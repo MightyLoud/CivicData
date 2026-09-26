@@ -1,0 +1,2 @@
+crosswalk_id,entity_id,entity_type,external_id,external_url,id_type,jurisdiction_id,notes,source_id,status,system,verified_at
+xw-hi-honolulu-county-geoid,jurisdiction-hi-honolulu-county,Jurisdiction,15003,https://tigerweb.geo.census.gov/tigerwebmain/Files/bas26/tigerweb_bas26_county_hi.html,COUNTY_GEOID,jurisdiction-hi-honolulu-county,Governed county GEOID for the single consolidated City and County jurisdiction.,src-hi-honolulu-census-county-20260823,VERIFIED,US_CENSUS,46257

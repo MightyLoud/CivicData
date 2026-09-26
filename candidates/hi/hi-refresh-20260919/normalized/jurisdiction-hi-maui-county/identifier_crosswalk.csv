@@ -1,0 +1,2 @@
+crosswalk_id,entity_id,entity_type,external_id,external_url,id_type,jurisdiction_id,notes,source_id,status,system,verified_at
+xw-hi-maui-county-geoid,jurisdiction-hi-maui-county,Jurisdiction,15009,https://tigerweb.geo.census.gov/tigerwebmain/Files/bas26/tigerweb_bas26_county_hi.html,COUNTY_GEOID,jurisdiction-hi-maui-county,Governed Maui County GEOID retained from HI-INV-001/BAS26 inventory; mapped source record explicitly references county geography.,src-hi-maui-census-county-20260823,VERIFIED,US_CENSUS,46257

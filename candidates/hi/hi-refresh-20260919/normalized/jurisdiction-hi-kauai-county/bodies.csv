@@ -1,0 +1,2 @@
+body_id,body_type,branch,jurisdiction_id,name,notes,official_url,row_updated_at,scope_version,source_ids,status
+body-hi-kauai-county-council,COUNTY_COUNCIL,LEGISLATIVE,jurisdiction-hi-kauai-county,Kauaʻi County Council,Current seven-member countywide at-large council; synthetic RAW numeric at-large IDs are not durable seats.,https://www.kauai.gov/Government/Council,46257,HI-NORM-001,src-hi-kauai-council-charter-20260823,ACTIVE
