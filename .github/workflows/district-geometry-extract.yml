@@ -1,0 +1,48 @@
+name: District geometry extraction candidate
+
+on:
+  pull_request:
+    paths:
+      - "tools/extract_district_geometry.py"
+      - ".github/workflows/district-geometry-extract.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install geometry dependency
+        run: python -m pip install --disable-pip-version-check shapely==2.1.2
+      - name: Extract current ArcGIS geometry
+        run: python tools/extract_district_geometry.py
+      - name: Promote successful extraction into governed artifacts
+        run: python tools/promote_district_geometry.py
+      - name: Validate promoted geometry offline
+        run: python tests/test_electoral_geometry.py
+      - name: Commit governed geometry to PR branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             data/reference/co/electoral_geometry             acceptance/representation/electoral_geometry_v0.1.json             data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json             data/normalized/co/jurisdiction-co-arvada/jurisdiction.json
+          if git diff --cached --quiet; then
+            echo "No governed geometry changes to commit."
+          else
+            git commit -m "Promote governed Alamosa and Arvada district geometry"
+            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          fi
+      - name: Upload geometry extraction
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: district-geometry-extract
+          path: artifacts/district_geometry_extract
