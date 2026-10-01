@@ -10,11 +10,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from adapters.factory.export_representation import export_factory_package
-from civic_gps_extensions.loader import load_resolver_with_extensions
 from consumers.empowered_vote.contract_v1 import (
     build_representation_from_civic_gps_result,
 )
-from consumers.empowered_vote.live_civic_gps import normalize_civic_gps_result
+from consumers.empowered_vote.live_civic_gps import (
+    load_governed_civic_gps_resolver,
+    normalize_civic_gps_result,
+)
 
 EXTENSION = ROOT / "civic_gps_extensions" / "registry_bundles.v0.1.json"
 PACKAGES = {
@@ -71,7 +73,7 @@ def expected_key(package, control, overlay):
 
 def run() -> None:
     extension = json.loads(EXTENSION.read_text(encoding="utf-8"))
-    resolver = load_resolver_with_extensions(
+    resolver = load_governed_civic_gps_resolver(
         ROOT,
         timeout_seconds=30.0,
     )
