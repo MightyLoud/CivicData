@@ -101,7 +101,7 @@ def run() -> None:
         assert len(controls) == 4, (city, len(controls))
 
         for control in controls:
-            address = control["address_input"]
+            address = control.get("civic_gps_probe_address") or control["address_input"]
             gps = resolver.resolve(address, observed_on=None)
             if "error" in gps:
                 raise AssertionError((city, address, gps["error"]))
@@ -174,6 +174,7 @@ def run() -> None:
             results.append({
                 "city": city,
                 "address": address,
+                "canonical_control_address": control["address_input"],
                 "adapter_id": overlay["overlay_id"],
                 "district_key": got_key,
                 "resolved_division_ocdid": (
