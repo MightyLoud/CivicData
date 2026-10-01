@@ -155,6 +155,38 @@ class GovernedLocalDistrictOverlayTests(unittest.TestCase):
             out["payload"]["known_gaps"][0]["summary"],
         )
 
+    def test_coordinate_resolver_returns_geography_only_payload(self):
+        from civic_gps_extensions.loader import (
+            CivicGPSBoundaryOverlayResolver,
+        )
+
+        class FakeEngine:
+            pass
+
+        resolver = CivicGPSBoundaryOverlayResolver(
+            FakeEngine(),
+            [],
+            [],
+            self.overlays,
+        )
+        result = resolver.resolve_governed_local_coordinate(
+            "jur-us-co-arvada",
+            longitude=-105.18539000544,
+            latitude=39.816501932133,
+            observed_on="2026-09-26",
+        )
+        self.assertNotIn("error", result)
+        self.assertEqual(
+            result["payload"]["district_assignments"],
+            [{
+                "adapter_id": "DIST-CO-ARVADA-COUNCIL",
+                "district_key": "4",
+            }],
+        )
+        self.assertEqual(result["payload"]["offices"], [])
+        self.assertEqual(result["payload"]["officeholders"], [])
+        self.assertEqual(result["payload"]["action_links"], [])
+
     def test_registry_snapshot_path_drift_fails_before_runtime(self):
         rows = deepcopy(
             self.extension["governed_local_district_overlays"]
