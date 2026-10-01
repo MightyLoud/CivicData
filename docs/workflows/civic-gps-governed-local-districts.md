@@ -82,16 +82,22 @@ No nearest-polygon, label matching, or district guessing is allowed.
 
 ## Acceptance
 
-The protected Civic GPS gate proves all eight real controls with live geocoding:
+The protected Civic GPS gate proves all eight governed test coordinates through
+the actual runtime resolver:
 
 - Alamosa Wards 1–4
 - Arvada Council Districts 1–4
 
-For each control it verifies:
+For every control it verifies:
 
-- municipal jurisdiction activation;
-- dynamically produced district key;
-- zero municipal civic-fact rows from Civic GPS;
+- coordinate → governed polygon → dynamic district key;
 - Contract-v1 division resolution;
 - exact Factory-expected office IDs;
 - zero canonical writes.
+
+The Census address geocoder is measured separately as an upstream provider-health
+sample. At least one live address per city must activate the municipality and
+return the same dynamic district assignment. Individual Census
+`ADDRESS_NOT_MATCHED` or transient request failures are reported as provider
+gaps rather than being allowed to invalidate an independently governed
+coordinate-to-district result.
