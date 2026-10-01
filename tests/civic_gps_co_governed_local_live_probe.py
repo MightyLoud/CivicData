@@ -78,6 +78,7 @@ def run() -> None:
         timeout_seconds=30.0,
     )
     results = []
+    live_success_by_city = {city: 0 for city in PACKAGES}
 
     for city, package_path in PACKAGES.items():
         package = json.loads(package_path.read_text(encoding="utf-8"))
@@ -177,57 +178,71 @@ def run() -> None:
                     observed_on=None,
                 )
                 if "error" in live_gps:
-                    raise AssertionError(
-                        (city, live_address, live_gps["error"])
+                    error = live_gps["error"]
+                    code = str(error.get("code") or "")
+                    if code not in {
+                        "ADDRESS_NOT_MATCHED",
+                        "UPSTREAM_REQUEST_FAILED",
+                    }:
+                        raise AssertionError(
+                            (city, live_address, error)
+                        )
+                    live_address_result = {
+                        "status": "GEOCODER_PROVIDER_GAP",
+                        "address": live_address,
+                        "error_code": code,
+                        "detail": error,
+                    }
+                else:
+                    live_normalized = normalize_civic_gps_result(
+                        live_address,
+                        live_gps,
                     )
-                live_normalized = normalize_civic_gps_result(
-                    live_address,
-                    live_gps,
-                )
-                assert live_normalized["status"] == "PASS", live_normalized
-                assert civic_jurisdiction_id in live_normalized[
-                    "jurisdiction_ids"
-                ]
-                live_key = live_normalized[
-                    "district_assignments"
-                ].get(overlay["overlay_id"])
-                assert live_key == want_key, (
-                    city,
-                    live_address,
-                    want_key,
-                    live_key,
-                )
+                    assert live_normalized["status"] == "PASS", live_normalized
+                    assert civic_jurisdiction_id in live_normalized[
+                        "jurisdiction_ids"
+                    ]
+                    live_key = live_normalized[
+                        "district_assignments"
+                    ].get(overlay["overlay_id"])
+                    assert live_key == want_key, (
+                        city,
+                        live_address,
+                        want_key,
+                        live_key,
+                    )
 
-                payload = live_gps["payload"]
-                jurisdiction_offices = [
-                    row
-                    for row in payload.get("offices", [])
-                    if row.get("jurisdiction_id")
-                    == civic_jurisdiction_id
-                ]
-                jurisdiction_applicable = [
-                    row
-                    for row in payload.get("applicable_offices", [])
-                    if row.get("jurisdiction_id")
-                    == civic_jurisdiction_id
-                ]
-                jurisdiction_actions = [
-                    row
-                    for row in payload.get("action_links", [])
-                    if row.get("jurisdiction_id")
-                    == civic_jurisdiction_id
-                ]
-                assert jurisdiction_offices == []
-                assert jurisdiction_applicable == []
-                assert jurisdiction_actions == []
-                live_address_result = {
-                    "status": "PASS",
-                    "address": live_address,
-                    "district_key": live_key,
-                    "matched_address": (
-                        live_normalized.get("matched_address")
-                    ),
-                }
+                    payload = live_gps["payload"]
+                    jurisdiction_offices = [
+                        row
+                        for row in payload.get("offices", [])
+                        if row.get("jurisdiction_id")
+                        == civic_jurisdiction_id
+                    ]
+                    jurisdiction_applicable = [
+                        row
+                        for row in payload.get("applicable_offices", [])
+                        if row.get("jurisdiction_id")
+                        == civic_jurisdiction_id
+                    ]
+                    jurisdiction_actions = [
+                        row
+                        for row in payload.get("action_links", [])
+                        if row.get("jurisdiction_id")
+                        == civic_jurisdiction_id
+                    ]
+                    assert jurisdiction_offices == []
+                    assert jurisdiction_applicable == []
+                    assert jurisdiction_actions == []
+                    live_success_by_city[city] += 1
+                    live_address_result = {
+                        "status": "PASS",
+                        "address": live_address,
+                        "district_key": live_key,
+                        "matched_address": (
+                            live_normalized.get("matched_address")
+                        ),
+                    }
             else:
                 assert live_geocode_status == (
                     "UNRESOLVED_CENSUS_GEOCODER"
@@ -261,6 +276,13 @@ def run() -> None:
             })
 
     assert len(results) == 8
+    for city, success_count in live_success_by_city.items():
+        assert success_count >= 1, (
+            city,
+            "At least one live Census-geocoder route per city is required.",
+            results,
+        )
+
     print(json.dumps({
         "status": "PASS",
         "gate": "EV-RC1-GOVERNED-LOCAL-GEOMETRY-LIVE",
@@ -276,8 +298,12 @@ def run() -> None:
             1
             for row in results
             if row["live_address"]["status"]
-            == "UNRESOLVED_CENSUS_GEOCODER"
+            in {
+                "UNRESOLVED_CENSUS_GEOCODER",
+                "GEOCODER_PROVIDER_GAP",
+            }
         ),
+        "live_success_by_city": live_success_by_city,
         "civic_gps_local_civic_fact_rows": 0,
         "canonical_writes": 0,
     }, sort_keys=True))
