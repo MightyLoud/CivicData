@@ -10,7 +10,10 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from civic_gps_extensions.loader import _load_extension
+from civic_gps_extensions.loader import (
+    _load_extension,
+    load_registry_with_extensions,
+)
 from civic_gps_extensions.local_geometry import (
     GovernedLocalDistrictError,
     apply_governed_local_district_overlays,
@@ -27,6 +30,21 @@ class GovernedLocalDistrictOverlayTests(unittest.TestCase):
         cls.overlays = prepare_governed_local_district_overlays(
             ROOT,
             cls.extension["governed_local_district_overlays"],
+        )
+
+    def test_merged_registry_contains_sixteen_bundles_without_mutating_packed_runtime(self):
+        merged, _ = load_registry_with_extensions(ROOT)
+        self.assertEqual(len(merged["bundles"]), 16)
+        self.assertEqual(
+            {
+                row["adapter_id"]
+                for row in merged["bundles"]
+                if row["adapter_id"] in {
+                    "BASE-CO-ALAMOSA",
+                    "BASE-CO-ARVADA",
+                }
+            },
+            {"BASE-CO-ALAMOSA", "BASE-CO-ARVADA"},
         )
 
     def test_all_configured_snapshots_prepare(self):
