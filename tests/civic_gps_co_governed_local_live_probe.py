@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import os
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +14,7 @@ from adapters.factory.export_representation import export_factory_package
 from consumers.empowered_vote.contract_v1 import (
     build_representation_from_civic_gps_result,
 )
+from civic_gps_extensions.loader import load_registry_with_extensions
 from consumers.empowered_vote.live_civic_gps import (
     load_governed_civic_gps_resolver,
     normalize_civic_gps_result,
@@ -73,6 +75,28 @@ def expected_key(package, control, overlay):
 
 def run() -> None:
     extension = json.loads(EXTENSION.read_text(encoding="utf-8"))
+    merged_registry, _ = load_registry_with_extensions(ROOT)
+    packed_registry = json.loads(
+        (ROOT / "civic_gps" / "registry.json").read_text(encoding="utf-8")
+    )
+    packed_expected = int(
+        os.environ.get(
+            "CIVIC_GPS_EXPECTED_BUNDLE_COUNT",
+            str(len(packed_registry["bundles"])),
+        )
+    )
+    assert len(packed_registry["bundles"]) == packed_expected, (
+        len(packed_registry["bundles"]),
+        packed_expected,
+    )
+    assert len(merged_registry["bundles"]) == (
+        packed_expected + len(extension["bundles"])
+    ), (
+        len(merged_registry["bundles"]),
+        packed_expected,
+        len(extension["bundles"]),
+    )
+
     resolver = load_governed_civic_gps_resolver(
         ROOT,
         timeout_seconds=30.0,
@@ -287,6 +311,9 @@ def run() -> None:
         "status": "PASS",
         "gate": "EV-RC1-GOVERNED-LOCAL-GEOMETRY-LIVE",
         "controls": results,
+        "packed_bundle_count": len(packed_registry["bundles"]),
+        "extension_bundle_count": len(extension["bundles"]),
+        "merged_bundle_count": len(merged_registry["bundles"]),
         "dynamic_polygon_assignments": 8,
         "factory_expected_divisions_used_as_routing_input": 0,
         "live_address_geocodes_passed": sum(
