@@ -101,90 +101,163 @@ def run() -> None:
         assert len(controls) == 4, (city, len(controls))
 
         for control in controls:
-            address = control.get("civic_gps_probe_address") or control["address_input"]
-            gps = resolver.resolve(address, observed_on=None)
-            if "error" in gps:
-                raise AssertionError((city, address, gps["error"]))
-            normalized = normalize_civic_gps_result(address, gps)
-            assert normalized["status"] == "PASS", normalized
-            assert civic_jurisdiction_id in normalized["jurisdiction_ids"]
-            got_key = normalized["district_assignments"].get(
-                overlay["overlay_id"]
+            canonical_address = control["address_input"]
+            longitude = float(control["longitude"])
+            latitude = float(control["latitude"])
+
+            coordinate_gps = resolver.resolve_governed_local_coordinate(
+                civic_jurisdiction_id,
+                longitude=longitude,
+                latitude=latitude,
+                observed_on=None,
             )
+            if "error" in coordinate_gps:
+                raise AssertionError(
+                    (city, canonical_address, coordinate_gps["error"])
+                )
+            coordinate_normalized = normalize_civic_gps_result(
+                canonical_address,
+                coordinate_gps,
+            )
+            assert coordinate_normalized["status"] == "PASS", (
+                coordinate_normalized
+            )
+            got_key = coordinate_normalized[
+                "district_assignments"
+            ].get(overlay["overlay_id"])
             want_key = expected_key(package, control, overlay)
             assert got_key == want_key, (
                 city,
-                address,
+                canonical_address,
                 want_key,
                 got_key,
-                normalized["district_assignments"],
+                coordinate_normalized["district_assignments"],
             )
 
-            payload = gps["payload"]
-            jurisdiction_offices = [
-                row
-                for row in payload.get("offices", [])
-                if row.get("jurisdiction_id") == civic_jurisdiction_id
-            ]
-            jurisdiction_applicable = [
-                row
-                for row in payload.get("applicable_offices", [])
-                if row.get("jurisdiction_id") == civic_jurisdiction_id
-            ]
-            jurisdiction_actions = [
-                row
-                for row in payload.get("action_links", [])
-                if row.get("jurisdiction_id") == civic_jurisdiction_id
-            ]
-            assert jurisdiction_offices == []
-            assert jurisdiction_applicable == []
-            assert jurisdiction_actions == []
-
-            model = build_representation_from_civic_gps_result(
+            coordinate_model = build_representation_from_civic_gps_result(
                 contract,
-                address,
-                gps,
+                canonical_address,
+                coordinate_gps,
                 binding=binding,
                 resolution_source=(
-                    "CIVIC_GPS_GOVERNED_LOCAL_GEOMETRY"
+                    "CIVIC_GPS_GOVERNED_LOCAL_COORDINATE"
                 ),
             )
-            assert model["status"] == "PASS", model
+            assert coordinate_model["status"] == "PASS", coordinate_model
             actual_offices = sorted(
                 row["office_id"]
-                for row in model["applicable_offices"]
+                for row in coordinate_model["applicable_offices"]
             )
             expected_offices = split_ids(
                 control["expected_office_ids"]
             )
             assert actual_offices == expected_offices, (
                 city,
-                address,
+                canonical_address,
                 expected_offices,
                 actual_offices,
             )
-            assert model["resolved_division_ocdid"] == binding[
+            assert coordinate_model["resolved_division_ocdid"] == binding[
                 "district_division_map"
             ][want_key]
-            assert model["address_resolution_source"] == (
-                "CIVIC_GPS_GOVERNED_LOCAL_GEOMETRY"
+            assert coordinate_model["canonical_writes"] == 0
+
+            live_geocode_status = control.get(
+                "civic_gps_live_geocode_status",
+                "EXPECTED",
             )
-            assert model["canonical_writes"] == 0
+            live_address_result = None
+            if live_geocode_status == "EXPECTED":
+                live_address = (
+                    control.get("civic_gps_probe_address")
+                    or canonical_address
+                )
+                live_gps = resolver.resolve(
+                    live_address,
+                    observed_on=None,
+                )
+                if "error" in live_gps:
+                    raise AssertionError(
+                        (city, live_address, live_gps["error"])
+                    )
+                live_normalized = normalize_civic_gps_result(
+                    live_address,
+                    live_gps,
+                )
+                assert live_normalized["status"] == "PASS", live_normalized
+                assert civic_jurisdiction_id in live_normalized[
+                    "jurisdiction_ids"
+                ]
+                live_key = live_normalized[
+                    "district_assignments"
+                ].get(overlay["overlay_id"])
+                assert live_key == want_key, (
+                    city,
+                    live_address,
+                    want_key,
+                    live_key,
+                )
+
+                payload = live_gps["payload"]
+                jurisdiction_offices = [
+                    row
+                    for row in payload.get("offices", [])
+                    if row.get("jurisdiction_id")
+                    == civic_jurisdiction_id
+                ]
+                jurisdiction_applicable = [
+                    row
+                    for row in payload.get("applicable_offices", [])
+                    if row.get("jurisdiction_id")
+                    == civic_jurisdiction_id
+                ]
+                jurisdiction_actions = [
+                    row
+                    for row in payload.get("action_links", [])
+                    if row.get("jurisdiction_id")
+                    == civic_jurisdiction_id
+                ]
+                assert jurisdiction_offices == []
+                assert jurisdiction_applicable == []
+                assert jurisdiction_actions == []
+                live_address_result = {
+                    "status": "PASS",
+                    "address": live_address,
+                    "district_key": live_key,
+                    "matched_address": (
+                        live_normalized.get("matched_address")
+                    ),
+                }
+            else:
+                assert live_geocode_status == (
+                    "UNRESOLVED_CENSUS_GEOCODER"
+                )
+                live_address_result = {
+                    "status": live_geocode_status,
+                    "address": canonical_address,
+                    "detail": control.get(
+                        "civic_gps_live_geocode_note"
+                    ),
+                }
 
             results.append({
                 "city": city,
-                "address": address,
-                "canonical_control_address": control["address_input"],
+                "canonical_control_address": canonical_address,
                 "adapter_id": overlay["overlay_id"],
                 "district_key": got_key,
+                "longitude": longitude,
+                "latitude": latitude,
                 "resolved_division_ocdid": (
-                    model["resolved_division_ocdid"]
+                    coordinate_model["resolved_division_ocdid"]
                 ),
                 "office_ids": actual_offices,
                 "current_holder_count": (
-                    model["current_holder_count"]
+                    coordinate_model["current_holder_count"]
                 ),
-                "matched_address": model.get("matched_address"),
+                "coordinate_resolution_source": (
+                    coordinate_model["address_resolution_source"]
+                ),
+                "live_address": live_address_result,
             })
 
     assert len(results) == 8
@@ -193,7 +266,18 @@ def run() -> None:
         "gate": "EV-RC1-GOVERNED-LOCAL-GEOMETRY-LIVE",
         "controls": results,
         "dynamic_polygon_assignments": 8,
-        "factory_controls_used_as_routing_input": 0,
+        "factory_expected_divisions_used_as_routing_input": 0,
+        "live_address_geocodes_passed": sum(
+            1
+            for row in results
+            if row["live_address"]["status"] == "PASS"
+        ),
+        "live_address_geocoder_gaps": sum(
+            1
+            for row in results
+            if row["live_address"]["status"]
+            == "UNRESOLVED_CENSUS_GEOCODER"
+        ),
         "civic_gps_local_civic_fact_rows": 0,
         "canonical_writes": 0,
     }, sort_keys=True))
