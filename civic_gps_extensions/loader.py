@@ -204,6 +204,76 @@ class CivicGPSBoundaryOverlayResolver:
                 _rehash(result)
             return result
 
+    def resolve_governed_local_coordinate(
+        self,
+        jurisdiction_id: str,
+        *,
+        longitude: float,
+        latitude: float,
+        observed_on: str | None = None,
+    ) -> dict[str, Any]:
+        """Resolve one governed local electoral district from a known point.
+
+        This method does not geocode and does not infer the municipality. The
+        caller supplies the already-resolved Civic GPS jurisdiction. Successful
+        district resolution proves that the point lies in exactly one governed
+        polygon for that jurisdiction.
+        """
+        jurisdiction_id = str(jurisdiction_id or "").strip()
+        candidates = [
+            row
+            for row in self.governed_local_district_overlays
+            if str(row["jurisdiction_id"]) == jurisdiction_id
+        ]
+        if len(candidates) != 1:
+            return {
+                "error": {
+                    "code": "GOVERNED_LOCAL_JURISDICTION_UNSUPPORTED",
+                    "message": (
+                        "Exactly one governed local district overlay is "
+                        "required for coordinate resolution."
+                    ),
+                    "details": {
+                        "jurisdiction_id": jurisdiction_id,
+                        "overlay_count": len(candidates),
+                    },
+                }
+            }
+        result: dict[str, Any] = {
+            "payload": {
+                "input": {
+                    "longitude": float(longitude),
+                    "latitude": float(latitude),
+                },
+                "jurisdictions": [
+                    {"jurisdiction_id": jurisdiction_id}
+                ],
+                "matched_divisions": [],
+                "district_assignments": [],
+                "offices": [],
+                "applicable_offices": [],
+                "officeholders": [],
+                "action_links": [],
+                "evidence": [],
+                "coverage": [],
+                "known_gaps": [],
+            },
+            "meta": {
+                "resolver_mode": "GOVERNED_LOCAL_COORDINATE",
+            },
+        }
+        result = apply_governed_local_district_overlays(
+            result,
+            {
+                "longitude": float(longitude),
+                "latitude": float(latitude),
+            },
+            candidates,
+            observed_on=observed_on,
+        )
+        _rehash(result)
+        return result
+
     def _resolve_municipal(self, address: str, *, observed_on: str | None = None) -> dict[str, Any]:
         result = self.engine.resolve(address, observed_on=observed_on)
         if "error" in result or not self.overlays:
