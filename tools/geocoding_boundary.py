@@ -114,11 +114,11 @@ def _normalized_candidate(row: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _candidate_identity(row: Mapping[str, Any]) -> tuple[Any, ...]:
+    # Ambiguity is geographic. Multiple provider labels for the same point do
+    # not create a distinct downstream district choice.
     return (
-        _clean(row.get("matched_address")).casefold(),
         round(float(row["longitude"]), 10),
         round(float(row["latitude"]), 10),
-        _clean(row.get("addr_type")),
     )
 
 
