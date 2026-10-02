@@ -72,12 +72,26 @@ identity.
 
 ### Empowered Vote
 
-Mode: `GOVERNED_ADDRESS_FIXTURE_RUNTIME`.
+Mode: `GOVERNED_GEOGRAPHY_RUNTIME`.
 
 The engine consumes every passing governed Factory `qa.address_tests` control.
-Each real address supplies the already-reviewed address → division/office
-boundary, then the actual Empowered Vote Contract-v1 runtime joins that
-geography to the certified representation graph.
+
+For district controls with committed coordinates, runtime geography is derived
+from the governed Polygon/MultiPolygon snapshot:
+
+```text
+coordinate
+  → governed geometry registry
+  → point-in-polygon
+  → canonical OCD division
+```
+
+The Factory `expected_division_id` is then checked as an assertion against the
+runtime result; it is not used as the district-routing input.
+
+Citywide controls without coordinate-backed local geometry continue through the
+reviewed fixture boundary. The report exposes `controls_pip` and
+`controls_fixture` separately.
 
 PASS requires:
 
@@ -87,7 +101,9 @@ PASS requires:
 - no canonical writes occur.
 
 This is deterministic runtime conformance, **not a live network geocode**.
-`live_civic_gps_network` remains explicitly untested here.
+Live address geocoding remains explicitly separate as
+`live_address_geocoding_network`; coordinate → district resolution is now
+exercised through governed PIP.
 
 When a jurisdiction contains ward/district divisions but no governed address
 control resolves those districts, the report records
