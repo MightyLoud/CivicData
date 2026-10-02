@@ -281,6 +281,100 @@
       "known_gaps": [],
       "ev_onboarding_status": "ROUTING_ONLY",
       "ev_onboarding_reason": "County geography is governed; package-to-representation division binding remains separately gated."
+    },
+    {
+      "adapter_id": "BASE-CO-ALAMOSA",
+      "mode": "BASE",
+      "priority": 80,
+      "scope_match": {
+        "geography": "place",
+        "fields": [
+          "GEOID"
+        ],
+        "equals": "0801090"
+      },
+      "division_rules": [
+        {
+          "division_id": "div-us-co-alamosa",
+          "name": "Alamosa",
+          "type": "municipality",
+          "when": {
+            "geography": "place",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "0801090"
+          }
+        }
+      ],
+      "jurisdictions": [
+        {
+          "jurisdiction_id": "jur-us-co-alamosa",
+          "activation": {
+            "geography": "place",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "0801090"
+          }
+        }
+      ],
+      "release_files": [
+        "../civic_gps_extensions/alamosa_release_v0.1.json"
+      ],
+      "district_adapters": [],
+      "applicable_office_rules": [],
+      "action_registry_files": [],
+      "known_gaps": [],
+      "ev_onboarding_status": "ROUTING_ONLY",
+      "ev_onboarding_reason": "Municipal and ward geography are governed; civic facts remain in the certified Jurisdiction Package."
+    },
+    {
+      "adapter_id": "BASE-CO-ARVADA",
+      "mode": "BASE",
+      "priority": 80,
+      "scope_match": {
+        "geography": "place",
+        "fields": [
+          "GEOID"
+        ],
+        "equals": "0803455"
+      },
+      "division_rules": [
+        {
+          "division_id": "div-us-co-arvada",
+          "name": "Arvada",
+          "type": "municipality",
+          "when": {
+            "geography": "place",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "0803455"
+          }
+        }
+      ],
+      "jurisdictions": [
+        {
+          "jurisdiction_id": "jur-us-co-arvada",
+          "activation": {
+            "geography": "place",
+            "fields": [
+              "GEOID"
+            ],
+            "equals": "0803455"
+          }
+        }
+      ],
+      "release_files": [
+        "../civic_gps_extensions/arvada_release_v0.1.json"
+      ],
+      "district_adapters": [],
+      "applicable_office_rules": [],
+      "action_registry_files": [],
+      "known_gaps": [],
+      "ev_onboarding_status": "ROUTING_ONLY",
+      "ev_onboarding_reason": "Municipal and council-district geography are governed; civic facts remain in the certified Jurisdiction Package."
     }
   ],
   "municipal_boundary_overlays": [
@@ -350,6 +444,74 @@
       "publication_eligible": false,
       "geometry_governance": {
         "policy_id": "texas-legislative-geometry-governance/0.1"
+      }
+    }
+  ],
+  "governed_local_district_overlays": [
+    {
+      "overlay_id": "DIST-CO-ALAMOSA-WARD",
+      "jurisdiction_id": "jur-us-co-alamosa",
+      "source_registry_path": "data/reference/co/district_geometry_sources_v0.1.json",
+      "source_registry_jurisdiction_id": "jurisdiction-co-alamosa",
+      "snapshot_path": "data/reference/co/geometry/alamosa_wards_2023_v0.1.json",
+      "division_type": "ward",
+      "parent_division_id": "div-us-co-alamosa",
+      "required": true,
+      "failure_scope": "ADAPTER",
+      "districts": {
+        "1": {
+          "division_ocdid": "ocd-division/country:us/state:co/place:alamosa/ward:1",
+          "division_id": "div-us-co-alamosa-ward-1",
+          "name": "Alamosa Ward 1"
+        },
+        "2": {
+          "division_ocdid": "ocd-division/country:us/state:co/place:alamosa/ward:2",
+          "division_id": "div-us-co-alamosa-ward-2",
+          "name": "Alamosa Ward 2"
+        },
+        "3": {
+          "division_ocdid": "ocd-division/country:us/state:co/place:alamosa/ward:3",
+          "division_id": "div-us-co-alamosa-ward-3",
+          "name": "Alamosa Ward 3"
+        },
+        "4": {
+          "division_ocdid": "ocd-division/country:us/state:co/place:alamosa/ward:4",
+          "division_id": "div-us-co-alamosa-ward-4",
+          "name": "Alamosa Ward 4"
+        }
+      }
+    },
+    {
+      "overlay_id": "DIST-CO-ARVADA-COUNCIL",
+      "jurisdiction_id": "jur-us-co-arvada",
+      "source_registry_path": "data/reference/co/district_geometry_sources_v0.1.json",
+      "source_registry_jurisdiction_id": "jurisdiction-co-arvada",
+      "snapshot_path": "data/reference/co/geometry/arvada_council_districts_2023_v0.1.json",
+      "division_type": "council_district",
+      "parent_division_id": "div-us-co-arvada",
+      "required": true,
+      "failure_scope": "ADAPTER",
+      "districts": {
+        "1": {
+          "division_ocdid": "ocd-division/country:us/state:co/place:arvada/council_district:1",
+          "division_id": "div-us-co-arvada-council-district-1",
+          "name": "Arvada Council District 1"
+        },
+        "2": {
+          "division_ocdid": "ocd-division/country:us/state:co/place:arvada/council_district:2",
+          "division_id": "div-us-co-arvada-council-district-2",
+          "name": "Arvada Council District 2"
+        },
+        "3": {
+          "division_ocdid": "ocd-division/country:us/state:co/place:arvada/council_district:3",
+          "division_id": "div-us-co-arvada-council-district-3",
+          "name": "Arvada Council District 3"
+        },
+        "4": {
+          "division_ocdid": "ocd-division/country:us/state:co/place:arvada/council_district:4",
+          "division_id": "div-us-co-arvada-council-district-4",
+          "name": "Arvada Council District 4"
+        }
       }
     }
   ]
