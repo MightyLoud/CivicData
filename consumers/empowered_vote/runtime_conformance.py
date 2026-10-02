@@ -13,8 +13,14 @@ from consumers.empowered_vote.contract_v1 import (
     build_representation_from_civic_gps_result,
     validate_contract,
 )
+from tools.governed_geography_resolver import (
+    GovernedCoordinateResolver,
+    GovernedGeographyError,
+    SOURCE as PIP_RESOLUTION_SOURCE,
+)
 
 RESOLUTION_SOURCE = "GOVERNED_FACTORY_ADDRESS_CONTROL"
+RUNTIME_MODE = "GOVERNED_GEOGRAPHY_RUNTIME"
 
 
 class RuntimeConformanceError(ValueError):
@@ -177,40 +183,65 @@ def evaluate_address_control(
         }
 
     fixture_jurisdiction_id = _fixture_jurisdiction_id(package)
-    binding = {
-        "contract_jurisdiction_ocdid": contract["jurisdiction"]["jurisdiction_ocdid"],
-        "civic_gps_jurisdiction_id": fixture_jurisdiction_id,
-    }
     base_division = _base_division_ocdid(contract)
-    if expected_division_ocdid == base_division:
-        binding["division_ocdid"] = expected_division_ocdid
-        district_adapter_id = None
-        district_key = None
+    coordinate_role = _clean(control.get("coordinate_role"))
+    if coordinate_role == "DERIVED_TEST_POINT_ONLY":
+        try:
+            resolver = GovernedCoordinateResolver()
+            gps, binding = resolver.civic_gps_payload(
+                address=address,
+                matched_address=_clean(control.get("geocoded_address"))
+                or _clean(control.get("normalized_address")),
+                longitude=float(control["longitude"]),
+                latitude=float(control["latitude"]),
+                jurisdiction_id=_clean(
+                    package.get("jurisdiction", {}).get("jurisdiction_id")
+                ),
+            )
+            resolution_source = PIP_RESOLUTION_SOURCE
+        except (GovernedGeographyError, KeyError, TypeError, ValueError) as exc:
+            return {
+                "test_id": control.get("test_id"),
+                "address": address,
+                "status": "BLOCKED",
+                "error": "GOVERNED_GEOMETRY_RESOLUTION_FAILED",
+                "detail": str(exc),
+            }
     else:
-        district_adapter_id = (
-            "fixture:"
-            + _clean(package.get("jurisdiction", {}).get("jurisdiction_id"))
-            + ":district"
-        )
-        district_key = expected_native_division
-        binding["district_adapter_id"] = district_adapter_id
-        binding["district_division_map"] = {
-            district_key: expected_division_ocdid,
+        binding = {
+            "contract_jurisdiction_ocdid": contract["jurisdiction"]["jurisdiction_ocdid"],
+            "civic_gps_jurisdiction_id": fixture_jurisdiction_id,
         }
+        if expected_division_ocdid == base_division:
+            binding["division_ocdid"] = expected_division_ocdid
+            district_adapter_id = None
+            district_key = None
+        else:
+            district_adapter_id = (
+                "fixture:"
+                + _clean(package.get("jurisdiction", {}).get("jurisdiction_id"))
+                + ":district"
+            )
+            district_key = expected_native_division
+            binding["district_adapter_id"] = district_adapter_id
+            binding["district_division_map"] = {
+                district_key: expected_division_ocdid,
+            }
+        gps = _gps_fixture(
+            address=address,
+            matched_address=_clean(control.get("normalized_address")),
+            fixture_jurisdiction_id=fixture_jurisdiction_id,
+            district_adapter_id=district_adapter_id,
+            district_key=district_key,
+        )
+        resolution_source = RESOLUTION_SOURCE
 
-    gps = _gps_fixture(
-        address=address,
-        matched_address=_clean(control.get("normalized_address")),
-        fixture_jurisdiction_id=fixture_jurisdiction_id,
-        district_adapter_id=district_adapter_id,
-        district_key=district_key,
-    )
     model = build_representation_from_civic_gps_result(
         dict(contract),
         address,
         gps,
         binding=binding,
-        resolution_source=RESOLUTION_SOURCE,
+        resolution_source=resolution_source,
     )
     if model.get("status") != "PASS":
         return {
@@ -231,7 +262,7 @@ def evaluate_address_control(
         errors.append("RESOLVED_DIVISION_MISMATCH")
     if actual_offices != expected_offices:
         errors.append("APPLICABLE_OFFICES_MISMATCH")
-    if model.get("address_resolution_source") != RESOLUTION_SOURCE:
+    if model.get("address_resolution_source") != resolution_source:
         errors.append("RESOLUTION_SOURCE_MISMATCH")
     if model.get("canonical_writes") != 0:
         errors.append("CANONICAL_WRITE_FORBIDDEN")
@@ -262,6 +293,7 @@ def evaluate_address_control(
         "current_holder_count": model.get("current_holder_count"),
         "selected_seat_capacity": expected_capacity,
         "resolution_source": model.get("address_resolution_source"),
+        "coordinate_role": coordinate_role or None,
         "canonical_writes": model.get("canonical_writes"),
     }
 
@@ -302,7 +334,7 @@ def evaluate_governed_address_runtime(
     if contract_errors:
         return {
             "status": "BLOCKED",
-            "mode": "GOVERNED_ADDRESS_FIXTURE_RUNTIME",
+            "mode": RUNTIME_MODE,
             "controls_total": 0,
             "controls_passed": 0,
             "controls_lossy": 0,
@@ -317,7 +349,7 @@ def evaluate_governed_address_runtime(
     if not isinstance(raw_controls, list) or not raw_controls:
         return {
             "status": "NOT_TESTED",
-            "mode": "GOVERNED_ADDRESS_FIXTURE_RUNTIME",
+            "mode": RUNTIME_MODE,
             "controls_total": 0,
             "controls_passed": 0,
             "controls_lossy": 0,
@@ -350,17 +382,27 @@ def evaluate_governed_address_runtime(
         status = "NOT_TESTED"
 
     geography_gaps = _division_coverage_gaps(package, raw_controls)
-    untested = ["live_civic_gps_network"]
+    untested = ["live_address_geocoding_network"]
     if geography_gaps:
         untested.append("district_address_runtime_coverage")
 
     return {
         "status": status,
-        "mode": "GOVERNED_ADDRESS_FIXTURE_RUNTIME",
+        "mode": RUNTIME_MODE,
         "controls_total": len(controls),
         "controls_passed": counts["PASS"],
         "controls_lossy": counts["LOSSY"],
         "controls_blocked": counts["BLOCKED"],
+        "controls_pip": sum(
+            1
+            for row in controls
+            if row.get("resolution_source") == PIP_RESOLUTION_SOURCE
+        ),
+        "controls_fixture": sum(
+            1
+            for row in controls
+            if row.get("resolution_source") == RESOLUTION_SOURCE
+        ),
         "controls": controls,
         "geography_gaps": geography_gaps,
         "untested_capabilities": untested,

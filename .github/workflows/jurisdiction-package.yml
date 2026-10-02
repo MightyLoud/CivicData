@@ -25,6 +25,8 @@ on:
       - "tests/test_export_representation.py"
       - "tests/test_empowered_vote_runtime_conformance.py"
       - "tests/test_geometry_governance.py"
+      - "tests/test_governed_geography_resolver.py"
+      - "tools/governed_geography_resolver.py"
       - "tools/geometry_governance.py"
       - "schemas/governed_geometry_snapshot_v0.1.schema.json"
       - "data/reference/co/district_geometry_sources_v0.1.json"
@@ -119,7 +121,7 @@ jobs:
           python-version: "3.12"
       - name: Compile generic, strict, exporter, Texas, and regression controls
         if: steps.package.outputs.present == 'true'
-        run: python -m py_compile tools/hi_factory_refresh.py tests/test_hi_factory_refresh.py tools/jurisdiction_package.py tools/jurisdiction_package_strict.py tools/co_factory_export.py tools/texas_activation_readiness.py tools/texas_successor_contract.py consumers/empowered_vote/production_profile.py consumers/empowered_vote/package_catalog.py consumers/empowered_vote/representation_catalog.py consumers/empowered_vote/contract_v1.py consumers/empowered_vote/runtime_conformance.py consumers/civicpatch/adapter.py consumers/civicpatch/build_akron_pilot.py consumers/civicpatch/reconcile.py consumers/civicpatch/build_akron_partner_patch.py consumers/civicpatch/build_akron_upstream_handoff.py tools/export_representation.py tools/geometry_governance.py tools/representation_semantics.py tools/ocdid_registry_validation.py tools/shared_identity_registry.py tools/snapshot_manifest.py tools/assertion_governance.py tools/canonical_representation_core.py tests/test_jurisdiction_package.py tests/test_jurisdiction_package_v0_2.py tests/test_jurisdiction_package_strict.py tests/test_jurisdiction_package_adversarial.py tests/test_co_factory_export.py tests/test_package_archives.py tests/test_public_identity_disposition.py tests/test_representation_semantics.py tests/test_ocdid_registry_validation.py tests/test_shared_identity_registry.py tests/test_snapshot_manifest.py tests/test_assertion_governance.py tests/test_canonical_representation_core.py tests/test_civicpatch_akron_integration.py tests/test_civicpatch_akron_reconciliation.py tests/test_civicpatch_akron_upstream_handoff.py tests/test_export_representation.py tests/test_empowered_vote_runtime_conformance.py tests/test_geometry_governance.py tests/test_tx_production_profile.py tests/test_texas_activation_readiness.py tests/test_tx_successor_package.py
+        run: python -m py_compile tools/hi_factory_refresh.py tests/test_hi_factory_refresh.py tools/jurisdiction_package.py tools/jurisdiction_package_strict.py tools/co_factory_export.py tools/texas_activation_readiness.py tools/texas_successor_contract.py consumers/empowered_vote/production_profile.py consumers/empowered_vote/package_catalog.py consumers/empowered_vote/representation_catalog.py consumers/empowered_vote/contract_v1.py consumers/empowered_vote/runtime_conformance.py consumers/civicpatch/adapter.py consumers/civicpatch/build_akron_pilot.py consumers/civicpatch/reconcile.py consumers/civicpatch/build_akron_partner_patch.py consumers/civicpatch/build_akron_upstream_handoff.py tools/export_representation.py tools/geometry_governance.py tools/governed_geography_resolver.py tools/representation_semantics.py tools/ocdid_registry_validation.py tools/shared_identity_registry.py tools/snapshot_manifest.py tools/assertion_governance.py tools/canonical_representation_core.py tests/test_jurisdiction_package.py tests/test_jurisdiction_package_v0_2.py tests/test_jurisdiction_package_strict.py tests/test_jurisdiction_package_adversarial.py tests/test_co_factory_export.py tests/test_package_archives.py tests/test_public_identity_disposition.py tests/test_representation_semantics.py tests/test_ocdid_registry_validation.py tests/test_shared_identity_registry.py tests/test_snapshot_manifest.py tests/test_assertion_governance.py tests/test_canonical_representation_core.py tests/test_civicpatch_akron_integration.py tests/test_civicpatch_akron_reconciliation.py tests/test_civicpatch_akron_upstream_handoff.py tests/test_export_representation.py tests/test_empowered_vote_runtime_conformance.py tests/test_geometry_governance.py tests/test_governed_geography_resolver.py tests/test_tx_production_profile.py tests/test_texas_activation_readiness.py tests/test_tx_successor_package.py
       - name: Run v0.1 legacy compatibility tests
         if: steps.package.outputs.present == 'true'
         run: python tests/test_jurisdiction_package.py
@@ -177,6 +179,9 @@ jobs:
       - name: Run governed district geometry controls
         if: steps.package.outputs.present == 'true'
         run: python tests/test_geometry_governance.py
+      - name: Run governed coordinate resolver controls
+        if: steps.package.outputs.present == 'true'
+        run: python tests/test_governed_geography_resolver.py
       - name: Verify bounded Hawaii refresh candidate
         if: steps.package.outputs.present == 'true'
         run: |
