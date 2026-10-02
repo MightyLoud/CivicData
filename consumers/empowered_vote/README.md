@@ -82,3 +82,25 @@ GOVERNED_FACTORY_ADDRESS_CONTROL
 rather than `CIVIC_GPS_LIVE`. Live/network Civic GPS remains a separate smoke
 test. District/ward divisions without a governed address control are reported as
 coverage gaps, never inferred.
+
+
+## Governed coordinate → division runtime
+
+District routing can now bypass predeclared Factory district bindings.
+
+`tools/governed_geography_resolver.py` loads the governed geometry source
+registry and committed polygon snapshot, runs point-in-polygon, and returns the
+canonical OCD division. It can also emit a geography-only payload compatible
+with the existing Civic GPS normalization boundary.
+
+Current deterministic coverage:
+
+```text
+8 district controls → GOVERNED_GEOMETRY_PIP
+10 citywide controls → GOVERNED_FACTORY_ADDRESS_CONTROL
+```
+
+For the eight Alamosa/Arvada district controls,
+`expected_division_id` is validation evidence only. Changing that expected
+value does not change the runtime PIP result; it causes conformance to fail.
+Address geocoding remains a separate upstream responsibility.
