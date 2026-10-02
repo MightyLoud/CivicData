@@ -17,6 +17,12 @@ on:
       - "consumers/empowered_vote/runtime_conformance.py"
       - "tests/test_empowered_vote_runtime_conformance.py"
       - "tests/test_geometry_governance.py"
+      - "tests/civic_gps_governed_local_overlay_test.py"
+      - "civic_gps_extensions/local_geometry.py"
+      - "civic_gps_extensions/registry_bundles.v0.1.json"
+      - "civic_gps_extensions/alamosa_release_v0.1.json"
+      - "civic_gps_extensions/arvada_release_v0.1.json"
+      - "data/reference/co/geometry/**"
       - "tests/test_governed_geography_resolver.py"
       - "tests/test_geocoding_boundary.py"
       - "tools/geocoding_boundary.py"
@@ -94,6 +100,8 @@ jobs:
         run: python -m unittest -v tests.test_empowered_vote_runtime_conformance
       - name: Governed district geometry and point-in-polygon
         run: python -m unittest -v tests.test_geometry_governance
+      - name: Governed local Civic GPS overlays
+        run: python tests/civic_gps_governed_local_overlay_test.py
       - name: Governed coordinate to division runtime
         run: python -m unittest -v tests.test_governed_geography_resolver
       - name: Governed geocoding boundary and address runtime
@@ -111,10 +119,12 @@ jobs:
           consumers/empowered_vote/contract_v1.py
           consumers/empowered_vote/contract_v1_catalog.py
           consumers/empowered_vote/runtime_conformance.py
+          civic_gps_extensions/local_geometry.py
           consumers/empowered_vote/address_runtime.py
           tools/representation_semantics.py
           tools/reconcile_representation.py
           tools/export_representation.py
           tools/geometry_governance.py
+          tests/civic_gps_governed_local_overlay_test.py
           tools/governed_geography_resolver.py
           tools/geocoding_boundary.py
