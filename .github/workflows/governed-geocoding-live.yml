@@ -1,0 +1,35 @@
+name: Governed geocoding live gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "tools/geocoding_boundary.py"
+      - "tools/governed_geography_resolver.py"
+      - "consumers/empowered_vote/address_runtime.py"
+      - "tests/test_geocoding_boundary.py"
+      - "tests/governed_geocoding_live_probe.py"
+      - "data/reference/co/geometry/**"
+      - "data/reference/co/district_geometry_sources_v0.1.json"
+      - "data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json"
+      - "data/normalized/co/jurisdiction-co-arvada/jurisdiction.json"
+      - ".github/workflows/governed-geocoding-live.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  geocoding-live:
+    name: Address to governed representation live gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Deterministic geocoding policy and end-to-end fixtures
+        run: python -m unittest -v tests.test_geocoding_boundary
+      - name: Live ArcGIS geocoder through governed PIP and EV runtime
+        run: python tests/governed_geocoding_live_probe.py
