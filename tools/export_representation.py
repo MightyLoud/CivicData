@@ -441,7 +441,7 @@ def evaluate_package(
             if contract is None:
                 result["consumers"][consumer] = _consumer_result(
                     "BLOCKED",
-                    mode="GOVERNED_ADDRESS_FIXTURE_RUNTIME",
+                    mode="GOVERNED_GEOGRAPHY_RUNTIME",
                     errors=result["representation_contract"]["errors"],
                 )
                 continue
@@ -449,7 +449,7 @@ def evaluate_package(
             if ev_errors:
                 result["consumers"][consumer] = _consumer_result(
                     "BLOCKED",
-                    mode="GOVERNED_ADDRESS_FIXTURE_RUNTIME",
+                    mode="GOVERNED_GEOGRAPHY_RUNTIME",
                     errors=ev_errors,
                 )
             else:
@@ -473,7 +473,7 @@ def evaluate_package(
 
                 result["consumers"][consumer] = _consumer_result(
                     overall_status,
-                    mode="GOVERNED_ADDRESS_FIXTURE_RUNTIME",
+                    mode="GOVERNED_GEOGRAPHY_RUNTIME",
                     semantic_loss=contract_loss,
                     identity_gaps=contract_identity_gaps,
                     geography_gaps=runtime.get("geography_gaps") or [],
@@ -485,6 +485,8 @@ def evaluate_package(
                         "controls_passed": runtime.get("controls_passed"),
                         "controls_lossy": runtime.get("controls_lossy"),
                         "controls_blocked": runtime.get("controls_blocked"),
+                        "controls_pip": runtime.get("controls_pip"),
+                        "controls_fixture": runtime.get("controls_fixture"),
                     },
                 )
                 payloads["empowered_vote_runtime"] = runtime
