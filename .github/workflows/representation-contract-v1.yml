@@ -17,6 +17,8 @@ on:
       - "consumers/empowered_vote/runtime_conformance.py"
       - "tests/test_empowered_vote_runtime_conformance.py"
       - "tests/test_geometry_governance.py"
+      - "tests/test_governed_geography_resolver.py"
+      - "tools/governed_geography_resolver.py"
       - "tools/geometry_governance.py"
       - "data/reference/co/district_geometry_sources_v0.1.json"
       - "acceptance/geometry/**"
@@ -88,6 +90,8 @@ jobs:
         run: python -m unittest -v tests.test_empowered_vote_runtime_conformance
       - name: Governed district geometry and point-in-polygon
         run: python -m unittest -v tests.test_geometry_governance
+      - name: Governed coordinate to division runtime
+        run: python -m unittest -v tests.test_governed_geography_resolver
       - name: Compile adapters, reconciler, and EV consumer
         run: >-
           python -m py_compile
@@ -105,3 +109,4 @@ jobs:
           tools/reconcile_representation.py
           tools/export_representation.py
           tools/geometry_governance.py
+          tools/governed_geography_resolver.py
