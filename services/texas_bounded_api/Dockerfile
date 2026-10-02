@@ -21,6 +21,9 @@ COPY consumers /app/consumers
 COPY tools /app/tools
 COPY schemas /app/schemas
 COPY data/packages/tx/legislative /app/data/packages/tx/legislative
+COPY data/reference/co/district_geometry_sources_v0.1.json /app/data/reference/co/district_geometry_sources_v0.1.json
+COPY data/reference/co/geometry/alamosa_wards_2023_v0.1.json /app/data/reference/co/geometry/alamosa_wards_2023_v0.1.json
+COPY data/reference/co/geometry/arvada_council_districts_2023_v0.1.json /app/data/reference/co/geometry/arvada_council_districts_2023_v0.1.json
 COPY services /app/services
 
 RUN useradd --create-home --uid 10001 civicdata \
