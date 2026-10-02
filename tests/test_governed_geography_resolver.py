@@ -48,6 +48,27 @@ class GovernedCoordinateResolverTests(unittest.TestCase):
                     self.assertEqual(result["canonical_writes"], 0)
         self.assertEqual(checked, 8)
 
+    def test_resolve_any_finds_jurisdiction_without_hint(self):
+        result = self.resolver.resolve_any(
+            longitude=-105.870897502578,
+            latitude=37.479843286555,
+        )
+        self.assertEqual(result["jurisdiction_id"], "jurisdiction-co-alamosa")
+        self.assertEqual(
+            result["division_ocdid"],
+            "ocd-division/country:us/state:co/place:alamosa/ward:1",
+        )
+
+    def test_resolve_any_outside_all_governed_geometry_fails_closed(self):
+        with self.assertRaisesRegex(
+            GovernedGeographyError,
+            "POINT_OUTSIDE_ALL_GOVERNED_GEOMETRY",
+        ):
+            self.resolver.resolve_any(
+                longitude=-100,
+                latitude=40,
+            )
+
     def test_can_resolve_by_jurisdiction_ocdid(self):
         result = self.resolver.resolve(
             jurisdiction_ocdid="ocd-jurisdiction/country:us/state:co/place:arvada/government",
