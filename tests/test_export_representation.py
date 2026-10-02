@@ -121,18 +121,24 @@ class GenericRepresentationConformanceTests(unittest.TestCase):
                 self.assertEqual(consumer["status"], "PASS")
                 self.assertEqual(
                     consumer["mode"],
-                    "GOVERNED_ADDRESS_FIXTURE_RUNTIME",
+                    "GOVERNED_GEOGRAPHY_RUNTIME",
                 )
                 expected_controls = 6 if row["jurisdiction_name"] in {"Alamosa", "Arvada"} else 2
                 self.assertEqual(consumer["details"]["controls_total"], expected_controls)
                 self.assertEqual(consumer["details"]["controls_passed"], expected_controls)
+                expected_pip = 4 if row["jurisdiction_name"] in {"Alamosa", "Arvada"} else 0
+                self.assertEqual(consumer["details"]["controls_pip"], expected_pip)
+                self.assertEqual(
+                    consumer["details"]["controls_fixture"],
+                    expected_controls - expected_pip,
+                )
                 self.assertEqual(consumer["geography_gaps"], [])
                 self.assertNotIn(
                     "address_resolution_without_binding_fixture",
                     consumer["untested_capabilities"],
                 )
                 self.assertIn(
-                    "live_civic_gps_network",
+                    "live_address_geocoding_network",
                     consumer["untested_capabilities"],
                 )
 
