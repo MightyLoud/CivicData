@@ -11,7 +11,9 @@ sys.path.insert(0, str(ROOT))
 
 from adapters.factory.export_representation import export_factory_package
 from consumers.empowered_vote.runtime_conformance import (
+    PIP_RESOLUTION_SOURCE,
     RESOLUTION_SOURCE,
+    RUNTIME_MODE,
     evaluate_address_control,
     evaluate_governed_address_runtime,
 )
@@ -50,7 +52,12 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
                 result,
             )
             for control in result["controls"]:
-                self.assertEqual(control["resolution_source"], RESOLUTION_SOURCE)
+                expected_source = (
+                    PIP_RESOLUTION_SOURCE
+                    if control.get("coordinate_role") == "DERIVED_TEST_POINT_ONLY"
+                    else RESOLUTION_SOURCE
+                )
+                self.assertEqual(control["resolution_source"], expected_source)
                 self.assertEqual(
                     control["actual_office_ids"],
                     control["expected_office_ids"],
@@ -67,6 +74,14 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
         self.assertEqual(by_jurisdiction["Alma"]["controls_total"], 2)
         self.assertEqual(by_jurisdiction["Arvada"]["controls_total"], 6)
         self.assertEqual(by_jurisdiction["Aspen"]["controls_total"], 2)
+        self.assertEqual(
+            sum(result["controls_pip"] for result in by_jurisdiction.values()),
+            8,
+        )
+        self.assertEqual(
+            sum(result["controls_fixture"] for result in by_jurisdiction.values()),
+            10,
+        )
 
     def test_all_current_local_electoral_divisions_have_governed_address_coverage(self):
         results = {}
@@ -142,6 +157,28 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
             self.assertEqual(warning["status"], "RESOLVED")
             self.assertEqual(warning["resolved_at"], "2026-09-26")
             self.assertIn("governed snapshot archived", warning["resolution"])
+
+    def test_district_expected_division_is_assertion_not_runtime_binding(self):
+        path = ROOT / "data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json"
+        package = load(path)
+        control = deepcopy(
+            next(
+                row
+                for row in package["qa"]["address_tests"]
+                if row.get("coordinate_role") == "DERIVED_TEST_POINT_ONLY"
+            )
+        )
+        original = control["expected_division_id"]
+        control["expected_division_id"] = "division-co-alamosa-ward-4"
+        result = evaluate_address_control(package, contract(package), control)
+        self.assertEqual(result["resolution_source"], PIP_RESOLUTION_SOURCE)
+        self.assertEqual(
+            result["resolved_division_ocdid"],
+            "ocd-division/country:us/state:co/place:alamosa/ward:1",
+        )
+        self.assertNotEqual(original, control["expected_division_id"])
+        self.assertEqual(result["status"], "LOSSY")
+        self.assertIn("RESOLVED_DIVISION_MISMATCH", result["errors"])
 
     def test_new_district_controls_select_citywide_plus_one_local_office(self):
         expectations = {
@@ -254,16 +291,13 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
             consumer = row["consumers"]["empowered_vote"]
             with self.subTest(jurisdiction=row["jurisdiction_name"]):
                 self.assertEqual(consumer["status"], "PASS", consumer)
-                self.assertEqual(
-                    consumer["mode"],
-                    "GOVERNED_ADDRESS_FIXTURE_RUNTIME",
-                )
+                self.assertEqual(consumer["mode"], RUNTIME_MODE)
                 self.assertNotIn(
                     "address_resolution_without_binding_fixture",
                     consumer["untested_capabilities"],
                 )
                 self.assertIn(
-                    "live_civic_gps_network",
+                    "live_address_geocoding_network",
                     consumer["untested_capabilities"],
                 )
 
