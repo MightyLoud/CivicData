@@ -1,0 +1,13 @@
+# Exclude local credentials and development state from Docker build uploads.
+# Keep all governed runtime parts, package evidence, tools and schemas available.
+.git
+**/.env
+**/.env.*
+**/.venv
+**/venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ssh
+**/.aws
+**/.railway
