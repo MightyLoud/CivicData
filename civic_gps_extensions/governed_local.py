@@ -108,6 +108,8 @@ def prepare_governed_local_overlays(
         raise GovernedLocalDistrictError(
             "GOVERNED_LOCAL_CONFIG_INVALID:" + ",".join(errors)
         )
+    if not rows:
+        return []
 
     root = Path(repo_root)
     registry_path = (
