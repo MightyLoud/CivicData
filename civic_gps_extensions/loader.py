@@ -15,6 +15,11 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
 
+from civic_gps_extensions.governed_local_district import (
+    GovernedLocalDistrictError,
+    apply_governed_local_district_overlays,
+    validate_governed_local_district_overlays,
+)
 from civic_gps_extensions.legislative import apply_legislative_groups, validate_legislative_groups
 from civic_gps_extensions.scoped_geocode import scoped_engine_class
 from civic_gps_extensions.texas_geometry_governance import (
@@ -30,7 +35,12 @@ DEFAULT_EXTENSION = Path(__file__).with_name("registry_bundles.v0.1.json")
 
 def _load_extension(path: Path) -> dict[str, Any]:
     if not path.is_file():
-        return {"extension_version": EXTENSION_VERSION, "bundles": [], "municipal_boundary_overlays": []}
+        return {
+            "extension_version": EXTENSION_VERSION,
+            "bundles": [],
+            "municipal_boundary_overlays": [],
+            "governed_local_district_overlays": [],
+        }
     extension = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(extension, dict) or str(extension.get("extension_version")) != EXTENSION_VERSION:
         raise ValueError("unsupported Civic GPS registry extension version")
@@ -50,6 +60,9 @@ def _load_extension(path: Path) -> dict[str, Any]:
         if oid in seen:
             raise ValueError(f"duplicate municipal boundary overlay: {oid}")
         seen.add(oid)
+    validate_governed_local_district_overlays(
+        extension.get("governed_local_district_overlays", [])
+    )
     validate_legislative_groups(extension.get("legislative_boundary_overlays", []))
     return extension
 
@@ -137,18 +150,52 @@ class CivicGPSBoundaryOverlayResolver:
     All components share one validated geocode within each resolve call.
     """
 
-    def __init__(self, engine: Any, overlays: list[dict[str, Any]], legislative_overlays=None):
+    def __init__(
+        self,
+        engine: Any,
+        overlays: list[dict[str, Any]],
+        legislative_overlays=None,
+        governed_local_district_overlays=None,
+        repo_root: str | Path | None = None,
+    ):
         self.engine = engine
         self.overlays = copy.deepcopy(overlays)
         self.legislative_overlays = copy.deepcopy(legislative_overlays or [])
+        self.governed_local_district_overlays = copy.deepcopy(
+            governed_local_district_overlays or []
+        )
+        self.repo_root = Path(repo_root) if repo_root is not None else Path.cwd()
 
     def resolve(self, address: str, *, observed_on: str | None = None) -> dict[str, Any]:
         address = address.strip()
         with self.engine.geocode_scope():
             result = self._resolve_municipal(address, observed_on=observed_on)
+            if "error" not in result and self.governed_local_district_overlays:
+                try:
+                    geocode = self.engine._geocode(address)
+                    result = apply_governed_local_district_overlays(
+                        result,
+                        geocode,
+                        self.governed_local_district_overlays,
+                        repo_root=self.repo_root,
+                        observed_on=observed_on,
+                    )
+                    _rehash(result)
+                except GovernedLocalDistrictError as exc:
+                    return {
+                        "error": {
+                            "code": exc.code,
+                            "message": exc.detail or str(exc),
+                        }
+                    }
             if "error" not in result and self.legislative_overlays:
                 geocode = self.engine._geocode(address)
-                result = apply_legislative_groups(self.engine, result, geocode, self.legislative_overlays)
+                result = apply_legislative_groups(
+                    self.engine,
+                    result,
+                    geocode,
+                    self.legislative_overlays,
+                )
                 _rehash(result)
             return result
 
@@ -255,10 +302,27 @@ def load_resolver_with_extensions(
     reserved_adapters = [a["adapter_id"] for b in registry["bundles"] for a in b.get("district_adapters", [])]
     reserved_jurisdictions = [j["jurisdiction_id"] for b in registry["bundles"] for j in b.get("jurisdictions", [])]
     overlays = extension.get("municipal_boundary_overlays", [])
+    local_district_overlays = extension.get(
+        "governed_local_district_overlays",
+        [],
+    )
     reserved_adapters.extend(o["overlay_id"] for o in overlays)
+    reserved_adapters.extend(
+        o["adapter_id"] for o in local_district_overlays
+    )
     reserved_jurisdictions.extend(o["jurisdiction_id"] for o in overlays)
     validate_legislative_groups(groups, reserved_adapters, reserved_jurisdictions)
     _verify_production_legislative_governance(groups, session=session, timeout_seconds=timeout_seconds)
     engine_class = scoped_engine_class(module.CivicGPSOverlayEngine, module.CivicGPSResolverError)
     engine = engine_class(registry, registry_root=registry_path.parent, timeout_seconds=timeout_seconds, session=session)
-    return CivicGPSBoundaryOverlayResolver(engine, overlays, groups) if overlays or groups else engine
+    return (
+        CivicGPSBoundaryOverlayResolver(
+            engine,
+            overlays,
+            groups,
+            local_district_overlays,
+            repo_root=root,
+        )
+        if overlays or groups or local_district_overlays
+        else engine
+    )
