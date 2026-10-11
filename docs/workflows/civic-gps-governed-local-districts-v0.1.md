@@ -68,6 +68,11 @@ A fallback coordinate outside all governed local snapshots preserves the
 original core `ADDRESS_NOT_MATCHED`; no broad geocoder fallback is created for
 uncovered jurisdictions.
 
+When this bounded fallback succeeds, its municipal/local geography is complete
+for that resolve call. The wrapper does not re-run the failed Census geocode for
+the local overlay or attempt legislative overlays from a geography response that
+the core Census path never established.
+
 ## Geometry governance
 
 At resolver construction, each local overlay must match a
