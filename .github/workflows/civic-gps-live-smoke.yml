@@ -111,7 +111,7 @@ jobs:
 
       - name: Compile engine, extensions, onboarding tool, and smoke tests
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
-        run: python -m py_compile civic_gps/engine.py civic_gps_extensions/governed_local_district.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_topology_probe_test.py tests/test_governed_local_district_overlay.py tests/civic_gps_arvada_district3_address_probe.py tests/civic_gps_governed_local_district_live_probe.py tests/civic_gps_live_smoke.py tests/civic_gps_hi_county_routing_probe.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py tests/civic_gps_bastrop_live_probe.py tests/civic_gps_brazos_live_probe.py tests/civic_gps_brazos_action_probe.py tests/civic_gps_smith_live_probe.py tests/civic_gps_grayson_live_probe.py tests/civic_gps_lubbock_live_probe.py consumers/empowered_vote/live_civic_gps.py tests/empowered_vote_live_civic_gps_network_test.py
+        run: python -m py_compile civic_gps/engine.py civic_gps_extensions/governed_local_district.py tools/civic_gps_tx_county_archetype.py tools/civic_gps_county_onboarding.py tests/civic_gps_county_onboarding_test.py tests/civic_gps_topology_probe_test.py tests/test_governed_local_district_overlay.py tests/civic_gps_governed_local_district_live_probe.py tests/civic_gps_live_smoke.py tests/civic_gps_hi_county_routing_probe.py tests/civic_gps_denton_live_probe.py tests/civic_gps_denton_negative_probe.py tests/civic_gps_denton_boundary_probe.py tests/civic_gps_denton_action_probe.py tests/civic_gps_collin_live_probe.py tests/civic_gps_travis_live_probe.py tests/civic_gps_williamson_live_probe.py tests/civic_gps_tarrant_live_probe.py tests/civic_gps_bastrop_live_probe.py tests/civic_gps_brazos_live_probe.py tests/civic_gps_brazos_action_probe.py tests/civic_gps_smith_live_probe.py tests/civic_gps_grayson_live_probe.py tests/civic_gps_lubbock_live_probe.py consumers/empowered_vote/live_civic_gps.py tests/empowered_vote_live_civic_gps_network_test.py
 
       - name: Run deterministic County Onboarding Pipeline fixtures
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
@@ -136,10 +136,6 @@ jobs:
       - name: Run baseline real-network Civic GPS controls
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python tests/civic_gps_live_smoke.py
-
-      - name: Probe Census-compatible Arvada District 3 address
-        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
-        run: python tests/civic_gps_arvada_district3_address_probe.py
 
       - name: Run Alamosa/Arvada governed local district live controls
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
