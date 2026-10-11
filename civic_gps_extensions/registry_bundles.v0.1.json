@@ -476,7 +476,8 @@
           "division_id": "div-us-co-alamosa-ward-4",
           "name": "Alamosa Ward 4"
         }
-      }
+      },
+      "jurisdiction_name": "Alamosa"
     },
     {
       "overlay_id": "DIST-CO-ARVADA-COUNCIL-GOVERNED",
@@ -506,7 +507,8 @@
           "division_id": "div-us-co-arvada-council-district-4",
           "name": "Arvada Council District 4"
         }
-      }
+      },
+      "jurisdiction_name": "Arvada"
     }
   ]
 }
