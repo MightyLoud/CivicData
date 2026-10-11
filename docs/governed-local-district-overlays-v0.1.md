@@ -120,3 +120,21 @@ Contract v1 and requires the exact expected municipal office set.
 
 Factory `expected_division_id` values are acceptance evidence only; they never
 supply the Civic GPS district assignment.
+
+
+## Geocoder normalization note
+
+The official Lee Fields facility address is retained in the Factory control as
+`1000 Twentieth St, Alamosa, CO 81101`.
+
+The reconstructed Civic GPS core uses a Census-backed address matcher that does
+not currently match that spelled-out ordinal. The live acceptance probe uses
+the equivalent routing alias:
+
+```text
+1000 20th St, Alamosa, CO 81101
+```
+
+This alias is **geocoder input normalization only**. It does not alter the
+governed point-in-polygon snapshot, expected Ward 4 assertion, canonical
+division, or applicable-office result.
