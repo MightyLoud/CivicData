@@ -5,6 +5,8 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+import shutil
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,6 +31,45 @@ def sha_json(value):
 
 
 class TexasPostActivationRuntimeTests(unittest.TestCase):
+    def test_docker_copy_set_readiness_and_missing_geometry_fail_closed(self):
+        # Exercise the shipped filesystem, not the full repository checkout.
+        from services.texas_bounded_api import main
+        from unittest.mock import patch
+        dockerfile = (ROOT / "services/texas_bounded_api/Dockerfile").read_text()
+        with tempfile.TemporaryDirectory() as directory:
+            staged = Path(directory)
+            shutil.copytree(ROOT / "civic_gps", staged / "civic_gps")
+            for line in dockerfile.splitlines():
+                if not line.startswith("COPY "):
+                    continue
+                _, source, target = line.split()
+                destination = staged / Path(target).relative_to("/app")
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                if (ROOT / source).is_dir():
+                    shutil.copytree(ROOT / source, destination)
+                else:
+                    shutil.copy2(ROOT / source, destination)
+
+            def build(*args, **kwargs):
+                return TexasBoundedRuntimeV02.build(
+                    staged, head_sha=HEAD, environment="container-ci",
+                    contract_path=staged / "services/texas_bounded_api/service_contract.v0.2.json",
+                    session=GovernanceSession(),
+                )
+
+            with patch.object(main, "_runtime", None), patch.object(main, "_runtime_instance", side_effect=build):
+                ready = main.readyz()
+                self.assertEqual(ready.status_code, 200, ready.body)
+                body = json.loads(ready.body)
+                self.assertEqual(body["status"], "PASS")
+                self.assertEqual(body["service"]["canonical_writes"], 0)
+                self.assertFalse(body["service"]["release_authorized"])
+                self.assertFalse(body["service"]["publication_workflow_authorized"])
+                (staged / "data/reference/co/geometry/alamosa_wards_2023_v0.1.json").unlink()
+                failed = main.readyz()
+                self.assertEqual(failed.status_code, 503)
+                self.assertIn("LOCAL_DISTRICT_SNAPSHOT_MISSING", json.loads(failed.body)["detail"])
+
     def test_v02_contract_requires_activated_defaults_and_keeps_release_closed(self):
         contract = json.loads((ROOT / "services/texas_bounded_api/service_contract.v0.2.json").read_text(encoding="utf-8"))
         self.assertEqual(contract["schema_version"], "texas-hosted-runtime-service/0.2")

@@ -59,7 +59,7 @@ TRAVIS_EXPECTED = {
     "DIST-TX-TRAVIS-JP": "5",
     "DIST-TX-TRAVIS-CONSTABLE": "5",
 }
-TRANSIENT_CENSUS_MARKERS = (
+TRANSIENT_UPSTREAM_MARKERS = (
     "timed out",
     "timeout",
     "connection",
@@ -188,9 +188,10 @@ def resolve_live(label: str, address: str) -> tuple[dict, int]:
         upstream_error = str(details.get("error") or "").lower()
         transient = (
             error.get("code") == "UPSTREAM_REQUEST_FAILED"
-            and error.get("message") == "GEOCODER request failed."
-            and str(details.get("url") or "").startswith("https://geocoding.geo.census.gov/geocoder/")
-            and any(marker in upstream_error for marker in TRANSIENT_CENSUS_MARKERS)
+            and any(
+                marker in upstream_error
+                for marker in TRANSIENT_UPSTREAM_MARKERS
+            )
         )
         if not transient or attempt == 3:
             if "error" in result:

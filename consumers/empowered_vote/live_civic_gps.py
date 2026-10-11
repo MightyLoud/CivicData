@@ -187,3 +187,26 @@ def load_default_civic_gps_resolver(
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module.CivicGPSOverlayEngine.from_file(registry_path, timeout_seconds=timeout_seconds)
+
+
+def load_governed_civic_gps_resolver(
+    repo_root: str | Path | None = None,
+    *,
+    timeout_seconds: float = 30.0,
+) -> Any:
+    """Load Civic GPS with governed repository extensions.
+
+    The packed core runtime remains unchanged. Municipal, local-district, and
+    legislative geography extensions are composed by the repository wrapper.
+    """
+    root = (
+        Path(repo_root)
+        if repo_root is not None
+        else Path(__file__).resolve().parents[2]
+    )
+    from civic_gps_extensions.loader import load_resolver_with_extensions
+
+    return load_resolver_with_extensions(
+        root,
+        timeout_seconds=timeout_seconds,
+    )
