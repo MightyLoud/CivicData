@@ -114,6 +114,28 @@ class SharedAuthorityTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 convert(package)
 
+    def test_legacy_provenance_snapshot_metadata_is_preserved(self):
+        from test_role_term_integration import fixture as legacy_fixture
+        from tools.shared_authority_dependencies import resolve_dependencies
+        package = legacy_fixture()
+        package["provenance"]["source_snapshot"] = {
+            "snapshot_id": "synthetic-snapshot", "nested": {"revision": "synthetic"}}
+        before = copy.deepcopy(package)
+        self.assertEqual(resolve_dependencies(package)["shared_body_ids"], set())
+        self.assertEqual(package, before)
+
+    def test_evidence_scope_checks_cannot_hide_in_snapshot_metadata(self):
+        from test_role_term_integration import fixture as legacy_fixture
+        from tools.shared_authority_dependencies import resolve_dependencies
+        for table in ("source_evidence", "source_assertions"):
+            for bad in ({"not": "a row list"}, ["not a row"], [{"jurisdiction_id": "foreign"}]):
+                with self.subTest(table=table, malformed=bad):
+                    package = legacy_fixture()
+                    package["provenance"]["source_snapshot"] = {"reviewed_dependencies": {}}
+                    package["provenance"][table] = bad
+                    with self.assertRaises(SharedAuthorityError):
+                        resolve_dependencies(package)
+
     def test_capacity_identity_and_existing_schemas(self):
         import jsonschema
         for capacity, allocation in ((6, 3), (11, 2)):

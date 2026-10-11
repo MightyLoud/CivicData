@@ -134,8 +134,16 @@ def _resolve(package, policy):
     if policy is None:
         if foreign:
             _fail("SHARED_AUTHORITY_REVIEW_REQUIRED")
-        for rows in list(records.values()) + list(package.get("provenance", {}).values()):
+        provenance = package.get("provenance", {})
+        # Provenance also supports opaque snapshot metadata, not only row lists.
+        # Only declared evidence/assertion collections carry entity scope.
+        source_rows = [provenance.get(name, []) for name in ("source_evidence", "source_assertions")]
+        for rows in list(records.values()) + source_rows:
+            if not isinstance(rows, list):
+                _fail("SHARED_DEPENDENCY_INPUT_INVALID")
             for row in rows:
+                if not isinstance(row, Mapping):
+                    _fail("SHARED_DEPENDENCY_INPUT_INVALID")
                 if row.get("jurisdiction_id") not in (None, "", jid):
                     _fail("SHARED_UNREVIEWED_DEPENDENCY_SCOPE")
         for office in offices.values():
