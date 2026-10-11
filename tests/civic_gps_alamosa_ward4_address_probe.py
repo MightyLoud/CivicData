@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from civic_gps_extensions.loader import load_resolver_with_extensions
+from tools.geocoding_boundary import ArcGISWorldGeocoder, GeocodingBoundary
 
 CANDIDATES = [
     "1000 Twentieth St, Alamosa, CO 81101",
@@ -60,7 +61,13 @@ def main() -> int:
                 and assignments.get(EXPECTED_ADAPTER) == EXPECTED_KEY
             ),
         })
-    print(json.dumps({"probe": "ALAMOSA_WARD4_ADDRESS", "results": rows}, sort_keys=True))
+    arcgis = GeocodingBoundary(ArcGISWorldGeocoder(timeout_seconds=30.0))
+    arcgis_result = arcgis.resolve("2190 State Ave, Alamosa, CO 81101")
+    print(json.dumps({
+        "probe": "ALAMOSA_WARD4_ADDRESS",
+        "results": rows,
+        "arcgis_selected_control": arcgis_result,
+    }, sort_keys=True))
     return 0
 
 
