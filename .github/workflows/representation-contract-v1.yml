@@ -18,6 +18,11 @@ on:
       - "tests/test_empowered_vote_runtime_conformance.py"
       - "tests/test_geometry_governance.py"
       - "tests/test_governed_geography_resolver.py"
+      - "tests/test_governed_local_district_overlay.py"
+      - "civic_gps_extensions/governed_local_district.py"
+      - "civic_gps_extensions/registry_bundles.v0.1.json"
+      - "civic_gps_extensions/alamosa_release_v0.1.json"
+      - "civic_gps_extensions/arvada_release_v0.1.json"
       - "tests/test_address_geocoding_runtime.py"
       - "tools/geocoding_boundary.py"
       - "consumers/empowered_vote/address_runtime.py"
@@ -103,6 +108,8 @@ jobs:
         run: python -m unittest -v tests.test_address_geocoding_runtime
       - name: Governed geocoding boundary and address runtime
         run: python -m unittest -v tests.test_geocoding_boundary
+      - name: Governed local district overlay contract
+        run: python -m unittest -v tests.test_governed_local_district_overlay
       - name: Compile adapters, reconciler, and EV consumer
         run: >-
           python -m py_compile
@@ -117,6 +124,7 @@ jobs:
           consumers/empowered_vote/contract_v1_catalog.py
           consumers/empowered_vote/runtime_conformance.py
           consumers/empowered_vote/address_runtime.py
+          civic_gps_extensions/governed_local_district.py
           tools/representation_semantics.py
           tools/reconcile_representation.py
           tools/export_representation.py
