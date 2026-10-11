@@ -101,10 +101,15 @@ def main() -> int:
                 continue
 
             address = control["address_input"]
-            gps = resolver.resolve(address, observed_on=None)
+            routing_address = (
+                control.get("civic_gps_address_alias")
+                or address
+            )
+            gps = resolver.resolve(routing_address, observed_on=None)
             if "error" in gps:
                 raise AssertionError(
-                    f"{control['test_id']}: Civic GPS error: {gps['error']}"
+                    f"{control['test_id']}: Civic GPS error for "
+                    f"{routing_address!r}: {gps['error']}"
                 )
             payload = gps["payload"]
             jurisdiction_ids = {
@@ -190,6 +195,7 @@ def main() -> int:
                 {
                     "test_id": control["test_id"],
                     "address": address,
+                    "routing_address": routing_address,
                     "matched_address": payload.get("input", {}).get(
                         "matched_address"
                     ),
