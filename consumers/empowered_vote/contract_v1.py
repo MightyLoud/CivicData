@@ -219,7 +219,9 @@ def validate_contract(
             errors.append("CONTRACT_POST_HEADCOUNT_INVALID")
 
     allowed_subjects = {
-        "jurisdiction": {jurisdiction_ocdid},
+        # Institutional jurisdictions are already explicitly referenced by
+        # organizations; assertions may retain evidence about those identities.
+        "jurisdiction": {jurisdiction_ocdid} | {row.get("jurisdiction_ocdid") for row in organizations.values() if str(row.get("jurisdiction_ocdid") or "").startswith("ocd-jurisdiction/")},
         "organization": set(organizations),
         "role": set(roles),
         "post": set(posts),

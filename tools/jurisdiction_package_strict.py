@@ -11,6 +11,13 @@ import re
 import shutil
 from pathlib import Path
 
+# Also support direct file-path loading used by legacy consumers and tests.
+import importlib.util as _importlib_util
+_dependency_spec = _importlib_util.spec_from_file_location(
+    "shared_authority_dependencies", Path(__file__).with_name("shared_authority_dependencies.py"))
+_dependencies = _importlib_util.module_from_spec(_dependency_spec)
+_dependency_spec.loader.exec_module(_dependencies)
+
 BASE_TABLES = (
     "divisions",
     "bodies",
@@ -195,7 +202,7 @@ def _add_missing_fk(errors, label, value, allowed):
         errors.append(f"{label}:{value}")
 
 
-def validate(pkg):
+def validate(pkg, *, reviewed_dependencies=None):
     schema_errors = validate_schema_contract(pkg)
     if schema_errors:
         aliases = []
@@ -235,6 +242,11 @@ def validate(pkg):
         return sorted(set(schema_errors + aliases))
 
     errors = []
+    try:
+        dependencies = _dependencies.resolve_dependencies(pkg, reviewed_dependencies)
+    except _dependencies.SharedAuthorityError as exc:
+        errors.append(str(exc))
+        dependencies = {"approved": {}, "jurisdictions": {}}
     version = pkg["schema_version"]
 
     jurisdiction = pkg.get("jurisdiction", {})
@@ -280,7 +292,7 @@ def validate(pkg):
 
     all_ids = set()
     ids_by_table = {}
-    entity_types = {jurisdiction_id: "Jurisdiction"}
+    entity_types = {jurisdiction_id: "Jurisdiction", **{key: "Jurisdiction" for key in dependencies["jurisdictions"]}}
     for table in tables_for(pkg):
         rows = records.get(table, [])
         key = PRIMARY_KEYS[table]
@@ -295,7 +307,7 @@ def validate(pkg):
         family = ENTITY_FAMILIES[table][0]
         entity_types.update({entity_id: family for entity_id in ids})
         for row in rows:
-            if row.get("jurisdiction_id") not in (None, jurisdiction_id):
+            if row.get("jurisdiction_id") not in (None, jurisdiction_id) and row.get(key) not in dependencies["approved"].get(table, {}):
                 errors.append("jurisdiction_scope:" + table)
 
     division_ids = ids_by_table.get("divisions", set())
@@ -345,7 +357,7 @@ def validate(pkg):
         ):
             errors.append("leadership_role_term_relationship")
     for row in records.get("identifier_crosswalk", []):
-        allowed = all_ids | ({jurisdiction_id} if jurisdiction_id else set())
+        allowed = all_ids | ({jurisdiction_id} if jurisdiction_id else set()) | set(dependencies["jurisdictions"])
         _add_missing_fk(errors, "crosswalk_entity_fk", row.get("entity_id"), allowed)
         _add_missing_fk(errors, "crosswalk_source_fk", row.get("source_id"), source_ids)
         expected_type = entity_types.get(row.get("entity_id"))
@@ -353,7 +365,7 @@ def validate(pkg):
             errors.append("crosswalk_entity_family")
 
     for row in source_rows:
-        if row.get("jurisdiction_id") not in (None, jurisdiction_id):
+        if row.get("jurisdiction_id") not in (None, jurisdiction_id) and row.get("source_id") not in dependencies["approved"].get("source_evidence", {}):
             errors.append("source_scope")
         target_id = row.get("supports_entity_id")
         if target_id not in entity_types:
@@ -361,7 +373,7 @@ def validate(pkg):
         elif row.get("supports_entity_type") != entity_types[target_id]:
             errors.append("source_entity_family")
     for row in assertion_rows:
-        if row.get("jurisdiction_id") not in (None, jurisdiction_id):
+        if row.get("jurisdiction_id") not in (None, jurisdiction_id) and row.get("assertion_id") not in dependencies["approved"].get("source_assertions", {}):
             errors.append("assertion_scope")
         _add_missing_fk(errors, "assertion_source_fk", row.get("source_id"), source_ids)
         subject_id = row.get("subject_id")
@@ -527,8 +539,8 @@ def _prepare_clean_output(out):
             child.unlink()
 
 
-def build(pkg, out):
-    errors = validate(pkg)
+def build(pkg, out, *, reviewed_dependencies=None):
+    errors = validate(pkg, reviewed_dependencies=reviewed_dependencies)
     if errors:
         raise ValueError("validation failed: " + ", ".join(errors))
     _prepare_clean_output(out)
@@ -556,7 +568,7 @@ def build(pkg, out):
     (out / "SHA256SUMS.txt").write_text(sums, encoding="utf-8")
 
 
-def verify_package(out):
+def verify_package(out, *, reviewed_dependencies=None):
     errors = []
     out = Path(out)
     if not out.is_dir() or out.is_symlink():
@@ -573,7 +585,7 @@ def verify_package(out):
         pkg = json.loads(pkg_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return ["jurisdiction_json"]
-    errors.extend(validate(pkg))
+    errors.extend(validate(pkg, reviewed_dependencies=reviewed_dependencies))
     pkg_dict = pkg if isinstance(pkg, dict) else {}
     pkg_jurisdiction = pkg_dict.get("jurisdiction") if isinstance(pkg_dict.get("jurisdiction"), dict) else {}
     pkg_qa = pkg_dict.get("qa") if isinstance(pkg_dict.get("qa"), dict) else {}

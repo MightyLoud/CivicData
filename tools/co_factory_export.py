@@ -63,7 +63,7 @@ def _qa_true(checks, check_type):
     return bool(matches) and all(row.get("result") is True for row in matches)
 
 
-def build_package(snapshot, jurisdiction_id):
+def build_package(snapshot, jurisdiction_id, *, reviewed_dependencies=None):
     jurisdictions = _rows_for(_table(snapshot, "01_Jurisdiction"), jurisdiction_id)
     if len(jurisdictions) != 1:
         raise ValueError(f"{jurisdiction_id}: expected one jurisdiction row, got {len(jurisdictions)}")
@@ -132,7 +132,17 @@ def build_package(snapshot, jurisdiction_id):
         },
         "warnings": warnings,
     }
-    errors = jp.validate(package)
+    if reviewed_dependencies is not None:
+        snapshot_rows = {name: _table(snapshot, source) for name, (source, _) in TABLE_MAP.items()}
+        snapshot_rows.update(jurisdictions=_table(snapshot, "01_Jurisdiction"),
+                             source_evidence=_table(snapshot, "08_SourceEvidence"),
+                             source_assertions=_table(snapshot, "09_SourceAssertion"))
+        package = jp._dependencies.include_reviewed_dependencies(package, snapshot_rows, reviewed_dependencies)
+        for name, rows in package["records"].items():
+            package["qa"]["source_counts"][name] = len(rows)
+        for name, rows in package["provenance"].items():
+            package["qa"]["source_counts"][name] = len(rows)
+    errors = jp.validate(package, reviewed_dependencies=reviewed_dependencies)
     if package["qa"]["tracker_complete"] is not True:
         errors.append("tracker_complete")
     if package["qa"]["release_ready"] is not True:

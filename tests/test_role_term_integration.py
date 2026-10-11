@@ -21,7 +21,8 @@ def fixture():
         records["people"].append({"person_id": f"test-person-{chamber}",
                                   "canonical_name": f"Synthetic {chamber} member",
                                   "person_status": "PROVISIONAL"})
-        records["offices"].append({"office_id": f"test-office-{chamber}", "seats": 1,
+        records["bodies"].append({"body_id": f"test-body-{chamber}", "name": f"Synthetic {chamber}"})
+        records["offices"].append({"office_id": f"test-office-{chamber}", "body_id": f"test-body-{chamber}", "seats": 1,
                                    "represented_division_id": f"test-{chamber}-{district}"})
         records["role_terms"].append({
             "role_term_id": f"test-term-{chamber}", "person_id": f"test-person-{chamber}",

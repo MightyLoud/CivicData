@@ -18,6 +18,7 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 from zoneinfo import ZoneInfo
 
 from adapters.shared_identity import SharedIdentityResolutionError, SharedIdentityResolver
+from tools.shared_authority_dependencies import resolve_dependencies, SharedAuthorityError
 
 SCHEMA_VERSION = "1.0.0-draft"
 CONTRACT_NAMESPACE = uuid5(NAMESPACE_URL, "https://civicdata.tech/representation-contract/v1")
@@ -182,6 +183,7 @@ def export_factory_package(
     generated_at: str | None = None,
     governed_package: bool = False,
     identity_registry: Mapping[str, Any] | None = None,
+    reviewed_dependencies: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     if not isinstance(package, Mapping):
         raise ExportError("package must be an object")
@@ -191,6 +193,10 @@ def export_factory_package(
     except SharedIdentityResolutionError as exc:
         raise ExportError(str(exc)) from exc
     records = _require_records(package)
+    try:
+        dependencies = resolve_dependencies(package, reviewed_dependencies)
+    except SharedAuthorityError as exc:
+        raise ExportError(str(exc)) from exc
     jurisdiction = package.get("jurisdiction")
     if not isinstance(jurisdiction, Mapping):
         raise ExportError("jurisdiction object is required")
@@ -275,7 +281,7 @@ def export_factory_package(
             {
                 "id": contract_id,
                 "shared_identity_id": shared_identity_id,
-                "jurisdiction_ocdid": ocdid,
+                "jurisdiction_ocdid": dependencies["body_jurisdictions"].get(body_id, ocdid),
                 "name": str(body.get("name") or body_id),
                 "classification": "board" if "BOARD" in str(body.get("body_type") or "").upper() else "other",
                 "parent_organization_id": (
@@ -499,6 +505,12 @@ def export_factory_package(
                     source_end = str(assertion["object_value"])
                     break
 
+        if body_id in dependencies["shared_body_ids"]:
+            # Expected expiry/appointment claims are evidence, not actual tenure.
+            source_end = term.get("term_end_date") or term.get("end_date") or term.get("term_end") or None
+            if term.get("interval_semantics") == "ACTUAL_TENURE":
+                source_end = term.get("valid_to") or source_end
+
         leadership = leadership_by_pair.get((person_id, office_id))
         label = (
             str(leadership.get("role_title") or leadership.get("role"))
@@ -517,7 +529,7 @@ def export_factory_package(
                 "designations": [],
                 "label": label,
                 "start_date": (
-                    term.get("valid_from")
+                    (term.get("valid_from") if body_id not in dependencies["shared_body_ids"] or term.get("interval_semantics") == "ACTUAL_TENURE" else None)
                     or term.get("term_start")
                     or term.get("start_date")
                     or term.get("term_start_date")
@@ -676,7 +688,7 @@ def export_factory_package(
             )
 
     subject_maps: dict[str, dict[str, str]] = {
-        "jurisdiction": {jurisdiction_id: ocdid},
+        "jurisdiction": {jurisdiction_id: ocdid, **{native_id: row["ocd_jurisdiction_id"] for native_id, row in dependencies["jurisdictions"].items()}},
         "body": organization_id_map,
         "office": post_id_map,
         "person": person_id_map,
@@ -774,6 +786,11 @@ def export_factory_package(
     # the governed catalog boundary; the ordinary exporter never assumes this.
     factory_complete = explicit_complete or (governed_package and address_controls_passed)
     certified = raw_complete and normalized_complete and qa_passed and parity_ok and factory_complete
+    if dependencies["shared_body_ids"]:
+        shared_terms = [term for term in records["role_terms"] if term.get("body_id") in dependencies["shared_body_ids"]]
+        certified = certified and all(
+            block.get("complete_jurisdiction", True) is True for block in (jurisdiction, qa)
+        ) and all(str(term.get("status") or term.get("currentness_status") or term.get("role_term_status") or "UNKNOWN").upper() in {"CURRENT", "CURRENT_VERIFIED", "FORMER"} for term in shared_terms)
 
     election_extension_present = all(election_presence)
     election_scope_complete = package.get("qa", {}).get("election_scope_complete") is True

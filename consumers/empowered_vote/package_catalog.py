@@ -170,7 +170,7 @@ def _acceptance_receipt(entry: dict[str, Any], repo_root: Path) -> dict[str, Any
     return receipt
 
 
-def reconstruct_package(entry: dict[str, Any], repo_root: str | Path) -> dict[str, Any]:
+def reconstruct_package(entry: dict[str, Any], repo_root: str | Path, *, reviewed_dependencies=None) -> dict[str, Any]:
     root = Path(repo_root)
     artifact = entry["artifact"]
     parts = sorted(root.glob(str(artifact["parts_glob"])))
@@ -206,7 +206,7 @@ def reconstruct_package(entry: dict[str, Any], repo_root: str | Path) -> dict[st
             except production_profile.ProductionProfileError as exc:
                 raise PackageCatalogError(exc.code, exc.detail) from exc
         else:
-            package = package_source.load_jurisdiction_package(package_dir)
+            package = package_source.load_jurisdiction_package(package_dir, reviewed_dependencies=reviewed_dependencies)
     if package["jurisdiction"]["jurisdiction_id"] != entry["package_jurisdiction_id"]:
         raise PackageCatalogError("PACKAGE_CATALOG_JURISDICTION_DRIFT")
     if str(package["schema_version"]) != str(entry["package_schema_version"]):

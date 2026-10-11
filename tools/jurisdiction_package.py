@@ -8,6 +8,13 @@ import hashlib
 import json
 from pathlib import Path
 
+# Also support direct file-path loading used by legacy consumers and tests.
+import importlib.util as _importlib_util
+_dependency_spec = _importlib_util.spec_from_file_location(
+    "shared_authority_dependencies", Path(__file__).with_name("shared_authority_dependencies.py"))
+_dependencies = _importlib_util.module_from_spec(_dependency_spec)
+_dependency_spec.loader.exec_module(_dependencies)
+
 BASE_TABLES = (
     "divisions",
     "bodies",
@@ -69,6 +76,7 @@ def validate_identity_graph(records):
             errors.append("role_term_person_fk")
         if office not in ids_by_table["offices"]:
             errors.append("role_term_office_fk")
+    errors.extend(_dependencies.body_graph_errors(records))
     return sorted(set(errors))
 
 
@@ -147,7 +155,7 @@ def validate_public_identity_disposition(pkg):
     return sorted(set(errors))
 
 
-def validate(pkg):
+def validate(pkg, *, reviewed_dependencies=None):
     errors = []
     version = pkg.get("schema_version")
     if version not in SUPPORTED_VERSIONS:
@@ -166,6 +174,7 @@ def validate(pkg):
     if errors:
         return sorted(set(errors))
 
+    errors.extend(_dependencies.dependency_errors(pkg, reviewed_dependencies))
     qa = pkg.get("qa", {})
     errors.extend(validate_production_scope(pkg))
     if qa.get("parity_ok") is not True:
@@ -256,8 +265,8 @@ def write_csv(path, rows):
         w.writerows(rows)
 
 
-def build(pkg, out):
-    errs = validate(pkg)
+def build(pkg, out, *, reviewed_dependencies=None):
+    errs = validate(pkg, reviewed_dependencies=reviewed_dependencies)
     if errs:
         raise SystemExit("validation failed: " + ", ".join(errs))
     out.mkdir(parents=True, exist_ok=True)

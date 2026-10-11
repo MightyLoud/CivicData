@@ -73,11 +73,12 @@ def build_representation_from_catalog(
     catalog_path: str | Path = package_catalog.DEFAULT_CATALOG,
     profile: str = "municipal_representation",
     allow_candidate: bool = False,
+    reviewed_dependencies=None,
 ) -> dict[str, Any]:
     try:
         catalog = package_catalog.load_catalog(catalog_path, allow_candidate=allow_candidate)
         entry = package_catalog.select_entry(catalog, civic_gps_result, profile=profile)
-        package = package_catalog.reconstruct_package(entry, repo_root)
+        package = package_catalog.reconstruct_package(entry, repo_root, reviewed_dependencies=reviewed_dependencies)
     except package_catalog.PackageCatalogError as exc:
         return _catalog_failure(address, exc.code, exc.detail)
     except package_source.PackageContractError as exc:
@@ -97,6 +98,7 @@ def build_representation_from_catalog(
         address,
         civic_gps_result,
         binding=package_catalog.binding_from_entry(entry),
+        reviewed_dependencies=reviewed_dependencies,
     )
     if model.get("status") == "PASS":
         model["package_catalog_entry_id"] = entry["entry_id"]
@@ -113,6 +115,7 @@ def build_representation_from_live_address(
     catalog_path: str | Path = package_catalog.DEFAULT_CATALOG,
     profile: str = "municipal_representation",
     allow_candidate: bool = False,
+    reviewed_dependencies=None,
 ) -> dict[str, Any]:
     if resolver is None:
         try:
@@ -131,4 +134,5 @@ def build_representation_from_live_address(
         catalog_path=catalog_path,
         profile=profile,
         allow_candidate=allow_candidate,
+        reviewed_dependencies=reviewed_dependencies,
     )

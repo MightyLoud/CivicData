@@ -1,0 +1,296 @@
+{
+  "all_data_synthetic": true,
+  "package": {
+    "schema_version": "0.1",
+    "jurisdiction": {
+      "jurisdiction_id": "jurisdiction-test",
+      "name": "Test",
+      "state_abbr": "CO",
+      "geoid": "0800000",
+      "ocd_jurisdiction_id": "ocd-jurisdiction/country:us/state:zz/place:example/government",
+      "division_id": "division-test"
+    },
+    "records": {
+      "divisions": [
+        {
+          "division_id": "division-test",
+          "jurisdiction_id": "jurisdiction-test",
+          "ocd_division_id": "ocd-division/country:us/state:zz/place:example",
+          "name": "Synthetic represented constituency",
+          "division_type": "MUNICIPALITY",
+          "source_ids": [
+            "src-1"
+          ]
+        },
+        {
+          "division_id": "division-institution",
+          "jurisdiction_id": "jurisdiction-actual-authority",
+          "name": "Synthetic institutional geography",
+          "ocd_division_id": "ocd-division/country:us/state:zz/place:institution",
+          "division_type": "MUNICIPALITY",
+          "source_ids": [
+            "src-authority"
+          ]
+        }
+      ],
+      "bodies": [
+        {
+          "body_id": "synthetic-shared-body",
+          "jurisdiction_id": "jurisdiction-actual-authority",
+          "name": "Synthetic canonical authority",
+          "source_ids": [
+            "src-authority"
+          ],
+          "body_type": "BOARD",
+          "status": "ACTIVE"
+        }
+      ],
+      "offices": [
+        {
+          "office_id": "synthetic-representative-office",
+          "jurisdiction_id": "jurisdiction-test",
+          "body_id": "synthetic-shared-body",
+          "represented_division_id": "division-test",
+          "seats": 3,
+          "office_name": "Synthetic Jurisdiction Representative",
+          "office_type": "representative",
+          "source_ids": [
+            "src-1"
+          ],
+          "status": "ACTIVE",
+          "selection_method": "APPOINTED"
+        }
+      ],
+      "people": [
+        {
+          "person_id": "synthetic-person",
+          "jurisdiction_id": "jurisdiction-test",
+          "canonical_name": "Synthetic Person"
+        }
+      ],
+      "role_terms": [
+        {
+          "role_term_id": "synthetic-term",
+          "jurisdiction_id": "jurisdiction-test",
+          "body_id": "synthetic-shared-body",
+          "office_id": "synthetic-representative-office",
+          "person_id": "synthetic-person",
+          "source_ids": [
+            "src-1"
+          ],
+          "status": "CURRENT",
+          "valid_from": null,
+          "valid_to": null,
+          "interval_semantics": "OBSERVATION"
+        }
+      ],
+      "leadership_roles": [],
+      "identifier_crosswalk": [
+        {
+          "crosswalk_id": "x-institution",
+          "entity_id": "jurisdiction-actual-authority",
+          "entity_type": "Jurisdiction",
+          "jurisdiction_id": "jurisdiction-actual-authority",
+          "id_type": "OCD_JURISDICTION_ID",
+          "external_id": "ocd-jurisdiction/country:us/state:zz/place:institution/government",
+          "status": "VERIFIED",
+          "source_id": "src-authority"
+        }
+      ]
+    },
+    "provenance": {
+      "source_evidence": [
+        {
+          "source_id": "src-1",
+          "jurisdiction_id": "jurisdiction-test",
+          "supports_entity_id": "jurisdiction-test",
+          "supports_entity_type": "Jurisdiction",
+          "url": "https://example.com/synthetic",
+          "accessed_at": "2026-10-11T00:00:00+00:00"
+        },
+        {
+          "source_id": "src-authority",
+          "jurisdiction_id": "jurisdiction-actual-authority",
+          "supports_entity_id": "synthetic-shared-body",
+          "supports_entity_type": "Body",
+          "url": "https://example.org/synthetic-authority-only",
+          "accessed_at": "2026-10-11T00:00:00+00:00"
+        }
+      ],
+      "source_assertions": [
+        {
+          "assertion_id": "assertion-authority",
+          "jurisdiction_id": "jurisdiction-actual-authority",
+          "subject_id": "synthetic-shared-body",
+          "subject_type": "Body",
+          "predicate": "name",
+          "object_value": "Synthetic canonical authority",
+          "object_type": "STRING",
+          "source_id": "src-authority",
+          "normalized_status": "NORMALIZED"
+        }
+      ]
+    },
+    "qa": {
+      "parity_ok": true,
+      "qa_fail_count": 0,
+      "blocking_gap_count": 0,
+      "address_tests": [
+        {
+          "test_id": "address-1",
+          "address_input": "1 Main St",
+          "jurisdiction_id": "jurisdiction-test",
+          "boundary_source_id": "src-1",
+          "actual_division_id": "division-test",
+          "expected_division_id": "division-test",
+          "result": true
+        },
+        {
+          "test_id": "address-2",
+          "address_input": "2 Main St",
+          "jurisdiction_id": "jurisdiction-test",
+          "boundary_source_id": "src-1",
+          "actual_division_id": "division-test",
+          "expected_division_id": "division-test",
+          "result": true
+        }
+      ],
+      "checks": [
+        {
+          "qa_id": "qa-parity",
+          "jurisdiction_id": "jurisdiction-test",
+          "check_type": "PARITY",
+          "result": true
+        },
+        {
+          "qa_id": "qa-replication",
+          "jurisdiction_id": "jurisdiction-test",
+          "check_type": "REPLICATION",
+          "result": true
+        }
+      ]
+    },
+    "warnings": []
+  },
+  "reviewed_dependencies": {
+    "review_id": "SYNTHETIC-TEST-REVIEW",
+    "reviewed_by": "synthetic-test-only",
+    "reviewed_at": "2026-10-11T00:00:00Z",
+    "package_jurisdiction_id": "jurisdiction-test",
+    "jurisdictions": [
+      {
+        "jurisdiction_id": "jurisdiction-actual-authority",
+        "name": "Synthetic institutional authority",
+        "state_abbr": "CO",
+        "geoid": "0899999",
+        "ocd_jurisdiction_id": "ocd-jurisdiction/country:us/state:zz/place:institution/government",
+        "division_id": "division-institution",
+        "source_ids": [
+          "src-authority"
+        ],
+        "status": "ACTIVE",
+        "jurisdiction_type": "MUNICIPALITY"
+      }
+    ],
+    "records": {
+      "bodies": [
+        {
+          "body_id": "synthetic-shared-body",
+          "jurisdiction_id": "jurisdiction-actual-authority",
+          "name": "Synthetic canonical authority",
+          "source_ids": [
+            "src-authority"
+          ],
+          "body_type": "BOARD",
+          "status": "ACTIVE"
+        }
+      ],
+      "divisions": [
+        {
+          "division_id": "division-test",
+          "jurisdiction_id": "jurisdiction-test",
+          "ocd_division_id": "ocd-division/country:us/state:zz/place:example",
+          "name": "Synthetic represented constituency",
+          "division_type": "MUNICIPALITY",
+          "source_ids": [
+            "src-1"
+          ]
+        },
+        {
+          "division_id": "division-institution",
+          "jurisdiction_id": "jurisdiction-actual-authority",
+          "name": "Synthetic institutional geography",
+          "ocd_division_id": "ocd-division/country:us/state:zz/place:institution",
+          "division_type": "MUNICIPALITY",
+          "source_ids": [
+            "src-authority"
+          ]
+        }
+      ],
+      "identifier_crosswalk": [
+        {
+          "crosswalk_id": "x-institution",
+          "entity_id": "jurisdiction-actual-authority",
+          "entity_type": "Jurisdiction",
+          "jurisdiction_id": "jurisdiction-actual-authority",
+          "id_type": "OCD_JURISDICTION_ID",
+          "external_id": "ocd-jurisdiction/country:us/state:zz/place:institution/government",
+          "status": "VERIFIED",
+          "source_id": "src-authority"
+        }
+      ]
+    },
+    "provenance": {
+      "source_evidence": [
+        {
+          "source_id": "src-1",
+          "jurisdiction_id": "jurisdiction-test",
+          "supports_entity_id": "jurisdiction-test",
+          "supports_entity_type": "Jurisdiction",
+          "url": "https://example.com/synthetic",
+          "accessed_at": "2026-10-11T00:00:00+00:00"
+        },
+        {
+          "source_id": "src-authority",
+          "jurisdiction_id": "jurisdiction-actual-authority",
+          "supports_entity_id": "synthetic-shared-body",
+          "supports_entity_type": "Body",
+          "url": "https://example.org/synthetic-authority-only",
+          "accessed_at": "2026-10-11T00:00:00+00:00"
+        }
+      ],
+      "source_assertions": [
+        {
+          "assertion_id": "assertion-authority",
+          "jurisdiction_id": "jurisdiction-actual-authority",
+          "subject_id": "synthetic-shared-body",
+          "subject_type": "Body",
+          "predicate": "name",
+          "object_value": "Synthetic canonical authority",
+          "object_type": "STRING",
+          "source_id": "src-authority",
+          "normalized_status": "NORMALIZED"
+        }
+      ]
+    },
+    "represented_offices": [
+      {
+        "office_id": "synthetic-representative-office",
+        "jurisdiction_id": "jurisdiction-test",
+        "body_id": "synthetic-shared-body",
+        "represented_division_id": "division-test",
+        "seats": 3,
+        "office_name": "Synthetic Jurisdiction Representative",
+        "office_type": "representative",
+        "source_ids": [
+          "src-1"
+        ],
+        "status": "ACTIVE",
+        "selection_method": "APPOINTED"
+      }
+    ],
+    "body_capacities": {
+      "synthetic-shared-body": 6
+    }
+  }
+}
