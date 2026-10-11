@@ -102,7 +102,7 @@ def main() -> int:
 
             address = control["address_input"]
             routing_address = (
-                control.get("civic_gps_address_alias")
+                control.get("civic_gps_live_routing_address")
                 or address
             )
             gps = resolver.resolve(routing_address, observed_on=None)
