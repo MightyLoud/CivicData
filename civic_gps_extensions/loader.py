@@ -22,6 +22,16 @@ from civic_gps_extensions.governed_local import (
 )
 from civic_gps_extensions.legislative import apply_legislative_groups, validate_legislative_groups
 from civic_gps_extensions.scoped_geocode import scoped_engine_class
+from tools.geocoding_boundary import (
+    ArcGISWorldGeocoder,
+    GeocodingBoundary,
+    GeocodingBoundaryError,
+)
+from tools.governed_geography_resolver import (
+    DEFAULT_REGISTRY as GOVERNED_GEOMETRY_REGISTRY,
+    GovernedCoordinateResolver,
+    GovernedGeographyError,
+)
 from civic_gps_extensions.texas_geometry_governance import (
     GeometryGovernanceFailure,
     PINS as TEXAS_GEOMETRY_PINS,
@@ -162,6 +172,7 @@ class CivicGPSBoundaryOverlayResolver:
         legislative_overlays=None,
         governed_local_district_overlays=None,
         repo_root: str | Path | None = None,
+        governed_fallback_geocoder: Any = None,
     ):
         self.engine = engine
         self.overlays = copy.deepcopy(overlays)
@@ -171,11 +182,25 @@ class CivicGPSBoundaryOverlayResolver:
         )
         self.repo_root = Path(repo_root) if repo_root is not None else None
         self._prepared_governed_local: dict[str, dict[str, Any]] = {}
+        self.governed_fallback_geocoder = governed_fallback_geocoder
+        self._governed_coordinate_resolver: GovernedCoordinateResolver | None = None
 
     def resolve(self, address: str, *, observed_on: str | None = None) -> dict[str, Any]:
         address = address.strip()
         with self.engine.geocode_scope():
             result = self._resolve_municipal(address, observed_on=observed_on)
+            if (
+                "error" in result
+                and self.governed_local_district_overlays
+                and isinstance(result.get("error"), dict)
+                and result["error"].get("code") == "ADDRESS_NOT_MATCHED"
+            ):
+                recovered = self._resolve_governed_local_fallback(
+                    address,
+                    observed_on=observed_on,
+                )
+                if recovered is not None:
+                    result = recovered
             if "error" not in result and self.governed_local_district_overlays:
                 payload = result.get("payload") if isinstance(result, dict) else None
                 active = {
@@ -222,6 +247,115 @@ class CivicGPSBoundaryOverlayResolver:
                 )
                 _rehash(result)
             return result
+
+    def _resolve_governed_local_fallback(
+        self,
+        address: str,
+        *,
+        observed_on: str | None = None,
+    ) -> dict[str, Any] | None:
+        """Recover only an ADDRESS_NOT_MATCHED through governed local geography.
+
+        The external fallback geocoder supplies coordinates only. The committed
+        governed geometry registry/snapshots decide whether those coordinates
+        activate one of the configured local jurisdictions. If not, the caller
+        preserves the original Civic GPS fail-closed result.
+        """
+        if (
+            self.repo_root is None
+            or self.governed_fallback_geocoder is None
+            or not (self.repo_root / GOVERNED_GEOMETRY_REGISTRY).is_file()
+        ):
+            return None
+
+        try:
+            geocode = self.governed_fallback_geocoder.resolve(address)
+            if self._governed_coordinate_resolver is None:
+                self._governed_coordinate_resolver = GovernedCoordinateResolver(
+                    root=self.repo_root,
+                    registry_path=self.repo_root / GOVERNED_GEOMETRY_REGISTRY,
+                )
+            geography = self._governed_coordinate_resolver.resolve_any(
+                longitude=float(geocode["longitude"]),
+                latitude=float(geocode["latitude"]),
+            )
+        except (GeocodingBoundaryError, GovernedGeographyError, KeyError, TypeError, ValueError):
+            return None
+
+        relevant = [
+            row
+            for row in self.governed_local_district_overlays
+            if str(row.get("source_registry_jurisdiction_id"))
+            == str(geography["jurisdiction_id"])
+        ]
+        if len(relevant) != 1:
+            return None
+        raw = relevant[0]
+        overlay_id = str(raw["overlay_id"])
+        prepared = self._prepared_governed_local.get(overlay_id)
+        if prepared is None:
+            prepared = prepare_governed_local_overlays(
+                self.repo_root,
+                [raw],
+            )[0]
+            self._prepared_governed_local[overlay_id] = prepared
+
+        payload = {
+            "input": {
+                "raw_address": address,
+                "matched_address": geocode["matched_address"],
+            },
+            "jurisdictions": [
+                {
+                    "jurisdiction_id": str(raw["jurisdiction_id"]),
+                    "name": str(raw["jurisdiction_name"]),
+                }
+            ],
+            "matched_divisions": [
+                {
+                    "division_id": str(raw["parent_division_id"]),
+                    "name": str(raw["jurisdiction_name"]),
+                    "parent_id": None,
+                    "type": "municipality",
+                }
+            ],
+            "district_assignments": [],
+            "evidence": [],
+            "coverage": [
+                {
+                    "layer": "governed_address_fallback",
+                    "status": "GEOGRAPHY_ONLY",
+                    "reason": (
+                        "Core Civic GPS returned ADDRESS_NOT_MATCHED; a governed "
+                        "geocoding-boundary coordinate was accepted and then "
+                        "validated against committed local geometry."
+                    ),
+                }
+            ],
+            "known_gaps": [],
+            "offices": [],
+            "officeholders": [],
+            "applicable_offices": [],
+            "action_links": [],
+        }
+        result = {
+            "payload": payload,
+            "meta": {
+                "resolution_mode": "GOVERNED_LOCAL_GEOCODER_FALLBACK",
+                "fallback_provider": geocode.get("provider"),
+            },
+        }
+        result = apply_governed_local_overlays(
+            result,
+            {
+                "longitude": float(geocode["longitude"]),
+                "latitude": float(geocode["latitude"]),
+            },
+            [prepared],
+            observed_on=observed_on,
+        )
+        _rehash(result)
+        return result
 
     def _resolve_municipal(self, address: str, *, observed_on: str | None = None) -> dict[str, Any]:
         result = self.engine.resolve(address, observed_on=observed_on)
@@ -336,6 +470,14 @@ def load_resolver_with_extensions(
     _verify_production_legislative_governance(groups, session=session, timeout_seconds=timeout_seconds)
     engine_class = scoped_engine_class(module.CivicGPSOverlayEngine, module.CivicGPSResolverError)
     engine = engine_class(registry, registry_root=registry_path.parent, timeout_seconds=timeout_seconds, session=session)
+    fallback_geocoder = None
+    if (
+        governed_local
+        and (root / GOVERNED_GEOMETRY_REGISTRY).is_file()
+    ):
+        fallback_geocoder = GeocodingBoundary(
+            ArcGISWorldGeocoder(timeout_seconds=timeout_seconds)
+        )
     return (
         CivicGPSBoundaryOverlayResolver(
             engine,
@@ -343,6 +485,7 @@ def load_resolver_with_extensions(
             groups,
             governed_local,
             repo_root=root,
+            governed_fallback_geocoder=fallback_geocoder,
         )
         if overlays or groups or governed_local
         else engine
