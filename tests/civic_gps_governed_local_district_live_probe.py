@@ -62,10 +62,7 @@ def main() -> int:
             if control.get("coordinate_role") != "DERIVED_TEST_POINT_ONLY":
                 continue
 
-            routing_address = CIVIC_GPS_GEOCODER_ALIASES.get(
-                control["test_id"],
-                control["address_input"],
-            )
+            routing_address = control["address_input"]
             gps = resolver.resolve(routing_address, observed_on=None)
             if "error" in gps:
                 raise AssertionError(
