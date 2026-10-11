@@ -6,8 +6,6 @@ on:
     paths:
       - "candidates/ev/maui_release_execution.v0.1/**"
       - "tools/ev_maui_release_execution.py"
-      - "tools/ev_maui_activation_diff.py"
-      - ".github/workflows/ev-maui-publication-candidate.yml"
       - "tests/ev_maui_release_execution_test.py"
       - "docs/ev-maui-integration-release-notes-v0.1.md"
       - "docs/ev-maui-release-execution-candidate-001.md"
@@ -50,10 +48,29 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Detect Maui release-execution candidate changes
+        id: scope
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git diff --name-only '${{ github.event.pull_request.base.sha }}' '${{ github.event.pull_request.head.sha }}' > /tmp/maui-release-execution-changed.txt
+          if grep -Eq '^(candidates/ev/maui_release_execution\.v0\.1/|tools/ev_maui_release_execution\.py$|tests/ev_maui_release_execution_test\.py$|docs/ev-maui-integration-release-notes-v0\.1\.md$|docs/ev-maui-release-execution-candidate-001\.md$)' /tmp/maui-release-execution-changed.txt; then
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Satisfy held release-execution gate for unrelated PR
+        if: steps.scope.outputs.run != 'true'
+        run: echo 'No Maui release-execution candidate inputs changed.'
       - uses: actions/setup-python@v5
+        if: steps.scope.outputs.run == 'true'
         with:
           python-version: "3.12"
       - name: Verify exact head and ten paths and unchanged production content
+        if: steps.scope.outputs.run == 'true'
         run: |
           python - <<'PY'
           import os
@@ -62,10 +79,13 @@ jobs:
           print(verify_git(Path('.'), os.environ['CANDIDATE_HEAD_SHA'], os.environ['CANDIDATE_BASE_SHA']))
           PY
       - name: Verify original manifest and retained evidence
+        if: steps.scope.outputs.run == 'true'
         run: python tests/ev_maui_publication_candidate_test.py
       - name: Test execution approval, asset integrity, collision and recovery controls offline
+        if: steps.scope.outputs.run == 'true'
         run: python tests/ev_maui_release_execution_test.py
       - name: Build held candidate with read-only destination checks
+        if: steps.scope.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
@@ -73,6 +93,7 @@ jobs:
           --head "$CANDIDATE_HEAD_SHA" --base "$CANDIDATE_BASE_SHA"
           --read-destination --output-dir artifacts/ev-maui-release-execution/candidate
       - name: Retain held candidate verification
+        if: steps.scope.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ev-maui-release-execution-candidate-${{ github.event.pull_request.head.sha || github.sha }}

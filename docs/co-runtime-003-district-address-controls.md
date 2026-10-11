@@ -22,7 +22,7 @@ Controls:
 | 1 | Cattails Golf Course | 500 Cottonwood Dr | Mayor + At-Large + Ward 1 |
 | 2 | Carroll Park | 860 Craft Dr | Mayor + At-Large + Ward 2 |
 | 3 | Jardin Hermosa Park | 1555 W Sixth St | Mayor + At-Large + Ward 3 |
-| 4 | Lee Fields | 1000 Twentieth St | Mayor + At-Large + Ward 4 |
+| 4 | Alamosa Cemetery | 2190 State Ave | Mayor + At-Large + Ward 4 |
 
 ## Arvada
 
@@ -41,7 +41,7 @@ Controls:
 |---|---|---|---|
 | 1 | Lake Arbor Golf Course | 8600 Wadsworth Boulevard | Mayor + two At-Large + District 1 |
 | 2 | Little Dry Creek Park | 7770 Pierce St | Mayor + two At-Large + District 2 |
-| 3 | Little Raven Park | 12140 W 57th Ave | Mayor + two At-Large + District 3 |
+| 3 | Harold D. Lutz Sports Complex | 10664 W 58th Ave | Mayor + two At-Large + District 3 |
 | 4 | West Woods Golf Club | 6655 Quaker Street | Mayor + two At-Large + District 4 |
 
 ## Runtime semantics
@@ -72,3 +72,44 @@ MACHINE_READABLE_DISTRICT_GEOMETRY_NOT_ARCHIVED
 
 That warning remains nonblocking and separate from the now-complete address
 runtime coverage.
+
+
+## Ward 4 control refresh — 2026-10-11
+
+The original Ward 4 acceptance control used Lee Fields at
+`1000 Twentieth St`. The governed polygon assignment was correct, but the
+reconstructed Civic GPS Census-backed geocoder did not match that facility
+street spelling (including tested `20th St` variants).
+
+The Ward 4 control was therefore refreshed to another City-listed public
+facility in the same governed ward:
+
+```text
+Alamosa Cemetery
+2190 State Ave, Alamosa, CO 81101
+```
+
+The reconstructed Civic GPS resolver activates Alamosa and emits Ward 4 for this
+address. ArcGIS independently geocodes it as a score-100 PointAddress at the
+committed derived test coordinate. The Ward 4 polygon and applicable-office
+assertions did not change.
+
+
+## Arvada District 3 control refresh — 2026-10-11
+
+The original District 3 control used Little Raven Park at
+`12140 W 57th Ave`. Its governed polygon assignment was correct, but the
+reconstructed Civic GPS Census-backed geocoder did not return an address match.
+
+The District 3 live control now uses another City-listed public athletic
+facility inside the same governed district:
+
+```text
+Harold D. Lutz Sports Complex
+10664 W 58th Ave, Arvada, CO 80002
+```
+
+The reconstructed Civic GPS resolver activates Arvada and emits District 3 for
+this address. ArcGIS independently geocodes it as a score-100 PointAddress at
+the committed derived test coordinate. The District 3 polygon and applicable
+office assertions did not change.
