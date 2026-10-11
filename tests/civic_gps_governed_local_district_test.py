@@ -26,6 +26,37 @@ class GovernedLocalDistrictOverlayTests(unittest.TestCase):
         extension = json.loads(EXT.read_text(encoding="utf-8"))
         return extension["governed_local_district_overlays"]
 
+    def test_routing_bundles_and_releases_are_geography_only(self):
+        extension = json.loads(EXT.read_text(encoding="utf-8"))
+        bundles = {row["adapter_id"]: row for row in extension["bundles"]}
+        expected = {
+            "BASE-CO-ALAMOSA": (
+                "0801090",
+                "jur-us-co-alamosa",
+                ROOT / "civic_gps_extensions/alamosa_release_v0.1.json",
+            ),
+            "BASE-CO-ARVADA": (
+                "0803455",
+                "jur-us-co-arvada",
+                ROOT / "civic_gps_extensions/arvada_release_v0.1.json",
+            ),
+        }
+        for adapter_id, (geoid, jurisdiction_id, release_path) in expected.items():
+            with self.subTest(adapter_id=adapter_id):
+                bundle = bundles[adapter_id]
+                self.assertEqual(bundle["mode"], "BASE")
+                self.assertEqual(bundle["scope_match"]["equals"], geoid)
+                self.assertEqual(bundle["district_adapters"], [])
+                self.assertEqual(bundle["applicable_office_rules"], [])
+                release = json.loads(release_path.read_text(encoding="utf-8"))
+                payload = release["payload"]
+                self.assertEqual(
+                    payload["jurisdictions"][0]["jurisdiction_id"],
+                    jurisdiction_id,
+                )
+                self.assertEqual(payload["offices"], [])
+                self.assertEqual(payload["officeholders"], [])
+
     def test_config_validates_and_snapshots_prepare(self):
         rows = self.rows()
         self.assertEqual(validate_governed_local_overlay_config(rows), [])
