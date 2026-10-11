@@ -1,0 +1,34 @@
+name: Governed address live smoke
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "tools/geocoding_boundary.py"
+      - "tools/governed_geography_resolver.py"
+      - "consumers/empowered_vote/address_runtime.py"
+      - "tests/test_address_geocoding_runtime.py"
+      - "tests/governed_address_live_smoke.py"
+      - ".github/workflows/governed-address-live-smoke.yml"
+      - "data/reference/co/geometry/**"
+      - "data/reference/co/district_geometry_sources_v0.1.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile boundary and runtime
+        run: python -m py_compile tools/geocoding_boundary.py tools/governed_geography_resolver.py consumers/empowered_vote/address_runtime.py tests/test_address_geocoding_runtime.py tests/governed_address_live_smoke.py
+      - name: Run deterministic geocoding boundary tests
+        run: python tests/test_address_geocoding_runtime.py
+      - name: Run eight live ArcGIS address controls
+        run: python tests/governed_address_live_smoke.py
