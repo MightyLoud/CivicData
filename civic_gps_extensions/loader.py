@@ -161,6 +161,7 @@ class CivicGPSBoundaryOverlayResolver:
         overlays: list[dict[str, Any]],
         legislative_overlays=None,
         governed_local_district_overlays=None,
+        repo_root: str | Path | None = None,
     ):
         self.engine = engine
         self.overlays = copy.deepcopy(overlays)
@@ -168,20 +169,49 @@ class CivicGPSBoundaryOverlayResolver:
         self.governed_local_district_overlays = copy.deepcopy(
             governed_local_district_overlays or []
         )
+        self.repo_root = Path(repo_root) if repo_root is not None else None
+        self._prepared_governed_local: dict[str, dict[str, Any]] = {}
 
     def resolve(self, address: str, *, observed_on: str | None = None) -> dict[str, Any]:
         address = address.strip()
         with self.engine.geocode_scope():
             result = self._resolve_municipal(address, observed_on=observed_on)
             if "error" not in result and self.governed_local_district_overlays:
-                geocode = self.engine._geocode(address)
-                result = apply_governed_local_overlays(
-                    result,
-                    geocode,
-                    self.governed_local_district_overlays,
-                    observed_on=observed_on,
-                )
-                _rehash(result)
+                payload = result.get("payload") if isinstance(result, dict) else None
+                active = {
+                    str(row.get("jurisdiction_id"))
+                    for row in (payload or {}).get("jurisdictions", [])
+                    if isinstance(row, dict) and row.get("jurisdiction_id")
+                }
+                relevant = [
+                    row
+                    for row in self.governed_local_district_overlays
+                    if str(row.get("jurisdiction_id")) in active
+                ]
+                if relevant:
+                    if self.repo_root is None:
+                        raise ValueError(
+                            "governed local district overlays require repo_root"
+                        )
+                    prepared = []
+                    for raw in relevant:
+                        overlay_id = str(raw["overlay_id"])
+                        cached = self._prepared_governed_local.get(overlay_id)
+                        if cached is None:
+                            cached = prepare_governed_local_overlays(
+                                self.repo_root,
+                                [raw],
+                            )[0]
+                            self._prepared_governed_local[overlay_id] = cached
+                        prepared.append(cached)
+                    geocode = self.engine._geocode(address)
+                    result = apply_governed_local_overlays(
+                        result,
+                        geocode,
+                        prepared,
+                        observed_on=observed_on,
+                    )
+                    _rehash(result)
             if "error" not in result and self.legislative_overlays:
                 geocode = self.engine._geocode(address)
                 result = apply_legislative_groups(
@@ -289,9 +319,8 @@ def load_resolver_with_extensions(
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     groups = copy.deepcopy(extension.get("legislative_boundary_overlays", []))
-    governed_local = prepare_governed_local_overlays(
-        root,
-        extension.get("governed_local_district_overlays", []),
+    governed_local = copy.deepcopy(
+        extension.get("governed_local_district_overlays", [])
     )
     if legislative_overlays is not None:
         if not isinstance(legislative_overlays, list):
@@ -313,6 +342,7 @@ def load_resolver_with_extensions(
             overlays,
             groups,
             governed_local,
+            repo_root=root,
         )
         if overlays or groups or governed_local
         else engine
