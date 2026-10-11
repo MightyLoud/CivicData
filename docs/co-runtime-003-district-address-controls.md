@@ -22,7 +22,7 @@ Controls:
 | 1 | Cattails Golf Course | 500 Cottonwood Dr | Mayor + At-Large + Ward 1 |
 | 2 | Carroll Park | 860 Craft Dr | Mayor + At-Large + Ward 2 |
 | 3 | Jardin Hermosa Park | 1555 W Sixth St | Mayor + At-Large + Ward 3 |
-| 4 | Lee Fields | 1000 Twentieth St | Mayor + At-Large + Ward 4 |
+| 4 | Alamosa Cemetery | 2190 State Ave | Mayor + At-Large + Ward 4 |
 
 ## Arvada
 
@@ -72,3 +72,24 @@ MACHINE_READABLE_DISTRICT_GEOMETRY_NOT_ARCHIVED
 
 That warning remains nonblocking and separate from the now-complete address
 runtime coverage.
+
+
+## Ward 4 control refresh — 2026-10-11
+
+The original Ward 4 acceptance control used Lee Fields at
+`1000 Twentieth St`. The governed polygon assignment was correct, but the
+reconstructed Civic GPS Census-backed geocoder did not match that facility
+street spelling (including tested `20th St` variants).
+
+The Ward 4 control was therefore refreshed to another City-listed public
+facility in the same governed ward:
+
+```text
+Alamosa Cemetery
+2190 State Ave, Alamosa, CO 81101
+```
+
+The reconstructed Civic GPS resolver activates Alamosa and emits Ward 4 for this
+address. ArcGIS independently geocodes it as a score-100 PointAddress at the
+committed derived test coordinate. The Ward 4 polygon and applicable-office
+assertions did not change.
