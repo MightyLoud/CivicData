@@ -191,11 +191,27 @@ def main() -> int:
                     f"{control['test_id']}: canonical writes must remain zero"
                 )
 
+            resolution_mode = gps.get("meta", {}).get("resolution_mode")
+            fallback_provider = gps.get("meta", {}).get("fallback_provider")
+            if control["test_id"] == "addrtest-co-alamosa-ward-4-lee-fields":
+                if resolution_mode != "GOVERNED_LOCAL_GEOCODER_FALLBACK":
+                    raise AssertionError(
+                        f"{control['test_id']}: expected governed fallback, "
+                        f"got {resolution_mode!r}"
+                    )
+                if fallback_provider != "ARCGIS_WORLD_GEOCODER":
+                    raise AssertionError(
+                        f"{control['test_id']}: expected ArcGIS fallback, "
+                        f"got {fallback_provider!r}"
+                    )
+
             summaries.append(
                 {
                     "test_id": control["test_id"],
                     "address": address,
                     "routing_address": routing_address,
+                    "resolution_mode": resolution_mode,
+                    "fallback_provider": fallback_provider,
                     "matched_address": payload.get("input", {}).get(
                         "matched_address"
                     ),
