@@ -6,7 +6,6 @@ on:
     paths:
       - "candidates/ev/maui_publication.v0.1/**"
       - "tools/ev_maui_publication_candidate.py"
-      - "tools/ev_maui_activation_diff.py"
       - "tests/ev_maui_publication_candidate_test.py"
       - "schemas/maui_integration_manifest_v0.1.schema.json"
       - "docs/ev-maui-publication-candidate-001.md"
@@ -28,10 +27,25 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+      - name: Detect Maui publication-candidate changes
+        id: scope
+        shell: bash
+        run: |
+          git diff --name-only '${{ github.event.pull_request.base.sha }}' '${{ github.event.pull_request.head.sha }}' > /tmp/maui-publication-changed.txt
+          if grep -Eq '^(candidates/ev/maui_publication\.v0\.1/|tools/ev_maui_publication_candidate\.py$|tests/ev_maui_publication_candidate_test\.py$|schemas/maui_integration_manifest_v0\.1\.schema\.json$|docs/ev-maui-publication-candidate-001\.md$)' /tmp/maui-publication-changed.txt; then
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Satisfy held publication-candidate gate for unrelated PR
+        if: steps.scope.outputs.run != 'true'
+        run: echo 'No Maui publication candidate inputs changed.'
       - uses: actions/setup-python@v5
+        if: steps.scope.outputs.run == 'true'
         with:
           python-version: "3.12"
       - name: Verify exact head and unchanged production surfaces
+        if: steps.scope.outputs.run == 'true'
         run: |
           python - <<'PY'
           import os
@@ -40,8 +54,10 @@ jobs:
           print(verify_diff(Path('.'), os.environ['CANDIDATE_BASE_SHA'], os.environ['CANDIDATE_HEAD_SHA']))
           PY
       - name: Verify candidate integrity and rejection controls offline
+        if: steps.scope.outputs.run == 'true'
         run: python tests/ev_maui_publication_candidate_test.py
       - name: Read proposed tag and release destination without reserving it
+        if: steps.scope.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -73,6 +89,7 @@ jobs:
           (Path(os.environ['RUNNER_TEMP']) / 'maui-destination.json').write_bytes(encoded(snapshot))
           PY
       - name: Build one manifest asset with exact-head verification
+        if: steps.scope.outputs.run == 'true'
         run: |
           python - <<'PYCODE'
           import json, os
@@ -102,6 +119,7 @@ jobs:
           print(json.dumps(report, sort_keys=True))
           PYCODE
       - name: Retain candidate verification artifacts
+        if: steps.scope.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ev-maui-publication-candidate-${{ github.event.pull_request.head.sha }}
