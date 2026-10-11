@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Load governed geography-only extensions into the exact Civic GPS engine.
 
-Extensions may add normal registry bundles or authoritative municipal-boundary
-overlays. They never create offices, officeholders, actions, or other civic facts.
+Extensions may add normal registry bundles, authoritative municipal-boundary
+overlays, and governed local-district overlays. They never create offices,
+officeholders, actions, or other civic facts.
 """
 from __future__ import annotations
 
@@ -141,12 +142,12 @@ def _rehash(result: dict[str, Any]) -> None:
 
 
 class CivicGPSBoundaryOverlayResolver:
-    """Compose optional municipality and legislative geography after the core.
+    """Compose optional municipal, local-district, and legislative geography.
 
     The core engine remains responsible for address geocoding and its normal
-    geography stack. Municipality overlays require a resolved parent jurisdiction;
-    legislative groups require an unambiguous state match. Official polygon
-    queries contribute jurisdiction/division geography only, never civic facts.
+    geography stack. Municipality/local-district overlays require a resolved
+    parent jurisdiction; legislative groups require an unambiguous state match.
+    Geography extensions contribute routing facts only, never civic facts.
     All components share one validated geocode within each resolve call.
     """
 
