@@ -193,7 +193,8 @@ class GovernedLocalDistrictOverlayTests(unittest.TestCase):
             engine,
             [],
             [],
-            prepared,
+            self.rows(),
+            repo_root=ROOT,
         )
         result = wrapper.resolve("500 Cottonwood Dr, Alamosa, CO 81101")
         self.assertEqual(engine.network_geocodes, 1)
@@ -203,6 +204,37 @@ class GovernedLocalDistrictOverlayTests(unittest.TestCase):
                 "adapter_id": "DIST-CO-ALAMOSA-WARDS-GOVERNED",
                 "district_key": "1",
             }],
+        )
+
+    def test_unrelated_active_jurisdiction_does_not_require_colorado_geometry_assets(self):
+        class Engine:
+            @contextmanager
+            def geocode_scope(self):
+                yield
+            def resolve(self, address, *, observed_on=None):
+                return {
+                    "payload": {
+                        "jurisdictions": [{"jurisdiction_id": "jur-us-tx-example"}],
+                        "matched_divisions": [],
+                        "district_assignments": [],
+                        "evidence": [],
+                        "coverage": [],
+                        "known_gaps": [],
+                    },
+                    "meta": {},
+                }
+
+        wrapper = CivicGPSBoundaryOverlayResolver(
+            Engine(),
+            [],
+            [],
+            self.rows(),
+            repo_root=Path("/definitely/not/a/repo"),
+        )
+        result = wrapper.resolve("TX ADDRESS")
+        self.assertEqual(
+            result["payload"]["jurisdictions"],
+            [{"jurisdiction_id": "jur-us-tx-example"}],
         )
 
     def test_registry_snapshot_binding_cannot_drift(self):
