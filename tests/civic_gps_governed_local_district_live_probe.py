@@ -31,6 +31,15 @@ CASES = (
 )
 GENERATED_AT = "2026-10-11T19:30:00Z"
 
+# The governed source keeps the City's official facility spelling. The
+# reconstructed Civic GPS core geocoder uses the Census address matcher, which
+# does not match the spelled-out ordinal for this one control. This alias is
+# routing-only; district truth still comes exclusively from governed PIP.
+CIVIC_GPS_GEOCODER_ALIASES = {
+    "addrtest-co-alamosa-ward-4-lee-fields":
+        "1000 20th St, Alamosa, CO 81101",
+}
+
 
 def main() -> int:
     resolver = load_resolver_with_extensions(ROOT, timeout_seconds=30.0)
@@ -53,7 +62,11 @@ def main() -> int:
             if control.get("coordinate_role") != "DERIVED_TEST_POINT_ONLY":
                 continue
 
-            gps = resolver.resolve(control["address_input"], observed_on=None)
+            routing_address = CIVIC_GPS_GEOCODER_ALIASES.get(
+                control["test_id"],
+                control["address_input"],
+            )
+            gps = resolver.resolve(routing_address, observed_on=None)
             if "error" in gps:
                 raise AssertionError(
                     f"{control['test_id']}: Civic GPS error: {gps['error']}"
@@ -146,6 +159,10 @@ def main() -> int:
                 {
                     "test_id": control["test_id"],
                     "address": control["address_input"],
+                    "routing_address": routing_address,
+                    "used_geocoder_alias": (
+                        routing_address != control["address_input"]
+                    ),
                     "jurisdiction": case["jurisdiction_id"],
                     "adapter_id": case["adapter_id"],
                     "district_key": actual_key,
