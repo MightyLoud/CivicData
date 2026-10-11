@@ -186,7 +186,7 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
                 "addrtest-co-alamosa-ward-1-cattails": "office-co-alamosa-council-ward-1",
                 "addrtest-co-alamosa-ward-2-carroll-park": "office-co-alamosa-council-ward-2",
                 "addrtest-co-alamosa-ward-3-jardin-hermosa": "office-co-alamosa-council-ward-3",
-                "addrtest-co-alamosa-ward-4-lee-fields": "office-co-alamosa-council-ward-4",
+                "addrtest-co-alamosa-ward-4-cemetery": "office-co-alamosa-council-ward-4",
             },
             "Arvada": {
                 "addrtest-co-arvada-district-1-lake-arbor-golf": "office-co-arvada-council-district-1",
