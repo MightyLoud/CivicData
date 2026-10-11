@@ -278,16 +278,23 @@ def build_representation_from_civic_gps_result(
         except (TypeError, ValueError):
             pass
         body_id = package_source.resolve_office_body_id(office, bodies)
-        body = bodies[body_id]
+        shared_identity = {}
+        if body_id in dependencies["shared_body_ids"]:
+            body = bodies[body_id]
+            shared_identity = {
+                "body_id": body_id,
+                "organization_id": body_id,
+                "organization_name": body.get("name"),
+                "organization_jurisdiction_id": body["jurisdiction_id"],
+                "organization_jurisdiction_ocdid": dependencies["body_jurisdictions"][body_id],
+                "represented_jurisdiction_id": office["jurisdiction_id"],
+                "organization_seat_capacity": dependencies["body_capacities"][body_id],
+            }
+        # Preserve ordinary legacy output and immutable acceptance receipts.
+        # Standalone offices gain no inferred organization membership.
         offices.append({
             "office_id": office_id,
-            "body_id": body_id,
-            "organization_id": body_id,
-            "organization_name": body.get("name"),
-            "organization_jurisdiction_id": body.get("jurisdiction_id") or package["jurisdiction"]["jurisdiction_id"],
-            "organization_jurisdiction_ocdid": dependencies["body_jurisdictions"].get(body_id, package["jurisdiction"].get("ocd_jurisdiction_id") or package["jurisdiction"].get("jurisdiction_ocdid")),
-            "represented_jurisdiction_id": office.get("jurisdiction_id") or package["jurisdiction"]["jurisdiction_id"],
-            "organization_seat_capacity": dependencies["body_capacities"].get(body_id),
+            **shared_identity,
             "office_name": _office_name(office),
             "classification_or_role": office.get("classification_or_role") or office.get("role"),
             "division_id": geography,

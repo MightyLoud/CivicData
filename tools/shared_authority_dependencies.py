@@ -78,7 +78,12 @@ def office_body_id(office, bodies):
 
 
 def body_graph_errors(records):
-    """Validate explicit Body links, including legacy aliases, without guessing."""
+    """Validate declared Body links without inventing standalone memberships.
+
+    Legacy packages may contain standalone offices or omit the Body model.
+    An absent association is not a dangling reference; every declared link must
+    resolve. Shared policies separately require exact explicit Office links.
+    """
     try:
         bodies = _index(records.get("bodies", []), "body_id")
         offices = _index(records.get("offices", []), "office_id")
@@ -88,7 +93,7 @@ def body_graph_errors(records):
                 _fail("BODY_PARENT_FK")
         for office in offices.values():
             body = office_body_id(office, bodies)
-            if body not in bodies:
+            if body is not None and body not in bodies:
                 _fail("OFFICE_BODY_FK")
             if office.get("body_id") and office.get("parent_id") and office["body_id"] != office["parent_id"]:
                 _fail("OFFICE_BODY_ALIAS_CONFLICT")
@@ -135,7 +140,7 @@ def _resolve(package, policy):
                     _fail("SHARED_UNREVIEWED_DEPENDENCY_SCOPE")
         for office in offices.values():
             body = bodies.get(office_body_id(office, bodies), {})
-            if office.get("jurisdiction_id") and not body.get("jurisdiction_id"):
+            if body and office.get("jurisdiction_id") and not body.get("jurisdiction_id"):
                 _fail("BODY_JURISDICTION_REQUIRED")
         return context
     if not isinstance(policy, Mapping) or policy.get("package_jurisdiction_id") != jid:

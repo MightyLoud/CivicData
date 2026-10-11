@@ -72,12 +72,15 @@ records. Contract v1's existing organization ID and institutional jurisdiction
 fields are retained; its assertion validator recognizes only jurisdictions
 explicitly referenced by the package or an organization.
 
-Legacy output now includes Body/organization ID and name, institutional native
+For reviewed shared Bodies, legacy output now includes Body/organization ID and name, institutional native
 jurisdiction/OCDID, represented native jurisdiction, and (for reviewed shared
 bodies) whole-body capacity. `seat_capacity` is still the represented Office's
 allocation. Address routing still requires the represented jurisdiction and
 existing geographic binding. Institutional/service geography never activates an
-Office. Missing Bodies fail even in direct projections. The prior unscoped
+Office. Dangling declared Body links fail even in direct projections. Legacy standalone
+offices without a declared Body retain their prior output, without inferred
+organization fields. Organization-dependent Core/Contract exports fail closed
+when a scoped Office has no institutional association. The prior unscoped
 single-body/exact-ID convention survives only for unscoped legacy rows.
 
 Shared status/date aliases may not conflict. Observation intervals and expected

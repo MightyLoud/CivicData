@@ -73,6 +73,47 @@ class SharedAuthorityTests(unittest.TestCase):
                 convert(package, reviewed_dependencies=policy)
         self.assertEqual(render(package, policy)["status"], "FAIL-CLOSED")
 
+    def test_bodyless_legacy_fixture_preserves_original_output(self):
+        from test_role_term_integration import fixture as legacy_fixture, gps as legacy_gps, bindings
+        package = legacy_fixture()
+        self.assertEqual(package["records"]["bodies"], [])
+        self.assertEqual(generic.validate_identity_graph(package["records"]), [])
+        result = representation.build_representation_from_civic_gps_result(
+            package, "Synthetic bodyless legacy", legacy_gps(), binding=bindings()[0],
+            identity_policy="INTERNAL_REVIEW")
+        self.assertEqual(result["status"], "PASS", result)
+        for office in result["applicable_offices"]:
+            self.assertNotIn("organization_id", office)
+            self.assertNotIn("body_id", office)
+
+    def test_mixed_standalone_office_does_not_inherit_local_body(self):
+        from tools.shared_authority_dependencies import office_body_id, body_graph_errors
+        body = {"body_id": "synthetic-local-council", "jurisdiction_id": "synthetic-county"}
+        mayor = {"office_id": "synthetic-mayor", "jurisdiction_id": "synthetic-county"}
+        council = {"office_id": "synthetic-council-seat", "body_id": body["body_id"], "jurisdiction_id": "synthetic-county"}
+        records = {"bodies": [body], "offices": [mayor, council]}
+        self.assertEqual(body_graph_errors(records), [])
+        self.assertIsNone(office_body_id(mayor, {body["body_id"]: body}))
+        mayor["body_id"] = "missing-body"
+        self.assertEqual(body_graph_errors(records), ["OFFICE_BODY_FK"])
+
+    def test_organization_exports_reject_scoped_standalone_office(self):
+        package, policy = fixture()
+        # A local standalone Office is allowed in a legacy package, but cannot
+        # silently disappear or inherit the Council in organization exports.
+        package["records"]["bodies"][0].update(
+            jurisdiction_id=package["jurisdiction"]["jurisdiction_id"], source_ids=["src-1"])
+        package["records"]["offices"][0].pop("body_id")
+        package["records"]["role_terms"][0].pop("body_id")
+        package["records"]["divisions"] = package["records"]["divisions"][:1]
+        package["records"]["identifier_crosswalk"] = []
+        package["provenance"]["source_evidence"] = package["provenance"]["source_evidence"][:1]
+        package["provenance"]["source_assertions"] = []
+        self.assertEqual(generic.validate(package), [])
+        for convert in (from_jurisdiction_package, export_factory_package):
+            with self.assertRaises(ValueError):
+                convert(package)
+
     def test_capacity_identity_and_existing_schemas(self):
         import jsonschema
         for capacity, allocation in ((6, 3), (11, 2)):

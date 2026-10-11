@@ -185,7 +185,8 @@ class MauiPreviewTest(unittest.TestCase):
         for key, value in (("division_type", "COUNCIL_DISTRICT"), ("address_routing_level", "COUNCIL_DISTRICT"),
                            ("jurisdiction_id", "other")):
             package = copy.deepcopy(self.package); package["records"]["divisions"][0][key] = value
-            self.assertClosed(self.build(package=package), "MAUI_RESIDENCY_SEMANTICS_INVALID")
+            self.assertClosed(self.build(package=package), "PACKAGE_SHARED_AUTHORITY_INVALID"
+                              if key == "jurisdiction_id" else "MAUI_RESIDENCY_SEMANTICS_INVALID")
         package = copy.deepcopy(self.package); package["records"]["divisions"].pop()
         self.assertClosed(self.build(package=package), "MAUI_RESIDENCY_SET_DRIFT")
 
@@ -205,7 +206,8 @@ class MauiPreviewTest(unittest.TestCase):
         for key, value in (("role_title", "Different Chair"), ("person_id", "person-hi-maui-richard-bissen"),
                            ("office_id", "office-hi-maui-mayor"), ("status", "FORMER")):
             package = copy.deepcopy(self.package); package["records"]["leadership_roles"][0][key] = value
-            self.assertClosed(self.build(package=package), "MAUI_LEADERSHIP_JOIN_INVALID")
+            self.assertClosed(self.build(package=package), "PACKAGE_IDENTITY_GRAPH_INVALID"
+                              if key == "office_id" else "MAUI_LEADERSHIP_JOIN_INVALID")
 
     def test_missing_sources_provisional_people_and_conflicting_dates_rejected(self):
         for table in ("offices", "people", "role_terms", "leadership_roles", "divisions"):

@@ -18,7 +18,7 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 from zoneinfo import ZoneInfo
 
 from adapters.shared_identity import SharedIdentityResolutionError, SharedIdentityResolver
-from tools.shared_authority_dependencies import resolve_dependencies, SharedAuthorityError
+from tools.shared_authority_dependencies import resolve_dependencies, SharedAuthorityError, office_body_id
 
 SCHEMA_VERSION = "1.0.0-draft"
 CONTRACT_NAMESPACE = uuid5(NAMESPACE_URL, "https://civicdata.tech/representation-contract/v1")
@@ -298,21 +298,16 @@ def export_factory_package(
     post_id_map: dict[str, str] = {}
     office_role: dict[str, str] = {}
     office_body_map: dict[str, str] = {}
+    bodies_by_id = {str(row.get("body_id") or row.get("id")): row for row in records["bodies"]}
     for office in records["offices"]:
         office_id = str(office.get("office_id") or office.get("id") or "")
-        body_id = str(office.get("body_id") or office.get("parent_id") or "")
+        body_id = str(office_body_id(office, bodies_by_id) or "")
         represented = str(
             office.get("represented_division_id")
             or office.get("geography_id")
             or office.get("division_id")
             or ""
         )
-        if not body_id and office_id.startswith("office:"):
-            exact_body = "body:" + office_id.removeprefix("office:")
-            if exact_body in organization_id_map:
-                body_id = exact_body
-        if not body_id and len(organization_id_map) == 1:
-            body_id = next(iter(organization_id_map))
         if not office_id or body_id not in organization_id_map or represented not in divisions_by_id:
             raise ExportError(
                 "Factory office graph is incomplete: "
@@ -444,17 +439,7 @@ def export_factory_package(
                 ),
                 None,
             )
-            body_id = str(
-                (source_office or {}).get("body_id")
-                or (source_office or {}).get("parent_id")
-                or ""
-            )
-            if not body_id and office_id.startswith("office:"):
-                exact_body = "body:" + office_id.removeprefix("office:")
-                if exact_body in organization_id_map:
-                    body_id = exact_body
-            if not body_id and len(organization_id_map) == 1:
-                body_id = next(iter(organization_id_map))
+            body_id = str(office_body_id(source_office or {}, bodies_by_id) or "")
         if (
             not term_id
             or person_id not in person_id_map

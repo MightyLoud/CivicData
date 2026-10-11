@@ -618,7 +618,7 @@ def from_jurisdiction_package(pkg: Mapping[str, Any], *, reviewed_dependencies=N
         represented_native = _clean(row.get("represented_division_id"))
         role_id = _stable_slug(row.get("office_type") or row.get("office_name"))
         if not post_id or not organization_id or represented_native not in division_ocdid_by_native:
-            continue
+            raise ValueError("Factory office graph is incomplete; Core requires explicit Body and Division associations")
         sources = _split_ids(row.get("source_ids"))
         roles_by_id.setdefault(
             role_id,
