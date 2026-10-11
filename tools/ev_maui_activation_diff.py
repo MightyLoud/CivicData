@@ -25,7 +25,7 @@ PROTECTED_EXTENSION_BUNDLES = {
     "BASE-HI-MAUI-COUNTY",
 }
 PROTECTED = [
-    "data",
+    "data/packages",
     "previews",
     "candidates",
     "civic_gps_runtime_parts",
