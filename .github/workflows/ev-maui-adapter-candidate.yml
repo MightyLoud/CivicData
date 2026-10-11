@@ -43,7 +43,7 @@ jobs:
         id: candidate_scope
         shell: bash
         run: |
-          CHANGED="$(git diff --name-only \"${CANDIDATE_BASE_SHA\}" HEAD)"
+          CHANGED=$(git diff --name-only "$CANDIDATE_BASE_SHA" HEAD)
           if printf '%s\n' "$CHANGED" | grep -Eq '^(consumers/empowered_vote/|onboarding/ev/|acceptance/ev/|candidates/ev/|previews/ev/|tools/ev_|tools/jurisdiction_package|tests/ev_|data/packages/|civic_gps_runtime_parts/|requirements-civic-gps\.txt)'; then
             echo "candidate=true" >> "$GITHUB_OUTPUT"
           else
