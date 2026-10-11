@@ -26,6 +26,10 @@ on:
       - "tests/test_empowered_vote_runtime_conformance.py"
       - "tests/test_geometry_governance.py"
       - "tests/test_governed_geography_resolver.py"
+      - "tests/test_address_geocoding_runtime.py"
+      - "tools/geocoding_boundary.py"
+      - "consumers/empowered_vote/address_runtime.py"
+      - "docs/governed-address-runtime-v0.1.md"
       - "tests/test_geocoding_boundary.py"
       - "tools/geocoding_boundary.py"
       - "consumers/empowered_vote/address_runtime.py"
@@ -189,6 +193,9 @@ jobs:
       - name: Run governed geocoding boundary controls
         if: steps.package.outputs.present == 'true'
         run: python tests/test_geocoding_boundary.py
+      - name: Run governed address geocoding boundary controls
+        if: steps.package.outputs.present == 'true'
+        run: python tests/test_address_geocoding_runtime.py
       - name: Verify bounded Hawaii refresh candidate
         if: steps.package.outputs.present == 'true'
         run: |
