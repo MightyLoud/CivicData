@@ -191,7 +191,7 @@ class EmpoweredVoteGovernedAddressRuntimeTests(unittest.TestCase):
             "Arvada": {
                 "addrtest-co-arvada-district-1-lake-arbor-golf": "office-co-arvada-council-district-1",
                 "addrtest-co-arvada-district-2-little-dry-creek": "office-co-arvada-council-district-2",
-                "addrtest-co-arvada-district-3-little-raven": "office-co-arvada-council-district-3",
+                "addrtest-co-arvada-district-3-lutz": "office-co-arvada-council-district-3",
                 "addrtest-co-arvada-district-4-west-woods": "office-co-arvada-council-district-4",
             },
         }
