@@ -18,6 +18,9 @@ on:
       - "tests/test_empowered_vote_runtime_conformance.py"
       - "tests/test_geometry_governance.py"
       - "tests/test_governed_geography_resolver.py"
+      - "tests/test_address_geocoding_runtime.py"
+      - "tools/geocoding_boundary.py"
+      - "consumers/empowered_vote/address_runtime.py"
       - "tests/test_geocoding_boundary.py"
       - "tools/geocoding_boundary.py"
       - "consumers/empowered_vote/address_runtime.py"
@@ -96,6 +99,8 @@ jobs:
         run: python -m unittest -v tests.test_geometry_governance
       - name: Governed coordinate to division runtime
         run: python -m unittest -v tests.test_governed_geography_resolver
+      - name: Governed address geocoding boundary
+        run: python -m unittest -v tests.test_address_geocoding_runtime
       - name: Governed geocoding boundary and address runtime
         run: python -m unittest -v tests.test_geocoding_boundary
       - name: Compile adapters, reconciler, and EV consumer
@@ -117,4 +122,6 @@ jobs:
           tools/export_representation.py
           tools/geometry_governance.py
           tools/governed_geography_resolver.py
+          tools/geocoding_boundary.py
+          consumers/empowered_vote/address_runtime.py
           tools/geocoding_boundary.py
