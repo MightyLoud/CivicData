@@ -189,6 +189,7 @@ class CivicGPSBoundaryOverlayResolver:
         address = address.strip()
         with self.engine.geocode_scope():
             result = self._resolve_municipal(address, observed_on=observed_on)
+            used_governed_local_fallback = False
             if (
                 "error" in result
                 and self.governed_local_district_overlays
@@ -201,7 +202,12 @@ class CivicGPSBoundaryOverlayResolver:
                 )
                 if recovered is not None:
                     result = recovered
-            if "error" not in result and self.governed_local_district_overlays:
+                    used_governed_local_fallback = True
+            if (
+                not used_governed_local_fallback
+                and "error" not in result
+                and self.governed_local_district_overlays
+            ):
                 payload = result.get("payload") if isinstance(result, dict) else None
                 active = {
                     str(row.get("jurisdiction_id"))
@@ -237,7 +243,11 @@ class CivicGPSBoundaryOverlayResolver:
                         observed_on=observed_on,
                     )
                     _rehash(result)
-            if "error" not in result and self.legislative_overlays:
+            if (
+                not used_governed_local_fallback
+                and "error" not in result
+                and self.legislative_overlays
+            ):
                 geocode = self.engine._geocode(address)
                 result = apply_legislative_groups(
                     self.engine,
