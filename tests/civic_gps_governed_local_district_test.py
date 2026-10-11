@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 import json
 from pathlib import Path
 import sys
@@ -14,6 +15,8 @@ from civic_gps_extensions.governed_local import (
     prepare_governed_local_overlays,
     validate_governed_local_overlay_config,
 )
+from civic_gps_extensions.loader import CivicGPSBoundaryOverlayResolver
+from civic_gps_extensions.scoped_geocode import scoped_engine_class
 
 EXT = ROOT / "civic_gps_extensions/registry_bundles.v0.1.json"
 
@@ -115,6 +118,61 @@ class GovernedLocalDistrictOverlayTests(unittest.TestCase):
                 prepared,
                 observed_on=None,
             )
+
+    def test_wrapper_reuses_one_validated_geocode_for_core_and_local_overlay(self):
+        prepared = prepare_governed_local_overlays(ROOT, self.rows())
+
+        class FakeError(Exception):
+            pass
+
+        class BaseEngine:
+            def __init__(self):
+                self.network_geocodes = 0
+
+            def _geocode(self, address):
+                self.network_geocodes += 1
+                return {
+                    "longitude": -105.870897502578,
+                    "latitude": 37.479843286555,
+                }
+
+            def resolve(self, address, *, observed_on=None):
+                self._geocode(address)
+                return {
+                    "payload": {
+                        "jurisdictions": [
+                            {"jurisdiction_id": "jur-us-co-alamosa"}
+                        ],
+                        "matched_divisions": [],
+                        "district_assignments": [],
+                        "evidence": [],
+                        "coverage": [],
+                        "known_gaps": [],
+                        "offices": [],
+                        "officeholders": [],
+                        "applicable_offices": [],
+                        "action_links": [],
+                    },
+                    "meta": {},
+                }
+
+        Scoped = scoped_engine_class(BaseEngine, FakeError)
+        engine = Scoped()
+        wrapper = CivicGPSBoundaryOverlayResolver(
+            engine,
+            [],
+            [],
+            prepared,
+        )
+        result = wrapper.resolve("500 Cottonwood Dr, Alamosa, CO 81101")
+        self.assertEqual(engine.network_geocodes, 1)
+        self.assertEqual(
+            result["payload"]["district_assignments"],
+            [{
+                "adapter_id": "DIST-CO-ALAMOSA-WARDS-GOVERNED",
+                "district_key": "1",
+            }],
+        )
 
     def test_registry_snapshot_binding_cannot_drift(self):
         rows = self.rows()
