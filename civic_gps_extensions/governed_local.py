@@ -52,6 +52,7 @@ def validate_governed_local_overlay_config(rows: Any) -> list[str]:
             "source_registry_jurisdiction_id",
             "snapshot_path",
             "parent_division_id",
+            "jurisdiction_name",
             "division_type",
             "districts",
         )
