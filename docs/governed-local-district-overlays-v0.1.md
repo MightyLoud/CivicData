@@ -122,19 +122,12 @@ Factory `expected_division_id` values are acceptance evidence only; they never
 supply the Civic GPS district assignment.
 
 
-## Geocoder normalization note
+## Ward 4 address compatibility
 
-The official Lee Fields facility address is retained in the Factory control as
-`1000 Twentieth St, Alamosa, CO 81101`.
+The live Alamosa Ward 4 control uses the City-listed Alamosa Cemetery at
+`2190 State Ave`. This address is matched by the reconstructed Civic GPS
+geocoder and resolves through the committed governed polygon to Ward 4.
 
-The reconstructed Civic GPS core uses a Census-backed address matcher that does
-not currently match that spelled-out ordinal. The live acceptance probe uses
-the equivalent routing alias:
-
-```text
-1000 20th St, Alamosa, CO 81101
-```
-
-This alias is **geocoder input normalization only**. It does not alter the
-governed point-in-polygon snapshot, expected Ward 4 assertion, canonical
-division, or applicable-office result.
+The earlier Lee Fields control remains useful historical evidence of the Ward 4
+polygon, but its street spelling was not matched by the Census-backed core
+geocoder. No address alias is used in the final live acceptance path.
