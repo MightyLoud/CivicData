@@ -48,6 +48,31 @@ class GovernedLocalDistrictOverlayTests(unittest.TestCase):
         self.extension = _load_extension(EXTENSION)
         self.overlays = self.extension["governed_local_district_overlays"]
 
+    def test_alamosa_and_arvada_base_bundles_are_routing_only(self):
+        by_id = {
+            row["adapter_id"]: row
+            for row in self.extension["bundles"]
+        }
+        expected = {
+            "BASE-CO-ALAMOSA": "alamosa_release_v0.1.json",
+            "BASE-CO-ARVADA": "arvada_release_v0.1.json",
+        }
+        for adapter_id, release_name in expected.items():
+            with self.subTest(adapter_id=adapter_id):
+                bundle = by_id[adapter_id]
+                self.assertEqual(bundle["mode"], "BASE")
+                self.assertEqual(bundle["district_adapters"], [])
+                self.assertEqual(bundle["applicable_office_rules"], [])
+                self.assertEqual(bundle["action_registry_files"], [])
+                self.assertEqual(bundle["ev_onboarding_status"], "ROUTING_ONLY")
+                release = json.loads(
+                    (ROOT / "civic_gps_extensions" / release_name).read_text(
+                        encoding="utf-8"
+                    )
+                )["payload"]
+                self.assertEqual(release["offices"], [])
+                self.assertEqual(release["officeholders"], [])
+
     def test_extension_contract_contains_two_valid_overlays(self):
         validate_governed_local_district_overlays(self.overlays)
         self.assertEqual(
