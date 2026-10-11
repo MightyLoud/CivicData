@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from tools.ev_maui_activation_diff import (
+    PROTECTED,
     PROTECTED_EXTENSION_BUNDLES,
     verify_extension_registry_delta,
 )
@@ -20,6 +21,11 @@ REGISTRY = ROOT / "civic_gps_extensions/registry_bundles.v0.1.json"
 class SharedExtensionProtectionTests(unittest.TestCase):
     def registry(self):
         return json.loads(REGISTRY.read_text(encoding="utf-8"))
+
+    def test_protected_data_scope_is_production_packages_not_all_normalized_data(self):
+        self.assertIn("data/packages", PROTECTED)
+        self.assertNotIn("data", PROTECTED)
+        self.assertNotIn("data/normalized", PROTECTED)
 
     def test_unrelated_bundle_and_overlay_additions_are_allowed(self):
         old = self.registry()
