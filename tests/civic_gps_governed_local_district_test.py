@@ -1,0 +1,335 @@
+from __future__ import annotations
+
+from contextlib import contextmanager
+import json
+from pathlib import Path
+import sys
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from civic_gps_extensions.governed_local import (
+    GovernedLocalDistrictError,
+    apply_governed_local_overlays,
+    prepare_governed_local_overlays,
+    validate_governed_local_overlay_config,
+)
+from civic_gps_extensions.loader import CivicGPSBoundaryOverlayResolver
+from civic_gps_extensions.scoped_geocode import scoped_engine_class
+
+EXT = ROOT / "civic_gps_extensions/registry_bundles.v0.1.json"
+
+
+class GovernedLocalDistrictOverlayTests(unittest.TestCase):
+    def rows(self):
+        extension = json.loads(EXT.read_text(encoding="utf-8"))
+        return extension["governed_local_district_overlays"]
+
+    def test_routing_bundles_and_releases_are_geography_only(self):
+        extension = json.loads(EXT.read_text(encoding="utf-8"))
+        bundles = {row["adapter_id"]: row for row in extension["bundles"]}
+        expected = {
+            "BASE-CO-ALAMOSA": (
+                "0801090",
+                "jur-us-co-alamosa",
+                ROOT / "civic_gps_extensions/alamosa_release_v0.1.json",
+            ),
+            "BASE-CO-ARVADA": (
+                "0803455",
+                "jur-us-co-arvada",
+                ROOT / "civic_gps_extensions/arvada_release_v0.1.json",
+            ),
+        }
+        for adapter_id, (geoid, jurisdiction_id, release_path) in expected.items():
+            with self.subTest(adapter_id=adapter_id):
+                bundle = bundles[adapter_id]
+                self.assertEqual(bundle["mode"], "BASE")
+                self.assertEqual(bundle["scope_match"]["equals"], geoid)
+                self.assertEqual(bundle["district_adapters"], [])
+                self.assertEqual(bundle["applicable_office_rules"], [])
+                release = json.loads(release_path.read_text(encoding="utf-8"))
+                payload = release["payload"]
+                self.assertEqual(
+                    payload["jurisdictions"][0]["jurisdiction_id"],
+                    jurisdiction_id,
+                )
+                self.assertEqual(payload["offices"], [])
+                self.assertEqual(payload["officeholders"], [])
+
+    def test_config_validates_and_snapshots_prepare(self):
+        rows = self.rows()
+        self.assertEqual(validate_governed_local_overlay_config(rows), [])
+        prepared = prepare_governed_local_overlays(ROOT, rows)
+        self.assertEqual(len(prepared), 2)
+        self.assertEqual(
+            {row["jurisdiction_id"] for row in prepared},
+            {"jur-us-co-alamosa", "jur-us-co-arvada"},
+        )
+
+    def test_alamosa_point_yields_ward_assignment_without_civic_facts(self):
+        prepared = prepare_governed_local_overlays(ROOT, self.rows())
+        result = {
+            "payload": {
+                "jurisdictions": [
+                    {"jurisdiction_id": "jur-us-co-alamosa", "name": "Alamosa"}
+                ],
+                "matched_divisions": [],
+                "district_assignments": [],
+                "evidence": [],
+                "coverage": [],
+                "offices": [],
+                "officeholders": [],
+                "applicable_offices": [],
+                "action_links": [],
+                "known_gaps": [],
+            }
+        }
+        out = apply_governed_local_overlays(
+            result,
+            {"longitude": -105.870897502578, "latitude": 37.479843286555},
+            prepared,
+            observed_on="2026-10-11",
+        )
+        self.assertEqual(
+            out["payload"]["district_assignments"],
+            [{"adapter_id": "DIST-CO-ALAMOSA-WARDS-GOVERNED", "district_key": "1"}],
+        )
+        self.assertTrue(
+            any(
+                row["division_id"] == "div-us-co-alamosa-ward-1"
+                for row in out["payload"]["matched_divisions"]
+            )
+        )
+        self.assertEqual(out["payload"]["offices"], [])
+        self.assertEqual(out["payload"]["officeholders"], [])
+        self.assertEqual(out["payload"]["action_links"], [])
+
+    def test_arvada_point_yields_district_four(self):
+        prepared = prepare_governed_local_overlays(ROOT, self.rows())
+        result = {
+            "payload": {
+                "jurisdictions": [
+                    {"jurisdiction_id": "jur-us-co-arvada", "name": "Arvada"}
+                ],
+                "matched_divisions": [],
+                "district_assignments": [],
+                "evidence": [],
+                "coverage": [],
+                "known_gaps": [],
+            }
+        }
+        out = apply_governed_local_overlays(
+            result,
+            {"longitude": -105.18539000544, "latitude": 39.816501932133},
+            prepared,
+            observed_on=None,
+        )
+        self.assertEqual(
+            out["payload"]["district_assignments"][0],
+            {"adapter_id": "DIST-CO-ARVADA-COUNCIL-GOVERNED", "district_key": "4"},
+        )
+
+    def test_outside_active_jurisdiction_polygon_fails_closed(self):
+        prepared = prepare_governed_local_overlays(ROOT, self.rows())
+        result = {
+            "payload": {
+                "jurisdictions": [{"jurisdiction_id": "jur-us-co-alamosa"}],
+                "matched_divisions": [],
+                "district_assignments": [],
+            }
+        }
+        with self.assertRaisesRegex(
+            GovernedLocalDistrictError,
+            "GOVERNED_LOCAL_DISTRICT_NOT_RESOLVED",
+        ):
+            apply_governed_local_overlays(
+                result,
+                {"longitude": -100, "latitude": 40},
+                prepared,
+                observed_on=None,
+            )
+
+    def test_wrapper_reuses_one_validated_geocode_for_core_and_local_overlay(self):
+        prepared = prepare_governed_local_overlays(ROOT, self.rows())
+
+        class FakeError(Exception):
+            pass
+
+        class BaseEngine:
+            def __init__(self):
+                self.network_geocodes = 0
+
+            def _geocode(self, address):
+                self.network_geocodes += 1
+                return {
+                    "longitude": -105.870897502578,
+                    "latitude": 37.479843286555,
+                }
+
+            def resolve(self, address, *, observed_on=None):
+                self._geocode(address)
+                return {
+                    "payload": {
+                        "jurisdictions": [
+                            {"jurisdiction_id": "jur-us-co-alamosa"}
+                        ],
+                        "matched_divisions": [],
+                        "district_assignments": [],
+                        "evidence": [],
+                        "coverage": [],
+                        "known_gaps": [],
+                        "offices": [],
+                        "officeholders": [],
+                        "applicable_offices": [],
+                        "action_links": [],
+                    },
+                    "meta": {},
+                }
+
+        Scoped = scoped_engine_class(BaseEngine, FakeError)
+        engine = Scoped()
+        wrapper = CivicGPSBoundaryOverlayResolver(
+            engine,
+            [],
+            [],
+            self.rows(),
+            repo_root=ROOT,
+        )
+        result = wrapper.resolve("500 Cottonwood Dr, Alamosa, CO 81101")
+        self.assertEqual(engine.network_geocodes, 1)
+        self.assertEqual(
+            result["payload"]["district_assignments"],
+            [{
+                "adapter_id": "DIST-CO-ALAMOSA-WARDS-GOVERNED",
+                "district_key": "1",
+            }],
+        )
+
+    def test_address_not_matched_can_recover_through_governed_fallback(self):
+        class Engine:
+            @contextmanager
+            def geocode_scope(self):
+                yield
+            def resolve(self, address, *, observed_on=None):
+                return {
+                    "error": {
+                        "code": "ADDRESS_NOT_MATCHED",
+                        "message": "no census match",
+                    }
+                }
+
+        class Fallback:
+            def resolve(self, address):
+                return {
+                    "status": "PASS",
+                    "provider": "FIXTURE_ARCGIS",
+                    "matched_address": "500 Cottonwood Dr, Alamosa, Colorado, 81101",
+                    "longitude": -105.870897502578,
+                    "latitude": 37.479843286555,
+                    "canonical_writes": 0,
+                }
+
+        wrapper = CivicGPSBoundaryOverlayResolver(
+            Engine(),
+            [],
+            [],
+            self.rows(),
+            repo_root=ROOT,
+            governed_fallback_geocoder=Fallback(),
+        )
+        result = wrapper.resolve("500 Cottonwood Dr, Alamosa, CO 81101")
+        self.assertNotIn("error", result)
+        self.assertEqual(
+            result["meta"]["resolution_mode"],
+            "GOVERNED_LOCAL_GEOCODER_FALLBACK",
+        )
+        self.assertEqual(
+            result["payload"]["district_assignments"],
+            [{
+                "adapter_id": "DIST-CO-ALAMOSA-WARDS-GOVERNED",
+                "district_key": "1",
+            }],
+        )
+        self.assertEqual(result["payload"]["offices"], [])
+        self.assertEqual(result["payload"]["officeholders"], [])
+        self.assertEqual(result["payload"]["action_links"], [])
+
+    def test_fallback_outside_governed_local_geometry_preserves_core_error(self):
+        class Engine:
+            @contextmanager
+            def geocode_scope(self):
+                yield
+            def resolve(self, address, *, observed_on=None):
+                return {
+                    "error": {
+                        "code": "ADDRESS_NOT_MATCHED",
+                        "message": "no census match",
+                    }
+                }
+
+        class Fallback:
+            def resolve(self, address):
+                return {
+                    "status": "PASS",
+                    "provider": "FIXTURE_ARCGIS",
+                    "matched_address": "Outside",
+                    "longitude": -100.0,
+                    "latitude": 40.0,
+                    "canonical_writes": 0,
+                }
+
+        wrapper = CivicGPSBoundaryOverlayResolver(
+            Engine(),
+            [],
+            [],
+            self.rows(),
+            repo_root=ROOT,
+            governed_fallback_geocoder=Fallback(),
+        )
+        result = wrapper.resolve("outside")
+        self.assertEqual(result["error"]["code"], "ADDRESS_NOT_MATCHED")
+
+    def test_unrelated_active_jurisdiction_does_not_require_colorado_geometry_assets(self):
+        class Engine:
+            @contextmanager
+            def geocode_scope(self):
+                yield
+            def resolve(self, address, *, observed_on=None):
+                return {
+                    "payload": {
+                        "jurisdictions": [{"jurisdiction_id": "jur-us-tx-example"}],
+                        "matched_divisions": [],
+                        "district_assignments": [],
+                        "evidence": [],
+                        "coverage": [],
+                        "known_gaps": [],
+                    },
+                    "meta": {},
+                }
+
+        wrapper = CivicGPSBoundaryOverlayResolver(
+            Engine(),
+            [],
+            [],
+            self.rows(),
+            repo_root=Path("/definitely/not/a/repo"),
+        )
+        result = wrapper.resolve("TX ADDRESS")
+        self.assertEqual(
+            result["payload"]["jurisdictions"],
+            [{"jurisdiction_id": "jur-us-tx-example"}],
+        )
+
+    def test_registry_snapshot_binding_cannot_drift(self):
+        rows = self.rows()
+        rows[0]["snapshot_path"] = "data/reference/co/geometry/not-real.json"
+        with self.assertRaisesRegex(
+            GovernedLocalDistrictError,
+            "GOVERNED_LOCAL_SNAPSHOT_REGISTRY_MISMATCH",
+        ):
+            prepare_governed_local_overlays(ROOT, rows)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

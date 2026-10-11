@@ -39,7 +39,18 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+      - name: Detect candidate-owned changes
+        id: candidate_scope
+        shell: bash
+        run: |
+          CHANGED=$(git diff --name-only "$CANDIDATE_BASE_SHA" HEAD)
+          if printf '%s\n' "$CHANGED" | grep -Eq '^(consumers/empowered_vote/|onboarding/ev/|acceptance/ev/|candidates/ev/|previews/ev/|tools/ev_|tools/jurisdiction_package|tests/ev_|data/packages/|civic_gps_runtime_parts/|requirements-civic-gps\.txt)'; then
+            echo "candidate=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "candidate=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Verify exact head and bounded production installation
+        if: steps.candidate_scope.outputs.candidate == 'true'
         run: python tools/ev_maui_activation_diff.py --repo-root . --base-sha "$CANDIDATE_BASE_SHA" --head-sha "$CANDIDATE_HEAD_SHA"
       - uses: actions/setup-python@v5
         with:

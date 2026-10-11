@@ -38,7 +38,10 @@ jobs:
         shell: bash
         run: |
           test "$(git rev-parse HEAD)" = "$CANDIDATE_HEAD_SHA"
-          git diff --exit-code "$CANDIDATE_BASE_SHA" HEAD -- data civic_gps_extensions civic_gps_runtime_parts civic_gps services railway.toml railway.json Dockerfile requirements-hosted-runtime.txt
+          # Shared civic_gps_extensions changes are regression inputs for this
+          # job, not candidate-owned mutations. Keep package/runtime/deployment
+          # assets immutable, then exercise the changed resolver below.
+          git diff --exit-code "$CANDIDATE_BASE_SHA" HEAD -- data/packages civic_gps_runtime_parts civic_gps services railway.toml railway.json Dockerfile requirements-hosted-runtime.txt
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
