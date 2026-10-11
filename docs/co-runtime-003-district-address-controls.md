@@ -41,7 +41,7 @@ Controls:
 |---|---|---|---|
 | 1 | Lake Arbor Golf Course | 8600 Wadsworth Boulevard | Mayor + two At-Large + District 1 |
 | 2 | Little Dry Creek Park | 7770 Pierce St | Mayor + two At-Large + District 2 |
-| 3 | Little Raven Park | 12140 W 57th Ave | Mayor + two At-Large + District 3 |
+| 3 | Harold D. Lutz Sports Complex | 10664 W 58th Ave | Mayor + two At-Large + District 3 |
 | 4 | West Woods Golf Club | 6655 Quaker Street | Mayor + two At-Large + District 4 |
 
 ## Runtime semantics
@@ -93,3 +93,23 @@ The reconstructed Civic GPS resolver activates Alamosa and emits Ward 4 for this
 address. ArcGIS independently geocodes it as a score-100 PointAddress at the
 committed derived test coordinate. The Ward 4 polygon and applicable-office
 assertions did not change.
+
+
+## Arvada District 3 control refresh — 2026-10-11
+
+The original District 3 control used Little Raven Park at
+`12140 W 57th Ave`. Its governed polygon assignment was correct, but the
+reconstructed Civic GPS Census-backed geocoder did not return an address match.
+
+The District 3 live control now uses another City-listed public athletic
+facility inside the same governed district:
+
+```text
+Harold D. Lutz Sports Complex
+10664 W 58th Ave, Arvada, CO 80002
+```
+
+The reconstructed Civic GPS resolver activates Arvada and emits District 3 for
+this address. ArcGIS independently geocodes it as a score-100 PointAddress at
+the committed derived test coordinate. The District 3 polygon and applicable
+office assertions did not change.
