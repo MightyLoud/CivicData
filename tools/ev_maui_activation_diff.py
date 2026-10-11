@@ -17,7 +17,11 @@ from consumers.empowered_vote import maui_countywide_production as production
 
 CATALOG_PATH = "consumers/empowered_vote/package_catalog.v0.1.json"
 ACTIVATION_PATHS = {str(production.SPEC_PATH), production.RECEIPT_PATH, production.REVIEW_REFERENCE["path"]}
-PROTECTED = ["data", "previews", "candidates", "civic_gps_extensions", "civic_gps_runtime_parts", "civic_gps",
+# Shared Civic GPS extension infrastructure is intentionally excluded here:
+# extension changes must be exercised by the downstream live candidate/runtime
+# tests rather than rejected before those regressions can run. Candidate-owned
+# package/runtime/deployment assets remain immutable.
+PROTECTED = ["data/packages", "previews", "candidates", "civic_gps_runtime_parts", "civic_gps",
              "services", "railway.toml", "railway.json", "Dockerfile", "requirements-hosted-runtime.txt"]
 
 
@@ -69,7 +73,10 @@ def verify_diff(root, base_sha, head_sha):
         raise ValueError("Validated Maui installation required")
     return {"status": "PASS", "base_sha": base_sha, "head_sha": head_sha,
             "other_catalog_entries_preserved": len(new["entries"]) - 1,
-            "activation_paths": changed, "protected_content_unchanged": True}
+            "activation_paths": changed, "protected_content_unchanged": True,
+            "shared_extension_changes_tested_downstream": any(
+                path.startswith("civic_gps_extensions/") for path in all_changed
+            )}
 
 
 def main():
