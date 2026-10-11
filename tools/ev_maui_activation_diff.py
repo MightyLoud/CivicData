@@ -17,8 +17,59 @@ from consumers.empowered_vote import maui_countywide_production as production
 
 CATALOG_PATH = "consumers/empowered_vote/package_catalog.v0.1.json"
 ACTIVATION_PATHS = {str(production.SPEC_PATH), production.RECEIPT_PATH, production.REVIEW_REFERENCE["path"]}
-PROTECTED = ["data", "previews", "candidates", "civic_gps_extensions", "civic_gps_runtime_parts", "civic_gps",
-             "services", "railway.toml", "railway.json", "Dockerfile", "requirements-hosted-runtime.txt"]
+EXTENSION_REGISTRY_PATH = "civic_gps_extensions/registry_bundles.v0.1.json"
+PROTECTED_EXTENSION_BUNDLES = {
+    "BASE-HI-HAWAII-COUNTY",
+    "BASE-HI-HONOLULU-COUNTY",
+    "BASE-HI-KAUAI-COUNTY",
+    "BASE-HI-MAUI-COUNTY",
+}
+PROTECTED = [
+    "data",
+    "previews",
+    "candidates",
+    "civic_gps_runtime_parts",
+    "civic_gps",
+    "services",
+    "railway.toml",
+    "railway.json",
+    "Dockerfile",
+    "requirements-hosted-runtime.txt",
+    "civic_gps_extensions/hi_hawaii_county_release_v0.1.json",
+    "civic_gps_extensions/hi_honolulu_county_release_v0.1.json",
+    "civic_gps_extensions/hi_kauai_county_release_v0.1.json",
+    "civic_gps_extensions/hi_maui_county_release_v0.1.json",
+]
+
+
+def verify_extension_registry_delta(old, new):
+    if not isinstance(old, dict) or not isinstance(new, dict):
+        raise ValueError("Civic GPS extension registry must remain JSON objects")
+    if old.get("extension_version") != new.get("extension_version"):
+        raise ValueError("Civic GPS extension version changed")
+
+    def protected(value):
+        bundles = value.get("bundles")
+        if not isinstance(bundles, list):
+            raise ValueError("Civic GPS extension bundles must remain a list")
+        by_id = {
+            str(row.get("adapter_id")): row
+            for row in bundles
+            if isinstance(row, dict) and row.get("adapter_id")
+        }
+        missing = PROTECTED_EXTENSION_BUNDLES - set(by_id)
+        if missing:
+            raise ValueError(
+                "Protected Hawaii Civic GPS bundle missing: "
+                + ",".join(sorted(missing))
+            )
+        return {
+            bundle_id: by_id[bundle_id]
+            for bundle_id in sorted(PROTECTED_EXTENSION_BUNDLES)
+        }
+
+    if protected(old) != protected(new):
+        raise ValueError("Protected Hawaii Civic GPS bundle changed")
 
 
 def verify_catalog_delta(old, new, changed_paths):
@@ -61,15 +112,30 @@ def verify_diff(root, base_sha, head_sha):
         return {**result, "mode": "HELD_MAUI_PUBLICATION_CANDIDATE",
                 "all_production_entries_preserved": 6, "protected_content_unchanged": True}
     git("diff", "--exit-code", base_sha, "HEAD", "--", *PROTECTED)
+    old_extension = json.loads(
+        git("show", base_sha + ":" + EXTENSION_REGISTRY_PATH)
+    )
+    new_extension = json.loads(
+        (root / EXTENSION_REGISTRY_PATH).read_text()
+    )
+    verify_extension_registry_delta(old_extension, new_extension)
+
     old = json.loads(git("show", base_sha + ":" + CATALOG_PATH))
     new = json.loads((root / CATALOG_PATH).read_text())
     changed = git("diff", "--name-only", base_sha, "HEAD", "--", "onboarding/ev", "acceptance/ev").decode().splitlines()
     verify_catalog_delta(old, new, changed)
     if production.installed_spec(root) is None:
         raise ValueError("Validated Maui installation required")
-    return {"status": "PASS", "base_sha": base_sha, "head_sha": head_sha,
-            "other_catalog_entries_preserved": len(new["entries"]) - 1,
-            "activation_paths": changed, "protected_content_unchanged": True}
+    return {
+        "status": "PASS",
+        "base_sha": base_sha,
+        "head_sha": head_sha,
+        "other_catalog_entries_preserved": len(new["entries"]) - 1,
+        "activation_paths": changed,
+        "protected_content_unchanged": True,
+        "protected_hawaii_extension_bundles_unchanged": True,
+        "unrelated_extension_additions_allowed": True,
+    }
 
 
 def main():
