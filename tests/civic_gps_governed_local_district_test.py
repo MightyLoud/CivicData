@@ -206,6 +206,90 @@ class GovernedLocalDistrictOverlayTests(unittest.TestCase):
             }],
         )
 
+    def test_address_not_matched_can_recover_through_governed_fallback(self):
+        class Engine:
+            @contextmanager
+            def geocode_scope(self):
+                yield
+            def resolve(self, address, *, observed_on=None):
+                return {
+                    "error": {
+                        "code": "ADDRESS_NOT_MATCHED",
+                        "message": "no census match",
+                    }
+                }
+
+        class Fallback:
+            def resolve(self, address):
+                return {
+                    "status": "PASS",
+                    "provider": "FIXTURE_ARCGIS",
+                    "matched_address": "500 Cottonwood Dr, Alamosa, Colorado, 81101",
+                    "longitude": -105.870897502578,
+                    "latitude": 37.479843286555,
+                    "canonical_writes": 0,
+                }
+
+        wrapper = CivicGPSBoundaryOverlayResolver(
+            Engine(),
+            [],
+            [],
+            self.rows(),
+            repo_root=ROOT,
+            governed_fallback_geocoder=Fallback(),
+        )
+        result = wrapper.resolve("500 Cottonwood Dr, Alamosa, CO 81101")
+        self.assertNotIn("error", result)
+        self.assertEqual(
+            result["meta"]["resolution_mode"],
+            "GOVERNED_LOCAL_GEOCODER_FALLBACK",
+        )
+        self.assertEqual(
+            result["payload"]["district_assignments"],
+            [{
+                "adapter_id": "DIST-CO-ALAMOSA-WARDS-GOVERNED",
+                "district_key": "1",
+            }],
+        )
+        self.assertEqual(result["payload"]["offices"], [])
+        self.assertEqual(result["payload"]["officeholders"], [])
+        self.assertEqual(result["payload"]["action_links"], [])
+
+    def test_fallback_outside_governed_local_geometry_preserves_core_error(self):
+        class Engine:
+            @contextmanager
+            def geocode_scope(self):
+                yield
+            def resolve(self, address, *, observed_on=None):
+                return {
+                    "error": {
+                        "code": "ADDRESS_NOT_MATCHED",
+                        "message": "no census match",
+                    }
+                }
+
+        class Fallback:
+            def resolve(self, address):
+                return {
+                    "status": "PASS",
+                    "provider": "FIXTURE_ARCGIS",
+                    "matched_address": "Outside",
+                    "longitude": -100.0,
+                    "latitude": 40.0,
+                    "canonical_writes": 0,
+                }
+
+        wrapper = CivicGPSBoundaryOverlayResolver(
+            Engine(),
+            [],
+            [],
+            self.rows(),
+            repo_root=ROOT,
+            governed_fallback_geocoder=Fallback(),
+        )
+        result = wrapper.resolve("outside")
+        self.assertEqual(result["error"]["code"], "ADDRESS_NOT_MATCHED")
+
     def test_unrelated_active_jurisdiction_does_not_require_colorado_geometry_assets(self):
         class Engine:
             @contextmanager
