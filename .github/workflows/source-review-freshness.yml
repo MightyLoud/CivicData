@@ -1,0 +1,68 @@
+name: Bound source-review freshness
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "acceptance/ev/**"
+      - "consumers/empowered_vote/**"
+      - "candidates/ev/**"
+      - "previews/ev/**"
+      - "tools/jurisdiction_package.py"
+      - "tools/jurisdiction_package_strict.py"
+      - "tools/representation_semantics.py"
+      - "tools/source_review_freshness.py"
+      - "tests/test_source_review_freshness.py"
+      - "docs/source-review-freshness-v0.1.md"
+      - ".github/workflows/source-review-freshness.yml"
+  push:
+    branches: [main]
+    paths:
+      - "acceptance/ev/**"
+      - "consumers/empowered_vote/**"
+      - "candidates/ev/**"
+      - "previews/ev/**"
+      - "tools/jurisdiction_package.py"
+      - "tools/jurisdiction_package_strict.py"
+      - "tools/representation_semantics.py"
+      - "tools/source_review_freshness.py"
+      - "tests/test_source_review_freshness.py"
+      - "docs/source-review-freshness-v0.1.md"
+      - ".github/workflows/source-review-freshness.yml"
+  schedule:
+    - cron: "17 15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-review-freshness-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  freshness:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test bound receipts and freshness boundaries
+        run: python -m unittest -v tests.test_source_review_freshness
+      - name: Report current UTC source freshness
+        if: always()
+        run: |
+          mkdir -p artifacts/source-review-freshness
+          python tools/source_review_freshness.py --repo-root . --github-actions > artifacts/source-review-freshness/report.json
+      - name: Preserve freshness evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-review-freshness-${{ github.event.pull_request.head.sha || github.sha }}
+          path: artifacts/source-review-freshness/
+          if-no-files-found: warn
+          retention-days: 30
