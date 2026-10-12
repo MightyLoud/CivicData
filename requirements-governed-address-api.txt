@@ -1,0 +1,2 @@
+-r requirements-hosted-runtime.txt
+pydantic>=2,<3
