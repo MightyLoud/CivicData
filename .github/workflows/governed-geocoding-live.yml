@@ -14,6 +14,17 @@ on:
       - "data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json"
       - "data/normalized/co/jurisdiction-co-arvada/jurisdiction.json"
       - ".github/workflows/governed-geocoding-live.yml"
+      - "tools/geometry_governance.py"
+      - "tests/governed_district_controls.py"
+      - "tests/test_address_pipeline_hardening.py"
+      - "adapters/factory/**"
+      - "adapters/shared_identity.py"
+      - "consumers/empowered_vote/contract_v1.py"
+      - "tools/shared_identity_registry.py"
+      - "data/normalized/co/jurisdiction-co-alamosa/**"
+      - "data/normalized/co/jurisdiction-co-arvada/**"
+      - "tools/jurisdiction_package_strict.py"
+      - "schemas/jurisdiction_package_v0.*.schema.json"
   workflow_dispatch:
 
 permissions:
@@ -31,5 +42,7 @@ jobs:
           python-version: "3.12"
       - name: Deterministic geocoding policy and end-to-end fixtures
         run: python -m unittest -v tests.test_geocoding_boundary
+      - name: Address hardening and package parity regressions
+        run: python -m unittest -v tests.test_address_pipeline_hardening
       - name: Live ArcGIS geocoder through governed PIP and EV runtime
         run: python tests/governed_geocoding_live_probe.py

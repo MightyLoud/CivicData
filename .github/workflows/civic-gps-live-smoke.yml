@@ -45,6 +45,19 @@ on:
       - 'docs/workflows/civic-gps-live-smoke.md'
       - 'docs/workflows/civic-gps-county-archetype.md'
       - 'docs/workflows/civic-gps-county-onboarding.md'
+      - 'data/normalized/co/jurisdiction-co-alamosa/**'
+      - 'data/normalized/co/jurisdiction-co-arvada/**'
+      - 'data/reference/co/geometry/**'
+      - 'data/reference/co/district_geometry_sources_v0.1.json'
+      - 'tools/geometry_governance.py'
+      - 'tests/governed_district_controls.py'
+      - 'tests/test_address_pipeline_hardening.py'
+      - 'adapters/factory/**'
+      - 'adapters/shared_identity.py'
+      - 'consumers/empowered_vote/contract_v1.py'
+      - 'tools/shared_identity_registry.py'
+      - 'tools/jurisdiction_package_strict.py'
+      - 'schemas/jurisdiction_package_v0.*.schema.json'
   schedule:
     - cron: '23 15 * * 3'
 
@@ -79,7 +92,7 @@ jobs:
           set -euo pipefail
           git diff --name-only '${{ github.event.pull_request.base.sha }}' '${{ github.event.pull_request.head.sha }}' > /tmp/civic-gps-changed-files.txt
           cat /tmp/civic-gps-changed-files.txt
-          if grep -Eq '^(civic_gps_runtime_parts/|civic_gps_extensions/|tests/civic_gps_|tests/empowered_vote_live_civic_gps_network_test\.py$|consumers/empowered_vote/live_civic_gps\.py$|tests/fixtures/civic_gps_county_onboarding/|tools/civic_gps_|schemas/civic_gps_|requirements-civic-gps\.txt$|\.github/workflows/civic-gps-live-smoke\.yml$|docs/workflows/civic-gps-)' /tmp/civic-gps-changed-files.txt; then
+          if grep -Eq '^(tools/jurisdiction_package_strict\.py$|schemas/jurisdiction_package_v0\.[^/]+\.schema\.json$|data/normalized/co/jurisdiction-co-(alamosa|arvada)/|data/reference/co/geometry/|data/reference/co/district_geometry_sources_v0\.1\.json$|tools/geometry_governance\.py$|tests/(test_governed_local_district_overlay|test_address_pipeline_hardening|governed_district_controls)\.py$|adapters/factory/|adapters/shared_identity\.py$|consumers/empowered_vote/contract_v1\.py$|tools/shared_identity_registry\.py$|civic_gps_runtime_parts/|civic_gps_extensions/|tests/civic_gps_|tests/empowered_vote_live_civic_gps_network_test\.py$|consumers/empowered_vote/live_civic_gps\.py$|tests/fixtures/civic_gps_county_onboarding/|tools/civic_gps_|schemas/civic_gps_|requirements-civic-gps\.txt$|\.github/workflows/civic-gps-live-smoke\.yml$|docs/workflows/civic-gps-)' /tmp/civic-gps-changed-files.txt; then
             echo 'run=true' >> "$GITHUB_OUTPUT"
           else
             echo 'run=false' >> "$GITHUB_OUTPUT"
@@ -132,6 +145,10 @@ jobs:
       - name: Run governed local district deterministic controls
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
         run: python -m unittest -v tests.test_governed_local_district_overlay
+
+      - name: Run address hardening and package parity regressions
+        if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'
+        run: python -m unittest -v tests.test_address_pipeline_hardening
 
       - name: Run baseline real-network Civic GPS controls
         if: github.event_name != 'pull_request' || steps.scope.outputs.run == 'true'

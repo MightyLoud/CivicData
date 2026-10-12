@@ -243,7 +243,7 @@
         "profile_id": "maui_countywide_mayor_council_v0.1",
         "acceptance_receipt": {
           "path": "acceptance/ev/maui_countywide.v0.1.json",
-          "sha256": "7b5e0ba92020b59bacb3959b17fa7735e62d92c9b75f5f697ea4406e598ba8c8"
+          "sha256": "7135b5efaad5a2a56b347f274778405cdbf913de8451a059ab468391dfee1de5"
         }
       },
       "candidate_only": false,

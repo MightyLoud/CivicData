@@ -3,6 +3,8 @@ name: Jurisdiction Package contract
 on:
   pull_request:
     paths:
+      - "tests/test_address_pipeline_hardening.py"
+      - "tests/governed_district_controls.py"
       - "schemas/jurisdiction_package_v0.*.schema.json"
       - "tools/jurisdiction_package.py"
       - "tools/jurisdiction_package_strict.py"
@@ -203,6 +205,9 @@ jobs:
       - name: Run governed address geocoding boundary controls
         if: steps.package.outputs.present == 'true'
         run: python tests/test_address_geocoding_runtime.py
+      - name: Address hardening and normalized package parity
+        if: steps.package.outputs.present == 'true'
+        run: python -m unittest -v tests.test_address_pipeline_hardening
       - name: Run governed local district overlay controls
         if: steps.package.outputs.present == 'true'
         run: python tests/test_governed_local_district_overlay.py

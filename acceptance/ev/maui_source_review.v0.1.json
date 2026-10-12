@@ -1,7 +1,7 @@
 {
   "review_schema": "maui-activation-source-review/0.1",
-  "reviewed_on": "2026-09-12",
-  "expires_on": "2026-10-12",
+  "reviewed_on": "2026-10-12",
+  "expires_on": "2026-11-11",
   "expiry_basis": "CONSERVATIVE_30_DAY_REVALIDATION_POLICY",
   "scope": "MAUI_COUNTYWIDE_MAYOR_AND_COUNCIL_ONLY",
   "package_sha256": "7ddaf33b2184f9a465128cac581e75b5b6a3a5601ca052d5ff9403b2ffc006e3",
@@ -10,144 +10,157 @@
       "source_id": "maui-activation-state-elections",
       "url": "https://elections.hawaii.gov/resources/elected-officials/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:20:30.475445+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:10.360832+00:00",
       "http_status": 200,
-      "response_sha256": "87fc9e19e814f8d8088f1145e9f2c17d906ea52402b3f0db88d7e7107ed79911",
-      "raw_excerpt": "County of Maui\nCounty of Maui Mayor - 4 year term\n4 year term beginning noon on second day of January following election\nMaximum of 2 consecutive full terms\nJurisdiction\nIncumbent\nNext\nElection\nCounty of Maui\nRichard Bissen\n2026\nCounty of Maui Councilmembers - 2 year term\n2 year term beginning noon on second day of January following election\r\nMaximum of 5 consecutive full terms\nJurisdiction\nIncumbent\nNext\nElection\nEast Maui\nShane Sinenci\n2026\nWest Maui\nTamara Paltin\n2026\nWailuku-Waihee-Waikapu\nAlice Lee\n2026\nKahului\nKauanoe Batangan*\n2026\nSouth Maui\nTom Cook\n2026\nMakawao-Haiku-Paia\nNohe Uu-Hodgins\n2026\nUpcountry\nYuki Lei Sugimura\n2026\nLanai\nGabe Johnson\n2026\nMolokai\nKeani Rawlins-Fernandez\n2026\n*On December 16, 2025, Councilmember Kauanoe Batangan was appointed by Mayor Richard Bissen to fill the vacancy created upon the passing of Tasha Kama.\n",
-      "raw_excerpt_sha256": "f8f5e5e71b8848554010d95e676b7c24e004522966d1692865f2f0776ae2aa3e"
+      "response_sha256": "bb0e649690a0022b9cfbc437afb306e63c8c3109429ac6820d4d520207f9d42d",
+      "raw_excerpt": "County of Maui\nCounty of Maui Mayor - 4 year term\n4 year term beginning noon on second day of January following election\nMaximum of 2 consecutive full terms\nJurisdictionIncumbentNext\nElection\nCounty of MauiRichard Bissen2026\nCounty of Maui Councilmembers - 2 year term\n2 year term beginning noon on second day of January following election\nMaximum of 5 consecutive full terms\nJurisdictionIncumbentNext\nElection\nEast MauiShane Sinenci2026\nWest MauiTamara Paltin2026\nWailuku-Waihee-WaikapuAlice Lee2026\nKahuluiKauanoe Batangan*2026\nSouth MauiTom Cook2026\nMakawao-Haiku-PaiaNohe Uu-Hodgins2026\nUpcountryYuki Lei Sugimura2026\nLanaiGabe Johnson2026\nMolokaiKeani Rawlins-Fernandez2026\n*On December 16, 2025, Councilmember Kauanoe Batangan was appointed by Mayor Richard Bissen to fill the vacancy created upon the passing of Tasha Kama.\n",
+      "raw_excerpt_sha256": "1477dcbe89900bd9bb25356698f65d02ba292fc0c8fdbe464d7ee08f91671263",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-roster",
       "url": "https://mauicounty.us/councilmembers/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:20:29.945269+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:12.155608+00:00",
       "http_status": 200,
-      "response_sha256": "2bb32b5408b3d77aa062b4a055c63004b3177a0348ccbb73163739f9ae203e27",
-      "raw_excerpt": "\nCouncilmembers – Nā Lālā ʻAha\nThe Maui County Council is a nine-member legislative body of officials who are elected on at-large basis (i.e., all County voters can cast votes for all nine seats), one each from nine residency areas. Each Council member is elected for a two-year term.\nThe Council is the legislative and policy-making body of the Maui County government, as provided by Section 2-2 of the\nCharter of the County of Maui\n: ‘All powers of the county shall be carried into execution as provided by this charter, or, if the charter makes no provisions, as provided by ordinance or resolution of the county council.’\nMembers\nAlice Lee, Council Chair\nYuki Lei Sugimura, Vice-Chair\nTasha Kama (In Memoriam)\nKauanoe Batangan, Councilmember\nTom Cook, Councilmember\nGabe Johnson, Councilmember\nTamara Paltin, Councilmember\nKeani Rawlins-Fernandez, Councilmember\nShane Sinenci, Councilmember\nNohelani Uʻu-Hodgins, Councilmember\n",
-      "raw_excerpt_sha256": "3d216bff08afadadccc9e6689935a356a18aa57ba910236e279eccaabb56406e"
+      "response_sha256": "29eb1a52d9d87f28004926bc84d5c35ea17682825eefcd6a359d8b1a7ff95aeb",
+      "raw_excerpt": "Members\nAlice Lee, Council Chair\nYuki Lei Sugimura, Vice-Chair\nTasha Kama (In Memoriam)\nKauanoe Batangan, Councilmember\nTom Cook, Councilmember\nGabe Johnson, Councilmember\nTamara Paltin, Councilmember\nKeani Rawlins-Fernandez, Councilmember\nShane Sinenci, Councilmember\nNohelani Uʻu-Hodgins, Councilmember\n",
+      "raw_excerpt_sha256": "2404cf7f4d982cea9d535a865d84eb19391a231a390934bc186cc5333247ed79",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-faq",
       "url": "https://mauicounty.us/frequently-asked-questions/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:21:58.028458+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:12.127687+00:00",
       "http_status": 200,
-      "response_sha256": "a1378c29d18965d6b286bc6a2b0ff9f19d22982d42558189967c36296d4f3d99",
-      "raw_excerpt": "\nFrequently Asked Questions -Nā nīnau i hāpai pinepine ʻia\n1. How can I contact a Councilmember?\nPlease visit\nMauiCounty.us/contact\nor\nthe\ncouncilmember page\nfor phone, fax and email contacts.\n2. Which Councilmember holds the seat from each residency area?\nPlease note that all county voters are eligible to vote in council elections for all nine residency areas.\nAlice L. Lee: Wailuku-Waiheʻe-Waikapū\nYuki Lei K. Sugimura: Upcountry\nKauanoe Batangan: Kahului\nTom Cook: South Maui\nGabe Johnson: Lānaʻi\nTamara Paltin: West Maui\nKeani N.W. Rawlins-Fernandez: Molokai\nShane M. Sinenci: East Maui\nNohe Uʻu-Hodgins: Makawao-Haʻikū-Pāʻia\n3. Which Councilmember should I contact to voice my concerns?\nAlthough they are subject to district residency requirements, Councilmembers are elected “at large” by the voters of the county. Therefore, concerns may be voiced to any Councilmember.\n7. How do I submit testimony if I can’t be there in person?\nFor Committee meeting agenda items, written testimony should be addressed to the Committee Chair and mailed or faxed to the Office of Council Services, 200 South High Street, Wailuku, HI 96793, 808-270-7686 (fax).\nSee\nHow to testify.\nFor Council meeting agenda items, written testimony should be addressed to the Council Chair and mailed or faxed to the Office of the County Clerk, 200 South High Street, Wailuku, HI 96793, 808-270-7171 (fax). Testimony for Council meetings may be emailed to\ncounty.clerk@mauicounty.us\n.\nFor Council and Committee meetings held in the Council Chamber, oral testimony may be received by telephone from each of the Council\nresidency area offices\nin South Maui, West Maui, Makawao-Ha‘ikū-Pā‘ia, Hāna, Lānaʻi, and Molokai.\n",
-      "raw_excerpt_sha256": "b1fc64feb7812b644f6f989a465b0203edf395d0512fd1d9d493c7f04e0c2018"
+      "response_sha256": "1f61b37936e3929b5764bf55edaf0c53e76f4bb37770ee72e76c6f0c2fd40090",
+      "raw_excerpt": "Which Councilmember holds the seat from each residency area?\nPlease note that all county voters are eligible to vote in council elections for all nine residency areas.\nAlice L. Lee: Wailuku-Waiheʻe-Waikapū\nYuki Lei K. Sugimura: Upcountry\nKauanoe Batangan: Kahului\nTom Cook: South Maui\nGabe Johnson: Lānaʻi\nTamara Paltin: West Maui\nKeani N.W. Rawlins-Fernandez: Molokai\nShane M. Sinenci: East Maui\nNohe Uʻu-Hodgins: Makawao-Haʻikū-Pāʻia\n3. Which Councilmember should I contact to voice my concerns?\nAlthough they are subject to district residency requirements, Councilmembers are elected “at large” by the voters of the county. Therefore, concerns may be voiced to any Councilmember.\n\n[...]\nOffice of Council Services, 200 South High Street, Wailuku, HI 96793",
+      "raw_excerpt_sha256": "ebdb3f95ad5cee6dc8fd41f75737ea2600e92321fe00f20e3c316c3b4af0a5c1",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-seating",
       "url": "https://mauicounty.us/press-release/batangan-seated-as-councilmember-changes-to-committees-adopted/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:20:29.945360+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:12.228843+00:00",
       "http_status": 200,
-      "response_sha256": "cace479b2d5287465d07f770c7fff9b9e900be0e9057d2ebba4243e44d54092c",
-      "raw_excerpt": "\nBatangan seated as councilmember; changes to committees adopted\nby\nAlice Lee\non\nJanuary 6, 2026\nFor Immediate Release:\nPress Release by:\nAlice L. Lee, Chair\nMaui County Council\nmedia@mauicounty.us\nBatangan seated as councilmember\n; changes to committees adopted\nWAILUKU, Hawaiʻi (Jan. 6, 2026)—Councilmember Kauanoe Batangan was seated on the Maui County Council at a swearing-in ceremony yesterday, which was followed by a special meeting where councilmembers agreed to committee-assignment changes, Chair Alice L. Lee announced today.\nBatangan accepted the council seat for the Kahului residency area for the remainder of the 2025-27 term. He was appointed following the Oct. 26 passing of Councilmember Tasha Kama.\n“Yesterday marked a meaningful occasion for the council,” said Lee, who holds the seat for the Wailuku-Waiheʻe-Waikapū residency area. “With Councilmember Batangan seated, the council immediately begins its work for the new year.”\nBy an 8-0 vote, the council adopted\nResolution 26-1\nto add Batangan as a voting member to all eight standing committees. The resolution also named Batangan as chair of the Government Relations, Ethics and Transparency Committee, replacing Councilmember Nohelani Uʻu-Hodgins, who was named chair of the Housing and Land Use Committee.\n",
-      "raw_excerpt_sha256": "ee2ae5f8083aa1517bc034c0a1656ae0d196dffbcbbe1a5e0d3d56de184fb22a"
+      "response_sha256": "ed1c2a38943e4e6390b21a0edbd8fd8b6490e4f58cb91fb8b96dc50fbbe5b447",
+      "raw_excerpt": "He was appointed following the Oct. 26 passing of Councilmember Tasha Kama.",
+      "raw_excerpt_sha256": "72a4a6827b877bcd299c3046fc6dfd9d408fca549de44fbbfe971e67e422a2ff",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-lee",
       "url": "https://mauicounty.us/lee/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:21:35.997623+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:12.177178+00:00",
       "http_status": 200,
-      "response_sha256": "fac970794d31886774018704fe46181d7b4240f73dba90c66a23f2c118babfbf",
-      "raw_excerpt": "\nAlice L. Lee\nAlice L. Lee is the Chair of the Maui County Council.\nShe holds the County Council seat for the Wailuku-Waiheʻe-Waikapū residency area.\n",
-      "raw_excerpt_sha256": "091f5d9fd52e0f5fa44520a2584def7bc312b2947582e26d1945fb407c6ba4e8"
+      "response_sha256": "565fdc1b43c67e2116d395c86f86979bd54eafc06ae127d6db00d6e46d04263c",
+      "raw_excerpt": "Alice L. Lee\n[...]\nAlice L. Lee is the Chair of the Maui County Council.\n[...]\nShe holds the County Council seat for the Wailuku-Waiheʻe-Waikapū residency area.",
+      "raw_excerpt_sha256": "15bee8638698f9a33745da53856781e4e3a36f619a7bd420c054a0ba83bfd8b0",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-sugimura",
       "url": "https://mauicounty.us/sugimura/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:21:41.470305+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:12.305676+00:00",
       "http_status": 200,
-      "response_sha256": "ab36d04ad9f96a7745e0ad8b42200b565e9a2c31039f1df49fb6496041c844f8",
-      "raw_excerpt": "\nYuki Lei Sugimura\nYuki Lei Sugimura is the Vice-Chair of the Maui County Council and the Chair of the Budget, Finance, and Economic Development Committee.\nShe holds the County Council seat for the Upcountry residency area.\nUpcountry water source development meeting\nView the\nmeeting\n:\nDownload (PDF, 5.38MB)\n",
-      "raw_excerpt_sha256": "b3d391496cc126fa3fc31399391ba58b7e5f0d92a7c862f5c606656ad445a47d"
+      "response_sha256": "6d61a4fc0888448cd155869342dabd5eb59e1c2c3decde4298a7829e829f21dd",
+      "raw_excerpt": "Yuki Lei Sugimura\n[...]\nYuki Lei Sugimura is the Vice-Chair of the Maui County Council\n[...]\nShe holds the County Council seat for the Upcountry residency area.",
+      "raw_excerpt_sha256": "4ae5c35eecab35024372ed5da08f71013e7c41286b8b7356d59d2281a60bde77",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-batangan",
       "url": "https://mauicounty.us/batangan/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:21:35.838251+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:12.291205+00:00",
       "http_status": 200,
-      "response_sha256": "b55c9ff3ab1c70af292d502c4d8c051c8ce2011c7fb9f1ed0b349949c9ef6788",
-      "raw_excerpt": "\nKauanoe Batangan\nKauanoe Batangan is the Chair of the Government Relations, Ethics and Transparency Committee.\nHe holds the County Council seat for the Kahului residency area.\n",
-      "raw_excerpt_sha256": "aae3d880cb12cb6f08d212244c88f5cf2169069150f78ea960ab9b14679c13d3"
+      "response_sha256": "afd947e0486a90cfa880f869eb49833866e9cfdcbf8027cec1cc157fa0fed606",
+      "raw_excerpt": "Kauanoe Batangan\n[...]\nHe holds the County Council seat for the Kahului residency area.",
+      "raw_excerpt_sha256": "442bebaf8d91e7f3c472d3d00020de0efcd3d568565c1c1b4304886f3f2fa6cd",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-cook",
       "url": "https://mauicounty.us/cook/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:21:35.923036+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:15.611693+00:00",
       "http_status": 200,
-      "response_sha256": "dd2d528cad1fbce484226f8d1a5d3d2db9accc767cb75ab22b89bcb65bd4065f",
-      "raw_excerpt": "\nTom Cook\nThomas Cook is the Chair of the Water and Infrastructure Committee.\nHe holds the County Council seat for the South Maui residency area.\n",
-      "raw_excerpt_sha256": "8c6ea9ec6775f07dc4420c7bc6798f3a9d25298c3cd8706e17d27c4d0e561dd0"
+      "response_sha256": "30d722456b894da148d9d8960df4f3a8d335e55d91d9b1aaee192d7ecad38b5a",
+      "raw_excerpt": "Thomas Cook\n[...]\nHe holds the County Council seat for the South Maui residency area.",
+      "raw_excerpt_sha256": "365455ba78e916490698c53ce714a49b8f300a85805a5cc224ede386a6be1085",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-johnson",
       "url": "https://mauicounty.us/johnson/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:21:36.172791+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:15.754017+00:00",
       "http_status": 200,
-      "response_sha256": "9a6f4c3f74a8d5f229fe83e1847947cd2be2fd19d67ac2e42d0c81f3636d3608",
-      "raw_excerpt": "\nGabe Johnson\nGabe Johnson is the Chair of the Agriculture, Diversification, Environment and Public Transportation Committee.\nHe holds the County Council seat for the Lānaʻi residency area.\nt and Communications\nRoxanne Morita, Lānaʻi Office Executive Assistant\nResidency Area Office Staff\nRoxanne Morita\nP.O. Box 630647\n814 Fraser Avenue\nLānaʻi City, Hawaii  96763\n(808) 565-7094\n(808) 866-4489\nContact\nEmail:\ngabe.johnson@mauicounty.us\nKalana O Maui Building\n200 South High St.\n8th Floor\nWailuku, Hawaii 96793\nPh: (808)",
-      "raw_excerpt_sha256": "cd226c7dd2cbb161b89ddec94898177474ec14d88c9fcddd445f3691273ae6b9"
+      "response_sha256": "aa82e90507f69d22b178661905d4288e1fb765a62c4e23b69e7b4eebbf9459df",
+      "raw_excerpt": "Gabe Johnson\n[...]\nHe holds the County Council seat for the Lānaʻi residency area.\n[...]\n814 Fraser Avenue\nLānaʻi City, Hawaii 96763\n",
+      "raw_excerpt_sha256": "9c9b001bbc576c3d4c43db6e19ae4e9a2687ec74e7811ebc76e6a63b8bad7352",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-paltin",
       "url": "https://mauicounty.us/paltin/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:21:36.025673+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:15.605769+00:00",
       "http_status": 200,
-      "response_sha256": "db5f8ab08b691cc8a8e97ae72f31efe6f5532cc45d49a096818f8a1bb50291d9",
-      "raw_excerpt": "\nTamara Paltin\nTamara Paltin is the Chair of the Disaster Recovery, International Affairs, and Planning Committee.\nShe holds the County Council seat for the West Maui residency area.\n",
-      "raw_excerpt_sha256": "2eb33dd5e68e9a1cb918e966ef3e4dba8c2d1c97ae071f0933776e42f56738ea"
+      "response_sha256": "4631998e9897b0c9ef70442765175f3900156eddd06cf9a6480afb243befb380",
+      "raw_excerpt": "Tamara Paltin\n[...]\nShe holds the County Council seat for the West Maui residency area.",
+      "raw_excerpt_sha256": "20a10b3e057716435ed16b0897c828065512e7488c86ace82db84661ef8b35a9",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-rawlins-fernandez",
       "url": "https://mauicounty.us/rawlins-fernandez/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:21:35.971004+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:15.632923+00:00",
       "http_status": 200,
-      "response_sha256": "eb29af00d33f7fe91023b889a68ac147bcb865a9a25e309b2d76b69685fcb9cd",
-      "raw_excerpt": "\nKeani Rawlins-Fernandez\nKeani Rawlins-Fernandez is the Chair of Kōmike Aloha ʻĀina.\nShe holds the County Council seat for the Molokai residency area.\n",
-      "raw_excerpt_sha256": "235bf8074bf8848a594a51927ecb01580371205a0a9e5559c811ac1c30590806"
+      "response_sha256": "3cf43aa85405acec00cd0201c91fc4b54af61437220ba71a78d12556c4042f8d",
+      "raw_excerpt": "Keani Rawlins-Fernandez\n[...]\nShe holds the County Council seat for the Molokai residency area.",
+      "raw_excerpt_sha256": "483a08a114b98426e530381da841dfa442f704a7678d2773c29ee465b27695b9",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-sinenci",
       "url": "https://mauicounty.us/sinenci/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:21:41.254045+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:15.640802+00:00",
       "http_status": 200,
-      "response_sha256": "ac619856049ec2a371bde00e58e154e06bb64671c576ef14454c357b1a952aa2",
-      "raw_excerpt": "\nShane Sinenci\nShane Sinenci is the Chair of the Water Authority, Social Services, and Parks Committee.\nHe holds the County Council seat for the East Maui residency area.\n",
-      "raw_excerpt_sha256": "65d8129d3f7bbf2261f241bed74c0fe3e804494b46e9bef720e9180f66c14975"
+      "response_sha256": "cea621c85ede2991f0420e441b9268cc1c75eea3c305f7563c682556c22f15fb",
+      "raw_excerpt": "Shane Sinenci\n[...]\nHe holds the County Council seat for the East Maui residency area.",
+      "raw_excerpt_sha256": "dd109ea2806c4a09144d6ac129e5cb49ff54fa0fbc15b244c0a56c881be26082",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     },
     {
       "source_id": "maui-activation-uu-hodgins",
       "url": "https://mauicounty.us/uu-hodgins/",
       "authority": "PRIMARY_OFFICIAL",
-      "reviewed_on": "2026-09-12",
-      "retrieved_at": "2026-09-12T20:21:41.302057+00:00",
+      "reviewed_on": "2026-10-12",
+      "retrieved_at": "2026-10-12T03:46:15.682799+00:00",
       "http_status": 200,
-      "response_sha256": "00111fb6943973479f9cb080bb1341381028b7463a663efd2e6fe608f75c8f89",
-      "raw_excerpt": "\nNohelani Uʻu-Hodgins\nNohelani Uʻu-Hodgins is the Chair of the Housing and Land Use Committee.\nShe holds the County Council seat for the Makawao-Haʻikū-Pāʻia residency area.\n",
-      "raw_excerpt_sha256": "5aa072e84bb478ebb6b58c719ec03736493412fb003d167593d5db9b3aa7e354"
+      "response_sha256": "cdfea5ee920f4cf81726f501765be13bcc8afb9a018f776e9f3c105b5b74ce45",
+      "raw_excerpt": "Nohelani Uʻu-Hodgins\n[...]\nShe holds the County Council seat for the Makawao-Haʻikū-Pāʻia residency area.",
+      "raw_excerpt_sha256": "95d0522b1b56e34313a8ec8e421d8757927769588cec68f6d333a79508e488e3",
+      "excerpt_format": "NORMALIZED_VISIBLE_TEXT_WITH_MARKED_OMISSIONS"
     }
   ],
   "normalized_assertions": [
@@ -458,9 +471,14 @@
     "blocking_gap_count": 0
   },
   "limitations": [
-    "Mayor directory, County Charter landing page, and Mayor appointment announcement returned HTTP 502 during this review. Current official State Elections, Council FAQ, member profiles, and Council seating notice establish the required facts.",
-    "Tasha Kama appears on the Council site as In Memoriam and is excluded from the current roster.",
-    "Exact tenure intervals remain unresolved; appointment-announcement and swearing-in dates are not substituted for canonical tenure dates.",
+    "This renewal rechecks the same 13 official sources; State Elections and current Council pages establish the bounded Mayor/Council facts.",
+    "Tasha Kama remains explicitly In Memoriam and is excluded from the current roster.",
+    "Exact tenure intervals remain unresolved; appointment and swearing-in evidence is not substituted for canonical tenure dates.",
     "This receipt covers Mayor/Council representation only and does not certify complete jurisdiction coverage."
-  ]
+  ],
+  "previous_review": {
+    "reviewed_on": "2026-09-12",
+    "expires_on": "2026-10-12",
+    "sha256": "b85827b4056d70e70ebb8e1e69bb02a60da3009854d5d80840a2edfe00c4b6b2"
+  }
 }

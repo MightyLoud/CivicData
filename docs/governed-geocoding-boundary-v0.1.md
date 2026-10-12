@@ -47,8 +47,11 @@ maximum returned candidates considered: 5
 These thresholds are CivicData policy, not a claim that the provider guarantees
 accuracy above a universal score.
 
-Exact duplicate/alias candidates at the same coordinate collapse to one
-geographic candidate because they cannot alter downstream district assignment.
+All candidate observations are normalized and ranked before aliases at the
+same coordinate are collapsed. The strongest observation represents each point;
+the margin is then measured against the strongest distinct location. Candidate
+ordering cannot change acceptance or the selected point. Aliases with the same
+best score but conflicting address types fail with `GEOCODER_ALIAS_TYPE_CONFLICT`.
 
 ## Fail-closed states
 
@@ -56,6 +59,7 @@ geographic candidate because they cannot alter downstream district assignment.
 - `GEOCODER_SCORE_BELOW_POLICY`
 - `AMBIGUOUS_ADDRESS`
 - `GEOCODER_ADDRESS_TYPE_NOT_ALLOWED`
+- `GEOCODER_ALIAS_TYPE_CONFLICT`
 - malformed/non-finite/out-of-range coordinate or provider payload
 - point outside all governed geometry
 - point inside more than one governed jurisdiction
@@ -84,6 +88,17 @@ ArcGIS findAddressCandidates
 
 The live gate is deliberately separate from deterministic CI because it depends
 on an external network service.
+
+Both ArcGIS live entry scripts and the Civic GPS live district probe consume
+the same current controls through `tests/governed_district_controls.py` and
+require the exact applicable office set after runtime resolution. Historical
+facility replacements are documented in CO-RUNTIME-003, rather than maintained
+as competing current control lists.
+
+The Census-backed Civic GPS path has provider-specific acceptance semantics:
+exactly one address match and finite WGS84 coordinates, without a synthetic
+ArcGIS confidence score. Both paths still require governed geometry before
+district assignment and keep expected control results out of routing inputs.
 
 ## Current scope
 

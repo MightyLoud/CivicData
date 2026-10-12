@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import copy
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 import hashlib
 import json
 from pathlib import Path
@@ -15,7 +15,7 @@ ENTRY_ID = "hi-maui-countywide-representation-v0.1"
 SPEC_PATH = Path("onboarding/ev/maui-county.v0.1.json")
 RECEIPT_PATH = "acceptance/ev/maui_countywide.v0.1.json"
 REVIEW_REFERENCE = {"path": "acceptance/ev/maui_source_review.v0.1.json",
-    "sha256": "b85827b4056d70e70ebb8e1e69bb02a60da3009854d5d80840a2edfe00c4b6b2"}
+    "sha256": "e7998ec01d24be0392623b1d347d43c03597bbcc81e60b2edb8b08c15d1faa77"}
 FLAGS = {"candidate_only": False, "production_eligible": True,
          "publication_eligible": False, "complete_jurisdiction": False}
 ROUTING = {"strategy": "REUSE_GOVERNED_ROUTE", "adapter_id": "BASE-HI-MAUI-COUNTY", "geoid": "15009",
@@ -106,11 +106,20 @@ def load_receipt(entry, root, *, today=None):
         and receipt.get("onboarding_expected") == EXPECTED, "MAUI_PRODUCTION_RECEIPT_CONTRACT_INVALID")
     review = read_bound(root, REVIEW_REFERENCE, "MAUI_PRODUCTION_SOURCE_REVIEW")
     require(review.get("review_schema") == "maui-activation-source-review/0.1"
-        and review.get("reviewed_on") == "2026-09-12" and review.get("expires_on") == "2026-10-12"
         and review.get("scope") == candidate.SCOPE and review.get("package_sha256") == candidate.PACKAGE_SHA256,
         "MAUI_PRODUCTION_SOURCE_REVIEW_INVALID")
+    try:
+        reviewed = date.fromisoformat(review["reviewed_on"])
+        expires = date.fromisoformat(review["expires_on"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise MauiProductionError("MAUI_PRODUCTION_SOURCE_REVIEW_INVALID") from exc
+    require(reviewed.isoformat() == review["reviewed_on"]
+        and expires.isoformat() == review["expires_on"]
+        and expires - reviewed == timedelta(days=30)
+        and review.get("expiry_basis") == "CONSERVATIVE_30_DAY_REVALIDATION_POLICY",
+        "MAUI_PRODUCTION_SOURCE_REVIEW_INVALID")
     current = datetime.now(timezone.utc).date() if today is None else today
-    require(date(2026, 9, 12) <= current < date(2026, 10, 12), "MAUI_PRODUCTION_SOURCE_REVIEW_EXPIRED_OR_FUTURE")
+    require(reviewed <= current < expires, "MAUI_PRODUCTION_SOURCE_REVIEW_EXPIRED_OR_FUTURE")
     observations, assertions = review["source_observations"], review["normalized_assertions"]
     ids = {row["source_id"] for row in observations}
     require(len(observations) == len(ids) == 13 and len(assertions) == 25
@@ -174,11 +183,12 @@ def build_representation(package, address, geographic, entry, root):
         validate_package(entry, root, package)
         result = candidate.build_representation(package, address, geographic, candidate_entry(entry))
         if result.get("status") == "PASS":
+            review = read_bound(root, REVIEW_REFERENCE, "MAUI_PRODUCTION_SOURCE_REVIEW")
             result.pop("candidate_gate", None)
             result.update(FLAGS)
             result.update({"preview_only": False, "production_profile_id": PROFILE_ID,
-                "package_catalog_entry_id": ENTRY_ID, "source_reviewed_on": "2026-09-12",
-                "source_review_expires_on": "2026-10-12",
+                "package_catalog_entry_id": ENTRY_ID, "source_reviewed_on": review["reviewed_on"],
+                "source_review_expires_on": review["expires_on"],
                 "acceptance_receipt_sha256": entry["countywide_profile"]["acceptance_receipt"]["sha256"]})
     except MauiProductionError as exc:
         result = {"status": "FAIL-CLOSED", "error": exc.code, "canonical_writes": 0,

@@ -132,27 +132,30 @@ def select_candidate(
     if not candidates:
         raise GeocodingBoundaryError("ADDRESS_NOT_MATCHED")
 
-    normalized: list[dict[str, Any]] = []
-    seen: set[tuple[Any, ...]] = set()
-    for raw in candidates:
-        row = _normalized_candidate(raw)
-        identity = _candidate_identity(row)
-        if identity in seen:
-            continue
-        seen.add(identity)
-        normalized.append(row)
-
-    if not normalized:
-        raise GeocodingBoundaryError("ADDRESS_NOT_MATCHED")
-
-    normalized.sort(
+    # Rank all observations before collapsing aliases, so a weak alias cannot
+    # hide a stronger candidate and fabricate a distinct-location margin.
+    ranked = sorted(
+        (_normalized_candidate(raw) for raw in candidates),
         key=lambda row: (
             -float(row["score"]),
             str(row["matched_address"]).casefold(),
+            str(row["matched_address"]),
+            str(row["addr_type"]),
             float(row["longitude"]),
             float(row["latitude"]),
         )
     )
+    normalized: list[dict[str, Any]] = []
+    by_point: dict[tuple[Any, ...], dict[str, Any]] = {}
+    for row in ranked:
+        identity = _candidate_identity(row)
+        prior = by_point.get(identity)
+        if prior is not None:
+            if row["score"] == prior["score"] and row["addr_type"] != prior["addr_type"]:
+                raise GeocodingBoundaryError("GEOCODER_ALIAS_TYPE_CONFLICT")
+            continue
+        by_point[identity] = row
+        normalized.append(row)
     top = normalized[0]
 
     if top["addr_type"] not in policy.allowed_addr_types:
