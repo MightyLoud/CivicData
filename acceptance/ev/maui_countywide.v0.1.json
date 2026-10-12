@@ -10,7 +10,7 @@
   "binding_sha256": "0336d269e51cfce7d36c7650a8d803656415bc2f6d9e556479a170886f9c70be",
   "source_review": {
     "path": "acceptance/ev/maui_source_review.v0.1.json",
-    "sha256": "b85827b4056d70e70ebb8e1e69bb02a60da3009854d5d80840a2edfe00c4b6b2"
+    "sha256": "e7998ec01d24be0392623b1d347d43c03597bbcc81e60b2edb8b08c15d1faa77"
   },
   "source_correction": {
     "path": "previews/ev/maui_source_correction.v0.1.json",

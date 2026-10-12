@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import copy
-from datetime import date
+from datetime import date, timedelta
 import hashlib
 import json
 from pathlib import Path
@@ -84,7 +84,9 @@ class MauiActivationTest(unittest.TestCase):
                                                              production.candidate_entry(self.entry))
         for field in ("applicable_offices", "residency_areas", "source_evidence", "source_assertions", "warnings"):
             self.assertEqual(result[field], candidate[field])
-        self.assertEqual(result["source_review_expires_on"], "2026-10-12")
+        review = json.loads((self.root / production.REVIEW_REFERENCE["path"]).read_text())
+        self.assertEqual(result["source_reviewed_on"], review["reviewed_on"])
+        self.assertEqual(result["source_review_expires_on"], review["expires_on"])
 
     def test_all_production_flags_are_strict_booleans(self):
         original = self.catalog_path.read_text()
@@ -122,11 +124,15 @@ class MauiActivationTest(unittest.TestCase):
         self.closed(self.build(), "MAUI_PRODUCTION_SOURCE_CORRECTION_UNAVAILABLE")
 
     def test_expiry_and_future_dates_block_default_service(self):
-        for current in (date(2026, 9, 11), date(2026, 10, 12), date(2027, 1, 2)):
+        review = json.loads((self.root / production.REVIEW_REFERENCE["path"]).read_text())
+        start = date.fromisoformat(review["reviewed_on"])
+        expires = date.fromisoformat(review["expires_on"])
+        self.assertEqual(expires - start, timedelta(days=30))
+        for current in (start - timedelta(days=1), expires, expires + timedelta(days=30)):
             with self.subTest(current=current), patch.object(production, "datetime") as clock:
                 clock.now.return_value.date.return_value = current
                 self.closed(self.build(), "MAUI_PRODUCTION_SOURCE_REVIEW_EXPIRED_OR_FUTURE")
-        for current in (date(2026, 9, 12), date(2026, 10, 11)):
+        for current in (start, expires - timedelta(days=1)):
             self.assertEqual(production.load_receipt(self.entry, self.root, today=current)["status"], "PASS")
 
     def test_rehashed_receipt_cannot_expand_scope_or_authorize_release(self):
@@ -135,6 +141,27 @@ class MauiActivationTest(unittest.TestCase):
             with self.subTest(key=key):
                 self.change_receipt(lambda receipt: receipt.update({key: wrong}))
                 self.closed(self.build(), "MAUI_PRODUCTION_RECEIPT_CONTRACT_INVALID")
+
+    def test_source_review_window_cannot_be_extended_beyond_thirty_days(self):
+        path = self.root / production.REVIEW_REFERENCE["path"]
+        review = json.loads(path.read_text())
+        start = date.fromisoformat(review["reviewed_on"])
+        review["expires_on"] = (start + timedelta(days=31)).isoformat()
+        path.write_text(json.dumps(review))
+        reference = {"path": production.REVIEW_REFERENCE["path"],
+                     "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+        self.change_receipt(lambda receipt: receipt.update(source_review=reference))
+        with patch.object(production, "REVIEW_REFERENCE", reference):
+            self.closed(self.build(), "MAUI_PRODUCTION_SOURCE_REVIEW_INVALID")
+
+    def test_fresh_source_review_observations_cover_the_same_twenty_five_assertions(self):
+        review = json.loads((self.root / production.REVIEW_REFERENCE["path"]).read_text())
+        self.assertEqual(len(review["source_observations"]), 13)
+        self.assertEqual(len(review["normalized_assertions"]), 25)
+        for row in review["source_observations"]:
+            self.assertEqual(row["http_status"], 200)
+            self.assertTrue(row["retrieved_at"].startswith(review["reviewed_on"] + "T"))
+            self.assertEqual(hashlib.sha256(row["raw_excerpt"].encode()).hexdigest(), row["raw_excerpt_sha256"])
 
     def test_rehashed_receipt_cannot_replace_review_or_corrected_package(self):
         self.change_receipt(lambda r: r.update(source_review={"path": production.REVIEW_REFERENCE["path"], "sha256": "0" * 64}))
