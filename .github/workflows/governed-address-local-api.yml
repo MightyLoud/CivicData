@@ -1,0 +1,71 @@
+name: Governed address local HTTP API
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "services/governed_address_api/**"
+      - "requirements-governed-address-api.txt"
+      - "requirements-hosted-runtime.txt"
+      - "tests/test_governed_address_api.py"
+      - "tests/test_governed_address_lookup.py"
+      - "tests/test_address_geocoding_runtime.py"
+      - "tests/governed_district_controls.py"
+      - "tools/governed_address_lookup.py"
+      - "docs/governed-address-local-api-v0.1.md"
+      - "consumers/empowered_vote/**"
+      - "adapters/factory/**"
+      - "adapters/shared_identity.py"
+      - "tools/shared_identity_registry.py"
+      - "tools/geocoding_boundary.py"
+      - "tools/governed_geography_resolver.py"
+      - "tools/geometry_governance.py"
+      - "tools/jurisdiction_package.py"
+      - "data/normalized/co/**"
+      - "data/reference/co/**"
+      - ".github/workflows/governed-address-local-api.yml"
+  push:
+    branches: [main]
+    paths:
+      - "services/governed_address_api/**"
+      - "requirements-governed-address-api.txt"
+      - "requirements-hosted-runtime.txt"
+      - "tests/test_governed_address_api.py"
+      - "tests/test_governed_address_lookup.py"
+      - "tests/test_address_geocoding_runtime.py"
+      - "tests/governed_district_controls.py"
+      - "tools/governed_address_lookup.py"
+      - "docs/governed-address-local-api-v0.1.md"
+      - "consumers/empowered_vote/**"
+      - "adapters/factory/**"
+      - "adapters/shared_identity.py"
+      - "tools/shared_identity_registry.py"
+      - "tools/geocoding_boundary.py"
+      - "tools/governed_geography_resolver.py"
+      - "tools/geometry_governance.py"
+      - "tools/jurisdiction_package.py"
+      - "data/normalized/co/**"
+      - "data/reference/co/**"
+      - ".github/workflows/governed-address-local-api.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-http:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install HTTP runtime and test client
+        run: python -m pip install -r requirements-governed-address-api.txt 'httpx>=0.28,<1'
+      - name: Offline HTTP, command and existing address runtime regressions
+        run: python -m unittest -v tests.test_governed_address_api tests.test_governed_address_lookup tests.test_address_geocoding_runtime
