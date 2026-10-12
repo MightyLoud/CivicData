@@ -29,7 +29,9 @@ The geocoding gate requires:
 - valid finite WGS84 longitude/latitude.
 
 Multiple labels for the same returned coordinate are collapsed before ambiguity
-evaluation.
+evaluation, after ranking all observations. Conflicting match types among
+equal-best aliases fail closed. The selected point and margin are independent
+of provider candidate order.
 
 The governed polygon snapshot remains authoritative for coordinate → district.
 
@@ -44,6 +46,12 @@ Examples:
 - invalid coordinates
 - point outside all governed geometry
 - ambiguous governed jurisdiction/division
+- unavailable or corrupt source registry/snapshot
+- malformed, duplicate, missing or unexportable jurisdiction package
+
+The source registry defaults to the supplied repository root. Expected registry,
+snapshot and package failures return a structured `FAIL-CLOSED` result with
+zero canonical writes.
 
 ## Live provider
 
@@ -51,7 +59,8 @@ The initial live adapter uses the public ArcGIS World Geocoder with
 `forStorage=false`. No geocoder response is promoted into canonical data.
 
 CI runs the eight governed Alamosa/Arvada public-facility addresses through the
-full live chain.
+full live chain. Both provider paths read current package controls through one
+shared loader and compare the exact expected office set after resolution.
 
 ## Output
 

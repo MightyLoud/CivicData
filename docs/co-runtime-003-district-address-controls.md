@@ -58,11 +58,12 @@ Factory qa.address_tests
 
 No district is inferred from a name or office title.
 
-## Remaining warning
+## Historical archive warning - resolved
 
-These controls close address-runtime coverage. They do **not** by themselves
-archive a machine-readable polygon/feature-service snapshot for either city's
-district geometry.
+The original CO-RUNTIME-003 address-control batch did not itself archive a
+machine-readable district snapshot. Issue #100 subsequently archived and
+verified both official polygon sources. The current governed source registry
+marks both entries `RESOLVED_MACHINE_READABLE`.
 
 Accordingly, both prior PIP warnings were narrowed to:
 
@@ -70,13 +71,15 @@ Accordingly, both prior PIP warnings were narrowed to:
 MACHINE_READABLE_DISTRICT_GEOMETRY_NOT_ARCHIVED
 ```
 
-That warning remains nonblocking and separate from the now-complete address
-runtime coverage.
+That warning is retained as a resolved audit record, rather than a current
+geometry blocker. Current package JSON is authoritative for acceptance controls;
+CSV, QA report, manifest and checksum exports are regenerated with the existing
+strict package builder and checked for parity.
 
 
 ## Ward 4 control refresh — 2026-10-11
 
-The original Ward 4 acceptance control used Lee Fields at
+The historical Ward 4 acceptance control used Lee Fields at
 `1000 Twentieth St`. The governed polygon assignment was correct, but the
 reconstructed Civic GPS Census-backed geocoder did not match that facility
 street spelling (including tested `20th St` variants).
@@ -97,7 +100,7 @@ assertions did not change.
 
 ## Arvada District 3 control refresh — 2026-10-11
 
-The original District 3 control used Little Raven Park at
+The historical District 3 control used Little Raven Park at
 `12140 W 57th Ave`. Its governed polygon assignment was correct, but the
 reconstructed Civic GPS Census-backed geocoder did not return an address match.
 

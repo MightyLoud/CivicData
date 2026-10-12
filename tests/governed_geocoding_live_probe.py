@@ -19,10 +19,7 @@ from tools.geocoding_boundary import (
     GeocodePolicy,
 )
 
-PACKAGES = (
-    ROOT / "data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json",
-    ROOT / "data/normalized/co/jurisdiction-co-arvada/jurisdiction.json",
-)
+from tests.governed_district_controls import load_district_controls
 STAMP = "2026-10-01T18:55:00-06:00"
 
 
@@ -31,85 +28,80 @@ def main() -> int:
     policy = GeocodePolicy()
     results = []
 
-    for package_path in PACKAGES:
-        package = json.loads(package_path.read_text(encoding="utf-8"))
+    for package_path, package, control in load_district_controls(ROOT):
         native_to_ocdid = {
             row["division_id"]: row["ocd_division_id"]
             for row in package["records"]["divisions"]
         }
-        for control in package["qa"]["address_tests"]:
-            if control.get("coordinate_role") != "DERIVED_TEST_POINT_ONLY":
-                continue
-
-            model = build_representation_for_address(
-                control["address_input"],
-                geocoder=geocoder,
-                generated_at=STAMP,
-                root=ROOT,
-                policy=policy,
+        model = build_representation_for_address(
+            control["address_input"],
+            geocoder=geocoder,
+            generated_at=STAMP,
+            root=ROOT,
+            policy=policy,
+        )
+        if model.get("status") != "PASS":
+            raise AssertionError(
+                f"{control['test_id']}: live pipeline failed: {model}"
             )
-            if model.get("status") != "PASS":
-                raise AssertionError(
-                    f"{control['test_id']}: live pipeline failed: {model}"
-                )
 
-            expected_division = native_to_ocdid[control["expected_division_id"]]
-            if model.get("resolved_division_ocdid") != expected_division:
-                raise AssertionError(
-                    f"{control['test_id']}: expected {expected_division}, "
-                    f"got {model.get('resolved_division_ocdid')}"
-                )
-
-            actual_offices = sorted(
-                row["office_id"] for row in model["applicable_offices"]
+        expected_division = native_to_ocdid[control["expected_division_id"]]
+        if model.get("resolved_division_ocdid") != expected_division:
+            raise AssertionError(
+                f"{control['test_id']}: expected {expected_division}, "
+                f"got {model.get('resolved_division_ocdid')}"
             )
-            expected_offices = sorted(
-                part.strip()
-                for part in control["expected_office_ids"].split(";")
-                if part.strip()
-            )
-            if actual_offices != expected_offices:
-                raise AssertionError(
-                    f"{control['test_id']}: office mismatch "
-                    f"expected={expected_offices} actual={actual_offices}"
-                )
 
-            geocoding = model["geocoding"]
-            if geocoding["provider"] != ARCGIS_PROVIDER:
-                raise AssertionError(
-                    f"{control['test_id']}: wrong provider {geocoding['provider']}"
-                )
-            if geocoding["score"] < policy.min_score:
-                raise AssertionError(
-                    f"{control['test_id']}: score below policy"
-                )
-            if geocoding["addr_type"] not in policy.allowed_addr_types:
-                raise AssertionError(
-                    f"{control['test_id']}: type outside policy"
-                )
-            if model["address_resolution_source"] != RESOLUTION_SOURCE:
-                raise AssertionError(
-                    f"{control['test_id']}: wrong resolution source"
-                )
-            if model["canonical_writes"] != 0:
-                raise AssertionError(
-                    f"{control['test_id']}: canonical writes must remain zero"
-                )
-
-            results.append(
-                {
-                    "test_id": control["test_id"],
-                    "address": control["address_input"],
-                    "matched_address": geocoding["matched_address"],
-                    "score": geocoding["score"],
-                    "addr_type": geocoding["addr_type"],
-                    "candidate_count": geocoding["candidate_count"],
-                    "score_margin": geocoding["score_margin"],
-                    "division_ocdid": model["resolved_division_ocdid"],
-                    "office_count": len(actual_offices),
-                    "status": "PASS",
-                }
+        actual_offices = sorted(
+            row["office_id"] for row in model["applicable_offices"]
+        )
+        expected_offices = sorted(
+            part.strip()
+            for part in control["expected_office_ids"].split(";")
+            if part.strip()
+        )
+        if actual_offices != expected_offices:
+            raise AssertionError(
+                f"{control['test_id']}: office mismatch "
+                f"expected={expected_offices} actual={actual_offices}"
             )
+
+        geocoding = model["geocoding"]
+        if geocoding["provider"] != ARCGIS_PROVIDER:
+            raise AssertionError(
+                f"{control['test_id']}: wrong provider {geocoding['provider']}"
+            )
+        if geocoding["score"] < policy.min_score:
+            raise AssertionError(
+                f"{control['test_id']}: score below policy"
+            )
+        if geocoding["addr_type"] not in policy.allowed_addr_types:
+            raise AssertionError(
+                f"{control['test_id']}: type outside policy"
+            )
+        if model["address_resolution_source"] != RESOLUTION_SOURCE:
+            raise AssertionError(
+                f"{control['test_id']}: wrong resolution source"
+            )
+        if model["canonical_writes"] != 0:
+            raise AssertionError(
+                f"{control['test_id']}: canonical writes must remain zero"
+            )
+
+        results.append(
+            {
+                "test_id": control["test_id"],
+                "address": control["address_input"],
+                "matched_address": geocoding["matched_address"],
+                "score": geocoding["score"],
+                "addr_type": geocoding["addr_type"],
+                "candidate_count": geocoding["candidate_count"],
+                "score_margin": geocoding["score_margin"],
+                "division_ocdid": model["resolved_division_ocdid"],
+                "office_count": len(actual_offices),
+                "status": "PASS",
+            }
+        )
 
     if len(results) != 8:
         raise AssertionError(f"expected 8 live district controls, got {len(results)}")

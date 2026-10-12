@@ -31,10 +31,18 @@ class GovernedGeographyError(ValueError):
 
 
 class GovernedCoordinateResolver:
-    def __init__(self, *, root: Path = ROOT, registry_path: Path = DEFAULT_REGISTRY):
-        self.root = root
-        self.registry_path = registry_path
-        self.registry = load_source_registry(registry_path)
+    def __init__(self, *, root: Path = ROOT, registry_path: Path | None = None):
+        self.root = Path(root)
+        self.registry_path = (
+            Path(registry_path) if registry_path is not None
+            else self.root / "data/reference/co/district_geometry_sources_v0.1.json"
+        )
+        try:
+            self.registry = load_source_registry(self.registry_path)
+        except GeometryGovernanceError as exc:
+            raise GovernedGeographyError(str(exc)) from exc
+        except (OSError, UnicodeError, ValueError, TypeError) as exc:
+            raise GovernedGeographyError("GOVERNED_GEOMETRY_SOURCE_REGISTRY_INVALID") from exc
         self.by_id = {
             row["jurisdiction_id"]: row for row in self.registry["entries"]
         }
@@ -73,8 +81,11 @@ class GovernedCoordinateResolver:
         path = self.root / str(row["governed_snapshot_path"])
         if not path.is_file():
             raise GovernedGeographyError("GOVERNED_GEOMETRY_SNAPSHOT_MISSING")
-        snapshot = json.loads(path.read_text(encoding="utf-8"))
-        errors = validate_geometry_snapshot(snapshot)
+        try:
+            snapshot = json.loads(path.read_text(encoding="utf-8"))
+            errors = validate_geometry_snapshot(snapshot)
+        except (OSError, UnicodeError, ValueError, TypeError) as exc:
+            raise GovernedGeographyError("GOVERNED_GEOMETRY_SNAPSHOT_INVALID") from exc
         if errors:
             raise GovernedGeographyError(
                 "GOVERNED_GEOMETRY_SNAPSHOT_INVALID:" + ",".join(errors)

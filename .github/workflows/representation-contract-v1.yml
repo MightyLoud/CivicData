@@ -4,6 +4,8 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - "tests/test_address_pipeline_hardening.py"
+      - "tests/governed_district_controls.py"
       - "schemas/representation_contract_v1.schema.json"
       - "schemas/civic_mirror_partner_snapshot_v0.1.schema.json"
       - "schemas/seegov_partner_snapshot_v0.1.schema.json"
@@ -108,6 +110,8 @@ jobs:
         run: python -m unittest -v tests.test_address_geocoding_runtime
       - name: Governed geocoding boundary and address runtime
         run: python -m unittest -v tests.test_geocoding_boundary
+      - name: Address hardening and normalized package parity
+        run: python -m unittest -v tests.test_address_pipeline_hardening
       - name: Governed local district overlay contract
         run: python -m unittest -v tests.test_governed_local_district_overlay
       - name: Compile adapters, reconciler, and EV consumer

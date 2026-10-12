@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
-from adapters.factory.export_representation import export_factory_package
+from adapters.factory.export_representation import ExportError, export_factory_package
 from consumers.empowered_vote.contract_v1 import (
     build_representation_from_civic_gps_result,
 )
@@ -36,10 +36,20 @@ class GovernedAddressRuntimeError(ValueError):
         self.code = code
 
 
+def _read_package(path: Path) -> dict[str, Any]:
+    try:
+        package = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError) as exc:
+        raise GovernedAddressRuntimeError("GOVERNED_JURISDICTION_PACKAGE_INVALID") from exc
+    if not isinstance(package, dict) or not isinstance(package.get("jurisdiction"), dict):
+        raise GovernedAddressRuntimeError("GOVERNED_JURISDICTION_PACKAGE_INVALID")
+    return package
+
+
 def _package_index(root: Path) -> dict[str, Path]:
     out: dict[str, Path] = {}
     for path in sorted((root / "data" / "normalized").glob("**/jurisdiction.json")):
-        package = json.loads(path.read_text(encoding="utf-8"))
+        package = _read_package(path)
         jurisdiction = package.get("jurisdiction", {})
         ocdid = (
             jurisdiction.get("ocd_jurisdiction_id")
@@ -72,8 +82,8 @@ def build_representation_for_address(
             "canonical_writes": 0,
         }
 
-    geography = GovernedCoordinateResolver(root=root)
     try:
+        geography = GovernedCoordinateResolver(root=root)
         resolved = geography.resolve_any(
             longitude=geocode["longitude"],
             latitude=geocode["latitude"],
@@ -87,7 +97,14 @@ def build_representation_for_address(
             "canonical_writes": 0,
         }
 
-    packages = _package_index(root)
+    try:
+        packages = _package_index(root)
+    except GovernedAddressRuntimeError as exc:
+        return {
+            "status": "FAIL-CLOSED", "error": exc.code,
+            "input_address": address, "geocoding": geocode,
+            "geography": resolved, "canonical_writes": 0,
+        }
     package_path = packages.get(resolved["jurisdiction_ocdid"])
     if package_path is None:
         return {
@@ -99,12 +116,19 @@ def build_representation_for_address(
             "canonical_writes": 0,
         }
 
-    package = json.loads(package_path.read_text(encoding="utf-8"))
-    contract = export_factory_package(
-        package,
-        generated_at=generated_at,
-        governed_package=True,
-    )
+    try:
+        package = _read_package(package_path)
+        contract = export_factory_package(
+            package, generated_at=generated_at, governed_package=True,
+        )
+    except (GovernedAddressRuntimeError, ExportError) as exc:
+        return {
+            "status": "FAIL-CLOSED",
+            "error": (exc.code if isinstance(exc, GovernedAddressRuntimeError)
+                      else "GOVERNED_JURISDICTION_PACKAGE_EXPORT_INVALID"),
+            "input_address": address, "geocoding": geocode,
+            "geography": resolved, "canonical_writes": 0,
+        }
     gps, binding = geography.civic_gps_payload_from_resolution(
         resolved,
         address=address,

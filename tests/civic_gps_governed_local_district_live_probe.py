@@ -14,6 +14,7 @@ from civic_gps_extensions.loader import load_resolver_with_extensions
 from consumers.empowered_vote.contract_v1 import (
     build_representation_from_civic_gps_result,
 )
+from tests.governed_district_controls import load_district_controls
 
 CASES = (
     {
@@ -30,16 +31,6 @@ CASES = (
     },
 )
 GENERATED_AT = "2026-10-11T19:30:00Z"
-
-# The governed source keeps the City's official facility spelling. The
-# reconstructed Civic GPS core geocoder uses the Census address matcher, which
-# does not match the spelled-out ordinal for this one control. This alias is
-# routing-only; district truth still comes exclusively from governed PIP.
-CIVIC_GPS_GEOCODER_ALIASES = {
-    "addrtest-co-alamosa-ward-4-lee-fields":
-        "1000 20th St, Alamosa, CO 81101",
-}
-
 
 def main() -> int:
     resolver = load_resolver_with_extensions(ROOT, timeout_seconds=30.0)
@@ -58,8 +49,8 @@ def main() -> int:
             if row.get("division_id") and row.get("ocd_division_id")
         }
 
-        for control in package["qa"]["address_tests"]:
-            if control.get("coordinate_role") != "DERIVED_TEST_POINT_ONLY":
+        for path, _, control in load_district_controls(ROOT):
+            if path != case["package"]:
                 continue
 
             routing_address = control["address_input"]
