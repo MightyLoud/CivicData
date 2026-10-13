@@ -128,7 +128,11 @@ def _division_for_binding(
     else:
         division_id = package.get("jurisdiction", {}).get("division_id")
         if not division_id:
-            divisions = package.get("records", {}).get("divisions", [])
+            # Shared institutional geography is a dependency, never the
+            # represented constituency or a fallback address-routing scope.
+            jid = package.get("jurisdiction", {}).get("jurisdiction_id")
+            divisions = [row for row in package.get("records", {}).get("divisions", [])
+                         if isinstance(row, dict) and row.get("jurisdiction_id") in (None, "", jid)]
             if len(divisions) == 1 and isinstance(divisions[0], dict):
                 division_id = _id(divisions[0], "division_id", "id")
     if not division_id:
@@ -150,6 +154,7 @@ def build_representation_from_civic_gps_result(
     *,
     binding: dict[str, Any],
     identity_policy: str | None = None,
+    reviewed_dependencies=None,
 ) -> dict[str, Any]:
     """Project current representation using Civic GPS only for geography."""
     caps = package_source.package_capabilities(package)
@@ -173,6 +178,15 @@ def build_representation_from_civic_gps_result(
     if package.get("jurisdiction", {}).get("jurisdiction_id") != binding.get("package_jurisdiction_id"):
         return _fail(address, "CIVIC_GPS_PACKAGE_BINDING_UNSUPPORTED")
 
+    try:
+        dependencies = package_source.resolve_shared_dependencies(package, reviewed_dependencies)
+        if dependencies["shared_body_ids"] and identity_policy is None:
+            package_source._validate_package_shape(package, reviewed_dependencies=reviewed_dependencies)
+    except package_source.SharedAuthorityError as exc:
+        return _fail(address, "PACKAGE_SHARED_AUTHORITY_INVALID", str(exc))
+    except package_source.PackageContractError as exc:
+        return _fail(address, exc.code, exc.detail)
+
     normalized = live_civic_gps.normalize_civic_gps_result(address, civic_gps_result)
     if normalized.get("status") != "PASS":
         return _fail(address, str(normalized.get("error") or "CIVIC_GPS_GEOGRAPHY_INVALID"), normalized.get("detail"))
@@ -192,6 +206,7 @@ def build_representation_from_civic_gps_result(
         for row in records.get("people", [])
         if isinstance(row, dict) and _id(row, "person_id", "id")
     }
+    bodies = {_id(row, "body_id", "id"): row for row in records["bodies"]}
     leadership = records.get("leadership_roles", [])
     try:
         projected_terms = [project_role_term(row) for row in records["role_terms"]]
@@ -262,8 +277,24 @@ def build_representation_from_civic_gps_result(
                 return _fail(address, "PACKAGE_REPRESENTATION_EXCEEDS_SEAT_CAPACITY", office_id)
         except (TypeError, ValueError):
             pass
+        body_id = package_source.resolve_office_body_id(office, bodies)
+        shared_identity = {}
+        if body_id in dependencies["shared_body_ids"]:
+            body = bodies[body_id]
+            shared_identity = {
+                "body_id": body_id,
+                "organization_id": body_id,
+                "organization_name": body.get("name"),
+                "organization_jurisdiction_id": body["jurisdiction_id"],
+                "organization_jurisdiction_ocdid": dependencies["body_jurisdictions"][body_id],
+                "represented_jurisdiction_id": office["jurisdiction_id"],
+                "organization_seat_capacity": dependencies["body_capacities"][body_id],
+            }
+        # Preserve ordinary legacy output and immutable acceptance receipts.
+        # Standalone offices gain no inferred organization membership.
         offices.append({
             "office_id": office_id,
+            **shared_identity,
             "office_name": _office_name(office),
             "classification_or_role": office.get("classification_or_role") or office.get("role"),
             "division_id": geography,

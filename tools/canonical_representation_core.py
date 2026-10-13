@@ -2,6 +2,11 @@
 """Canonical Representation Core v0.1 validator and legacy package adapter."""
 from __future__ import annotations
 
+try:
+    from tools.shared_authority_dependencies import resolve_dependencies, SharedAuthorityError
+except ModuleNotFoundError:  # Direct script execution from tools/.
+    from shared_authority_dependencies import resolve_dependencies, SharedAuthorityError
+
 from copy import deepcopy
 from datetime import datetime
 import re
@@ -108,7 +113,7 @@ def _status(value: Any) -> str:
 
 def _membership_status(value: Any) -> str:
     text = _clean(value).upper()
-    if text == "CURRENT":
+    if text in {"CURRENT", "CURRENT_VERIFIED"}:
         return "CURRENT"
     if text in {"FORMER", "ENDED", "INACTIVE"}:
         return "FORMER"
@@ -493,7 +498,7 @@ def _map_assertion_subject(
     return canonical_type, subject_id
 
 
-def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
+def from_jurisdiction_package(pkg: Mapping[str, Any], *, reviewed_dependencies=None) -> dict[str, Any]:
     """Convert a v0.1/v0.2 Jurisdiction Package into the core shape.
 
     Existing native IDs are preserved. This adapter does not mint shared
@@ -507,6 +512,11 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
     qa = pkg.get("qa")
     if not all(isinstance(x, Mapping) for x in (jurisdiction, records, provenance, qa)):
         raise CanonicalCoreError("PACKAGE_SHAPE_INVALID")
+
+    try:
+        dependencies = resolve_dependencies(pkg, reviewed_dependencies)
+    except SharedAuthorityError as exc:
+        raise CanonicalCoreError(str(exc)) from exc
 
     divisions_raw = records.get("divisions", [])
     bodies_raw = records.get("bodies", [])
@@ -547,12 +557,14 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
         raise CanonicalCoreError("PACKAGE_JURISDICTION_OCDID_REQUIRED")
 
     jurisdiction_division = None
-    for row in divisions:
+    local_division_ids = {division_ocdid_by_native.get(row.get("division_id") or row.get("id")) for row in divisions_raw if row.get("jurisdiction_id") in (None, jurisdiction.get("jurisdiction_id"))}
+    local_divisions = [row for row in divisions if row["division_ocdid"] in local_division_ids]
+    for row in local_divisions:
         if row["division_type"] in {"MUNICIPALITY", "COUNTY", "STATE", "COUNTRY"}:
             jurisdiction_division = row["division_ocdid"]
             break
-    if jurisdiction_division is None and divisions:
-        jurisdiction_division = divisions[0]["division_ocdid"]
+    if jurisdiction_division is None and local_divisions:
+        jurisdiction_division = local_divisions[0]["division_ocdid"]
     if jurisdiction_division is None:
         raise CanonicalCoreError("PACKAGE_BASE_DIVISION_REQUIRED")
 
@@ -568,6 +580,15 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
         }
     ]
 
+    for native_id, native in dependencies["jurisdictions"].items():
+        jurisdictions.append({
+            "jurisdiction_ocdid": native["ocd_jurisdiction_id"],
+            "division_ocdid": division_ocdid_by_native[dependencies["jurisdiction_divisions"][native_id]],
+            "name": _clean(native.get("name")) or native["ocd_jurisdiction_id"],
+            "level": _level(native), "record_status": _status(native.get("status")),
+            "parent_jurisdiction_ocdid": None, "source_ids": _split_ids(native.get("source_ids")),
+        })
+
     organizations: list[dict[str, Any]] = []
     for row in bodies_raw:
         if not isinstance(row, Mapping):
@@ -578,7 +599,7 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
         organizations.append(
             {
                 "organization_id": organization_id,
-                "jurisdiction_ocdid": jurisdiction_ocdid,
+                "jurisdiction_ocdid": dependencies["body_jurisdictions"].get(organization_id, jurisdiction_ocdid),
                 "name": _clean(row.get("name")) or organization_id,
                 "organization_type": _org_type(row),
                 "record_status": _status(row.get("status")),
@@ -597,7 +618,7 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
         represented_native = _clean(row.get("represented_division_id"))
         role_id = _stable_slug(row.get("office_type") or row.get("office_name"))
         if not post_id or not organization_id or represented_native not in division_ocdid_by_native:
-            continue
+            raise ValueError("Factory office graph is incomplete; Core requires explicit Body and Division associations")
         sources = _split_ids(row.get("source_ids"))
         roles_by_id.setdefault(
             role_id,
@@ -654,9 +675,9 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
                 "membership_id": membership_id,
                 "person_id": person_id,
                 "post_id": post_id,
-                "membership_status": _membership_status(row.get("status") or row.get("role_term_status")),
-                "start_date": row.get("valid_from") or row.get("term_start_date") or None,
-                "end_date": row.get("valid_to") or row.get("term_end_date") or None,
+                "membership_status": _membership_status(row.get("status") or row.get("currentness_status") or row.get("role_term_status")),
+                "start_date": (row.get("valid_from") if row.get("body_id") not in dependencies["shared_body_ids"] or row.get("interval_semantics") == "ACTUAL_TENURE" else None) or row.get("term_start_date") or None,
+                "end_date": (row.get("valid_to") if row.get("body_id") not in dependencies["shared_body_ids"] or row.get("interval_semantics") == "ACTUAL_TENURE" else None) or row.get("term_end_date") or None,
                 "label": None,
                 "designations": [],
                 "source_ids": _split_ids(row.get("source_ids")),
@@ -712,6 +733,8 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
             jurisdiction_ocdid=jurisdiction_ocdid,
             division_ocdid_by_native=division_ocdid_by_native,
         )
+        if _clean(row.get("subject_type")).lower() == "jurisdiction" and row.get("subject_id") in dependencies["jurisdictions"]:
+            subject_type, subject_id = "jurisdiction", dependencies["jurisdictions"][row["subject_id"]]["ocd_jurisdiction_id"]
         source_status = _clean(row.get("normalized_status")).upper()
         if source_status == "NORMALIZED":
             normalization_status = "NORMALIZED"
@@ -745,6 +768,9 @@ def from_jurisdiction_package(pkg: Mapping[str, Any]) -> dict[str, Any]:
         for row in assertions
     )
     certified = raw_complete and normalized_complete and qa_passed and parity_ok
+    if dependencies["shared_body_ids"]:
+        explicit_complete = any(qa.get(key) is True for key in ("factory_complete", "complete_jurisdiction")) or jurisdiction.get("complete_jurisdiction") is True
+        certified = certified and explicit_complete and all(block.get("complete_jurisdiction", True) is True for block in (jurisdiction, qa)) and all(row["membership_status"] != "UNKNOWN" for row in memberships)
     reviewed_at = _clean(jurisdiction.get("row_updated_at")) or "UNKNOWN"
 
     core = {

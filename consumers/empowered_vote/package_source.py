@@ -32,6 +32,10 @@ if _contract_spec is None or _contract_spec.loader is None:
     raise ImportError("unable to load jurisdiction identity contract")
 _contract = importlib.util.module_from_spec(_contract_spec)
 _contract_spec.loader.exec_module(_contract)
+validate_shared_dependencies = _contract._dependencies.dependency_errors
+resolve_shared_dependencies = _contract._dependencies.resolve_dependencies
+resolve_office_body_id = _contract._dependencies.office_body_id
+SharedAuthorityError = _contract._dependencies.SharedAuthorityError
 validate_identity_graph = _contract.validate_identity_graph
 validate_role_term_sources = _contract.validate_role_term_sources
 validate_production_scope = _contract.validate_production_scope
@@ -102,7 +106,7 @@ def require_public_identity_disposition(package: dict[str, Any]) -> None:
         raise PackageContractError("PACKAGE_PUBLIC_IDENTITY_UNRESOLVED", ",".join(errors))
 
 
-def _validate_package_shape(package: dict[str, Any]) -> None:
+def _validate_package_shape(package: dict[str, Any], *, reviewed_dependencies=None) -> None:
     version = str(package.get("schema_version"))
     if version not in SUPPORTED_SCHEMA_VERSIONS:
         raise PackageContractError("PACKAGE_SCHEMA_VERSION_UNSUPPORTED", version)
@@ -125,6 +129,10 @@ def _validate_package_shape(package: dict[str, Any]) -> None:
     graph_errors = validate_identity_graph(records)
     if graph_errors:
         raise PackageContractError("PACKAGE_IDENTITY_GRAPH_INVALID", ",".join(graph_errors))
+
+    dependency_errors = validate_shared_dependencies(package, reviewed_dependencies)
+    if dependency_errors:
+        raise PackageContractError("PACKAGE_SHARED_AUTHORITY_INVALID", ",".join(dependency_errors))
 
     provenance = package.get("provenance")
     if not isinstance(provenance, dict) or not isinstance(provenance.get("source_evidence"), list):
@@ -167,7 +175,7 @@ def _validate_package_shape(package: dict[str, Any]) -> None:
     require_public_identity_disposition(package)
 
 
-def load_jurisdiction_package(package_dir: str | Path) -> dict[str, Any]:
+def load_jurisdiction_package(package_dir: str | Path, *, reviewed_dependencies=None) -> dict[str, Any]:
     root = Path(package_dir)
     if not root.is_dir():
         raise PackageContractError("PACKAGE_DIRECTORY_NOT_FOUND", str(root))
@@ -187,7 +195,7 @@ def load_jurisdiction_package(package_dir: str | Path) -> dict[str, Any]:
     package = _load_json(root / "jurisdiction.json", "PACKAGE_JURISDICTION_JSON_INVALID")
     qa_report = _load_json(root / "qa_report.json", "PACKAGE_QA_REPORT_INVALID")
     manifest = _load_json(root / "manifest.json", "PACKAGE_MANIFEST_INVALID")
-    _validate_package_shape(package)
+    _validate_package_shape(package, reviewed_dependencies=reviewed_dependencies)
 
     if qa_report != package.get("qa"):
         raise PackageContractError("PACKAGE_QA_SIDECAR_DRIFT")
