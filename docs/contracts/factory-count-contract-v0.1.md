@@ -42,10 +42,16 @@ crosswalk, supply missing service dates, alter approval, or certify count eviden
 as a geography replay. The sidecar records a declared source hash; the upstream
 capture/replay must verify those bytes and their lineage separately.
 
-Both recovered pilot captures currently have blank jurisdiction OCD crosswalks.
-Their count preflight passes, and representation export remains held at the
-existing governed-crosswalk requirement. No crosswalk is inferred from FIPS or
-municipal names. No pilot is added to the governed catalog or hosted service.
+The earlier recovered pilot captures had blank jurisdiction OCD crosswalks;
+their count preflight passed while representation export was held at the
+governed-crosswalk requirement. On October 14, 2026, explicit jurisdiction and
+Division crosswalks were applied and verified for Bowie and Victory, and fresh
+scoped representation candidates passed local schema and consumer-graph checks.
+These internal mappings do not verify upstream publication of government objects.
+Candidate acceptance, release binding, independent geography replay and scoped
+service activation remain separate gates. No crosswalk is inferred from FIPS or
+municipal names, and this change adds neither pilot to the governed catalog or
+hosted service.
 
 Run `python -m unittest -v tests.test_factory_count_contract` for synthetic count
 controls and exact compatibility comparisons against the five current Colorado
