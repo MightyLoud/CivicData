@@ -1,0 +1,16 @@
+{
+  "schema": "CIVIC_TRACKER_COUNT_PROFILES_v0.1",
+  "adopted_date": "2026-10-13",
+  "unlisted_jurisdiction_basis": "SEAT_CAPACITY",
+  "scope": "Declared interpretation for two verified pilot jurisdictions. Counts and capacity are read from each export and validated rather than copied from these profiles.",
+  "profiles": {
+    "jurisdiction-tx-09640": {
+      "tracker_count_basis": "OFFICE_CONTAINERS",
+      "evidence": "CivicCartography Office Count Contract v0.1, October 13, 2026. Four ACTIVE Office containers carry seven seats and seven CURRENT RoleTerms in the captured baseline."
+    },
+    "jurisdiction-vt-cousub-5000975175": {
+      "tracker_count_basis": "SEAT_CAPACITY",
+      "evidence": "Accepted Victory Selectboard replay captured October 12, 2026. One ACTIVE Office container carries three seats and three CURRENT RoleTerms."
+    }
+  }
+}

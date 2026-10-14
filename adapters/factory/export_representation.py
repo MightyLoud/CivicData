@@ -18,6 +18,7 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 from zoneinfo import ZoneInfo
 
 from adapters.shared_identity import SharedIdentityResolutionError, SharedIdentityResolver
+from adapters.factory.count_contract import CountContractError, assess_factory_counts
 
 SCHEMA_VERSION = "1.0.0-draft"
 CONTRACT_NAMESPACE = uuid5(NAMESPACE_URL, "https://civicdata.tech/representation-contract/v1")
@@ -196,6 +197,10 @@ def export_factory_package(
         raise ExportError("jurisdiction object is required")
 
     jurisdiction_id = str(jurisdiction.get("jurisdiction_id") or "")
+    try:
+        assess_factory_counts(package)
+    except CountContractError as exc:
+        raise ExportError(f"Factory count contract: {exc}") from exc
     ocdid = str(jurisdiction.get("ocd_jurisdiction_id") or jurisdiction.get("jurisdiction_ocdid") or "")
     if not ocdid and jurisdiction_id:
         ocdid = _legacy_municipal_jurisdiction_to_ocd(jurisdiction_id, jurisdiction) or ""
