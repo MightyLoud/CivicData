@@ -56,6 +56,7 @@ def _selection(value: Any) -> str:
     aliases = {
         "election": "elected",
         "elected": "elected",
+        "elected_at_large": "elected",
         "appointment": "appointed",
         "appointed": "appointed",
         "ex_officio": "ex_officio",
