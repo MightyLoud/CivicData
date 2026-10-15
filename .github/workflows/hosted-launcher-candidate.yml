@@ -1,0 +1,40 @@
+name: Hosted launcher candidate
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'candidates/hosted_launcher/**'
+      - '.github/workflows/hosted-launcher-candidate.yml'
+permissions:
+  contents: read
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install hash-locked dependencies
+        run: python -m pip install --require-hashes -r candidates/hosted_launcher/requirements.lock
+      - name: Check out pinned service
+        run: |
+          git clone https://github.com/MightyLoud/CivicData.git /tmp/civic-pinned
+          git -C /tmp/civic-pinned checkout --detach e9c11f26c0cec8acd409d92f4d4867b5ee5715f7
+      - name: Run launcher controls
+        run: python candidates/hosted_launcher/test_candidate.py /tmp/civic-pinned
+      - name: Build and smoke-test container
+        run: python candidates/hosted_launcher/verify_container.py
+      - name: Upload validation receipts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hosted-launcher-candidate-${{ github.event.pull_request.head.sha }}
+          path: |
+            candidates/hosted_launcher/validation.json
+            candidates/hosted_launcher/container_receipt.json
+          if-no-files-found: error
+          retention-days: 30
