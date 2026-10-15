@@ -67,11 +67,12 @@ def _is_current(term: dict[str, Any]) -> bool:
 
 def project_role_term(term: dict[str, Any]) -> dict[str, Any]:
     """Project known aliases without changing the canonical record or its IDs."""
+    # Factory intervals retain their recorded precision; do not invent day values.
     projected = copy.deepcopy(term)
     for destination, aliases in (
         ("status", ("status", "currentness_status", "role_term_status")),
-        ("start_date", ("term_start", "start_date", "term_start_date")),
-        ("end_date", ("term_end", "end_date", "term_end_date")),
+        ("start_date", ("term_start", "start_date", "term_start_date", "valid_from")),
+        ("end_date", ("term_end", "end_date", "term_end_date", "valid_to")),
     ):
         values = [term[key] if term[key] != "" else None for key in aliases if key in term]
         if any(value != values[0] for value in values[1:]):
