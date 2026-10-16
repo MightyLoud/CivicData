@@ -1,0 +1,48 @@
+{
+  "status": "PROPOSED_NOT_ADOPTED",
+  "base_commit": "8f7e5c01be3d2ea0ad765c9c45b9def911fe9352",
+  "canonical_path": "data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json",
+  "canonical_sha256": "da20eccb2454afbe6ab4c8b543bdb5d414c944fadadb083b76a0f49a36b228fb",
+  "leadership_record": {
+    "jurisdiction_id": "jurisdiction-co-alamosa",
+    "leadership_id": "leadership-co-alamosa-liz-hensley-mayor-pro-tem",
+    "notes": "Separate candidate; official roster observation only. Start/end dates unknown; not adopted.",
+    "observed_at": "2026-10-16T13:12:37.167806+00:00",
+    "office_id": "office-co-alamosa-council-ward-1",
+    "person_id": "person-co-alamosa-liz-hensley",
+    "role_title": "Mayor Pro Tem",
+    "source_id": "src-co-alamosa-current-council-roster-20261016",
+    "status": "CURRENT",
+    "valid_from": null,
+    "valid_to": null
+  },
+  "source_evidence": {
+    "accessed_at": "2026-10-16T13:12:37.167806+00:00",
+    "authority_level": "PRIMARY_OFFICIAL",
+    "content_hash": "c59c4b69055dcb84482e97fb5fe8dba5f25ec3238886c870a1e9c426bbf5b418",
+    "jurisdiction_id": "jurisdiction-co-alamosa",
+    "locator": "Liz Hensley \u2014 Mayor Pro Tem, City Councilor Ward 1",
+    "notes": "HTML fingerprint retained; observation does not establish exact service dates.",
+    "source_id": "src-co-alamosa-current-council-roster-20261016",
+    "source_type": "OFFICIAL_DIRECTORY",
+    "title": "City Council Members \u2014 October 16 candidate capture",
+    "url": "https://www.alamosa.gov/city-council-members",
+    "capture_extract_sha256": "255ae1688c110f38712a72efe20dc1b3d2136f1f6fe3af2427be6909dc0d2883"
+  },
+  "source_assertion": {
+    "assertion_id": "asrt-co-alamosa-liz-hensley-mayor-pro-tem-20261016",
+    "confidence": "HIGH",
+    "normalized_status": "PROPOSED",
+    "notes": "Candidate pending governed review; no source-system adoption.",
+    "object_type": "TEXT",
+    "object_value": "Mayor Pro Tem",
+    "predicate": "role_title",
+    "source_id": "src-co-alamosa-current-council-roster-20261016",
+    "source_locator": "Liz Hensley roster entry",
+    "subject_id": "leadership-co-alamosa-liz-hensley-mayor-pro-tem",
+    "subject_type": "LeadershipRole"
+  },
+  "existing_membership_id": "9bf214ce-cdf7-5349-ab4e-1d0349444184",
+  "production_eligible": false,
+  "publication_eligible": false
+}
