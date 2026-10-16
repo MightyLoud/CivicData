@@ -1,0 +1,1291 @@
+{
+  "status": "PASS",
+  "scope": "INTERNAL_REVIEW",
+  "complete_jurisdiction": false,
+  "publication_eligible": false,
+  "canonical_writes": 0,
+  "geometry_governance": {
+    "status": "CONTROLLED_TEST_SESSION_NOT_LIVE_VERIFIED",
+    "policy_id": "texas-legislative-geometry-governance/0.1"
+  },
+  "geography": {
+    "meta": {
+      "canonicalization": "UTF-8 JSON; object keys sorted for hashing; arrays sorted by stable identifiers where applicable",
+      "observed_on": "2026-10-16",
+      "response_id": "gps-composite-241b39f2485a",
+      "schema_version": "civic-gps-response/0.3.0",
+      "serialized_at": "2026-10-16T00:02:59+00:00",
+      "source_tab": "Civic GPS Adapters",
+      "canonical_content_sha256": "8c91145c3b6a1f519cc84fa9b4632fcff6974693784e964e79e78d486f60df1e"
+    },
+    "payload": {
+      "action_links": [],
+      "applicable_offices": [
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-clerk",
+          "official_url": "https://countyclerk.traviscountytx.gov/",
+          "title": "County Clerk",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "Dyana Limon-Mercado",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-commissioner-precinct-3",
+          "official_url": "https://www.traviscountytx.gov/",
+          "title": "County Commissioner, Precinct 3",
+          "applicability_scope": "DISTRICT_MATCH",
+          "district_division_id": "div-us-tx-travis-county-commissioner-precinct-3",
+          "district_name": "Travis County Commissioner Precinct 3",
+          "representative": "Ann Howard",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-constable-precinct-5",
+          "official_url": "https://www.traviscountytx.gov/constables",
+          "title": "Constable, Precinct 5",
+          "applicability_scope": "DISTRICT_MATCH",
+          "district_division_id": "div-us-tx-travis-county-constable-precinct-5",
+          "district_name": "Travis County Constable Precinct 5",
+          "representative": "Carlos B. Lopez",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-district-clerk",
+          "official_url": "https://www.traviscountytx.gov/district-clerk/bio",
+          "title": "District Clerk",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "Velva L. Price",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-judge",
+          "official_url": "https://www.traviscountytx.gov/",
+          "title": "County Judge",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "Andy Brown",
+          "leadership_role": "Presiding Officer",
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-5",
+          "official_url": "https://tax-office.traviscountytx.gov/court-costs-fines-fees/justice-of-the-peace",
+          "title": "Justice of the Peace, Precinct 5",
+          "applicability_scope": "DISTRICT_MATCH",
+          "district_division_id": "div-us-tx-travis-county-jp-precinct-5",
+          "district_name": "Travis County Justice of the Peace Precinct 5",
+          "representative": "Tanisa Jeffers",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-sheriff",
+          "official_url": "https://www.traviscountytx.gov/sheriff",
+          "title": "Sheriff",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "Sally Hernandez",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-tax-assessor-collector",
+          "official_url": "https://tax-office.traviscountytx.gov/about-us/celia-israel",
+          "title": "Tax Assessor-Collector",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "Celia Israel",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-treasurer",
+          "official_url": "https://www.traviscountytx.gov/treasurer/request-information",
+          "title": "County Treasurer",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "Dolores Ortega-Carter",
+          "leadership_role": null,
+          "status": "CURRENT"
+        }
+      ],
+      "coverage": [
+        {
+          "layer": "GEO-TX-LEGISLATIVE-TWO-DISTRICTS",
+          "status": "GEOGRAPHY_ONLY",
+          "scope": "INTERNAL_REVIEW",
+          "complete_jurisdiction": false,
+          "publication_eligible": false,
+          "reason": "All configured legislative districts resolved; civic facts remain package-governed."
+        },
+        {
+          "layer": "constable_precinct",
+          "status": "RELEASE_BACKED",
+          "reason": "Address-specific Constable precinct resolved from the shared official Travis County Justice Court/Constable geography; identity is canonical-release-only."
+        },
+        {
+          "layer": "county_commissioner_precinct",
+          "status": "RELEASE_BACKED",
+          "reason": "Address-specific Commissioner precinct resolved from official Travis County administrative-boundary GIS."
+        },
+        {
+          "layer": "county_government",
+          "status": "RELEASE_BACKED",
+          "reason": "Travis County current elected-office release is joined."
+        },
+        {
+          "layer": "federal_state_municipal_school_and_special_districts",
+          "status": "OUT_OF_SCOPE",
+          "reason": "This Travis County BASE release does not claim completeness for other government layers."
+        },
+        {
+          "layer": "justice_of_the_peace_precinct",
+          "status": "RELEASE_BACKED",
+          "reason": "Address-specific Justice of the Peace precinct resolved from official Travis County administrative-boundary GIS."
+        },
+        {
+          "layer": "travis_action_endpoints",
+          "status": "NOT_YET_RELEASED",
+          "reason": "Travis County civic-action routing is intentionally not yet released in the county-archetype geography/office batch."
+        }
+      ],
+      "district_assignments": [
+        {
+          "adapter_id": "DIST-TX-HOUSE-H2316",
+          "district_key": "49",
+          "district_division_id": "div-wb020-8d372cd6f15770de5f452ceb224ec52929c30beddac3bdf9013864d538cbb449",
+          "district_name": "Texas House District 49",
+          "jurisdiction_id": "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145",
+          "layer": "state_house_district",
+          "status": "GEOGRAPHY_ONLY",
+          "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",
+          "scope": "INTERNAL_REVIEW",
+          "source_plan_id": "PLANH2316",
+          "source_vintage_status": "GOVERNED_ACCEPTANCE_REQUIRED__TLC_PLANH2316"
+        },
+        {
+          "adapter_id": "DIST-TX-SENATE-S2168",
+          "district_key": "14",
+          "district_division_id": "div-wb020-ed0238818cdb70336de04839d183a5a92c3af3ecb3f7bcd0cc330ba1e25d5f8b",
+          "district_name": "Texas Senate District 14",
+          "jurisdiction_id": "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145",
+          "layer": "state_senate_district",
+          "status": "GEOGRAPHY_ONLY",
+          "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",
+          "scope": "INTERNAL_REVIEW",
+          "source_plan_id": "PLANS2168",
+          "source_vintage_status": "GOVERNED_ACCEPTANCE_REQUIRED__88TH_DESCRIPTION_89TH_LAYER_CAVEAT_RETAINED"
+        },
+        {
+          "adapter_id": "DIST-TX-TRAVIS-COMMISSIONER",
+          "district_key": "3",
+          "district_division_id": "div-us-tx-travis-county-commissioner-precinct-3",
+          "district_name": "Travis County Commissioner Precinct 3",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "layer": "county_commissioner_precinct",
+          "office_id": "office-travis-county-commissioner-precinct-3",
+          "official_boundary_url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/0",
+          "official_profile_url": "https://www.traviscountytx.gov/",
+          "representative": "Ann Howard",
+          "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",
+          "status": "VERIFIED"
+        },
+        {
+          "adapter_id": "DIST-TX-TRAVIS-CONSTABLE",
+          "district_key": "5",
+          "district_division_id": "div-us-tx-travis-county-constable-precinct-5",
+          "district_name": "Travis County Constable Precinct 5",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "layer": "constable_precinct",
+          "office_id": "office-travis-county-constable-precinct-5",
+          "official_boundary_url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/2",
+          "official_profile_url": "https://www.traviscountytx.gov/constables",
+          "representative": "Carlos B. Lopez",
+          "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",
+          "status": "VERIFIED"
+        },
+        {
+          "adapter_id": "DIST-TX-TRAVIS-JP",
+          "district_key": "5",
+          "district_division_id": "div-us-tx-travis-county-jp-precinct-5",
+          "district_name": "Travis County Justice of the Peace Precinct 5",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "layer": "justice_of_the_peace_precinct",
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-5",
+          "official_boundary_url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/2",
+          "official_profile_url": "https://tax-office.traviscountytx.gov/court-costs-fines-fees/justice-of-the-peace",
+          "representative": "Tanisa Jeffers",
+          "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",
+          "status": "VERIFIED"
+        }
+      ],
+      "evidence": [
+        {
+          "evidence_id": "EVID-DIST-DIST-TX-TRAVIS-COMMISSIONER",
+          "supports": [
+            "district_assignments.div-us-tx-travis-county-commissioner-precinct-3"
+          ],
+          "url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/0/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+          "verified_on": "2026-10-16"
+        },
+        {
+          "evidence_id": "EVID-DIST-DIST-TX-TRAVIS-CONSTABLE",
+          "supports": [
+            "district_assignments.div-us-tx-travis-county-constable-precinct-5"
+          ],
+          "url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/2/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+          "verified_on": "2026-10-16"
+        },
+        {
+          "evidence_id": "EVID-DIST-DIST-TX-TRAVIS-JP",
+          "supports": [
+            "district_assignments.div-us-tx-travis-county-jp-precinct-5"
+          ],
+          "url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/2/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+          "verified_on": "2026-10-16"
+        },
+        {
+          "evidence_id": "EVID-GEO-ADAPTER-TX-TRAVIS",
+          "supports": [
+            "input.address",
+            "matched_divisions"
+          ],
+          "url": "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=1100+Congress+Ave%2C+Austin%2C+TX+78701&benchmark=Public_AR_Current&vintage=Current_Current&format=json&layers=States%2CCounties%2CIncorporated+Places%2CUnified+School+Districts",
+          "verified_on": "2026-10-16"
+        },
+        {
+          "evidence_id": "EVID-LEGISLATIVE-DIST-TX-HOUSE-H2316-0",
+          "supports": [
+            "district_assignments.div-wb020-8d372cd6f15770de5f452ceb224ec52929c30beddac3bdf9013864d538cbb449"
+          ],
+          "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json",
+          "verified_on": "2026-10-16",
+          "source_plan_id": "PLANH2316",
+          "authority_url": "https://data.capitol.texas.gov/dataset/planh2316"
+        },
+        {
+          "evidence_id": "EVID-LEGISLATIVE-DIST-TX-HOUSE-H2316-1",
+          "supports": [
+            "district_assignments.div-wb020-8d372cd6f15770de5f452ceb224ec52929c30beddac3bdf9013864d538cbb449"
+          ],
+          "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json&distance=1&units=esriSRUnit_Meter",
+          "verified_on": "2026-10-16",
+          "source_plan_id": "PLANH2316",
+          "authority_url": "https://data.capitol.texas.gov/dataset/planh2316"
+        },
+        {
+          "evidence_id": "EVID-LEGISLATIVE-DIST-TX-SENATE-S2168-0",
+          "supports": [
+            "district_assignments.div-wb020-ed0238818cdb70336de04839d183a5a92c3af3ecb3f7bcd0cc330ba1e25d5f8b"
+          ],
+          "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json",
+          "verified_on": "2026-10-16",
+          "source_plan_id": "PLANS2168",
+          "authority_url": "https://data.capitol.texas.gov/dataset/plans2168"
+        },
+        {
+          "evidence_id": "EVID-LEGISLATIVE-DIST-TX-SENATE-S2168-1",
+          "supports": [
+            "district_assignments.div-wb020-ed0238818cdb70336de04839d183a5a92c3af3ecb3f7bcd0cc330ba1e25d5f8b"
+          ],
+          "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json&distance=1&units=esriSRUnit_Meter",
+          "verified_on": "2026-10-16",
+          "source_plan_id": "PLANS2168",
+          "authority_url": "https://data.capitol.texas.gov/dataset/plans2168"
+        },
+        {
+          "evidence_id": "EVID-REL-ADAPTER-TX-TRAVIS-01",
+          "supports": [
+            "jurisdictions.jur-us-tx-travis-county",
+            "offices",
+            "officeholders"
+          ],
+          "url": "https://www.traviscountytx.gov/departments/public-information-records",
+          "verified_on": "2026-10-16"
+        }
+      ],
+      "input": {
+        "address": "1100 Congress Ave, Austin, TX 78701",
+        "address_preserved": true,
+        "address_source_url": "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=1100+Congress+Ave%2C+Austin%2C+TX+78701&benchmark=Public_AR_Current&vintage=Current_Current&format=json&layers=States%2CCounties%2CIncorporated+Places%2CUnified+School+Districts",
+        "matched_address": "1100 CONGRESS AVE, AUSTIN, TX, 78701"
+      },
+      "jurisdictions": [
+        {
+          "division_id": "div-us-tx-travis-county",
+          "government_type": "county",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "name": "Travis County",
+          "office_count": 20,
+          "snapshot_ref": "https://www.traviscountytx.gov/departments/public-information-records",
+          "status": "RELEASE_BACKED_CURRENT"
+        },
+        {
+          "jurisdiction_id": "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145",
+          "name": "Texas",
+          "coverage_class": "GEOGRAPHY_ONLY"
+        }
+      ],
+      "known_gaps": [
+        {
+          "gap_id": "GAP-GEO-TX-LEGISLATIVE-TWO-DISTRICTS-RELEASE",
+          "status": "NOT_YET_RELEASED",
+          "summary": "Internal geography candidate; geometry vintage and live integration gates remain separate."
+        },
+        {
+          "gap_id": "GAP-TRAVIS-GPS-001",
+          "status": "BOUNDED_V0_1_SCOPE",
+          "summary": "The v0.1 speed-benchmark countywide set is intentionally bounded to six core offices; additional countywide elected offices are not yet modeled."
+        },
+        {
+          "gap_id": "GAP-TRAVIS-GPS-002",
+          "status": "NOT_YET_RELEASED",
+          "summary": "Travis County civic-action routing is intentionally not included in the county-archetype geography/office release."
+        },
+        {
+          "gap_id": "GAP-TRAVIS-GPS-003",
+          "status": "SOURCE_CONFLICT_DOCUMENTED",
+          "summary": "Some Travis GIS/contact display labels lag current office pages, including Commissioner/Constable Precinct 4. GIS is used only for geometry; canonical officeholder identity comes from current official pages."
+        }
+      ],
+      "matched_divisions": [
+        {
+          "division_id": "div-us-tx",
+          "name": "Texas",
+          "parent_id": null,
+          "type": "state"
+        },
+        {
+          "division_id": "div-us-tx-travis-county",
+          "name": "Travis County",
+          "parent_id": "div-us-tx",
+          "type": "county"
+        },
+        {
+          "division_id": "div-us-tx-travis-county-commissioner-precinct-3",
+          "name": "Travis County Commissioner Precinct 3",
+          "parent_id": "div-us-tx-travis-county",
+          "type": "commissioner_precinct"
+        },
+        {
+          "division_id": "div-us-tx-travis-county-constable-precinct-5",
+          "name": "Travis County Constable Precinct 5",
+          "parent_id": "div-us-tx-travis-county",
+          "type": "constable_precinct"
+        },
+        {
+          "division_id": "div-us-tx-travis-county-jp-precinct-5",
+          "name": "Travis County Justice of the Peace Precinct 5",
+          "parent_id": "div-us-tx-travis-county",
+          "type": "justice_of_the_peace_precinct"
+        },
+        {
+          "division_id": "div-wb020-8d372cd6f15770de5f452ceb224ec52929c30beddac3bdf9013864d538cbb449",
+          "name": "Texas House District 49",
+          "parent_id": null,
+          "type": "state_house_district"
+        },
+        {
+          "division_id": "div-wb020-ed0238818cdb70336de04839d183a5a92c3af3ecb3f7bcd0cc330ba1e25d5f8b",
+          "name": "Texas Senate District 14",
+          "parent_id": null,
+          "type": "state_senate_district"
+        }
+      ],
+      "officeholders": [
+        {
+          "canonical_name": "Dyana Limon-Mercado",
+          "leadership_role": null,
+          "office_id": "office-travis-county-clerk",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Jeff Travillion",
+          "leadership_role": null,
+          "office_id": "office-travis-county-commissioner-precinct-1",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Brigid Shea",
+          "leadership_role": null,
+          "office_id": "office-travis-county-commissioner-precinct-2",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Ann Howard",
+          "leadership_role": null,
+          "office_id": "office-travis-county-commissioner-precinct-3",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "George Morales",
+          "leadership_role": null,
+          "office_id": "office-travis-county-commissioner-precinct-4",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Tonya Nixon",
+          "leadership_role": null,
+          "office_id": "office-travis-county-constable-precinct-1",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Adan Ballesteros",
+          "leadership_role": null,
+          "office_id": "office-travis-county-constable-precinct-2",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Stacy Suits",
+          "leadership_role": null,
+          "office_id": "office-travis-county-constable-precinct-3",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Gabriel Padilla",
+          "leadership_role": null,
+          "office_id": "office-travis-county-constable-precinct-4",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Carlos B. Lopez",
+          "leadership_role": null,
+          "office_id": "office-travis-county-constable-precinct-5",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Velva L. Price",
+          "leadership_role": null,
+          "office_id": "office-travis-county-district-clerk",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Andy Brown",
+          "leadership_role": "Presiding Officer",
+          "office_id": "office-travis-county-judge",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Yvonne Williams",
+          "leadership_role": null,
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-1",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Randall Slagle",
+          "leadership_role": null,
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-2",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Sylvia Holmes",
+          "leadership_role": null,
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-3",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Raul Arturo Gonzalez",
+          "leadership_role": null,
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-4",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Tanisa Jeffers",
+          "leadership_role": null,
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-5",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Sally Hernandez",
+          "leadership_role": null,
+          "office_id": "office-travis-county-sheriff",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Celia Israel",
+          "leadership_role": null,
+          "office_id": "office-travis-county-tax-assessor-collector",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Dolores Ortega-Carter",
+          "leadership_role": null,
+          "office_id": "office-travis-county-treasurer",
+          "selection_type": "election"
+        }
+      ],
+      "offices": [
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-clerk",
+          "official_url": "https://countyclerk.traviscountytx.gov/",
+          "title": "County Clerk"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-commissioner-precinct-1",
+          "official_url": "https://www.traviscountytx.gov/",
+          "title": "County Commissioner, Precinct 1"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-commissioner-precinct-2",
+          "official_url": "https://www.traviscountytx.gov/",
+          "title": "County Commissioner, Precinct 2"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-commissioner-precinct-3",
+          "official_url": "https://www.traviscountytx.gov/",
+          "title": "County Commissioner, Precinct 3"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-commissioner-precinct-4",
+          "official_url": "https://www.traviscountytx.gov/",
+          "title": "County Commissioner, Precinct 4"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-constable-precinct-1",
+          "official_url": "https://www.traviscountytx.gov/constables",
+          "title": "Constable, Precinct 1"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-constable-precinct-2",
+          "official_url": "https://www.traviscountytx.gov/constables",
+          "title": "Constable, Precinct 2"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-constable-precinct-3",
+          "official_url": "https://www.traviscountytx.gov/constables",
+          "title": "Constable, Precinct 3"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-constable-precinct-4",
+          "official_url": "https://www.traviscountytx.gov/constables",
+          "title": "Constable, Precinct 4"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-constable-precinct-5",
+          "official_url": "https://www.traviscountytx.gov/constables",
+          "title": "Constable, Precinct 5"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-district-clerk",
+          "official_url": "https://www.traviscountytx.gov/district-clerk/bio",
+          "title": "District Clerk"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-judge",
+          "official_url": "https://www.traviscountytx.gov/",
+          "title": "County Judge"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-1",
+          "official_url": "https://tax-office.traviscountytx.gov/court-costs-fines-fees/justice-of-the-peace",
+          "title": "Justice of the Peace, Precinct 1"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-2",
+          "official_url": "https://tax-office.traviscountytx.gov/court-costs-fines-fees/justice-of-the-peace",
+          "title": "Justice of the Peace, Precinct 2"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-3",
+          "official_url": "https://tax-office.traviscountytx.gov/court-costs-fines-fees/justice-of-the-peace",
+          "title": "Justice of the Peace, Precinct 3"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-4",
+          "official_url": "https://tax-office.traviscountytx.gov/court-costs-fines-fees/justice-of-the-peace",
+          "title": "Justice of the Peace, Precinct 4"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-justice-of-the-peace-precinct-5",
+          "official_url": "https://tax-office.traviscountytx.gov/court-costs-fines-fees/justice-of-the-peace",
+          "title": "Justice of the Peace, Precinct 5"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-sheriff",
+          "official_url": "https://www.traviscountytx.gov/sheriff",
+          "title": "Sheriff"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-tax-assessor-collector",
+          "official_url": "https://tax-office.traviscountytx.gov/about-us/celia-israel",
+          "title": "Tax Assessor-Collector"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-travis-county",
+          "office_id": "office-travis-county-treasurer",
+          "official_url": "https://www.traviscountytx.gov/treasurer/request-information",
+          "title": "County Treasurer"
+        }
+      ]
+    }
+  },
+  "representation": {
+    "status": "PASS",
+    "scope": "BOUND_BINDINGS_ONLY",
+    "projections": [
+      {
+        "binding_id": "tx-house",
+        "representation": {
+          "status": "PASS",
+          "consumer_gate": "EV-IMP-005",
+          "representation_only": true,
+          "full_essentials_supported": false,
+          "package_schema_version": "0.1",
+          "input_address": "1100 Congress Ave, Austin, TX 78701",
+          "matched_address": "1100 CONGRESS AVE, AUSTIN, TX, 78701",
+          "address_resolution_source": "CIVIC_GPS_LIVE",
+          "resolved_jurisdictions": [
+            "jur-us-tx-travis-county",
+            "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145"
+          ],
+          "district_assignments": {
+            "DIST-TX-HOUSE-H2316": "49",
+            "DIST-TX-SENATE-S2168": "14",
+            "DIST-TX-TRAVIS-COMMISSIONER": "3",
+            "DIST-TX-TRAVIS-CONSTABLE": "5",
+            "DIST-TX-TRAVIS-JP": "5"
+          },
+          "resolved_division_id": "div-wb020-8d372cd6f15770de5f452ceb224ec52929c30beddac3bdf9013864d538cbb449",
+          "jurisdiction": {
+            "complete_jurisdiction": false,
+            "geoid": "48",
+            "identity_status": "RESOLVED",
+            "jurisdiction_id": "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145",
+            "jurisdiction_kind": "State",
+            "jurisdiction_type": "State",
+            "name": "Texas",
+            "publication_eligible": false,
+            "state_abbr": "TX"
+          },
+          "applicable_offices": [
+            {
+              "office_id": "off-wb020-885d8d24cb3cf605ac9afc2a313455275227238826469cb2707a003b6ce1d730",
+              "office_name": "State Representative",
+              "classification_or_role": null,
+              "division_id": "div-wb020-8d372cd6f15770de5f452ceb224ec52929c30beddac3bdf9013864d538cbb449",
+              "seat_capacity": 1,
+              "current_status": null,
+              "holders": [
+                {
+                  "role_term_id": "rt-wb020-641b5f65e42606fe41693e1d2cd502ad447451179ee1379d151f4589c89a5a5c",
+                  "person_id": "per-wb020-d061f1971ec9ac58afe308519c117465deb046363ffb026680fa2e483ee840b7",
+                  "name": "Gina Hinojosa",
+                  "selection_method": null,
+                  "status": "CURRENT",
+                  "term_start": "2025-01-14",
+                  "term_end": null,
+                  "term_expiration_year": null,
+                  "confidence": null,
+                  "leadership_roles": [],
+                  "source_id": null,
+                  "source_ids": [
+                    "ev-wb020-15db64fbbf29d7096500c69eda86b9f1ba5cf0f2d6ac135ce6644fc7344ae785",
+                    "pkg-tx-house-member-49",
+                    "pkg-tx-lrl-5799",
+                    "pkg-tx-house-journal-89r-day01"
+                  ],
+                  "source_record_id": "sr-wb020-d061f1971ec9ac58afe308519c117465deb046363ffb026680fa2e483ee840b7",
+                  "observed_at": "2026-08-22 00:00:00",
+                  "person_status": "AUTHORITATIVE"
+                }
+              ],
+              "source_id": null,
+              "source_ids": [
+                "ev-wb020-29315c9115227a501c83ad05d1cf505bcea6a57c20b550888fcff7da4ab358cb"
+              ]
+            }
+          ],
+          "current_holder_count": 1,
+          "source_evidence": [
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-08-20",
+              "retrieved_at": "2026-08-21",
+              "source_field": "authority_scope",
+              "source_id": "ev-wb020-29315c9115227a501c83ad05d1cf505bcea6a57c20b550888fcff7da4ab358cb",
+              "source_record_id": "sr-wb020-f01f42c7b04a317e468115b5942b72f0db2c162919ce2391b9d7cefd5274a4c7",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Current Texas House roster authority establishes current membership and district labels.",
+              "url": "https://house.texas.gov/members"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-08-21",
+              "retrieved_at": "2026-08-21",
+              "source_field": "authority_scope",
+              "source_id": "ev-wb020-11a3d246be11b49078081b51cef19fffce97707226020fb49151f7ed740e8be8",
+              "source_record_id": "sr-wb020-9bc8e0edab9fb402d328a10402165861b45bac2ba0fd13638e7581b4d25c6846",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Current Texas Senate roster authority establishes current membership and district labels.",
+              "url": "https://senate.texas.gov/members.php"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-08-22",
+              "retrieved_at": "2026-09-05",
+              "source_field": "current_official:occupancy",
+              "source_id": "ev-wb020-15db64fbbf29d7096500c69eda86b9f1ba5cf0f2d6ac135ce6644fc7344ae785",
+              "source_record_id": "sr-wb020-d061f1971ec9ac58afe308519c117465deb046363ffb026680fa2e483ee840b7",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Retained current-holder observation: Gina Hinojosa / House District 49; exact term dates are separately evidenced.",
+              "url": "https://house.texas.gov/members"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-08-22",
+              "retrieved_at": "2026-09-05",
+              "source_field": "current_official:occupancy",
+              "source_id": "ev-wb020-16a8ece0bdfc2b807913f493153153a564e2ae0dacaf10cabcff71a42c892695",
+              "source_record_id": "sr-wb020-d387c4b877eeedc0a1a6efc49f6e3897209d245e27d8eae3164870552a762dca",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Retained current-holder observation: Sarah Eckhardt / Senate District 14; exact term dates are separately evidenced.",
+              "url": "https://senate.texas.gov/members.php"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "person_identity:official_member_page",
+              "source_id": "pkg-tx-house-member-49",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Official Texas House member page identifies Gina Hinojosa as District 49.",
+              "url": "https://house.texas.gov/members/49"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "person_identity:official_member_page",
+              "source_id": "pkg-tx-senate-member-14",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Official Texas Senate member page identifies Sarah Eckhardt as District 14.",
+              "url": "https://senate.texas.gov/member.php?d=14"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "role_term:current_service_period",
+              "source_id": "pkg-tx-lrl-5799",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Texas Legislative Reference Library identifies Gina Hinojosa, House District 49, current term beginning 2025-01-14; published future endpoint retained only as evidence metadata.",
+              "url": "https://lrl.texas.gov/legeleaders/members/memberdisplay.cfm?memberID=5799"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "role_term:current_service_period",
+              "source_id": "pkg-tx-lrl-5858",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Texas Legislative Reference Library identifies Sarah Eckhardt, Senate District 14, current term beginning 2025-01-14; published future endpoint retained only as evidence metadata.",
+              "url": "https://lrl.texas.gov/legeleaders/members/memberdisplay.cfm?memberID=5858"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "role_term:oath_and_roll",
+              "source_id": "pkg-tx-house-journal-89r-day01",
+              "source_type": "OFFICIAL_DOCUMENT",
+              "summary": "89th Regular Session House day-one journal identifies Hinojosa in District 49 roll and records oath administration to members-elect present.",
+              "url": "https://journals.house.texas.gov/HJRNL/89R/HTML/89RDAY01FINAL.HTM"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "role_term:oath_and_roll",
+              "source_id": "pkg-tx-senate-journal-89r-day01",
+              "source_type": "OFFICIAL_DOCUMENT",
+              "summary": "89th Regular Session Senate day-one journal names Eckhardt as elected for District 14 and records senators-elect roll/oath that day.",
+              "url": "https://journals.senate.texas.gov/sjrnl/89r/pdf/89RSJ01-14-F.PDF"
+            }
+          ],
+          "source_assertions": [
+            {
+              "assertion": "represented_division_id",
+              "assertion_id": "tx-h49-office-division",
+              "source_ids": [
+                "ev-wb020-29315c9115227a501c83ad05d1cf505bcea6a57c20b550888fcff7da4ab358cb"
+              ],
+              "target_entity": "Office",
+              "target_id": "off-wb020-885d8d24cb3cf605ac9afc2a313455275227238826469cb2707a003b6ce1d730",
+              "value": "div-wb020-8d372cd6f15770de5f452ceb224ec52929c30beddac3bdf9013864d538cbb449"
+            },
+            {
+              "assertion": "represented_division_id",
+              "assertion_id": "tx-s14-office-division",
+              "source_ids": [
+                "ev-wb020-11a3d246be11b49078081b51cef19fffce97707226020fb49151f7ed740e8be8"
+              ],
+              "target_entity": "Office",
+              "target_id": "off-wb020-9de02949411df4d7a684a554cca2927b3b11d7a422c4a6a13b23359dcb6102ee",
+              "value": "div-wb020-ed0238818cdb70336de04839d183a5a92c3af3ecb3f7bcd0cc330ba1e25d5f8b"
+            },
+            {
+              "assertion": "identity_resolution_status",
+              "assertion_id": "tx-gina-identity",
+              "source_ids": [
+                "pkg-tx-house-member-49",
+                "pkg-tx-lrl-5799"
+              ],
+              "target_entity": "Person",
+              "target_id": "per-wb020-d061f1971ec9ac58afe308519c117465deb046363ffb026680fa2e483ee840b7",
+              "value": "AUTHORITATIVE"
+            },
+            {
+              "assertion": "identity_resolution_status",
+              "assertion_id": "tx-sarah-identity",
+              "source_ids": [
+                "pkg-tx-senate-member-14",
+                "pkg-tx-lrl-5858"
+              ],
+              "target_entity": "Person",
+              "target_id": "per-wb020-d387c4b877eeedc0a1a6efc49f6e3897209d245e27d8eae3164870552a762dca",
+              "value": "AUTHORITATIVE"
+            },
+            {
+              "assertion": "role_term_status",
+              "assertion_id": "tx-gina-current-occupancy",
+              "source_ids": [
+                "ev-wb020-15db64fbbf29d7096500c69eda86b9f1ba5cf0f2d6ac135ce6644fc7344ae785",
+                "pkg-tx-house-member-49"
+              ],
+              "target_entity": "Role_Term",
+              "target_id": "rt-wb020-641b5f65e42606fe41693e1d2cd502ad447451179ee1379d151f4589c89a5a5c",
+              "value": "CURRENT"
+            },
+            {
+              "assertion": "role_term_status",
+              "assertion_id": "tx-sarah-current-occupancy",
+              "source_ids": [
+                "ev-wb020-16a8ece0bdfc2b807913f493153153a564e2ae0dacaf10cabcff71a42c892695",
+                "pkg-tx-senate-member-14"
+              ],
+              "target_entity": "Role_Term",
+              "target_id": "rt-wb020-b4a929f891f6efa83524c699169bbff4c59a26c9e2d95d66a114ff70b28db03d",
+              "value": "CURRENT"
+            },
+            {
+              "assertion": "term_start_date",
+              "assertion_id": "tx-gina-term-start",
+              "source_ids": [
+                "pkg-tx-lrl-5799",
+                "pkg-tx-house-journal-89r-day01"
+              ],
+              "target_entity": "Role_Term",
+              "target_id": "rt-wb020-641b5f65e42606fe41693e1d2cd502ad447451179ee1379d151f4589c89a5a5c",
+              "value": "2025-01-14"
+            },
+            {
+              "assertion": "term_start_date",
+              "assertion_id": "tx-sarah-term-start",
+              "source_ids": [
+                "pkg-tx-lrl-5858",
+                "pkg-tx-senate-journal-89r-day01"
+              ],
+              "target_entity": "Role_Term",
+              "target_id": "rt-wb020-b4a929f891f6efa83524c699169bbff4c59a26c9e2d95d66a114ff70b28db03d",
+              "value": "2025-01-14"
+            }
+          ],
+          "warnings": [
+            {
+              "scope": "BOUND_BINDINGS_ONLY",
+              "status": "INFO",
+              "summary": "Exactly House 49 + Senate 14 are included; omitted Texas data means NOT_INCLUDED_NOT_ABSENT.",
+              "warning_id": "BOUNDED-TX-LEGISLATIVE-SCOPE"
+            }
+          ],
+          "canonical_writes": 0,
+          "identity_policy": "INTERNAL_REVIEW",
+          "publication_eligible": false,
+          "deterministic_sha256": "dd8ee4741f895047106459bf3dbbf58c04c04ee2a37cf3eb8c6ec12cb585f3fa"
+        }
+      },
+      {
+        "binding_id": "tx-senate",
+        "representation": {
+          "status": "PASS",
+          "consumer_gate": "EV-IMP-005",
+          "representation_only": true,
+          "full_essentials_supported": false,
+          "package_schema_version": "0.1",
+          "input_address": "1100 Congress Ave, Austin, TX 78701",
+          "matched_address": "1100 CONGRESS AVE, AUSTIN, TX, 78701",
+          "address_resolution_source": "CIVIC_GPS_LIVE",
+          "resolved_jurisdictions": [
+            "jur-us-tx-travis-county",
+            "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145"
+          ],
+          "district_assignments": {
+            "DIST-TX-HOUSE-H2316": "49",
+            "DIST-TX-SENATE-S2168": "14",
+            "DIST-TX-TRAVIS-COMMISSIONER": "3",
+            "DIST-TX-TRAVIS-CONSTABLE": "5",
+            "DIST-TX-TRAVIS-JP": "5"
+          },
+          "resolved_division_id": "div-wb020-ed0238818cdb70336de04839d183a5a92c3af3ecb3f7bcd0cc330ba1e25d5f8b",
+          "jurisdiction": {
+            "complete_jurisdiction": false,
+            "geoid": "48",
+            "identity_status": "RESOLVED",
+            "jurisdiction_id": "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145",
+            "jurisdiction_kind": "State",
+            "jurisdiction_type": "State",
+            "name": "Texas",
+            "publication_eligible": false,
+            "state_abbr": "TX"
+          },
+          "applicable_offices": [
+            {
+              "office_id": "off-wb020-9de02949411df4d7a684a554cca2927b3b11d7a422c4a6a13b23359dcb6102ee",
+              "office_name": "State Senator",
+              "classification_or_role": null,
+              "division_id": "div-wb020-ed0238818cdb70336de04839d183a5a92c3af3ecb3f7bcd0cc330ba1e25d5f8b",
+              "seat_capacity": 1,
+              "current_status": null,
+              "holders": [
+                {
+                  "role_term_id": "rt-wb020-b4a929f891f6efa83524c699169bbff4c59a26c9e2d95d66a114ff70b28db03d",
+                  "person_id": "per-wb020-d387c4b877eeedc0a1a6efc49f6e3897209d245e27d8eae3164870552a762dca",
+                  "name": "Sarah Eckhardt",
+                  "selection_method": null,
+                  "status": "CURRENT",
+                  "term_start": "2025-01-14",
+                  "term_end": null,
+                  "term_expiration_year": null,
+                  "confidence": null,
+                  "leadership_roles": [],
+                  "source_id": null,
+                  "source_ids": [
+                    "ev-wb020-16a8ece0bdfc2b807913f493153153a564e2ae0dacaf10cabcff71a42c892695",
+                    "pkg-tx-senate-member-14",
+                    "pkg-tx-lrl-5858",
+                    "pkg-tx-senate-journal-89r-day01"
+                  ],
+                  "source_record_id": "sr-wb020-d387c4b877eeedc0a1a6efc49f6e3897209d245e27d8eae3164870552a762dca",
+                  "observed_at": "2026-08-22 00:00:00",
+                  "person_status": "AUTHORITATIVE"
+                }
+              ],
+              "source_id": null,
+              "source_ids": [
+                "ev-wb020-11a3d246be11b49078081b51cef19fffce97707226020fb49151f7ed740e8be8"
+              ]
+            }
+          ],
+          "current_holder_count": 1,
+          "source_evidence": [
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-08-20",
+              "retrieved_at": "2026-08-21",
+              "source_field": "authority_scope",
+              "source_id": "ev-wb020-29315c9115227a501c83ad05d1cf505bcea6a57c20b550888fcff7da4ab358cb",
+              "source_record_id": "sr-wb020-f01f42c7b04a317e468115b5942b72f0db2c162919ce2391b9d7cefd5274a4c7",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Current Texas House roster authority establishes current membership and district labels.",
+              "url": "https://house.texas.gov/members"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-08-21",
+              "retrieved_at": "2026-08-21",
+              "source_field": "authority_scope",
+              "source_id": "ev-wb020-11a3d246be11b49078081b51cef19fffce97707226020fb49151f7ed740e8be8",
+              "source_record_id": "sr-wb020-9bc8e0edab9fb402d328a10402165861b45bac2ba0fd13638e7581b4d25c6846",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Current Texas Senate roster authority establishes current membership and district labels.",
+              "url": "https://senate.texas.gov/members.php"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-08-22",
+              "retrieved_at": "2026-09-05",
+              "source_field": "current_official:occupancy",
+              "source_id": "ev-wb020-15db64fbbf29d7096500c69eda86b9f1ba5cf0f2d6ac135ce6644fc7344ae785",
+              "source_record_id": "sr-wb020-d061f1971ec9ac58afe308519c117465deb046363ffb026680fa2e483ee840b7",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Retained current-holder observation: Gina Hinojosa / House District 49; exact term dates are separately evidenced.",
+              "url": "https://house.texas.gov/members"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-08-22",
+              "retrieved_at": "2026-09-05",
+              "source_field": "current_official:occupancy",
+              "source_id": "ev-wb020-16a8ece0bdfc2b807913f493153153a564e2ae0dacaf10cabcff71a42c892695",
+              "source_record_id": "sr-wb020-d387c4b877eeedc0a1a6efc49f6e3897209d245e27d8eae3164870552a762dca",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Retained current-holder observation: Sarah Eckhardt / Senate District 14; exact term dates are separately evidenced.",
+              "url": "https://senate.texas.gov/members.php"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "person_identity:official_member_page",
+              "source_id": "pkg-tx-house-member-49",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Official Texas House member page identifies Gina Hinojosa as District 49.",
+              "url": "https://house.texas.gov/members/49"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "person_identity:official_member_page",
+              "source_id": "pkg-tx-senate-member-14",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Official Texas Senate member page identifies Sarah Eckhardt as District 14.",
+              "url": "https://senate.texas.gov/member.php?d=14"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "role_term:current_service_period",
+              "source_id": "pkg-tx-lrl-5799",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Texas Legislative Reference Library identifies Gina Hinojosa, House District 49, current term beginning 2025-01-14; published future endpoint retained only as evidence metadata.",
+              "url": "https://lrl.texas.gov/legeleaders/members/memberdisplay.cfm?memberID=5799"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "role_term:current_service_period",
+              "source_id": "pkg-tx-lrl-5858",
+              "source_type": "OFFICIAL_WEB",
+              "summary": "Texas Legislative Reference Library identifies Sarah Eckhardt, Senate District 14, current term beginning 2025-01-14; published future endpoint retained only as evidence metadata.",
+              "url": "https://lrl.texas.gov/legeleaders/members/memberdisplay.cfm?memberID=5858"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "role_term:oath_and_roll",
+              "source_id": "pkg-tx-house-journal-89r-day01",
+              "source_type": "OFFICIAL_DOCUMENT",
+              "summary": "89th Regular Session House day-one journal identifies Hinojosa in District 49 roll and records oath administration to members-elect present.",
+              "url": "https://journals.house.texas.gov/HJRNL/89R/HTML/89RDAY01FINAL.HTM"
+            },
+            {
+              "authority_level": "OFFICIAL_PRIMARY",
+              "confidence": "HIGH",
+              "evidence_status": "ACTIVE",
+              "observed_at": "2026-09-06",
+              "retrieved_at": "2026-09-06",
+              "source_field": "role_term:oath_and_roll",
+              "source_id": "pkg-tx-senate-journal-89r-day01",
+              "source_type": "OFFICIAL_DOCUMENT",
+              "summary": "89th Regular Session Senate day-one journal names Eckhardt as elected for District 14 and records senators-elect roll/oath that day.",
+              "url": "https://journals.senate.texas.gov/sjrnl/89r/pdf/89RSJ01-14-F.PDF"
+            }
+          ],
+          "source_assertions": [
+            {
+              "assertion": "represented_division_id",
+              "assertion_id": "tx-h49-office-division",
+              "source_ids": [
+                "ev-wb020-29315c9115227a501c83ad05d1cf505bcea6a57c20b550888fcff7da4ab358cb"
+              ],
+              "target_entity": "Office",
+              "target_id": "off-wb020-885d8d24cb3cf605ac9afc2a313455275227238826469cb2707a003b6ce1d730",
+              "value": "div-wb020-8d372cd6f15770de5f452ceb224ec52929c30beddac3bdf9013864d538cbb449"
+            },
+            {
+              "assertion": "represented_division_id",
+              "assertion_id": "tx-s14-office-division",
+              "source_ids": [
+                "ev-wb020-11a3d246be11b49078081b51cef19fffce97707226020fb49151f7ed740e8be8"
+              ],
+              "target_entity": "Office",
+              "target_id": "off-wb020-9de02949411df4d7a684a554cca2927b3b11d7a422c4a6a13b23359dcb6102ee",
+              "value": "div-wb020-ed0238818cdb70336de04839d183a5a92c3af3ecb3f7bcd0cc330ba1e25d5f8b"
+            },
+            {
+              "assertion": "identity_resolution_status",
+              "assertion_id": "tx-gina-identity",
+              "source_ids": [
+                "pkg-tx-house-member-49",
+                "pkg-tx-lrl-5799"
+              ],
+              "target_entity": "Person",
+              "target_id": "per-wb020-d061f1971ec9ac58afe308519c117465deb046363ffb026680fa2e483ee840b7",
+              "value": "AUTHORITATIVE"
+            },
+            {
+              "assertion": "identity_resolution_status",
+              "assertion_id": "tx-sarah-identity",
+              "source_ids": [
+                "pkg-tx-senate-member-14",
+                "pkg-tx-lrl-5858"
+              ],
+              "target_entity": "Person",
+              "target_id": "per-wb020-d387c4b877eeedc0a1a6efc49f6e3897209d245e27d8eae3164870552a762dca",
+              "value": "AUTHORITATIVE"
+            },
+            {
+              "assertion": "role_term_status",
+              "assertion_id": "tx-gina-current-occupancy",
+              "source_ids": [
+                "ev-wb020-15db64fbbf29d7096500c69eda86b9f1ba5cf0f2d6ac135ce6644fc7344ae785",
+                "pkg-tx-house-member-49"
+              ],
+              "target_entity": "Role_Term",
+              "target_id": "rt-wb020-641b5f65e42606fe41693e1d2cd502ad447451179ee1379d151f4589c89a5a5c",
+              "value": "CURRENT"
+            },
+            {
+              "assertion": "role_term_status",
+              "assertion_id": "tx-sarah-current-occupancy",
+              "source_ids": [
+                "ev-wb020-16a8ece0bdfc2b807913f493153153a564e2ae0dacaf10cabcff71a42c892695",
+                "pkg-tx-senate-member-14"
+              ],
+              "target_entity": "Role_Term",
+              "target_id": "rt-wb020-b4a929f891f6efa83524c699169bbff4c59a26c9e2d95d66a114ff70b28db03d",
+              "value": "CURRENT"
+            },
+            {
+              "assertion": "term_start_date",
+              "assertion_id": "tx-gina-term-start",
+              "source_ids": [
+                "pkg-tx-lrl-5799",
+                "pkg-tx-house-journal-89r-day01"
+              ],
+              "target_entity": "Role_Term",
+              "target_id": "rt-wb020-641b5f65e42606fe41693e1d2cd502ad447451179ee1379d151f4589c89a5a5c",
+              "value": "2025-01-14"
+            },
+            {
+              "assertion": "term_start_date",
+              "assertion_id": "tx-sarah-term-start",
+              "source_ids": [
+                "pkg-tx-lrl-5858",
+                "pkg-tx-senate-journal-89r-day01"
+              ],
+              "target_entity": "Role_Term",
+              "target_id": "rt-wb020-b4a929f891f6efa83524c699169bbff4c59a26c9e2d95d66a114ff70b28db03d",
+              "value": "2025-01-14"
+            }
+          ],
+          "warnings": [
+            {
+              "scope": "BOUND_BINDINGS_ONLY",
+              "status": "INFO",
+              "summary": "Exactly House 49 + Senate 14 are included; omitted Texas data means NOT_INCLUDED_NOT_ABSENT.",
+              "warning_id": "BOUNDED-TX-LEGISLATIVE-SCOPE"
+            }
+          ],
+          "canonical_writes": 0,
+          "identity_policy": "INTERNAL_REVIEW",
+          "publication_eligible": false,
+          "deterministic_sha256": "5e1b594be73e808b047a06fc933c238ab5209db3c85b8ad544b5a9e44caa1f7c"
+        }
+      }
+    ],
+    "complete_jurisdiction": false,
+    "publication_eligible": false,
+    "canonical_writes": 0,
+    "deterministic_sha256": "7a9f4358921d836a6406d302e09005accc6c4b9c8c2d52c1785e90004cbdefc6"
+  }
+}

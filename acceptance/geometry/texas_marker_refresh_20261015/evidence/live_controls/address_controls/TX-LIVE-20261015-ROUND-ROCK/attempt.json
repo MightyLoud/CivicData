@@ -1,0 +1,9 @@
+{
+  "case_id": "TX-LIVE-20261015-ROUND-ROCK",
+  "address": "221 East Main Street, Round Rock, TX 78664",
+  "expect": "FAIL-CLOSED",
+  "address_authority": "https://www.roundrocktexas.gov/venue/round-rock-city-hall/",
+  "attempt": 1,
+  "retries_allowed": false,
+  "scope": "INTERNAL_REVIEW"
+}

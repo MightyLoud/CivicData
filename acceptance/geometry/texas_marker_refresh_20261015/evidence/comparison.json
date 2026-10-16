@@ -1,0 +1,49 @@
+{
+  "status": "COMPARISON_COMPLETE",
+  "archive_sha256": "f8f7d11bccd35d23496cbb3cb0f4dd82f2604bf5b3ac3d3cc7799e4eccb21a39",
+  "scope": "House 49 and Senate 14 only; current service geometry versus archived accepted service geometry and archived TLC shapefiles. No statewide equivalence or metadata-only classification of the entire service.",
+  "accepted_pins_changed": false,
+  "rows": [
+    {
+      "chamber": "house",
+      "district": 49,
+      "plan": "PLANH2316",
+      "retrieved_at": "2026-10-15T23:57:58.844018+00:00",
+      "query_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?f=json&where=DIST_NBR%3D49&outFields=DIST_NBR&returnGeometry=true&outSR=%7B%22wkt%22%3A+%22PROJCS%5B%5C%22NAD_1983_Lambert_Conformal_Conic%5C%22%2CGEOGCS%5B%5C%22GCS_North_American_1983%5C%22%2CDATUM%5B%5C%22D_North_American_1983%5C%22%2CSPHEROID%5B%5C%22GRS_1980%5C%22%2C6378137.0%2C298.257222101%5D%5D%2CPRIMEM%5B%5C%22Greenwich%5C%22%2C0.0%5D%2CUNIT%5B%5C%22Degree%5C%22%2C0.0174532925199433%5D%5D%2CPROJECTION%5B%5C%22Lambert_Conformal_Conic%5C%22%5D%2CPARAMETER%5B%5C%22False_Easting%5C%22%2C1000000.0%5D%2CPARAMETER%5B%5C%22False_Northing%5C%22%2C1000000.0%5D%2CPARAMETER%5B%5C%22Central_Meridian%5C%22%2C-100.0%5D%2CPARAMETER%5B%5C%22Standard_Parallel_1%5C%22%2C27.41666666666667%5D%2CPARAMETER%5B%5C%22Standard_Parallel_2%5C%22%2C34.91666666666666%5D%2CPARAMETER%5B%5C%22Latitude_Of_Origin%5C%22%2C31.16666666666667%5D%2CUNIT%5B%5C%22Meter%5C%22%2C1.0%5D%5D%22%7D",
+      "current_response_sha256": "db4217dd65a8064fdbb29eb6c7f269f278f513c700312302f944c1f9bcd57831",
+      "tlc_zip_sha256": "82d2a0aeb31e714c687df03fb082af1bbb6e052feefc7e895639ea7ea871a8c7",
+      "same_crs": true,
+      "current_equals_historical_geometry": true,
+      "historical_hausdorff_m": 0.0,
+      "historical_symmetric_difference_m2": 0.0,
+      "tlc_hausdorff_m": 6.786417920712253e-05,
+      "tlc_symmetric_difference_m2": 1.4744112575819615,
+      "historical_tlc_hausdorff_m": 6.786417920712253e-05,
+      "current_geometry_valid": true,
+      "historical_geometry_valid": true
+    },
+    {
+      "chamber": "senate",
+      "district": 14,
+      "plan": "PLANS2168",
+      "retrieved_at": "2026-10-15T23:58:02.833619+00:00",
+      "query_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0/query?f=json&where=DIST_NBR%3D14&outFields=DIST_NBR&returnGeometry=true&outSR=%7B%22wkt%22%3A+%22PROJCS%5B%5C%22NAD_1983_Lambert_Conformal_Conic%5C%22%2CGEOGCS%5B%5C%22GCS_North_American_1983%5C%22%2CDATUM%5B%5C%22D_North_American_1983%5C%22%2CSPHEROID%5B%5C%22GRS_1980%5C%22%2C6378137.0%2C298.257222101%5D%5D%2CPRIMEM%5B%5C%22Greenwich%5C%22%2C0.0%5D%2CUNIT%5B%5C%22Degree%5C%22%2C0.0174532925199433%5D%5D%2CPROJECTION%5B%5C%22Lambert_Conformal_Conic%5C%22%5D%2CPARAMETER%5B%5C%22False_Easting%5C%22%2C1000000.0%5D%2CPARAMETER%5B%5C%22False_Northing%5C%22%2C1000000.0%5D%2CPARAMETER%5B%5C%22Central_Meridian%5C%22%2C-100.0%5D%2CPARAMETER%5B%5C%22Standard_Parallel_1%5C%22%2C27.41666666666667%5D%2CPARAMETER%5B%5C%22Standard_Parallel_2%5C%22%2C34.91666666666666%5D%2CPARAMETER%5B%5C%22Latitude_Of_Origin%5C%22%2C31.16666666666667%5D%2CUNIT%5B%5C%22Meter%5C%22%2C1.0%5D%5D%22%7D",
+      "current_response_sha256": "c76e4c5b9f5bb487da891f4249dde510e3c9511a2adc91b54a6b5485e618f60c",
+      "tlc_zip_sha256": "7bf496e41cfc6ddc02d26fce70cbf549352843d9c0c1cb972af4a31d26282086",
+      "same_crs": true,
+      "current_equals_historical_geometry": true,
+      "historical_hausdorff_m": 0.0,
+      "historical_symmetric_difference_m2": 0.0,
+      "tlc_hausdorff_m": 6.76855920761978e-05,
+      "tlc_symmetric_difference_m2": 4.662153943557854,
+      "historical_tlc_hausdorff_m": 6.76855920761978e-05,
+      "current_geometry_valid": true,
+      "historical_geometry_valid": true
+    }
+  ],
+  "archive_library_file_id": "libfile_8be1fbc47d808191a5b637c739f27e89",
+  "tlc_live_download_status": "HTTP 403; used checksum-verified archived authoritative shapefiles",
+  "crs_verified_with_pyproj": true,
+  "current_response_bytes_match_accepted": true,
+  "next_step": "Prepare bounded geometry-marker refresh candidate with unchanged-district evidence, then rerun live address and boundary controls; merge remains held."
+}

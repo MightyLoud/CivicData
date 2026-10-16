@@ -1,0 +1,44 @@
+[
+  {
+    "request_number": 1,
+    "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.7335155994536,30.269100398737436",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "DIST_NBR",
+      "returnGeometry": "false",
+      "f": "json"
+    },
+    "started_at": "2026-10-16T00:03:30.859220+00:00",
+    "http_status": 200,
+    "response_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.7335155994536%2C30.269100398737436&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json",
+    "response_file": "response_01.json",
+    "response_sha256": "7c9d2c06173b50d70142b9bc68bc0e6a1f03309639c10399028826fa55282697",
+    "finished_at": "2026-10-16T00:03:34.677006+00:00"
+  },
+  {
+    "request_number": 2,
+    "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.7335155994536,30.269100398737436",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "DIST_NBR",
+      "returnGeometry": "false",
+      "f": "json",
+      "distance": 1,
+      "units": "esriSRUnit_Meter"
+    },
+    "started_at": "2026-10-16T00:03:34.677295+00:00",
+    "http_status": 200,
+    "response_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.7335155994536%2C30.269100398737436&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json&distance=1&units=esriSRUnit_Meter",
+    "response_file": "response_02.json",
+    "response_sha256": "5cdc46031bb23b935e59dbce0c856f71afa0369ea8f28915fe065ec7997b81a3",
+    "finished_at": "2026-10-16T00:03:34.948903+00:00"
+  }
+]

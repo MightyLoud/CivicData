@@ -32,8 +32,8 @@ class GovernanceSession(Session):
             self.calls.append((url, copy.deepcopy(params)))
             self.metadata_calls.append((url, copy.deepcopy(params)))
             chamber = "house" if "Texas_State_House" in url else "senate"
-            schema = 1742232985031 if chamber == "house" else 1742233136000
-            data = 1742232985031 if chamber == "house" else 1770228332000
+            schema = 1792066285908 if chamber == "house" else 1742233136000
+            data = 1792066197893 if chamber == "house" else 1770228332000
             body = {
                 "serviceItemId": PINS[chamber]["service_item_id"],
                 "name": PINS[chamber]["layer_name"],

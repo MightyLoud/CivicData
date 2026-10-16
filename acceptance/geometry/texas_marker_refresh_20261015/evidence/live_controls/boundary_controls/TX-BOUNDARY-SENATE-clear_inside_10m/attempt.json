@@ -1,0 +1,11 @@
+{
+  "case_id": "TX-BOUNDARY-SENATE-clear_inside_10m",
+  "chamber": "senate",
+  "address": null,
+  "point": [
+    -97.73124043134202,
+    30.24884001517173
+  ],
+  "expected": "PASS",
+  "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY"
+}

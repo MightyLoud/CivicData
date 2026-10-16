@@ -1,0 +1,11 @@
+{
+  "case_id": "TX-BOUNDARY-SENATE-midpoint",
+  "chamber": "senate",
+  "address": null,
+  "point": [
+    -97.7312866213084,
+    30.24875921242925
+  ],
+  "expected": "CONFLICT",
+  "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY"
+}

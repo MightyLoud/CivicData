@@ -1,0 +1,228 @@
+[
+  {
+    "case_id": "TX-BOUNDARY-HOUSE-midpoint",
+    "chamber": "house",
+    "address": null,
+    "point": [
+      -97.73351312323541,
+      30.269099716168498
+    ],
+    "expected": "CONFLICT",
+    "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY",
+    "result": {
+      "status": "CONFLICT",
+      "code": "AMBIGUOUS_DISTRICT",
+      "message": "Multiple polygons intersect the point."
+    },
+    "expected_status_met": true,
+    "observations": [
+      {
+        "phase": "exact",
+        "feature_count": 1,
+        "district_keys": [
+          46
+        ],
+        "error": null
+      },
+      {
+        "phase": "probe",
+        "feature_count": 2,
+        "district_keys": [
+          46,
+          49
+        ],
+        "error": null
+      }
+    ],
+    "geocoder_requests": 0
+  },
+  {
+    "case_id": "TX-BOUNDARY-HOUSE-near_inside_025m",
+    "chamber": "house",
+    "address": null,
+    "point": [
+      -97.7335155994536,
+      30.269100398737436
+    ],
+    "expected": "CONFLICT",
+    "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY",
+    "result": {
+      "status": "CONFLICT",
+      "code": "AMBIGUOUS_DISTRICT",
+      "message": "Multiple polygons intersect the point."
+    },
+    "expected_status_met": true,
+    "observations": [
+      {
+        "phase": "exact",
+        "feature_count": 1,
+        "district_keys": [
+          49
+        ],
+        "error": null
+      },
+      {
+        "phase": "probe",
+        "feature_count": 2,
+        "district_keys": [
+          46,
+          49
+        ],
+        "error": null
+      }
+    ],
+    "geocoder_requests": 0
+  },
+  {
+    "case_id": "TX-BOUNDARY-HOUSE-clear_inside_10m",
+    "chamber": "house",
+    "address": null,
+    "point": [
+      -97.73361217198963,
+      30.26912701888957
+    ],
+    "expected": "PASS",
+    "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY",
+    "result": {
+      "status": "PASS",
+      "key": "49",
+      "evidence_urls": [
+        "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.73361217198963%2C30.26912701888957&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json",
+        "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.73361217198963%2C30.26912701888957&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json&distance=1&units=esriSRUnit_Meter"
+      ]
+    },
+    "expected_status_met": true,
+    "observations": [
+      {
+        "phase": "exact",
+        "feature_count": 1,
+        "district_keys": [
+          49
+        ],
+        "error": null
+      },
+      {
+        "phase": "probe",
+        "feature_count": 1,
+        "district_keys": [
+          49
+        ],
+        "error": null
+      }
+    ],
+    "geocoder_requests": 0
+  },
+  {
+    "case_id": "TX-BOUNDARY-SENATE-midpoint",
+    "chamber": "senate",
+    "address": null,
+    "point": [
+      -97.7312866213084,
+      30.24875921242925
+    ],
+    "expected": "CONFLICT",
+    "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY",
+    "result": {
+      "status": "CONFLICT",
+      "code": "AMBIGUOUS_DISTRICT",
+      "message": "Multiple polygons intersect the point."
+    },
+    "expected_status_met": true,
+    "observations": [
+      {
+        "phase": "exact",
+        "feature_count": 1,
+        "district_keys": [
+          21
+        ],
+        "error": null
+      },
+      {
+        "phase": "probe",
+        "feature_count": 2,
+        "district_keys": [
+          14,
+          21
+        ],
+        "error": null
+      }
+    ],
+    "geocoder_requests": 0
+  },
+  {
+    "case_id": "TX-BOUNDARY-SENATE-near_inside_025m",
+    "chamber": "senate",
+    "address": null,
+    "point": [
+      -97.73128546656017,
+      30.24876123249802
+    ],
+    "expected": "CONFLICT",
+    "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY",
+    "result": {
+      "status": "CONFLICT",
+      "code": "AMBIGUOUS_DISTRICT",
+      "message": "Multiple polygons intersect the point."
+    },
+    "expected_status_met": true,
+    "observations": [
+      {
+        "phase": "exact",
+        "feature_count": 1,
+        "district_keys": [
+          14
+        ],
+        "error": null
+      },
+      {
+        "phase": "probe",
+        "feature_count": 2,
+        "district_keys": [
+          14,
+          21
+        ],
+        "error": null
+      }
+    ],
+    "geocoder_requests": 0
+  },
+  {
+    "case_id": "TX-BOUNDARY-SENATE-clear_inside_10m",
+    "chamber": "senate",
+    "address": null,
+    "point": [
+      -97.73124043134202,
+      30.24884001517173
+    ],
+    "expected": "PASS",
+    "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY",
+    "result": {
+      "status": "PASS",
+      "key": "14",
+      "evidence_urls": [
+        "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.73124043134202%2C30.24884001517173&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json",
+        "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.73124043134202%2C30.24884001517173&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json&distance=1&units=esriSRUnit_Meter"
+      ]
+    },
+    "expected_status_met": true,
+    "observations": [
+      {
+        "phase": "exact",
+        "feature_count": 1,
+        "district_keys": [
+          14
+        ],
+        "error": null
+      },
+      {
+        "phase": "probe",
+        "feature_count": 1,
+        "district_keys": [
+          14
+        ],
+        "error": null
+      }
+    ],
+    "geocoder_requests": 0
+  }
+]
