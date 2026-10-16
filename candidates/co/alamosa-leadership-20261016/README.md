@@ -14,10 +14,12 @@ From repository root:
 python3 candidates/co/alamosa-leadership-20261016/validate.py
 ```
 
-The read-only validator checks the exact canonical baseline hash, identity and evidence joins, exporter output, the one membership-label difference, identifier/date preservation and draft contract structure. It also verifies that the production consumer rejects the draft as uncertified. It creates no canonical files or exported runtime artifacts.
+The read-only validator checks the exact archived baseline hash in baseline-package.json, identity and evidence joins, exporter output, the one membership-label difference, identifier/date preservation and draft contract structure. It also verifies that the production consumer rejects the draft as uncertified. It creates no canonical files or exported runtime artifacts.
 
 The targeted Alamosa leadership candidate workflow runs this validator and four tests covering a valid read-only execution, eleven proposal/evidence mutations and rejection of optimized Python execution. The workflow has read-only repository permissions.
 
 ## Review and adoption boundary
 
 This directory is a candidate, not an adopted correction. Its assertion remains proposed. The validated export is explicitly draft; inherited historical QA/certification fields do not recertify this change. Before adoption, review the source evidence, regenerate package sidecars/checksums and run the governed source acceptance process. Do not simply copy this candidate into the canonical package or change contract certification to bypass review. The private review site's historical replay contracts remain separate and unchanged.
+
+The archived baseline preserves the original candidate replay after canonical changes. The validator separately checks that it never mutates the current canonical file. It does not assert that the current canonical file still matches the historical baseline.
