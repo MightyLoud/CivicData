@@ -1,0 +1,39 @@
+{
+  "case_id": "TX-BOUNDARY-SENATE-clear_inside_10m",
+  "chamber": "senate",
+  "address": null,
+  "point": [
+    -97.73124043134202,
+    30.24884001517173
+  ],
+  "expected": "PASS",
+  "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY",
+  "result": {
+    "status": "PASS",
+    "key": "14",
+    "evidence_urls": [
+      "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.73124043134202%2C30.24884001517173&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json",
+      "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.73124043134202%2C30.24884001517173&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json&distance=1&units=esriSRUnit_Meter"
+    ]
+  },
+  "expected_status_met": true,
+  "observations": [
+    {
+      "phase": "exact",
+      "feature_count": 1,
+      "district_keys": [
+        14
+      ],
+      "error": null
+    },
+    {
+      "phase": "probe",
+      "feature_count": 1,
+      "district_keys": [
+        14
+      ],
+      "error": null
+    }
+  ],
+  "geocoder_requests": 0
+}

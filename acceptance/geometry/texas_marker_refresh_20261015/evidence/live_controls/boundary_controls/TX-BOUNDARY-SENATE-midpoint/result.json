@@ -1,0 +1,37 @@
+{
+  "case_id": "TX-BOUNDARY-SENATE-midpoint",
+  "chamber": "senate",
+  "address": null,
+  "point": [
+    -97.7312866213084,
+    30.24875921242925
+  ],
+  "expected": "CONFLICT",
+  "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY",
+  "result": {
+    "status": "CONFLICT",
+    "code": "AMBIGUOUS_DISTRICT",
+    "message": "Multiple polygons intersect the point."
+  },
+  "expected_status_met": true,
+  "observations": [
+    {
+      "phase": "exact",
+      "feature_count": 1,
+      "district_keys": [
+        21
+      ],
+      "error": null
+    },
+    {
+      "phase": "probe",
+      "feature_count": 2,
+      "district_keys": [
+        14,
+        21
+      ],
+      "error": null
+    }
+  ],
+  "geocoder_requests": 0
+}

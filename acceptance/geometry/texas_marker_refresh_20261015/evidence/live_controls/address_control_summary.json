@@ -1,0 +1,63 @@
+[
+  {
+    "case_id": "TX-LIVE-20261015-CAPITOL",
+    "address": "1100 Congress Ave, Austin, TX 78701",
+    "expect": "PASS",
+    "address_authority": "https://tspb.texas.gov/plan/hours/hours.html",
+    "status": "PASS",
+    "expected_status_met": true,
+    "geocoder_requests": 1,
+    "total_requests": 8,
+    "error": null,
+    "gps_error": null,
+    "legislative_assignments": [
+      {
+        "adapter_id": "DIST-TX-HOUSE-H2316",
+        "district_key": "49",
+        "district_division_id": "div-wb020-8d372cd6f15770de5f452ceb224ec52929c30beddac3bdf9013864d538cbb449",
+        "district_name": "Texas House District 49",
+        "jurisdiction_id": "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145",
+        "layer": "state_house_district",
+        "status": "GEOGRAPHY_ONLY",
+        "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",
+        "scope": "INTERNAL_REVIEW",
+        "source_plan_id": "PLANH2316",
+        "source_vintage_status": "GOVERNED_ACCEPTANCE_REQUIRED__TLC_PLANH2316"
+      },
+      {
+        "adapter_id": "DIST-TX-SENATE-S2168",
+        "district_key": "14",
+        "district_division_id": "div-wb020-ed0238818cdb70336de04839d183a5a92c3af3ecb3f7bcd0cc330ba1e25d5f8b",
+        "district_name": "Texas Senate District 14",
+        "jurisdiction_id": "jur-wb020-3023c697b820b99e0aa520342cc9dc5887744891bd87814dc53dc8459523d145",
+        "layer": "state_senate_district",
+        "status": "GEOGRAPHY_ONLY",
+        "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",
+        "scope": "INTERNAL_REVIEW",
+        "source_plan_id": "PLANS2168",
+        "source_vintage_status": "GOVERNED_ACCEPTANCE_REQUIRED__88TH_DESCRIPTION_89TH_LAYER_CAVEAT_RETAINED"
+      }
+    ],
+    "projections": 2,
+    "canonical_writes": 0,
+    "publication_eligible": false,
+    "source_unchanged": true
+  },
+  {
+    "case_id": "TX-LIVE-20261015-ROUND-ROCK",
+    "address": "221 East Main Street, Round Rock, TX 78664",
+    "expect": "FAIL-CLOSED",
+    "address_authority": "https://www.roundrocktexas.gov/venue/round-rock-city-hall/",
+    "status": "FAIL-CLOSED",
+    "expected_status_met": true,
+    "geocoder_requests": 1,
+    "total_requests": 6,
+    "error": "CIVIC_GPS_JURISDICTION_NOT_ACTIVE",
+    "gps_error": null,
+    "legislative_assignments": [],
+    "projections": 0,
+    "canonical_writes": 0,
+    "publication_eligible": false,
+    "source_unchanged": true
+  }
+]

@@ -1,0 +1,576 @@
+{
+  "status": "FAIL-CLOSED",
+  "scope": "INTERNAL_REVIEW",
+  "complete_jurisdiction": false,
+  "publication_eligible": false,
+  "canonical_writes": 0,
+  "geometry_governance": {
+    "status": "CONTROLLED_TEST_SESSION_NOT_LIVE_VERIFIED",
+    "policy_id": "texas-legislative-geometry-governance/0.1"
+  },
+  "geography": {
+    "meta": {
+      "canonicalization": "UTF-8 JSON; object keys sorted for hashing; arrays sorted by stable identifiers where applicable",
+      "observed_on": "2026-10-16",
+      "response_id": "gps-composite-2af0dce3decb",
+      "schema_version": "civic-gps-response/0.3.0",
+      "serialized_at": "2026-10-16T00:03:12+00:00",
+      "source_tab": "Civic GPS Adapters",
+      "canonical_content_sha256": "780c33510ea1d8b45fd63f0e8cd7cff3a86aa15d2a2a5549d7155b94ce4e3de9"
+    },
+    "payload": {
+      "action_links": [],
+      "applicable_offices": [
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-clerk",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "County Clerk",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "Nancy E. Rister",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-commissioner-1",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Commissioner Precinct 1",
+          "applicability_scope": "DISTRICT_MATCH",
+          "district_division_id": "div-us-tx-williamson-county-commissioner-1",
+          "district_name": "Williamson County Commissioner Precinct 1",
+          "representative": "Terry Cook",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-constable-1",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Constable Precinct 1",
+          "applicability_scope": "DISTRICT_MATCH",
+          "district_division_id": "div-us-tx-williamson-county-constable-1",
+          "district_name": "Williamson County Constable Precinct 1",
+          "representative": "Mickey Chance",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-district-clerk",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "District Clerk",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "Lisa David",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-jp-1",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Justice of the Peace Precinct 1",
+          "applicability_scope": "DISTRICT_MATCH",
+          "district_division_id": "div-us-tx-williamson-county-jp-1",
+          "district_name": "Williamson County Justice Precinct 1",
+          "representative": "KT Musselman",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-judge",
+          "official_url": "https://www.wilcotx.gov/334/County-Judge",
+          "title": "County Judge",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "Steven Snell",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-sheriff",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Sheriff",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "Matthew Lindemann",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-tax-assessor-collector",
+          "official_url": "https://www.wilcotx.gov/tax",
+          "title": "Tax Assessor-Collector",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "Catherine Totty",
+          "leadership_role": null,
+          "status": "CURRENT"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-treasurer",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "County Treasurer",
+          "applicability_scope": "JURISDICTION_WIDE",
+          "representative": "D. Scott Heselmeyer",
+          "leadership_role": null,
+          "status": "CURRENT"
+        }
+      ],
+      "coverage": [
+        {
+          "layer": "GEO-TX-LEGISLATIVE-TWO-DISTRICTS",
+          "status": "OUT_OF_SCOPE",
+          "scope": "INTERNAL_REVIEW",
+          "reason": "Resolved district is outside the configured canonical slice."
+        },
+        {
+          "layer": "county_government",
+          "status": "RELEASE_BACKED",
+          "reason": "Williamson County current elected-office release is joined."
+        },
+        {
+          "layer": "federal_state_municipal_school_and_special_districts",
+          "status": "OUT_OF_SCOPE",
+          "reason": "This Williamson County BASE release does not claim completeness for other government layers."
+        },
+        {
+          "layer": "williamson_action_endpoints",
+          "status": "NOT_YET_RELEASED",
+          "reason": "Williamson County civic-action routing is intentionally not yet released in the county-archetype geography/office batch."
+        },
+        {
+          "layer": "williamson_county_commissioner_precinct",
+          "status": "RELEASE_BACKED",
+          "reason": "Address-specific Commissioner precinct resolved from official Williamson County precinct geometry."
+        },
+        {
+          "layer": "williamson_county_constable_precinct",
+          "status": "RELEASE_BACKED",
+          "reason": "Address-specific Constable precinct resolved from the shared official Williamson County precinct geography; identity is canonical-release-only."
+        },
+        {
+          "layer": "williamson_county_jp_precinct",
+          "status": "RELEASE_BACKED",
+          "reason": "Address-specific Justice precinct resolved from official Williamson County precinct geometry."
+        }
+      ],
+      "district_assignments": [
+        {
+          "adapter_id": "DIST-TX-WILLIAMSON-COMMISSIONER",
+          "district_key": "1",
+          "district_division_id": "div-us-tx-williamson-county-commissioner-1",
+          "district_name": "Williamson County Commissioner Precinct 1",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "layer": "williamson_county_commissioner_precinct",
+          "office_id": "office-us-tx-williamson-county-commissioner-1",
+          "official_boundary_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0",
+          "official_profile_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "representative": "Terry Cook",
+          "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",
+          "status": "VERIFIED"
+        },
+        {
+          "adapter_id": "DIST-TX-WILLIAMSON-CONSTABLE",
+          "district_key": "1",
+          "district_division_id": "div-us-tx-williamson-county-constable-1",
+          "district_name": "Williamson County Constable Precinct 1",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "layer": "williamson_county_constable_precinct",
+          "office_id": "office-us-tx-williamson-county-constable-1",
+          "official_boundary_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0",
+          "official_profile_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "representative": "Mickey Chance",
+          "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",
+          "status": "VERIFIED"
+        },
+        {
+          "adapter_id": "DIST-TX-WILLIAMSON-JP",
+          "district_key": "1",
+          "district_division_id": "div-us-tx-williamson-county-jp-1",
+          "district_name": "Williamson County Justice Precinct 1",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "layer": "williamson_county_jp_precinct",
+          "office_id": "office-us-tx-williamson-county-jp-1",
+          "official_boundary_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0",
+          "official_profile_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "representative": "KT Musselman",
+          "resolution_method": "CENSUS_GEOCODE_PLUS_OFFICIAL_ARCGIS_POINT_INTERSECT",
+          "status": "VERIFIED"
+        }
+      ],
+      "evidence": [
+        {
+          "evidence_id": "EVID-DIST-DIST-TX-WILLIAMSON-COMMISSIONER",
+          "supports": [
+            "district_assignments.div-us-tx-williamson-county-commissioner-1"
+          ],
+          "url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0/query?where=1%3D1&geometry=-97.677487813436%2C30.508886077001&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+          "verified_on": "2026-10-16"
+        },
+        {
+          "evidence_id": "EVID-DIST-DIST-TX-WILLIAMSON-CONSTABLE",
+          "supports": [
+            "district_assignments.div-us-tx-williamson-county-constable-1"
+          ],
+          "url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0/query?where=1%3D1&geometry=-97.677487813436%2C30.508886077001&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+          "verified_on": "2026-10-16"
+        },
+        {
+          "evidence_id": "EVID-DIST-DIST-TX-WILLIAMSON-JP",
+          "supports": [
+            "district_assignments.div-us-tx-williamson-county-jp-1"
+          ],
+          "url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0/query?where=1%3D1&geometry=-97.677487813436%2C30.508886077001&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+          "verified_on": "2026-10-16"
+        },
+        {
+          "evidence_id": "EVID-GEO-ADAPTER-TX-WILLIAMSON",
+          "supports": [
+            "input.address",
+            "matched_divisions"
+          ],
+          "url": "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=221+East+Main+Street%2C+Round+Rock%2C+TX+78664&benchmark=Public_AR_Current&vintage=Current_Current&format=json&layers=States%2CCounties%2CIncorporated+Places%2CUnified+School+Districts",
+          "verified_on": "2026-10-16"
+        },
+        {
+          "evidence_id": "EVID-REL-ADAPTER-TX-WILLIAMSON-01",
+          "supports": [
+            "jurisdictions.jur-us-tx-williamson-county",
+            "offices",
+            "officeholders"
+          ],
+          "url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "verified_on": "2026-10-16"
+        }
+      ],
+      "input": {
+        "address": "221 East Main Street, Round Rock, TX 78664",
+        "address_preserved": true,
+        "address_source_url": "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=221+East+Main+Street%2C+Round+Rock%2C+TX+78664&benchmark=Public_AR_Current&vintage=Current_Current&format=json&layers=States%2CCounties%2CIncorporated+Places%2CUnified+School+Districts",
+        "matched_address": "221 E MAIN AVE, ROUND ROCK, TX, 78664"
+      },
+      "jurisdictions": [
+        {
+          "division_id": "div-us-tx-williamson-county",
+          "government_type": "county",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "name": "Williamson County",
+          "office_count": 18,
+          "snapshot_ref": "https://www.wilcotx.gov/188/Elected-Officials",
+          "status": "RELEASE_BACKED_CURRENT"
+        }
+      ],
+      "known_gaps": [
+        {
+          "gap_id": "GAP-GEO-TX-LEGISLATIVE-TWO-DISTRICTS-DISTRICT_OUT_OF_SCOPE",
+          "status": "OUT_OF_SCOPE",
+          "summary": "Resolved district is outside the configured canonical slice."
+        },
+        {
+          "gap_id": "GAP-WILLIAMSON-GPS-001",
+          "status": "NOT_YET_RELEASED",
+          "summary": "Williamson County civic-action routing is intentionally not included in this geography/office release."
+        },
+        {
+          "gap_id": "GAP-WILLIAMSON-GPS-002",
+          "status": "BOUNDED_V0_1_SCOPE",
+          "summary": "The v0.1 countywide set is intentionally bounded to six core countywide offices; additional countywide offices are not yet modeled."
+        },
+        {
+          "gap_id": "GAP-WILLIAMSON-GPS-003",
+          "status": "SOURCE_PRECEDENCE_RESOLVED",
+          "summary": "Newer office-specific evidence establishes Catherine Totty as current Tax Assessor-Collector; a stale general directory entry for Larry Gaddes is not canonical."
+        }
+      ],
+      "matched_divisions": [
+        {
+          "division_id": "div-us-tx",
+          "name": "Texas",
+          "parent_id": null,
+          "type": "state"
+        },
+        {
+          "division_id": "div-us-tx-williamson-county",
+          "name": "Williamson County",
+          "parent_id": "div-us-tx",
+          "type": "county"
+        },
+        {
+          "division_id": "div-us-tx-williamson-county-commissioner-1",
+          "name": "Williamson County Commissioner Precinct 1",
+          "parent_id": "div-us-tx-williamson-county",
+          "type": "county_commissioner_precinct"
+        },
+        {
+          "division_id": "div-us-tx-williamson-county-constable-1",
+          "name": "Williamson County Constable Precinct 1",
+          "parent_id": "div-us-tx-williamson-county",
+          "type": "constable_precinct"
+        },
+        {
+          "division_id": "div-us-tx-williamson-county-jp-1",
+          "name": "Williamson County Justice Precinct 1",
+          "parent_id": "div-us-tx-williamson-county",
+          "type": "justice_precinct"
+        }
+      ],
+      "officeholders": [
+        {
+          "canonical_name": "Nancy E. Rister",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-clerk",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Terry Cook",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-commissioner-1",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Cynthia Long",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-commissioner-2",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Valerie Covey",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-commissioner-3",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Russ Boles",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-commissioner-4",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Mickey Chance",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-constable-1",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Jeff Anderson",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-constable-2",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Kevin Wilkie",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-constable-3",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Paul Leal",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-constable-4",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Lisa David",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-district-clerk",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "KT Musselman",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-jp-1",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Angela Williams",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-jp-2",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Evelyn McLean",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-jp-3",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Rhonda Redden",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-jp-4",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Steven Snell",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-judge",
+          "selection_type": "appointment"
+        },
+        {
+          "canonical_name": "Matthew Lindemann",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-sheriff",
+          "selection_type": "election"
+        },
+        {
+          "canonical_name": "Catherine Totty",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-tax-assessor-collector",
+          "selection_type": "appointment"
+        },
+        {
+          "canonical_name": "D. Scott Heselmeyer",
+          "leadership_role": null,
+          "office_id": "office-us-tx-williamson-county-treasurer",
+          "selection_type": "election"
+        }
+      ],
+      "offices": [
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-clerk",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "County Clerk"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-commissioner-1",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Commissioner Precinct 1"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-commissioner-2",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Commissioner Precinct 2"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-commissioner-3",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Commissioner Precinct 3"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-commissioner-4",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Commissioner Precinct 4"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-constable-1",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Constable Precinct 1"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-constable-2",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Constable Precinct 2"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-constable-3",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Constable Precinct 3"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-constable-4",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Constable Precinct 4"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-district-clerk",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "District Clerk"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-jp-1",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Justice of the Peace Precinct 1"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-jp-2",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Justice of the Peace Precinct 2"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-jp-3",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Justice of the Peace Precinct 3"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-jp-4",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Justice of the Peace Precinct 4"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-judge",
+          "official_url": "https://www.wilcotx.gov/334/County-Judge",
+          "title": "County Judge"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-sheriff",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "Sheriff"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-tax-assessor-collector",
+          "official_url": "https://www.wilcotx.gov/tax",
+          "title": "Tax Assessor-Collector"
+        },
+        {
+          "coverage_class": "RELEASED_CURRENT",
+          "jurisdiction_id": "jur-us-tx-williamson-county",
+          "office_id": "office-us-tx-williamson-county-treasurer",
+          "official_url": "https://www.wilcotx.gov/188/Elected-Officials",
+          "title": "County Treasurer"
+        }
+      ]
+    }
+  },
+  "representation": {
+    "status": "FAIL-CLOSED",
+    "consumer_gate": "EV-IMP-005",
+    "input_address": "221 East Main Street, Round Rock, TX 78664",
+    "error": "CIVIC_GPS_JURISDICTION_NOT_ACTIVE",
+    "canonical_writes": 0,
+    "detail": "tx-house"
+  }
+}

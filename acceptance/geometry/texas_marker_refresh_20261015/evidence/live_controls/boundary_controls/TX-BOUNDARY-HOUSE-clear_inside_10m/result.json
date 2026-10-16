@@ -1,0 +1,39 @@
+{
+  "case_id": "TX-BOUNDARY-HOUSE-clear_inside_10m",
+  "chamber": "house",
+  "address": null,
+  "point": [
+    -97.73361217198963,
+    30.26912701888957
+  ],
+  "expected": "PASS",
+  "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY",
+  "result": {
+    "status": "PASS",
+    "key": "49",
+    "evidence_urls": [
+      "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.73361217198963%2C30.26912701888957&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json",
+      "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.73361217198963%2C30.26912701888957&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json&distance=1&units=esriSRUnit_Meter"
+    ]
+  },
+  "expected_status_met": true,
+  "observations": [
+    {
+      "phase": "exact",
+      "feature_count": 1,
+      "district_keys": [
+        49
+      ],
+      "error": null
+    },
+    {
+      "phase": "probe",
+      "feature_count": 1,
+      "district_keys": [
+        49
+      ],
+      "error": null
+    }
+  ],
+  "geocoder_requests": 0
+}

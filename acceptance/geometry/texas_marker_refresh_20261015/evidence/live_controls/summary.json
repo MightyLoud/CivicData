@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "address_controls": 2,
+  "boundary_controls": 6,
+  "all_expected_statuses_met": true,
+  "live_network": true,
+  "preflight_before_and_after": true,
+  "scope": "Internal bounded House 49 / Senate 14; injected recording session is not production release evidence",
+  "deployment_performed": false,
+  "source_writes": 0
+}

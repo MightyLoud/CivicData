@@ -1,0 +1,121 @@
+[
+  {
+    "request_number": 1,
+    "url": "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress",
+    "params": {
+      "address": "221 East Main Street, Round Rock, TX 78664",
+      "benchmark": "Public_AR_Current",
+      "vintage": "Current_Current",
+      "format": "json",
+      "layers": "States,Counties,Incorporated Places,Unified School Districts"
+    },
+    "started_at": "2026-10-16T00:03:12.729888+00:00",
+    "http_status": 200,
+    "response_url": "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=221+East+Main+Street%2C+Round+Rock%2C+TX+78664&benchmark=Public_AR_Current&vintage=Current_Current&format=json&layers=States%2CCounties%2CIncorporated+Places%2CUnified+School+Districts",
+    "response_file": "response_01.json",
+    "response_sha256": "cf01494e551b659a726d269b4db506526c203bb5848192a989da58c78e1517e9",
+    "finished_at": "2026-10-16T00:03:16.888521+00:00"
+  },
+  {
+    "request_number": 2,
+    "url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.677487813436,30.508886077001",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "*",
+      "returnGeometry": "false",
+      "f": "json"
+    },
+    "started_at": "2026-10-16T00:03:16.889308+00:00",
+    "http_status": 200,
+    "response_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0/query?where=1%3D1&geometry=-97.677487813436%2C30.508886077001&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+    "response_file": "response_02.json",
+    "response_sha256": "4a86c4d192db84a5da9399bfe813cb792e27d941a17947085745137e23285ffd",
+    "finished_at": "2026-10-16T00:03:21.241014+00:00"
+  },
+  {
+    "request_number": 3,
+    "url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.677487813436,30.508886077001",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "*",
+      "returnGeometry": "false",
+      "f": "json"
+    },
+    "started_at": "2026-10-16T00:03:21.241639+00:00",
+    "http_status": 200,
+    "response_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0/query?where=1%3D1&geometry=-97.677487813436%2C30.508886077001&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+    "response_file": "response_03.json",
+    "response_sha256": "4a86c4d192db84a5da9399bfe813cb792e27d941a17947085745137e23285ffd",
+    "finished_at": "2026-10-16T00:03:21.612870+00:00"
+  },
+  {
+    "request_number": 4,
+    "url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.677487813436,30.508886077001",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "*",
+      "returnGeometry": "false",
+      "f": "json"
+    },
+    "started_at": "2026-10-16T00:03:21.613380+00:00",
+    "http_status": 200,
+    "response_url": "https://gis.wilco.org/arcgis/rest/services/public/county_administrative_boundaries/MapServer/0/query?where=1%3D1&geometry=-97.677487813436%2C30.508886077001&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+    "response_file": "response_04.json",
+    "response_sha256": "4a86c4d192db84a5da9399bfe813cb792e27d941a17947085745137e23285ffd",
+    "finished_at": "2026-10-16T00:03:21.773006+00:00"
+  },
+  {
+    "request_number": 5,
+    "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.677487813436,30.508886077001",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "DIST_NBR",
+      "returnGeometry": "false",
+      "f": "json"
+    },
+    "started_at": "2026-10-16T00:03:21.775355+00:00",
+    "http_status": 200,
+    "response_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.677487813436%2C30.508886077001&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json",
+    "response_file": "response_05.json",
+    "response_sha256": "2a32cae7ce4a5871bb202b06eb73a3f44c56f35530f4e4d9370844415dd1db77",
+    "finished_at": "2026-10-16T00:03:26.609123+00:00"
+  },
+  {
+    "request_number": 6,
+    "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.677487813436,30.508886077001",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "DIST_NBR",
+      "returnGeometry": "false",
+      "f": "json",
+      "distance": 1,
+      "units": "esriSRUnit_Meter"
+    },
+    "started_at": "2026-10-16T00:03:26.609480+00:00",
+    "http_status": 200,
+    "response_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.677487813436%2C30.508886077001&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json&distance=1&units=esriSRUnit_Meter",
+    "response_file": "response_06.json",
+    "response_sha256": "2a32cae7ce4a5871bb202b06eb73a3f44c56f35530f4e4d9370844415dd1db77",
+    "finished_at": "2026-10-16T00:03:26.864887+00:00"
+  }
+]

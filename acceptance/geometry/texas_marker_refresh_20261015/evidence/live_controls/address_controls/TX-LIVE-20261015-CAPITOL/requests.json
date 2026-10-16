@@ -1,0 +1,163 @@
+[
+  {
+    "request_number": 1,
+    "url": "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress",
+    "params": {
+      "address": "1100 Congress Ave, Austin, TX 78701",
+      "benchmark": "Public_AR_Current",
+      "vintage": "Current_Current",
+      "format": "json",
+      "layers": "States,Counties,Incorporated Places,Unified School Districts"
+    },
+    "started_at": "2026-10-16T00:02:59.722611+00:00",
+    "http_status": 200,
+    "response_url": "https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress?address=1100+Congress+Ave%2C+Austin%2C+TX+78701&benchmark=Public_AR_Current&vintage=Current_Current&format=json&layers=States%2CCounties%2CIncorporated+Places%2CUnified+School+Districts",
+    "response_file": "response_01.json",
+    "response_sha256": "7fa8c52cde59be7b51ddf8764dd9dfd4efa1516a653430d051a7038a98338888",
+    "finished_at": "2026-10-16T00:03:03.548399+00:00"
+  },
+  {
+    "request_number": 2,
+    "url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.739754035328,30.27644199222",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "*",
+      "returnGeometry": "false",
+      "f": "json"
+    },
+    "started_at": "2026-10-16T00:03:03.549322+00:00",
+    "http_status": 200,
+    "response_url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/0/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+    "response_file": "response_02.json",
+    "response_sha256": "dc868276bafe05647f5130eb737ba25924c681c3cde39adaad494458d9da4e30",
+    "finished_at": "2026-10-16T00:03:07.469001+00:00"
+  },
+  {
+    "request_number": 3,
+    "url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/2/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.739754035328,30.27644199222",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "*",
+      "returnGeometry": "false",
+      "f": "json"
+    },
+    "started_at": "2026-10-16T00:03:07.469501+00:00",
+    "http_status": 200,
+    "response_url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/2/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+    "response_file": "response_03.json",
+    "response_sha256": "f5052ae14d279fa17d284a4abad5cf90b06d023a13ec59476a19b9cc318ec506",
+    "finished_at": "2026-10-16T00:03:07.644953+00:00"
+  },
+  {
+    "request_number": 4,
+    "url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/2/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.739754035328,30.27644199222",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "*",
+      "returnGeometry": "false",
+      "f": "json"
+    },
+    "started_at": "2026-10-16T00:03:07.645400+00:00",
+    "http_status": 200,
+    "response_url": "https://gis.traviscountytx.gov/server1/rest/services/Boundaries_and_Jurisdictions/Admin_Boundaries_Simple/MapServer/2/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=%2A&returnGeometry=false&f=json",
+    "response_file": "response_04.json",
+    "response_sha256": "f5052ae14d279fa17d284a4abad5cf90b06d023a13ec59476a19b9cc318ec506",
+    "finished_at": "2026-10-16T00:03:07.768882+00:00"
+  },
+  {
+    "request_number": 5,
+    "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.739754035328,30.27644199222",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "DIST_NBR",
+      "returnGeometry": "false",
+      "f": "json"
+    },
+    "started_at": "2026-10-16T00:03:07.770764+00:00",
+    "http_status": 200,
+    "response_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json",
+    "response_file": "response_05.json",
+    "response_sha256": "7c9d2c06173b50d70142b9bc68bc0e6a1f03309639c10399028826fa55282697",
+    "finished_at": "2026-10-16T00:03:11.989120+00:00"
+  },
+  {
+    "request_number": 6,
+    "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.739754035328,30.27644199222",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "DIST_NBR",
+      "returnGeometry": "false",
+      "f": "json",
+      "distance": 1,
+      "units": "esriSRUnit_Meter"
+    },
+    "started_at": "2026-10-16T00:03:11.989449+00:00",
+    "http_status": 200,
+    "response_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json&distance=1&units=esriSRUnit_Meter",
+    "response_file": "response_06.json",
+    "response_sha256": "7c9d2c06173b50d70142b9bc68bc0e6a1f03309639c10399028826fa55282697",
+    "finished_at": "2026-10-16T00:03:12.333101+00:00"
+  },
+  {
+    "request_number": 7,
+    "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.739754035328,30.27644199222",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "DIST_NBR",
+      "returnGeometry": "false",
+      "f": "json"
+    },
+    "started_at": "2026-10-16T00:03:12.333728+00:00",
+    "http_status": 200,
+    "response_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json",
+    "response_file": "response_07.json",
+    "response_sha256": "7cc8dec3ebfbe40b6d5aa126b7fde1de214e8cf7b9ff4fa8884ef75b36fa4ca2",
+    "finished_at": "2026-10-16T00:03:12.488912+00:00"
+  },
+  {
+    "request_number": 8,
+    "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.739754035328,30.27644199222",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "DIST_NBR",
+      "returnGeometry": "false",
+      "f": "json",
+      "distance": 1,
+      "units": "esriSRUnit_Meter"
+    },
+    "started_at": "2026-10-16T00:03:12.489283+00:00",
+    "http_status": 200,
+    "response_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_Senate_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.739754035328%2C30.27644199222&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json&distance=1&units=esriSRUnit_Meter",
+    "response_file": "response_08.json",
+    "response_sha256": "7cc8dec3ebfbe40b6d5aa126b7fde1de214e8cf7b9ff4fa8884ef75b36fa4ca2",
+    "finished_at": "2026-10-16T00:03:12.721110+00:00"
+  }
+]

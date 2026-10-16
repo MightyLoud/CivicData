@@ -20,8 +20,8 @@ from civic_gps_extensions.texas_geometry_governance import (
 
 def metadata(chamber):
     pin = PINS[chamber]
-    schema = 1742232985031 if chamber == "house" else 1742233136000
-    data = 1742232985031 if chamber == "house" else 1770228332000
+    schema = 1792066285908 if chamber == "house" else 1742233136000
+    data = 1792066197893 if chamber == "house" else 1770228332000
     return {
         "serviceItemId": pin["service_item_id"],
         "name": pin["layer_name"],
@@ -68,6 +68,18 @@ class TexasGeometryGovernanceTests(unittest.TestCase):
         self.assertEqual(len(first["receipt_sha256"]), 64)
         self.assertEqual(len(self.session.calls), 2)
         self.assertTrue(all(call[1] == {"f": "json"} for call in self.session.calls))
+
+    def test_previous_house_markers_are_rejected(self):
+        self.session.bodies["house"]["editingInfo"] = {
+            "schemaLastEditDate": 1742232985031, "dataLastEditDate": 1742232985031}
+        with self.assertRaisesRegex(GeometryGovernanceFailure, "data_last_edit_utc,schema_last_edit_utc"):
+            verify_texas_geometry_governance(session=self.session)
+
+    def test_revision_evidence_hash_matches_committed_comparison(self):
+        import hashlib
+        path = ROOT / ACCEPTANCE["marker_revision_evidence"]
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
+                         ACCEPTANCE["marker_revision_evidence_sha256"])
 
     def test_service_item_drift_fails_closed(self):
         self.session.bodies["house"]["serviceItemId"] = "changed"
