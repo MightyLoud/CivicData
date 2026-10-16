@@ -4,7 +4,7 @@ ROOT=pathlib.Path(__file__).resolve().parents[3];sys.path.insert(0,str(ROOT))
 from consumers.empowered_vote.package_source import load_jurisdiction_package
 from adapters.factory.export_representation import export_factory_package
 from consumers.empowered_vote.contract_v1 import validate_contract
-from tools.jurisdiction_package import validate
+from tools.jurisdiction_package_strict import validate,verify_package
 
 def check():
  if not __debug__:raise RuntimeError('Assertions must be enabled')
@@ -12,12 +12,15 @@ def check():
  pkg=load_jurisdiction_package(folder);assert not validate(pkg)
  expected=copy.deepcopy(baseline)
  expected['records']['leadership_roles']=copy.deepcopy(pkg['records']['leadership_roles'])
- expected['provenance']['source_evidence'].append(p['source_evidence'])
+ e=copy.deepcopy(p['source_evidence']);e['supports_entity_id']=p['leadership_record']['leadership_id'];e['supports_entity_type']='LeadershipRole'
+ expected['provenance']['source_evidence'].append(e)
+ for key in ['leadership_roles','source_evidence','source_assertions']:expected['qa']['source_counts'][key]+=1
+ assert not verify_package(folder)
  a=copy.deepcopy(p['source_assertion']);a['normalized_status']='NORMALIZED';a['notes']='Official roster supports the leadership title; exact leadership service dates remain unknown.'
  expected['provenance']['source_assertions'].append(a)
  assert pkg==expected
  roles=pkg['records']['leadership_roles'];assert len(roles)==1
- role=copy.deepcopy(roles[0]);role['notes']=p['leadership_record']['notes'];assert role==p['leadership_record']
+ role=copy.deepcopy(roles[0]);role['notes']=p['leadership_record']['notes'];assert role.pop('body_id')=='body-co-alamosa-city-council';assert role==p['leadership_record']
  for line in (folder/'SHA256SUMS.txt').read_text().splitlines():
   digest,name=line.split('  ',1);assert hashlib.sha256((folder/name).read_bytes()).hexdigest()==digest,name
  manifest=json.loads((folder/'manifest.json').read_text())
