@@ -98,6 +98,8 @@ def apply_certification(review: Mapping[str, Any], decision: Mapping[str, Any], 
     _require(isinstance(decision.get('reviewer'), str) and bool(decision['reviewer'].strip()), 'REVIEWER_REQUIRED')
     _require(isinstance(decision.get('reason'), str) and bool(decision['reason'].strip()), 'REVIEW_REASON_REQUIRED')
     _require(_timestamp(decision.get('verified_at')), 'REVIEW_TIMESTAMP_INVALID')
+    _require(_timestamp(draft.get('generated_at')), 'GENERATION_TIMESTAMP_INVALID')
+    _require(datetime.fromisoformat(decision['verified_at'].replace('Z', '+00:00')) >= datetime.fromisoformat(draft['generated_at'].replace('Z', '+00:00')), 'REVIEW_PREDATES_DRAFT')
     _require(isinstance(decision.get('gates'), Mapping) and set(decision['gates']) == set(GATES), 'CERTIFICATION_GATES_INVALID')
     _require(all(decision['gates'][gate] is True for gate in GATES), 'CERTIFICATION_GATES_INCOMPLETE')
     _require(isinstance(decision.get('evidence_refs'), list) and bool(decision['evidence_refs']) and all(isinstance(v, str) and v.strip() for v in decision['evidence_refs']), 'GATE_EVIDENCE_REQUIRED')

@@ -65,6 +65,11 @@ class FactoryExportReviewTests(unittest.TestCase):
         r=deepcopy(self.review);r['contract']['memberships'][0]['label']='tampered'
         with self.assertRaisesRegex(ExportReviewError,'DRAFT_FINGERPRINT_MISMATCH'):apply_certification(r,self.decision,source_package=self.package)
 
+    def test_review_cannot_predate_draft(self):
+        decision=deepcopy(self.decision);decision['verified_at']='2026-08-19T00:00:00Z'
+        with self.assertRaisesRegex(ExportReviewError,'REVIEW_PREDATES_DRAFT'):
+            apply_certification(self.review,decision,source_package=self.package)
+
     def test_changed_source_rejects_stored_review(self):
         package=deepcopy(self.package);package['records']['people'][0]['notes']='Changed after review'
         with self.assertRaisesRegex(ExportReviewError,'SOURCE_FINGERPRINT_MISMATCH'):
