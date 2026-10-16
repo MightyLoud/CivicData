@@ -190,6 +190,26 @@ class RepresentationTests(unittest.TestCase):
                 p["records"]["role_terms"][0].update(extra)
                 self.assertEqual(self.preview(p)["error"], "ROLE_TERM_FIELD_CONFLICT")
 
+    def test_factory_month_intervals_preserve_precision_and_input(self):
+        term = {"valid_from": "2025-11", "valid_to": "2027-11"}
+        before = copy.deepcopy(term)
+        projected = representation.project_role_term(term)
+        self.assertEqual(projected["start_date"], "2025-11")
+        self.assertEqual(projected["end_date"], "2027-11")
+        self.assertEqual(term, before)
+
+    def test_factory_unknown_intervals_remain_unknown(self):
+        projected = representation.project_role_term({"valid_from": None, "valid_to": None})
+        self.assertIsNone(projected["start_date"])
+        self.assertIsNone(projected["end_date"])
+
+    def test_factory_interval_alias_conflicts_fail_closed(self):
+        for extra in ({"valid_from": "2024-11"}, {"valid_to": "2027-11"}):
+            with self.subTest(extra=extra):
+                p = fixture()
+                p["records"]["role_terms"][0].update(extra)
+                self.assertEqual(self.preview(p)["error"], "ROLE_TERM_FIELD_CONFLICT")
+
     def test_invalid_or_partial_tx_date_rejected(self):
         for value in ("2025", "2025-01", "2025-02-30", "20250114", 45671):
             with self.subTest(value=value):
