@@ -55,4 +55,4 @@ The proposed marker revision `2026-10-15` retains policy schema `0.1` and the or
 
 Fresh House 49 and Senate 14 responses match the accepted response bytes exactly. Their geometry comparisons against archived TLC PLANH2316 / PLANS2168 shapefiles reproduce the accepted numerical results in the verified same CRS. The source archive checksum was verified. Live TLC downloads returned HTTP 403, so this comparison uses archived authoritative shapefiles; it does not verify current TLC resource bytes or statewide equivalence.
 
-The evidence is in `candidates/texas_geometry_refresh/evidence/comparison.json`. This source branch is a review candidate. Main and the accepted production deployment are unchanged. Later marker drift must continue to fail closed.
+The evidence is in `acceptance/geometry/texas_marker_refresh_20261015/evidence/comparison.json`. This source branch is a review candidate. Main and the accepted production deployment are unchanged. Later marker drift must continue to fail closed.

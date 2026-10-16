@@ -9,7 +9,7 @@ POLICY_ID = "texas-legislative-geometry-governance/0.1"
 ACCEPTANCE = {
     "accepted_on": "2026-09-06",
     "marker_revision": "2026-10-15",
-    "marker_revision_evidence": "candidates/texas_geometry_refresh/evidence/comparison.json",
+    "marker_revision_evidence": "acceptance/geometry/texas_marker_refresh_20261015/evidence/comparison.json",
     "marker_revision_evidence_sha256": "f8810acfc460a726a7b7e9ddbf6bd0d10b431cadd2d6ff5324e7f3e502d911f6",
     "candidate_commit": "a9994e75d9aac62ae1ae494b8984199e7477bd6a",
     "evidence_archive": "Day12_TX_Live_Controls_2026-09-06.zip",

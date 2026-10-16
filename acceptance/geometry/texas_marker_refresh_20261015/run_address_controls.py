@@ -8,7 +8,7 @@ import sys
 import requests
 
 ROOT = Path(__file__).resolve().parent
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[3]
 RUNTIME = None  # Supplied by run_controls.py after exact runtime reconstruction.
 sys.path.insert(0, str(REPO))
 from civic_gps_extensions.texas_legislative import resolve_texas_internal_preview

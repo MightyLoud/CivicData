@@ -10,4 +10,4 @@ Fresh live controls: Capitol positive and Round Rock negative; midpoint, 0.25 m 
 
 Local regressions: 9 governance, 3 activation runtime, 6 successor package, and 3 post-activation runtime tests passed. The post-activation suite required reconstructing the committed runtime before execution; its initial missing-runtime error was resolved by that setup.
 
-To capture a new append-only attempt, install requirements-civic-gps.txt and run `python candidates/texas_geometry_refresh/run_controls.py --output /absolute/new/attempt-directory`. The runner reconstructs the existing runtime and package in a temporary directory. It makes two public address geocodes and coordinate-only boundary requests, and never changes external source systems.
+To capture a new append-only attempt, install requirements-civic-gps.txt and run `python acceptance/geometry/texas_marker_refresh_20261015/run_controls.py --output /absolute/new/attempt-directory`. The runner reconstructs the existing runtime and package in a temporary directory. It makes two public address geocodes and coordinate-only boundary requests, and never changes external source systems.

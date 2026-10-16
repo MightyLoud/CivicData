@@ -2,7 +2,7 @@
 Run with requests installed. Captures are append-only; use a new --output for each attempt.
 """
 import argparse,base64,io,json,pathlib,sys,tempfile,zipfile
-REPO=pathlib.Path(__file__).resolve().parents[2]
+REPO=pathlib.Path(__file__).resolve().parents[3]
 sys.path.insert(0,str(REPO))
 from civic_gps_extensions.texas_geometry_governance import verify_texas_geometry_governance
 parser=argparse.ArgumentParser();parser.add_argument('--output',type=pathlib.Path,required=True);args=parser.parse_args()
