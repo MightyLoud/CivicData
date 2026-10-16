@@ -1,0 +1,24 @@
+name: Factory export certification review
+on:
+  pull_request:
+    paths:
+      - tools/factory_export_review.py
+      - tools/assertion_governance.py
+      - adapters/factory/export_representation.py
+      - consumers/empowered_vote/contract_v1.py
+      - tools/jurisdiction_package_strict.py
+      - tests/test_factory_export_review.py
+      - data/normalized/co/jurisdiction-co-alamosa/**
+      - candidates/co/alamosa-leadership-20261016/baseline-package.json
+      - .github/workflows/factory-export-review.yml
+permissions:
+  contents: read
+jobs:
+  review-controls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 -m unittest tests.test_factory_export_review tests.test_assertion_governance tests.test_export_representation tests.test_empowered_vote_contract_v1 tests.test_role_term_integration
