@@ -1,0 +1,12 @@
+{
+  "source_url": "https://www.alamosa.gov/city-council-members",
+  "retrieved_at": "2026-10-16T13:12:37.167806+00:00",
+  "original_response_sha256": "c59c4b69055dcb84482e97fb5fe8dba5f25ec3238886c870a1e9c426bbf5b418",
+  "observation": {
+    "name": "Liz Hensley",
+    "leadership": "Mayor Pro Tem",
+    "office": "City Councilor",
+    "ward": "1"
+  },
+  "extraction_basis": "Roster-entry facts checked against the captured official HTML; full response excluded from repository because it contains unrelated session/security material."
+}

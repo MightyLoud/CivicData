@@ -2,7 +2,7 @@
 
 The official City Council Members page retrieved October 16, 2026 lists Liz Hensley as Mayor Pro Tem and Ward 1 Councilor. The canonical package has no leadership records, so its exported membership omits Mayor Pro Tem.
 
-This proposal appends one leadership record, one official source-evidence record and one **proposed** assertion. It preserves existing identifiers, people, offices, memberships and service dates. Exact leadership dates remain unknown. The evidence entry records the URL, retrieval time and SHA-256 of the original HTML response; it does not imply continuous verification.
+This proposal appends one leadership record, one official source-evidence record and one **proposed** assertion. It preserves existing identifiers, people, offices, memberships and service dates. Exact leadership dates remain unknown. The evidence entry records the URL, retrieval time and SHA-256 of the original HTML response; it does not imply continuous verification. A minimal factual extract is retained under evidence/roster-facts.json with its own SHA-256. The original response fingerprint is recorded separately; the validator checks extract integrity and observation links, not the absent original response bytes. Full HTML is excluded because it contains unrelated session/security material.
 
 Source: https://www.alamosa.gov/city-council-members
 
@@ -15,6 +15,8 @@ python3 candidates/co/alamosa-leadership-20261016/validate.py
 ```
 
 The read-only validator checks the exact canonical baseline hash, identity and evidence joins, exporter output, the one membership-label difference, identifier/date preservation and draft contract structure. It also verifies that the production consumer rejects the draft as uncertified. It creates no canonical files or exported runtime artifacts.
+
+The targeted Alamosa leadership candidate workflow runs this validator and four tests covering a valid read-only execution, eleven proposal/evidence mutations and rejection of optimized Python execution. The workflow has read-only repository permissions.
 
 ## Review and adoption boundary
 

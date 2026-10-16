@@ -1,0 +1,22 @@
+name: Alamosa leadership candidate
+on:
+  pull_request:
+    paths:
+      - candidates/co/alamosa-leadership-20261016/**
+      - .github/workflows/alamosa-leadership-candidate.yml
+      - adapters/factory/export_representation.py
+      - consumers/empowered_vote/contract_v1.py
+      - tools/jurisdiction_package.py
+      - data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json
+permissions:
+  contents: read
+jobs:
+  validate-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python3 candidates/co/alamosa-leadership-20261016/validate.py
+      - run: python3 candidates/co/alamosa-leadership-20261016/test_candidate.py

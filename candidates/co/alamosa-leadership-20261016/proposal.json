@@ -26,7 +26,8 @@
     "source_id": "src-co-alamosa-current-council-roster-20261016",
     "source_type": "OFFICIAL_DIRECTORY",
     "title": "City Council Members \u2014 October 16 candidate capture",
-    "url": "https://www.alamosa.gov/city-council-members"
+    "url": "https://www.alamosa.gov/city-council-members",
+    "capture_extract_sha256": "255ae1688c110f38712a72efe20dc1b3d2136f1f6fe3af2427be6909dc0d2883"
   },
   "source_assertion": {
     "assertion_id": "asrt-co-alamosa-liz-hensley-mayor-pro-tem-20261016",

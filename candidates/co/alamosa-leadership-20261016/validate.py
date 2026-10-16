@@ -5,8 +5,25 @@ from adapters.factory.export_representation import export_factory_package
 from consumers.empowered_vote.contract_v1 import validate_contract,build_representation_from_civic_gps_result
 from tools.jurisdiction_package import validate_identity_graph,validate_role_term_sources
 
-def validate():
- proposal=json.loads(pathlib.Path(__file__).with_name('proposal.json').read_text());source=ROOT/proposal['canonical_path'];raw=source.read_bytes();assert hashlib.sha256(raw).hexdigest()==proposal['canonical_sha256'],'Canonical baseline drift: reconcile before applying candidate'
+def validate(proposal=None):
+ if not __debug__:raise RuntimeError('Candidate validator requires assertions enabled')
+ if proposal is None:proposal=json.loads(pathlib.Path(__file__).with_name('proposal.json').read_text())
+ assert proposal['status']=='PROPOSED_NOT_ADOPTED'
+ assert proposal['canonical_path']=='data/normalized/co/jurisdiction-co-alamosa/jurisdiction.json'
+ assert proposal['production_eligible'] is False and proposal['publication_eligible'] is False
+ leadership=proposal['leadership_record'];evidence=proposal['source_evidence'];assertion=proposal['source_assertion']
+ assert leadership['person_id']=='person-co-alamosa-liz-hensley' and leadership['office_id']=='office-co-alamosa-council-ward-1'
+ assert leadership['role_title']=='Mayor Pro Tem' and leadership['status']=='CURRENT'
+ assert leadership['source_id']==evidence['source_id']==assertion['source_id']
+ assert assertion['subject_type']=='LeadershipRole' and assertion['subject_id']==leadership['leadership_id']
+ assert assertion['predicate']=='role_title' and assertion['object_value']=='Mayor Pro Tem' and assertion['normalized_status']=='PROPOSED'
+ assert evidence['url']=='https://www.alamosa.gov/city-council-members'
+ captured=pathlib.Path(__file__).with_name('evidence').joinpath('roster-facts.json').read_bytes()
+ assert hashlib.sha256(captured).hexdigest()==evidence['capture_extract_sha256']
+ facts=json.loads(captured);assert facts['source_url']==evidence['url'] and facts['retrieved_at']==evidence['accessed_at']
+ assert facts['original_response_sha256']==evidence['content_hash']
+ assert facts['observation']=={'name':'Liz Hensley','leadership':'Mayor Pro Tem','office':'City Councilor','ward':'1'}
+ source=ROOT/proposal['canonical_path'];raw=source.read_bytes();assert hashlib.sha256(raw).hexdigest()==proposal['canonical_sha256'],'Canonical baseline drift: reconcile before applying candidate'
  baseline=json.loads(raw);candidate=copy.deepcopy(baseline);assert not baseline['records']['leadership_roles']
  candidate['records']['leadership_roles'].append(proposal['leadership_record']);candidate['provenance']['source_evidence'].append(proposal['source_evidence']);candidate['provenance']['source_assertions'].append(proposal['source_assertion'])
  assert not validate_identity_graph(candidate['records']);assert not validate_role_term_sources(candidate['records'],candidate['provenance'])
