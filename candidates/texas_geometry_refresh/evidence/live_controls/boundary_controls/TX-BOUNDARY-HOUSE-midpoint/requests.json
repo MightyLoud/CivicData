@@ -1,0 +1,44 @@
+[
+  {
+    "request_number": 1,
+    "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.73351312323541,30.269099716168498",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "DIST_NBR",
+      "returnGeometry": "false",
+      "f": "json"
+    },
+    "started_at": "2026-10-16T00:03:26.874084+00:00",
+    "http_status": 200,
+    "response_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.73351312323541%2C30.269099716168498&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json",
+    "response_file": "response_01.json",
+    "response_sha256": "f5fee33bcf770070a8c08b6998b54c426f7462a272546c4f4a49d0320630f8f6",
+    "finished_at": "2026-10-16T00:03:30.601658+00:00"
+  },
+  {
+    "request_number": 2,
+    "url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query",
+    "params": {
+      "where": "1=1",
+      "geometry": "-97.73351312323541,30.269099716168498",
+      "geometryType": "esriGeometryPoint",
+      "inSR": "4326",
+      "spatialRel": "esriSpatialRelIntersects",
+      "outFields": "DIST_NBR",
+      "returnGeometry": "false",
+      "f": "json",
+      "distance": 1,
+      "units": "esriSRUnit_Meter"
+    },
+    "started_at": "2026-10-16T00:03:30.601972+00:00",
+    "http_status": 200,
+    "response_url": "https://services.arcgis.com/KTcxiTD9dsQw4r7Z/arcgis/rest/services/Texas_State_House_Districts/FeatureServer/0/query?where=1%3D1&geometry=-97.73351312323541%2C30.269099716168498&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=DIST_NBR&returnGeometry=false&f=json&distance=1&units=esriSRUnit_Meter",
+    "response_file": "response_02.json",
+    "response_sha256": "5cdc46031bb23b935e59dbce0c856f71afa0369ea8f28915fe065ec7997b81a3",
+    "finished_at": "2026-10-16T00:03:30.853120+00:00"
+  }
+]

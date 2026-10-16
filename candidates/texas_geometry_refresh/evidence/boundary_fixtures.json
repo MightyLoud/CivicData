@@ -1,0 +1,66 @@
+[
+  {
+    "chamber": "house",
+    "source_file": "house_geometry.json",
+    "district_key": "49",
+    "ring_index": 0,
+    "segment_index": 1214,
+    "segment_endpoints": [
+      [
+        -97.7333256238018,
+        30.2696122158093
+      ],
+      [
+        -97.733700622669,
+        30.2685872165277
+      ]
+    ],
+    "segment_length_meters": 119.22025855095491,
+    "midpoint": [
+      -97.73351312323541,
+      30.269099716168498
+    ],
+    "near_inside_025m": [
+      -97.7335155994536,
+      30.269100398737436
+    ],
+    "clear_inside_10m": [
+      -97.73361217198963,
+      30.26912701888957
+    ],
+    "normal_azimuth": -72.38194984613767,
+    "selection": "Nearest 100\u2013500m segment to the fixed Capitol-area reference with unique inward normal, selected before live point queries."
+  },
+  {
+    "chamber": "senate",
+    "source_file": "senate_geometry.json",
+    "district_key": "14",
+    "ring_index": 0,
+    "segment_index": 3771,
+    "segment_endpoints": [
+      [
+        -97.7297896206628,
+        30.2481142131603
+      ],
+      [
+        -97.732783621954,
+        30.2494042116982
+      ]
+    ],
+    "segment_length_meters": 321.69048981645017,
+    "midpoint": [
+      -97.7312866213084,
+      30.24875921242925
+    ],
+    "near_inside_025m": [
+      -97.73128546656017,
+      30.24876123249802
+    ],
+    "clear_inside_10m": [
+      -97.73124043134202,
+      30.24884001517173
+    ],
+    "normal_azimuth": 26.39478929532561,
+    "selection": "Nearest 100\u2013500m segment to the fixed Capitol-area reference with unique inward normal, selected before live point queries."
+  }
+]

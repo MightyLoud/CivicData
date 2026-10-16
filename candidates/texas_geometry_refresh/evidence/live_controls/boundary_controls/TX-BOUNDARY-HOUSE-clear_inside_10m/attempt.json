@@ -1,0 +1,11 @@
+{
+  "case_id": "TX-BOUNDARY-HOUSE-clear_inside_10m",
+  "chamber": "house",
+  "address": null,
+  "point": [
+    -97.73361217198963,
+    30.26912701888957
+  ],
+  "expected": "PASS",
+  "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY"
+}

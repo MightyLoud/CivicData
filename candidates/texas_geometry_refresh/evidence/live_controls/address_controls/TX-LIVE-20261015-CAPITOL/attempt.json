@@ -1,0 +1,9 @@
+{
+  "case_id": "TX-LIVE-20261015-CAPITOL",
+  "address": "1100 Congress Ave, Austin, TX 78701",
+  "expect": "PASS",
+  "address_authority": "https://tspb.texas.gov/plan/hours/hours.html",
+  "attempt": 1,
+  "retries_allowed": false,
+  "scope": "INTERNAL_REVIEW"
+}

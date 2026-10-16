@@ -8,6 +8,9 @@ import json
 POLICY_ID = "texas-legislative-geometry-governance/0.1"
 ACCEPTANCE = {
     "accepted_on": "2026-09-06",
+    "marker_revision": "2026-10-15",
+    "marker_revision_evidence": "candidates/texas_geometry_refresh/evidence/comparison.json",
+    "marker_revision_evidence_sha256": "f8810acfc460a726a7b7e9ddbf6bd0d10b431cadd2d6ff5324e7f3e502d911f6",
     "candidate_commit": "a9994e75d9aac62ae1ae494b8984199e7477bd6a",
     "evidence_archive": "Day12_TX_Live_Controls_2026-09-06.zip",
     "evidence_archive_sha256": "f8f7d11bccd35d23496cbb3cb0f4dd82f2604bf5b3ac3d3cc7799e4eccb21a39",
@@ -23,8 +26,8 @@ PINS = {
         "service_item_id": "0627be7aa6f0440081bd750734761a63",
         "layer_name": "Texas_State_House_Districts_89th_2025_2027",
         "district_field": "DIST_NBR",
-        "schema_last_edit_utc": "2025-03-17T17:36:25Z",
-        "data_last_edit_utc": "2025-03-17T17:36:25Z",
+        "schema_last_edit_utc": "2026-10-15T12:11:25Z",
+        "data_last_edit_utc": "2026-10-15T12:09:57Z",
         "accepted_hausdorff_m": "0.0000678642",
         "vintage_note": "Captured service polygon accepted against TLC PLANH2316 in the TLC NAD83 Lambert CRS.",
     },

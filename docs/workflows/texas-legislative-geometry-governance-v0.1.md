@@ -48,3 +48,11 @@ The Senate service description references the 88th Legislature while the accepte
 4. the accepted live-control archive/hash and candidate commit remain unchanged.
 
 This closes only the geometry-version-governance blocker for the internal bounded preview. Production-profile support, public-identity publication disposition, production deployment validation, merge/release, and activation remain separately governed.
+
+## October 15 marker revision candidate
+
+The proposed marker revision `2026-10-15` retains policy schema `0.1` and the original acceptance archive. It changes only House schema/data markers to `2026-10-15T12:11:25Z` / `2026-10-15T12:09:57Z`; Senate markers are unchanged. The deterministic governance receipt now binds this revision and the comparison evidence hash.
+
+Fresh House 49 and Senate 14 responses match the accepted response bytes exactly. Their geometry comparisons against archived TLC PLANH2316 / PLANS2168 shapefiles reproduce the accepted numerical results in the verified same CRS. The source archive checksum was verified. Live TLC downloads returned HTTP 403, so this comparison uses archived authoritative shapefiles; it does not verify current TLC resource bytes or statewide equivalence.
+
+The evidence is in `candidates/texas_geometry_refresh/evidence/comparison.json`. This source branch is a review candidate. Main and the accepted production deployment are unchanged. Later marker drift must continue to fail closed.

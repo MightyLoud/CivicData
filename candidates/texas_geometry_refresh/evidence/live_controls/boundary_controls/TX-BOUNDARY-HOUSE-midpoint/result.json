@@ -1,0 +1,37 @@
+{
+  "case_id": "TX-BOUNDARY-HOUSE-midpoint",
+  "chamber": "house",
+  "address": null,
+  "point": [
+    -97.73351312323541,
+    30.269099716168498
+  ],
+  "expected": "CONFLICT",
+  "control_scope": "LIVE_COORDINATE_ADAPTER_ONLY",
+  "result": {
+    "status": "CONFLICT",
+    "code": "AMBIGUOUS_DISTRICT",
+    "message": "Multiple polygons intersect the point."
+  },
+  "expected_status_met": true,
+  "observations": [
+    {
+      "phase": "exact",
+      "feature_count": 1,
+      "district_keys": [
+        46
+      ],
+      "error": null
+    },
+    {
+      "phase": "probe",
+      "feature_count": 2,
+      "district_keys": [
+        46,
+        49
+      ],
+      "error": null
+    }
+  ],
+  "geocoder_requests": 0
+}
