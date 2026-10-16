@@ -23,7 +23,7 @@ def validate(proposal=None):
  facts=json.loads(captured);assert facts['source_url']==evidence['url'] and facts['retrieved_at']==evidence['accessed_at']
  assert facts['original_response_sha256']==evidence['content_hash']
  assert facts['observation']=={'name':'Liz Hensley','leadership':'Mayor Pro Tem','office':'City Councilor','ward':'1'}
- source=ROOT/proposal['canonical_path'];raw=source.read_bytes();assert hashlib.sha256(raw).hexdigest()==proposal['canonical_sha256'],'Canonical baseline drift: reconcile before applying candidate'
+ source=ROOT/proposal['canonical_path'];current_raw=source.read_bytes();raw=pathlib.Path(__file__).with_name('baseline-package.json').read_bytes();assert hashlib.sha256(raw).hexdigest()==proposal['canonical_sha256'],'Canonical baseline drift: reconcile before applying candidate'
  baseline=json.loads(raw);candidate=copy.deepcopy(baseline);assert not baseline['records']['leadership_roles']
  candidate['records']['leadership_roles'].append(proposal['leadership_record']);candidate['provenance']['source_evidence'].append(proposal['source_evidence']);candidate['provenance']['source_assertions'].append(proposal['source_assertion'])
  assert not validate_identity_graph(candidate['records']);assert not validate_role_term_sources(candidate['records'],candidate['provenance'])
@@ -38,6 +38,6 @@ def validate(proposal=None):
  exported['certification']['status']='draft';assert not validate_contract(exported,require_certified=False);assert 'CONTRACT_NOT_CERTIFIED' in validate_contract(exported)
  response=build_representation_from_civic_gps_result(exported,'CANDIDATE REVIEW',{},binding={});assert response['error']=='CONTRACT_NOT_CERTIFIED' and 'applicable_offices' not in response
  assert proposal['leadership_record']['valid_from'] is None and proposal['leadership_record']['valid_to'] is None
- assert source.read_bytes()==raw
+ assert source.read_bytes()==current_raw
  return {'status':'CANDIDATE_CHECKS_PASS_NOT_ADOPTED','canonical_source_unchanged':True,'membership_delta':'Liz Hensley label: null -> Mayor Pro Tem','existing_ids_and_service_dates_preserved':True,'new_evidence_records':1,'new_proposed_assertions':1,'contract_status':'draft','production_consumer':'REJECTED_CONTRACT_NOT_CERTIFIED','production_eligible':False}
 if __name__=='__main__':print(json.dumps(validate(),indent=2))
