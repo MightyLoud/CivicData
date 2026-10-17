@@ -1,6 +1,8 @@
 # Texas bounded Railway deployment v0.1
 
-Status: `DEPLOYED_AND_VALIDATED__FROZEN_PREACTIVATION_PROOF`
+Status: `HISTORICAL_DEPLOYMENT_PROOF__HOST_CURRENTLY_OFFLINE`
+
+Current hosting inspection (2026-10-09): the public `/healthz` and `/readyz` routes return Railway edge HTTP 404 (`Application not found`). Railway reports no active deployments. The v0.2 deployment was stopped on 2026-10-07. Statements below about a live URL and the pre-activation pin describe historical evidence, not current availability. See [hosting recovery assessment](civicdata-hosting-recovery-2026-10-09.md).
 
 Railway is the governed external HTTPS production target used to validate the bounded Texas House District 49 / Senate District 14 hosted runtime. Provider connection, project creation, service creation, public HTTPS exposure, exact-head deployment, and hosted validation are complete.
 
